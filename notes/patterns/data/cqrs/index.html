@@ -1,0 +1,303 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>CQRS — Command Query Responsibility Segregation — Notes — Amit Singh</title><meta name="description" content="Separate the write model (commands) from the read model (queries). Unlocks independent scaling, optimised projections, and eventual-consistency trade-offs at scale."><link rel="canonical" href="https://shipsolid.github.io/notes/patterns/data/cqrs/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="CQRS — Command Query Responsibility Segregation — Notes — Amit Singh"><meta property="og:description" content="Separate the write model (commands) from the read model (queries). Unlocks independent scaling, optimised projections, and eventual-consistency trade-offs at scale."><meta property="og:url" content="https://shipsolid.github.io/notes/patterns/data/cqrs/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="CQRS — Command Query Responsibility Segregation — Notes — Amit Singh"><meta name="twitter:description" content="Separate the write model (commands) from the read model (queries). Unlocks independent scaling, optimised projections, and eventual-consistency trade-offs at scale."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/patterns" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Patterns</a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> CQRS — Command Query Responsibility Segregation </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Separate the write model (commands) from the read model (queries). Unlocks independent scaling, optimised projections, and eventual-consistency trade-offs at scale.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 30, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/patterns" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>patterns</a><a href="/notes/tag/distributed-systems" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>distributed-systems</a><a href="/notes/tag/data" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>data</a><a href="/notes/tag/maang-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>maang-prep</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="cqrs--command-query-responsibility-segregation">CQRS — Command Query Responsibility Segregation</h1>
+<blockquote>
+<p><strong>Interview level:</strong> Principal / Staff (L6/L7) — almost always paired with Event Sourcing in
+MAANG interviews. The key signal: can you articulate <em>when</em> CQRS is the right call vs. overkill?
+Most candidates know the pattern; few can argue the trade-off honestly.</p>
+</blockquote>
+<hr>
+<h2 id="context">Context</h2>
+<p>A system’s read and write access patterns diverge significantly. The write side enforces invariants
+and emits domain events; the read side serves queries at high throughput with complex projections
+(joins, aggregations, materialized views) that the write model doesn’t support efficiently.</p>
+<hr>
+<h2 id="problem">Problem</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Force</th><th>Description</th></tr></thead><tbody><tr><td>Read/write asymmetry</td><td>Reads are 10–100× more frequent than writes; optimising one degrades the other</td></tr><tr><td>Schema tension</td><td>The normalised write schema is expensive to query; query views need denormalised data</td></tr><tr><td>Scaling asymmetry</td><td>Read and write tiers need independent scaling units</td></tr><tr><td>Audit / history</td><td>Write model loses history on update; queries need temporal snapshots</td></tr></tbody></table>
+<hr>
+<h2 id="solution">Solution</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Write["Write Side"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        CMD["Command\n(CreateOrder, CancelOrder)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        DOMAIN["Domain Model\n(validates invariants)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        ES["Event Store\n(append-only)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        CMD --> DOMAIN --> ES</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Sync["Projection Engine"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        PROJ["Event Handler\n(reads event stream,\nupdates read models)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        ES -->|"domain events"| PROJ</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Read["Read Side"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        RM1["Read Model A\nOrders by Customer\n(materialised view)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        RM2["Read Model B\nOrder Summary\n(aggregated)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        QRY["Query Handler"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        PROJ --> RM1 &#x26; RM2</span></span>
+<span class="line"><span style="color:#E1E4E8">        QRY --> RM1 &#x26; RM2</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    CLIENT["Client"] -->|"commands"| CMD</span></span>
+<span class="line"><span style="color:#E1E4E8">    CLIENT -->|"queries"| QRY</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Write side</strong> is the authority: it validates commands against the domain model and appends immutable
+events. <strong>Projection engine</strong> is an async subscriber that transforms events into read-optimised
+views — one per query pattern. <strong>Read side</strong> is a set of eventually-consistent, denormalised stores
+optimised for specific queries (PostgreSQL materialized views, Elasticsearch, Redis hashes, etc.).</p>
+<hr>
+<h2 id="implementation-decisions">Implementation Decisions</h2>
+<h3 id="how-many-read-models">How many read models?</h3>
+<p>One per query shape. Resist the urge to build a “general-purpose” read model — that’s just the
+write model with a different name.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Query: "all orders for customer X, sorted by date"   → read model: orders_by_customer (hash keyed by customer_id)</span></span>
+<span class="line"><span>Query: "order summary for dashboard"                  → read model: order_summary (pre-aggregated counts)</span></span>
+<span class="line"><span>Query: "full-text search on order description"        → read model: Elasticsearch index</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="projection-rebuild">Projection rebuild</h3>
+<p>When the projection logic changes (new field, bug fix), you must replay all events to rebuild the
+view. Design for this from day one:</p>
+<ol>
+<li>Write events to an <strong>append-only event log</strong> (Kafka, EventStoreDB, PostgreSQL table with
+sequence ID)</li>
+<li>Keep the <strong>consumer group offset</strong> separate from the read model state — you can reset the offset
+and replay without touching the write side</li>
+<li><strong>Blue/green projection rebuild</strong>: build the new projection in parallel from offset 0, then
+atomically swap read traffic to the new view once it catches up</li>
+</ol>
+<h3 id="command-acknowledgement-and-the-consistency-gap">Command acknowledgement and the consistency gap</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">sequenceDiagram</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Client</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant WriteAPI</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant EventLog</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Projection</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant ReadAPI</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Client->>+WriteAPI: CreateOrder(id=42)</span></span>
+<span class="line"><span style="color:#E1E4E8">    WriteAPI->>EventLog: append OrderCreated(id=42)</span></span>
+<span class="line"><span style="color:#E1E4E8">    WriteAPI-->>-Client: 202 Accepted (command ID)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Note over Projection: async, may lag 10ms–2s</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Client->>+ReadAPI: GET /orders/42</span></span>
+<span class="line"><span style="color:#E1E4E8">    ReadAPI-->>-Client: 404 (projection not yet updated)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Note over Client: retry with backoff or poll command status</span></span>
+<span class="line"></span></code></pre>
+<p>This is the <strong>most common production bug</strong> in CQRS systems: clients issue a command, then
+immediately query the read model and get stale data. Solutions:</p>
+<ul>
+<li><strong>Optimistic UI</strong>: update the client’s local state immediately; treat the read-model response as
+an eventual confirmation</li>
+<li><strong>Command receipt token</strong>: return a <code>command_id</code> on write; read API accepts <code>?after_command=id</code>
+and waits until the projection has processed at least that command</li>
+<li><strong>Polling endpoint</strong>: <code>GET /commands/{id}/status</code> returns <code>pending | completed | failed</code> —
+projection marks commands complete after applying the event</li>
+</ul>
+<hr>
+<h2 id="consequences">Consequences</h2>
+<h3 id="gains">Gains</h3>
+<ul>
+<li>Read and write tiers scale independently (write side: vertically for consistency; read side:
+horizontally for throughput)</li>
+<li>Read models are purpose-built: no JOIN overhead, no lock contention with writes</li>
+<li>Event log is an audit trail by default — no extra instrumentation needed</li>
+<li>Multiple read models can serve the same events with different projections simultaneously</li>
+</ul>
+<h3 id="trade-offs">Trade-offs</h3>
+<ul>
+<li><strong>Eventual consistency is non-negotiable</strong>: reads lag behind writes by the projection processing
+delay. If the business requires read-your-own-writes consistency, CQRS requires extra machinery
+(see above). Not every domain can tolerate this.</li>
+<li><strong>Projection rebuild cost</strong>: at 10M events, a full replay takes time and compute. Plan the rebuild
+strategy before you need it.</li>
+<li><strong>Operational complexity</strong>: two data stores, an event log, a projection service, and a
+consistency lag to monitor. Adds at least 3 new failure modes.</li>
+<li><strong>Not worth it for simple CRUD</strong>: if reads and writes are symmetric and volume is low, CQRS is
+overengineering. Say this in the interview.</li>
+</ul>
+<hr>
+<h2 id="when-not-to-use-cqrs">When NOT to use CQRS</h2>
+<p>State this proactively — it signals maturity:</p>
+<ul>
+<li>CRUD-heavy systems with no complex query patterns</li>
+<li>Teams that don’t yet have the operational maturity to run distributed event logs</li>
+<li>Low-traffic systems (&#x3C; 1K RPS) where a single well-indexed database handles both reads and writes
+comfortably</li>
+<li>Systems without a genuine audit or history requirement</li>
+</ul>
+<hr>
+<h2 id="observability">Observability</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>cqrs_command_latency_seconds{command_type}         # write-side latency</span></span>
+<span class="line"><span>cqrs_projection_lag_events{projection}             # events behind the write head</span></span>
+<span class="line"><span>cqrs_projection_lag_seconds{projection}            # time lag of slowest projection</span></span>
+<span class="line"><span>cqrs_read_model_query_latency_seconds{model}       # read-side latency</span></span>
+<span class="line"><span>cqrs_command_failures_total{command_type, reason}  # write-side rejections</span></span>
+<span class="line"><span>cqrs_projection_rebuild_duration_seconds           # how long a replay takes</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The <strong>critical alert</strong>: <code>cqrs_projection_lag_seconds > SLA_THRESHOLD</code> — projection is falling
+behind faster than it can process. Root causes: projection consumer is undersized, event log
+partition count too low, read model write is slow. Correlate with event log consumer lag.</p>
+<hr>
+<h2 id="maang-interview-anchors">MAANG Interview Anchors</h2>
+<ul>
+<li>
+<p>“CQRS is a trade: you pay with eventual consistency and operational complexity to get independent
+read/write scaling and purpose-built projections. I’d only make that trade when the read/write
+asymmetry is real and measurable — not as a default architecture.”</p>
+</li>
+<li>
+<p>“The hardest operational problem in CQRS isn’t the pattern itself — it’s the projection rebuild.
+At 100M events, a full replay can take hours. I’d design the event log to be replayable from any
+offset, run blue/green projection rebuilds in parallel, and gate traffic switchover on projection
+lag dropping to &#x3C; 1 second.”</p>
+</li>
+<li>
+<p>“Read-your-own-writes is the gap that bites every team. My answer is a command receipt token:
+the write API returns a <code>command_sequence_number</code>; the read API accepts <code>?consistent_after=N</code> and
+returns 503 with a Retry-After header if the projection hasn’t caught up. This makes the
+consistency guarantee explicit in the API contract, not buried in an SLA footnote.”</p>
+</li>
+<li>
+<p>“I’d instrument projection lag as a first-class SLO, not a background metric. If the projection
+is 10 seconds behind, the business impact is that 10 seconds of orders are invisible in the
+dashboard. That’s a customer-visible SLO breach, not a platform warning.”</p>
+</li>
+</ul>
+<hr>
+<h2 id="known-uses">Known Uses</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>System</th><th>CQRS application</th></tr></thead><tbody><tr><td>Axon Framework</td><td>Canonical CQRS + Event Sourcing in Java/Spring</td></tr><tr><td>EventStoreDB</td><td>Purpose-built event log with projection engine</td></tr><tr><td>Kafka + Materialized views</td><td>Kafka Streams aggregates into read models</td></tr><tr><td>Microsoft Azure Event Sourcing reference</td><td>CQRS + ES with Azure Service Bus</td></tr><tr><td>Uber’s domain events</td><td>Write to Kafka; downstream services build their own read models</td></tr></tbody></table>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in Patterns</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/patterns/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Patterns </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Reusable engineering patterns for distributed systems, observability, reliability, and platform design — grounded in production experience at scale.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/communication/fan-out-fan-in" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Fan-Out / Fan-In </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Decompose a request into parallel sub-tasks (fan-out), execute concurrently, then merge results (fan-in). The foundational pattern for latency-bound aggregation.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/communication/backpressure" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Backpressure </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Signal from a slow consumer to a fast producer to slow down. Prevents unbounded queue growth, OOM, and cascading overload. The foundational flow-control pattern.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/communication/common/deadline-propagation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Deadline Propagation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How a client deadline must be inherited by every downstream goroutine or service call so that cancelled work stops consuming resources rather than running to completion unobserved.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/topic/patterns" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Patterns notes
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#context" data-slug="context" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Context</a></li><li data-astro-cid-xvrfupwn><a href="#problem" data-slug="problem" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Problem</a></li><li data-astro-cid-xvrfupwn><a href="#solution" data-slug="solution" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Solution</a></li><li data-astro-cid-xvrfupwn><a href="#implementation-decisions" data-slug="implementation-decisions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Implementation Decisions</a></li><li data-astro-cid-xvrfupwn><a href="#how-many-read-models" data-slug="how-many-read-models" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>How many read models?</a></li><li data-astro-cid-xvrfupwn><a href="#projection-rebuild" data-slug="projection-rebuild" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Projection rebuild</a></li><li data-astro-cid-xvrfupwn><a href="#command-acknowledgement-and-the-consistency-gap" data-slug="command-acknowledgement-and-the-consistency-gap" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Command acknowledgement and the consistency gap</a></li><li data-astro-cid-xvrfupwn><a href="#consequences" data-slug="consequences" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Consequences</a></li><li data-astro-cid-xvrfupwn><a href="#gains" data-slug="gains" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Gains</a></li><li data-astro-cid-xvrfupwn><a href="#trade-offs" data-slug="trade-offs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Trade-offs</a></li><li data-astro-cid-xvrfupwn><a href="#when-not-to-use-cqrs" data-slug="when-not-to-use-cqrs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>When NOT to use CQRS</a></li><li data-astro-cid-xvrfupwn><a href="#observability" data-slug="observability" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Observability</a></li><li data-astro-cid-xvrfupwn><a href="#maang-interview-anchors" data-slug="maang-interview-anchors" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>MAANG Interview Anchors</a></li><li data-astro-cid-xvrfupwn><a href="#known-uses" data-slug="known-uses" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Known Uses</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

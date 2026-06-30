@@ -1,0 +1,530 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Confluence Content Templates — SRE / Observability / Platform — Notes — Amit Singh</title><meta name="description" content="**Space:** `OBS` or `PLT` **Parent page:** `Decision Log (ADRs)`"><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/10-templates/confluence-content-templates/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Confluence Content Templates — SRE / Observability / Platform — Notes — Amit Singh"><meta property="og:description" content="**Space:** `OBS` or `PLT` **Parent page:** `Decision Log (ADRs)`"><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/10-templates/confluence-content-templates/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Confluence Content Templates — SRE / Observability / Platform — Notes — Amit Singh"><meta name="twitter:description" content="**Space:** `OBS` or `PLT` **Parent page:** `Decision Log (ADRs)`"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-10-templates" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>10 Templates</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Confluence Content Templates — SRE / Observability / Platform </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>**Space:** `OBS` or `PLT` **Parent page:** `Decision Log (ADRs)`</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/templates" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Templates</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="confluence-content-templates--sre--observability--platform">Confluence Content Templates — SRE / Observability / Platform</h1>
+<blockquote>
+<p><strong>Lens:</strong> Solution Architect<br>
+<strong>Usage:</strong> Copy each section into a new Confluence page. Fill <code>[FILL: ...]</code> blocks.<br>
+Apply the <code>[TEMPLATE]</code> label so these scaffold pages are excluded from navigation.<br>
+Delete this header comment when instantiating a real page.</p>
+</blockquote>
+<hr>
+<h2 id="template-1--architecture-decision-record-adr">Template 1 — Architecture Decision Record (ADR)</h2>
+<p><strong>Space:</strong> <code>OBS</code> or <code>PLT</code><br>
+<strong>Parent page:</strong> <code>Decision Log (ADRs)</code><br>
+<strong>Naming:</strong> <code>ADR-{NNN}: {Short title}</code> — e.g.
+<code>ADR-007: Adopt OTel-native instrumentation over vendor SDKs</code></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#85E89D">Owner</span><span style="color:#E1E4E8">:          [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">name / team</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Status</span><span style="color:#E1E4E8">:         </span><span style="color:#9ECBFF">proposed | accepted | superseded</span></span>
+<span class="line"><span style="color:#85E89D">Created</span><span style="color:#E1E4E8">:        </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Superseded by</span><span style="color:#E1E4E8">:  [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">ADR-NNN</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">or N/A</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Last reviewed</span><span style="color:#E1E4E8">:  </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Context</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: 2–4 sentences. What problem are we solving? What is the forcing function?</span></span>
+<span class="line"><span style="color:#E1E4E8">Include scale, constraints, and what happens if we do nothing.]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Decision</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: One clear statement of what we decided. No hedging.</span></span>
+<span class="line"><span style="color:#E1E4E8">Example: "We will use OpenTelemetry SDKs for all new service instrumentation.</span></span>
+<span class="line"><span style="color:#E1E4E8">Vendor SDK adoption is blocked pending migration to OTel."]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Alternatives Considered</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Option | Why rejected |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [FILL: Option A] | [FILL: reason] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| [FILL: Option B] | [FILL: reason] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Consequences</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**Positive:**</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**Negative / tradeoffs:**</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**Open questions (resolve before implementation):**</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [FILL, or "None"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Links</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> Related ADRs: [FILL: ADR-NNN links]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> Implementation PR / Jira: [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> Design doc / RFC: [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="template-2--request-for-comments-rfc">Template 2 — Request for Comments (RFC)</h2>
+<p><strong>Space:</strong> <code>PLT</code><br>
+<strong>Parent page:</strong> <code>RFCs (proposals)</code><br>
+<strong>Naming:</strong> <code>RFC-{NNN}: {Short title}</code><br>
+<strong>Lifecycle:</strong> <code>draft</code> → <code>in-review</code> → <code>accepted</code> | <code>rejected</code> | <code>withdrawn</code></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#85E89D">Owner</span><span style="color:#E1E4E8">:        [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">author name</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Status</span><span style="color:#E1E4E8">:       </span><span style="color:#9ECBFF">draft | in-review | accepted | rejected | withdrawn</span></span>
+<span class="line"><span style="color:#85E89D">Created</span><span style="color:#E1E4E8">:      </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Comment by</span><span style="color:#E1E4E8">:   </span><span style="color:#9ECBFF">YYYY-MM-DD   ← hard deadline for async review</span></span>
+<span class="line"><span style="color:#85E89D">Reviewers</span><span style="color:#E1E4E8">:    [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">list names</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Problem Statement</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: What breaks, costs too much, or is missing? Anchor to a real incident,</span></span>
+<span class="line"><span style="color:#E1E4E8">a capacity ceiling, or a user pain point. Include metrics where available.]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Proposal</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: What are you proposing to build or change? Keep this to 3–5 paragraphs.</span></span>
+<span class="line"><span style="color:#E1E4E8">Diagrams strongly preferred over prose for system changes.]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">### Scope</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**In scope:**</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**Out of scope:**</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Design</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: Technical detail — API contracts, data flow, component interactions.</span></span>
+<span class="line"><span style="color:#E1E4E8">For infra changes: include IaC approach (Helm/Terraform), rollout strategy,</span></span>
+<span class="line"><span style="color:#E1E4E8">and rollback path. Embed diagrams here, not at the bottom.]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Alternatives</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Alternative | Tradeoff |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Migration / Rollout Plan</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: Phases. Include: how existing users are migrated, any flag-gate strategy,</span></span>
+<span class="line"><span style="color:#E1E4E8">expected downtime window (or confirm zero-downtime), canary criteria.]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Operational Impact</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> Monitoring / alerting changes: [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> On-call runbook changes: [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> FinOps impact (ingest / compute): [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> Cardinality delta: [FILL: +N series / -N series]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Open Questions</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Question | Owner | Resolve by |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Decision</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#85E89D">> </span><span style="color:#E1E4E8;font-weight:bold">**[Complete after review period]**</span></span>
+<span class="line"><span style="color:#85E89D">> Accepted / Rejected / Withdrawn on YYYY-MM-DD.</span></span>
+<span class="line"><span style="color:#85E89D">> Summary of changes from original proposal: [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#85E89D">]</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="template-3--service-slo-document">Template 3 — Service SLO Document</h2>
+<p><strong>Space:</strong> <code>SRE</code><br>
+<strong>Parent page:</strong> <code>Services &#x26; SLOs → SLO Registry</code><br>
+<strong>Naming:</strong> <code>[Service Name] — SLO Document</code><br>
+<strong>Review cadence:</strong> 90 days or after any SLO miss event</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#85E89D">Owner</span><span style="color:#E1E4E8">:            [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">team name</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Service tier</span><span style="color:#E1E4E8">:     </span><span style="color:#9ECBFF">Tier 1 | Tier 2 | Tier 3</span></span>
+<span class="line"><span style="color:#85E89D">Status</span><span style="color:#E1E4E8">:           </span><span style="color:#9ECBFF">active | proposed | deprecated</span></span>
+<span class="line"><span style="color:#85E89D">Created</span><span style="color:#E1E4E8">:          </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Last reviewed</span><span style="color:#E1E4E8">:    </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Error budget link</span><span style="color:#E1E4E8">: [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Grafana dashboard URL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Service Overview</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: 2 sentences. What does this service do and who depends on it?]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## SLIs (Service Level Indicators)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| SLI Name | Metric Query | Good event definition |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| Availability | [FILL: promQL] | HTTP 2xx + 3xx responses |</span></span>
+<span class="line"><span style="color:#E1E4E8">| Latency P99 | [FILL: promQL] | &#x3C; [</span><span style="color:#DBEDFF;text-decoration:underline">N</span><span style="color:#E1E4E8">]ms |</span></span>
+<span class="line"><span style="color:#E1E4E8">| [FILL: custom SLI] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## SLOs (Service Level Objectives)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| SLI | Target | Window | Error Budget |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| Availability | [FILL: e.g. 99.9%] | 30-day rolling | [FILL: e.g. 43.8 min/month] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| Latency P99 | [FILL: e.g. 99%] | 30-day rolling | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Alerting Policy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Alert name | Burn rate | Window | Severity |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [FILL: e.g. 14.4×] | 1h | SEV1 |</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [FILL: e.g. 6×] | 6h | SEV2 |</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [FILL: e.g. 1×] | 3d (ticket) | SEV3 |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Error Budget Policy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8;font-weight:bold"> **>50% budget remaining:**</span><span style="color:#E1E4E8"> Normal release velocity</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8;font-weight:bold"> **25–50% remaining:**</span><span style="color:#E1E4E8"> Release freeze for non-critical changes</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8;font-weight:bold"> **&#x3C;25% remaining:**</span><span style="color:#E1E4E8"> Full feature freeze; reliability work only</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8;font-weight:bold"> **Budget exhausted:**</span><span style="color:#E1E4E8"> [FILL: escalation path — who approves exception releases?]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Dependencies</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Dependency | Type | SLA provided | Impact if down |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [FILL: upstream service] | synchronous | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| [FILL: data store] | synchronous | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Runbook Links</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Alert | Runbook |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [FILL: alert name] | [FILL: Confluence runbook link] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## SLO History</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Quarter | Met? | Notes |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [FILL: Q1 YYYY] | Yes / No | [FILL: any notable misses] |</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="template-4--incident-post-mortem">Template 4 — Incident Post-Mortem</h2>
+<p><strong>Space:</strong> <code>SRE</code><br>
+<strong>Parent page:</strong> <code>Incident Management → Post-Mortems</code><br>
+<strong>Naming:</strong> <code>YYYY-MM-DD — [Incident Title]</code><br>
+<strong>Lock:</strong> Read-only after 30 days. Post-mortems are immutable records.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#85E89D">Owner</span><span style="color:#E1E4E8">:          [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">incident commander</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Severity</span><span style="color:#E1E4E8">:       </span><span style="color:#9ECBFF">SEV1 | SEV2 | SEV3</span></span>
+<span class="line"><span style="color:#85E89D">Status</span><span style="color:#E1E4E8">:         </span><span style="color:#9ECBFF">draft | published | closed</span></span>
+<span class="line"><span style="color:#85E89D">Incident start</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">YYYY-MM-DD HH:MM UTC</span></span>
+<span class="line"><span style="color:#85E89D">Incident end</span><span style="color:#E1E4E8">:   </span><span style="color:#9ECBFF">YYYY-MM-DD HH:MM UTC</span></span>
+<span class="line"><span style="color:#85E89D">MTTR</span><span style="color:#E1E4E8">:           [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">HH:MM</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Impacted</span><span style="color:#E1E4E8">:       [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">services / customers / regions</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Executive Summary</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: 3–5 sentences. What broke, why, how long, what was the blast radius.</span></span>
+<span class="line"><span style="color:#E1E4E8">Readable by a VP who wasn't there. No jargon without definition.]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Impact</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Dimension | Value |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| User-facing impact | [FILL: % of requests affected / error rate] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| Duration | [FILL: minutes / hours] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| Regions affected | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| Estimated revenue / SLO impact | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Timeline</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Time (UTC) | Event |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| HH:MM | [FILL: first alert fired / anomaly detected] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| HH:MM | [FILL: on-call paged] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| HH:MM | [FILL: war room opened] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| HH:MM | [FILL: root cause identified] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| HH:MM | [FILL: mitigation applied] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| HH:MM | [FILL: incident resolved / all-clear] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Root Cause Analysis</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**What happened:**</span></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: technical sequence of events. Start from the triggering condition, not the alert.]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**Why it happened (5 Whys):**</span></span>
+<span class="line"><span style="color:#FFAB70">1.</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">2.</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">3.</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">4.</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">5.</span><span style="color:#E1E4E8"> [FILL: systemic root cause]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8;font-weight:bold">**Contributing factors:**</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## What Went Well</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [FILL: detection time, alert fidelity, response clarity, tooling that helped]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## What Went Poorly</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [FILL: gaps in observability, unclear runbooks, slow escalation, missing automation]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Action Items</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Item | Owner | Jira ticket | Due date | Status |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | YYYY-MM-DD | open |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Lessons Learned</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: 2–3 sentences. What systemic lesson does this incident surface?</span></span>
+<span class="line"><span style="color:#E1E4E8">Link to any RFC or ADR that should be created as a result.]</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="template-5--onboarding-checklist-per-team">Template 5 — Onboarding Checklist (per team)</h2>
+<p><strong>Space:</strong> <code>OBS</code><br>
+<strong>Parent page:</strong> <code>Onboarding → [Team Name]</code><br>
+<strong>Naming:</strong> <code>[Team Name] — Onboarding Tracker</code></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#85E89D">Team</span><span style="color:#E1E4E8">:           [</span><span style="color:#9ECBFF">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Service(s)</span><span style="color:#E1E4E8">:     [</span><span style="color:#9ECBFF">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Owner</span><span style="color:#E1E4E8">:          [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">platform contact / shepherd</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Started</span><span style="color:#E1E4E8">:        </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Target complete</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Status</span><span style="color:#E1E4E8">:         </span><span style="color:#9ECBFF">in-progress | complete</span></span>
+<span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Pre-onboarding</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Service tier confirmed with SRE team (Tier 1 / 2 / 3)</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Service owner and on-call rotation registered</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Service dependency map reviewed</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Instrumentation</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Metrics emitted via OTel SDK (not proprietary)</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Mandatory labels present: </span><span style="color:#79B8FF">`[FILL: list from label schema]`</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Log format validated (structured JSON, required fields)</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Distributed tracing enabled; sampling rate confirmed</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Cardinality estimate reviewed and approved</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Platform Config</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Collector pipeline configured for this service</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Dashboard created (use org template as base)</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Alerts configured (minimum: availability + latency)</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Runbooks linked to each alert</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## SLO Setup</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] SLI definitions agreed with service team</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] SLO targets set and documented</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Error budget policy acknowledged by team lead</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Burn-rate alerts wired</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Validation</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Load test run; signal quality confirmed</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] On-call engineer run through runbooks in dry-run</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Onboarding sign-off by Observability Architect</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Notes</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: any deviations, exceptions, or follow-up items]</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="template-6--runbook-per-alert">Template 6 — Runbook (per alert)</h2>
+<p><strong>Space:</strong> <code>SRE</code><br>
+<strong>Parent page:</strong> <code>Runbooks → [Alert category]</code><br>
+<strong>Naming:</strong> <code>Runbook — [AlertName]</code><br>
+<strong>Review cadence:</strong> 90 days</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#85E89D">Alert name</span><span style="color:#E1E4E8">:     [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">exact alert name from alerting system</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Severity</span><span style="color:#E1E4E8">:       </span><span style="color:#9ECBFF">SEV1 | SEV2 | SEV3</span></span>
+<span class="line"><span style="color:#85E89D">Owner</span><span style="color:#E1E4E8">:          [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">team</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Last reviewed</span><span style="color:#E1E4E8">:  </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Dashboard</span><span style="color:#E1E4E8">:      [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Grafana URL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Alert Meaning</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: 1–2 sentences. What condition triggers this? What does it indicate is wrong?]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Impact if unaddressed</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: What degrades, breaks, or impacts users if this fires and is ignored?]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Triage Steps</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">1.</span><span style="color:#E1E4E8;font-weight:bold"> **Confirm the alert is real**</span><span style="color:#E1E4E8"> (not a flap / stale data)</span></span>
+<span class="line"><span style="color:#FFAB70">   -</span><span style="color:#E1E4E8"> Check: [FILL: specific query / dashboard panel]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">2.</span><span style="color:#E1E4E8;font-weight:bold"> **Scope the blast radius**</span></span>
+<span class="line"><span style="color:#FFAB70">   -</span><span style="color:#E1E4E8"> Check: [FILL: which services / regions / users affected]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">3.</span><span style="color:#E1E4E8;font-weight:bold"> **Look for recent changes**</span></span>
+<span class="line"><span style="color:#FFAB70">   -</span><span style="color:#E1E4E8"> Check deploys in the last 2 hours: [FILL: link to deploy history]</span></span>
+<span class="line"><span style="color:#FFAB70">   -</span><span style="color:#E1E4E8"> Check config changes: [FILL: link]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">4.</span><span style="color:#E1E4E8;font-weight:bold"> **[FILL: domain-specific diagnostic step]**</span></span>
+<span class="line"><span style="color:#FFAB70">   -</span><span style="color:#E1E4E8"> [FILL: exact query or command]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">5.</span><span style="color:#E1E4E8;font-weight:bold"> **[FILL: domain-specific diagnostic step]**</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Common Causes</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Cause | Indicator | Resolution |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Escalation</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8;font-weight:bold"> **Not resolved in 30 min:**</span><span style="color:#E1E4E8"> Page [FILL: next escalation name / role]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8;font-weight:bold"> **Blast radius expanding:**</span><span style="color:#E1E4E8"> Open SEV1 war room, notify [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8;font-weight:bold"> **Needs vendor support:**</span><span style="color:#E1E4E8"> [FILL: support portal / contact]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Resolution Verification</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: specific metric query or dashboard state that confirms the issue is resolved]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Related Runbooks</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [FILL: link to related runbooks]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Post-incident</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">If this alert triggered a SEV1/SEV2, open a post-mortem within 24 hours.</span></span>
+<span class="line"><span style="color:#E1E4E8">Link: [FILL: post-mortem template]</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="template-7--production-readiness-review-prr">Template 7 — Production Readiness Review (PRR)</h2>
+<p><strong>Space:</strong> <code>SRE</code><br>
+<strong>Parent page:</strong> <code>Reliability Reviews → PRR Archive</code><br>
+<strong>Naming:</strong> <code>[Service Name] PRR — YYYY-MM-DD</code></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="markdown"><code><span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"><span style="color:#85E89D">Service</span><span style="color:#E1E4E8">:          [</span><span style="color:#9ECBFF">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Owner</span><span style="color:#E1E4E8">:            [</span><span style="color:#85E89D">FILL</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">service team TL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">SRE reviewer</span><span style="color:#E1E4E8">:     [</span><span style="color:#9ECBFF">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">Review date</span><span style="color:#E1E4E8">:      </span><span style="color:#9ECBFF">YYYY-MM-DD</span></span>
+<span class="line"><span style="color:#85E89D">Decision</span><span style="color:#E1E4E8">:         </span><span style="color:#9ECBFF">approved | approved-with-conditions | blocked</span></span>
+<span class="line"><span style="color:#E1E4E8">---</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Service Summary</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: what the service does, scale expectations, launch target date]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Checklist</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">### Observability</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Metrics: RED signals instrumented (Rate, Errors, Duration)</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Logs: structured, searchable, no PII in log lines</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Traces: distributed tracing enabled, sampling configured</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Dashboards: service dashboard exists, linked here: [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">### Alerting</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] At least one availability alert configured</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] At least one latency alert configured</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] All alerts have runbooks linked</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Alerts validated in non-prod before this review</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">### Reliability</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] SLI/SLO defined and documented: [FILL: link]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Error budget policy acknowledged</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Dependency failure modes documented</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Graceful degradation strategy defined</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">### Operational</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] On-call rotation registered</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Deployment runbook exists</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Rollback procedure documented and tested</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Rollback time target: &#x3C; [FILL: N minutes]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">### Capacity</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Load test results reviewed: [FILL: link]</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Auto-scaling configured and tested</span></span>
+<span class="line"><span style="color:#FFAB70">-</span><span style="color:#E1E4E8"> [ ] Resource limits set (CPU, memory, ingest)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Conditions (if any)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: any items that must be resolved post-launch, with owner and due date]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">| Condition | Owner | Due |</span></span>
+<span class="line"><span style="color:#E1E4E8">|---|---|---|</span></span>
+<span class="line"><span style="color:#E1E4E8">| [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | [</span><span style="color:#DBEDFF;text-decoration:underline">FILL</span><span style="color:#E1E4E8">] | YYYY-MM-DD |</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF;font-weight:bold">## Decision Rationale</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[FILL: 2–3 sentences explaining the approval or block decision]</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<p><em>Templates version: 1.0 — add new templates here as recurring page types emerge.</em></p>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#template-1--architecture-decision-record-adr" data-slug="template-1--architecture-decision-record-adr" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Template 1 — Architecture Decision Record (ADR)</a></li><li data-astro-cid-xvrfupwn><a href="#template-2--request-for-comments-rfc" data-slug="template-2--request-for-comments-rfc" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Template 2 — Request for Comments (RFC)</a></li><li data-astro-cid-xvrfupwn><a href="#template-3--service-slo-document" data-slug="template-3--service-slo-document" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Template 3 — Service SLO Document</a></li><li data-astro-cid-xvrfupwn><a href="#template-4--incident-post-mortem" data-slug="template-4--incident-post-mortem" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Template 4 — Incident Post-Mortem</a></li><li data-astro-cid-xvrfupwn><a href="#template-5--onboarding-checklist-per-team" data-slug="template-5--onboarding-checklist-per-team" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Template 5 — Onboarding Checklist (per team)</a></li><li data-astro-cid-xvrfupwn><a href="#template-6--runbook-per-alert" data-slug="template-6--runbook-per-alert" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Template 6 — Runbook (per alert)</a></li><li data-astro-cid-xvrfupwn><a href="#template-7--production-readiness-review-prr" data-slug="template-7--production-readiness-review-prr" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Template 7 — Production Readiness Review (PRR)</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

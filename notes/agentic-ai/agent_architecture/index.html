@@ -1,0 +1,505 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Understanding Agent Architecture — Notes — Amit Singh</title><meta name="description" content="Covers: LLM, Tools, Memory, Planning, Execution Loop"><link rel="canonical" href="https://shipsolid.github.io/notes/agentic-ai/agent_architecture/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Understanding Agent Architecture — Notes — Amit Singh"><meta property="og:description" content="Covers: LLM, Tools, Memory, Planning, Execution Loop"><meta property="og:url" content="https://shipsolid.github.io/notes/agentic-ai/agent_architecture/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Understanding Agent Architecture — Notes — Amit Singh"><meta name="twitter:description" content="Covers: LLM, Tools, Memory, Planning, Execution Loop"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/agentic-ai" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Agentic AI</a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Understanding Agent Architecture </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Covers: LLM, Tools, Memory, Planning, Execution Loop</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 21, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/agentic" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Agentic</a><a href="/notes/tag/ai" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>AI</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="what-you-will-understand-at-the-end">What you will understand at the end</h2>
+<ul>
+<li>What each of the five core agent components does and <em>why</em> it exists</li>
+<li>How those components connect into an execution loop</li>
+<li>The vocabulary used by frameworks like LangChain, LangGraph, and the Anthropic SDK</li>
+</ul>
+<hr>
+<h2 id="the-mental-model">The mental model</h2>
+<p>An agent is not a single program — it is a <strong>runtime</strong> that wraps a language model and gives it
+capabilities the model cannot have on its own: persistent state, external tool access, and
+controlled iteration.</p>
+<p>Think of it like this:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Runtime["Agent Runtime"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        direction LR</span></span>
+<span class="line"><span style="color:#E1E4E8">        M["Memory"] --> L["LLM"] --> P["Planning"] --> T["Tools"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        T -->|"Execution Loop"| M</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span></code></pre>
+<p>None of these components is optional. Remove any one and you have something weaker — a chatbot, a
+function, a script — not an agent.</p>
+<hr>
+<h2 id="component-1--llm-large-language-model">Component 1 — LLM (Large Language Model)</h2>
+<p><strong>What it is:</strong> The reasoning engine. Given text in, text out. It can produce natural language,
+structured JSON, tool calls, or code — depending on how you prompt it.</p>
+<p><strong>What it is NOT:</strong> Stateless and memoryless by design. Each call to the API is independent. The LLM
+does not “remember” previous calls unless you pass that history in the prompt.</p>
+<p><strong>Why this matters for agents:</strong></p>
+<p>The LLM’s statelessness is actually a feature. It means the agent runtime — not the model — owns the
+state. This gives you full control over what context the model sees, what gets stored, and for how
+long.</p>
+<p><strong>What the LLM does in the agent loop:</strong></p>
+<ol>
+<li>Reads the current context (system prompt + message history + tool results)</li>
+<li>Decides what to do next: answer directly, request a tool call, or ask for clarification</li>
+<li>Returns either a final answer or a structured tool call request</li>
+</ol>
+<p><strong>Model selection in this course:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Model</th><th>When to use</th></tr></thead><tbody><tr><td><code>claude-haiku-4-5</code></td><td>Lab exercises, smoke tests, high-volume cheap tasks</td></tr><tr><td><code>claude-sonnet-4-6</code></td><td>Multi-step reasoning, tool use, code generation</td></tr><tr><td><code>claude-opus-4-8</code></td><td>Production, highest capability tasks</td></tr></tbody></table>
+<p>The labs are model-agnostic by design — swapping the model string is intentional exploration.</p>
+<hr>
+<h2 id="component-2--tools">Component 2 — Tools</h2>
+<p><strong>What they are:</strong> Functions the LLM can invoke. A tool has three parts:</p>
+<ol>
+<li><strong>Name</strong> — identifier (<code>search_web</code>, <code>read_file</code>, <code>execute_sql</code>)</li>
+<li><strong>Description</strong> — natural language explanation the LLM uses to decide when to call it</li>
+<li><strong>Input schema</strong> — JSON Schema defining what parameters the function expects</li>
+</ol>
+<p><strong>How tool calling works (step by step):</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="txt"><code><span class="line"><span>1. You define tools as a list of schemas</span></span>
+<span class="line"><span>2. You pass the tools list to the LLM with the user's message</span></span>
+<span class="line"><span>3. The LLM responds with a tool_use block instead of text:</span></span>
+<span class="line"><span>       {"name": "search_web", "input": {"query": "Anthropic agent SDK"}}</span></span>
+<span class="line"><span>4. Your code executes the real function with those inputs</span></span>
+<span class="line"><span>5. You feed the function's return value back to the LLM as a tool_result</span></span>
+<span class="line"><span>6. The LLM reads the result and continues</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>The LLM does not execute tools — your code does.</strong> The LLM only generates the call parameters.
+This is a safety guarantee: you control what runs.</p>
+<p><strong>Common tool categories:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Category</th><th>Examples</th></tr></thead><tbody><tr><td>Information access</td><td>Web search, document retrieval, database query</td></tr><tr><td>Code execution</td><td>Python sandbox, SQL runner, shell commands</td></tr><tr><td>External services</td><td>Email, calendar, Slack, GitHub API</td></tr><tr><td>Memory operations</td><td>Store to vector DB, retrieve from vector DB</td></tr><tr><td>Agent spawning</td><td>Create a sub-agent, delegate a sub-task (multi-agent workflows)</td></tr></tbody></table>
+<p><strong>Why description quality matters:</strong> The LLM picks tools based on their descriptions. A vague
+description leads to wrong tool choices. A precise description with examples leads to correct use.
+This is prompt engineering applied to tool design.</p>
+<hr>
+<h2 id="component-3--memory">Component 3 — Memory</h2>
+<p><strong>Why it exists:</strong> The LLM context window is finite. A real agent task may span hundreds of turns
+and reference data from hours or days ago. Memory solves the persistence problem.</p>
+<p><strong>The four layers of agent memory:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Layer</th><th>Where it lives</th><th>How long it lasts</th><th>Example use</th></tr></thead><tbody><tr><td>In-context (short)</td><td>The message list</td><td>One session</td><td>Current conversation history</td></tr><tr><td>Working memory</td><td>Variables in code</td><td>One agent run</td><td>Intermediate results, accumulated answers</td></tr><tr><td>External (long)</td><td>Vector DB / SQL</td><td>Indefinitely</td><td>User preferences, past interactions</td></tr><tr><td>Episodic</td><td>Semantic search index</td><td>Indefinitely</td><td>Retrieve relevant past tasks by similarity</td></tr></tbody></table>
+<p><strong>In-context memory is the message list.</strong> Every time you call the LLM, you pass the full
+conversation history as the <code>messages</code> parameter. This is explicit and visible — you decide what
+stays in it, what gets summarized, and what gets dropped.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">messages </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [</span></span>
+<span class="line"><span style="color:#E1E4E8">    {</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"user"</span><span style="color:#E1E4E8">,      </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"What is the capital of France?"</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    {</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"assistant"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"Paris."</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    {</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"user"</span><span style="color:#E1E4E8">,      </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"And what is its population?"</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#6A737D">    # The assistant has "memory" only because we passed both prior messages above</span></span>
+<span class="line"><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Long-term memory requires external storage.</strong> The agent uses a tool to store and retrieve from a
+vector database. Retrieval is semantic — you search by meaning, not exact text. This is how agents
+feel like they “remember” past sessions.</p>
+<p><strong>Memory is where most production agent bugs hide.</strong> Common failures:</p>
+<ul>
+<li>Context window overflow — the message list grows too large</li>
+<li>Memory hallucination — the model generates plausible but false “memories”</li>
+<li>Context poisoning — stale or incorrect data in the message list contaminates reasoning</li>
+</ul>
+<hr>
+<h2 id="component-4--planning">Component 4 — Planning</h2>
+<p><strong>What it is:</strong> The strategy the agent uses to decide <em>how</em> to approach a multi-step task.</p>
+<p><strong>Why it matters:</strong> A single LLM call is rarely enough for complex tasks. Planning determines how
+the agent decomposes a goal into steps, tracks progress, and adapts when a step fails.</p>
+<p><strong>The three main planning patterns:</strong></p>
+<h3 id="react-reason--act">ReAct (Reason + Act)</h3>
+<p>The most common pattern. The agent interleaves reasoning traces with actions:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="txt"><code><span class="line"><span>Thought: I need to find the population of Paris. I'll use the search tool.</span></span>
+<span class="line"><span>Action: search_web(query="Paris population 2024")</span></span>
+<span class="line"><span>Observation: Paris has a population of approximately 2.1 million in the city proper.</span></span>
+<span class="line"><span>Thought: I now have the answer. I can respond directly.</span></span>
+<span class="line"><span>Answer: The population of Paris is approximately 2.1 million.</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Each “thought” is a scratchpad the LLM uses to reason. Each “action” is a tool call. Each
+“observation” is the tool’s return value. The loop continues until the LLM emits a final answer.</p>
+<p><strong>This is what LangGraph implements natively.</strong></p>
+<h3 id="plan-and-execute">Plan-and-Execute</h3>
+<p>The agent generates a full step-by-step plan <em>before</em> acting:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="txt"><code><span class="line"><span>Plan:</span></span>
+<span class="line"><span>  1. Search for the current population of Paris</span></span>
+<span class="line"><span>  2. Verify the source is authoritative (Wikipedia, official census)</span></span>
+<span class="line"><span>  3. Format the response</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Execute step 1: search_web(...)</span></span>
+<span class="line"><span>Execute step 2: verify_source(...)</span></span>
+<span class="line"><span>Execute step 3: format_response(...)</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Better for long, structured tasks. Weaker at adapting mid-task.</p>
+<h3 id="chain-of-thought-cot">Chain-of-Thought (CoT)</h3>
+<p>The agent reasons through a problem in a single LLM call before acting:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="txt"><code><span class="line"><span>Question: What is 17 × 24?</span></span>
+<span class="line"><span>Let me work through this step by step.</span></span>
+<span class="line"><span>17 × 20 = 340</span></span>
+<span class="line"><span>17 × 4  = 68</span></span>
+<span class="line"><span>340 + 68 = 408</span></span>
+<span class="line"><span>Answer: 408</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Not a loop — pure reasoning in one call. Effective for math, logic, and well-structured problems.</p>
+<p><strong>Which to use:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Pattern</th><th>Best for</th><th>Weakness</th></tr></thead><tbody><tr><td>ReAct</td><td>Open-ended tasks, tool use, search-heavy agents</td><td>More LLM calls = higher cost</td></tr><tr><td>Plan-and-Execute</td><td>Long structured tasks, parallel sub-tasks</td><td>Brittle if early steps fail</td></tr><tr><td>Chain-of-Thought</td><td>Math, logic, single-call reasoning</td><td>Cannot use tools mid-thought</td></tr></tbody></table>
+<hr>
+<h2 id="component-5--execution-loop">Component 5 — Execution Loop</h2>
+<p><strong>What it is:</strong> The control flow that ties all four components together and runs until a stopping
+condition is met.</p>
+<p><strong>The canonical loop:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">while</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> done:</span></span>
+<span class="line"><span style="color:#E1E4E8">    context </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> memory.read()          </span><span style="color:#6A737D"># 1. Load current state</span></span>
+<span class="line"><span style="color:#E1E4E8">    decision </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> llm.call(context)     </span><span style="color:#6A737D"># 2. Ask the LLM what to do next</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> decision.is_final_answer():   </span><span style="color:#6A737D"># 3. Check stopping condition</span></span>
+<span class="line"><span style="color:#E1E4E8">        done </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> decision.text</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    tool_result </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> tools.run(decision.tool_call)  </span><span style="color:#6A737D"># 4. Execute the chosen tool</span></span>
+<span class="line"><span style="color:#E1E4E8">    memory.write(decision, tool_result)           </span><span style="color:#6A737D"># 5. Update memory with result</span></span>
+<span class="line"></span></code></pre>
+<p>This is not pseudocode for dramatic effect — LangGraph’s <code>StateGraph</code>, LangChain’s <code>AgentExecutor</code>,
+and Anthropic’s tool use pattern are all implementations of this exact loop.</p>
+<p><strong>Stopping conditions:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Condition</th><th>Description</th></tr></thead><tbody><tr><td>Final answer emitted</td><td>LLM produces a text response with no tool call — task complete</td></tr><tr><td>Max iterations</td><td>Hard limit to prevent infinite loops (usually 10–25)</td></tr><tr><td>Token budget exceeded</td><td>Context window approaching limit — force a summary or stop</td></tr><tr><td>Error state</td><td>Tool returned an unrecoverable error — surface it to the user</td></tr><tr><td>Human-in-the-loop</td><td>Agent pauses and waits for user confirmation before continuing</td></tr></tbody></table>
+<p><strong>Why max iterations matters:</strong> Without a hard limit, a misbehaving agent that never reaches a final
+answer will run forever (and bill you forever). Always set one.</p>
+<p><strong>The loop in the Anthropic SDK (conceptual):</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">messages </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [{</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"user"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: task}]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">for</span><span style="color:#E1E4E8"> _ </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> range</span><span style="color:#E1E4E8">(max_iterations):</span></span>
+<span class="line"><span style="color:#E1E4E8">    response </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> client.messages.create(</span></span>
+<span class="line"><span style="color:#FFAB70">        model</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"claude-sonnet-4-6"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        tools</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">tool_schemas,</span></span>
+<span class="line"><span style="color:#FFAB70">        messages</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">messages,</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> response.stop_reason </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> "end_turn"</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> response.content[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">].text          </span><span style="color:#6A737D"># Final answer — stop</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    tool_call </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> response.content[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">]              </span><span style="color:#6A737D"># LLM requested a tool</span></span>
+<span class="line"><span style="color:#E1E4E8">    result </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> execute_tool(tool_call)             </span><span style="color:#6A737D"># Run it</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    messages.append({</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"assistant"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: response.content})</span></span>
+<span class="line"><span style="color:#E1E4E8">    messages.append({</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"user"</span><span style="color:#E1E4E8">,      </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: [tool_result_block(result)]})</span></span>
+<span class="line"><span style="color:#6A737D">    # Loop continues with the expanded message history</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="how-the-five-components-fit-together">How the five components fit together</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    In(["User Input"]) --> Mem</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Loop["Execution Loop — repeats until stop condition"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        Mem["Memory\nmsg history · state vars"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        LLM["LLM\nreasoning + planning\nReAct · Plan-and-Execute · CoT"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        Tools["Tools\nexecute"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">        Mem -->|"context"| LLM</span></span>
+<span class="line"><span style="color:#E1E4E8">        LLM -->|"tool call"| Tools</span></span>
+<span class="line"><span style="color:#E1E4E8">        Tools -->|"tool result"| Mem</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    LLM -->|"final answer"| Out(["Agent Response"])</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Reading the diagram:</strong></p>
+<ol>
+<li>The loop starts by loading context from Memory into the LLM</li>
+<li>The LLM decides: emit a final answer, or call a tool</li>
+<li>If a tool call, Tools executes it and the result goes back into Memory</li>
+<li>The loop repeats until the LLM emits a final answer or a stop condition fires</li>
+<li>Planning is not a separate step — it is <em>how the LLM reasons</em> inside step 2</li>
+</ol>
+<hr>
+<h2 id="concept-check">Concept check</h2>
+<p>Before moving to the next lab, you should be able to answer these questions without notes:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Question</th><th>Answer hint</th></tr></thead><tbody><tr><td>Why is the LLM stateless by design?</td><td>The agent runtime — not the model — owns state. This gives you control.</td></tr><tr><td>Who actually executes a tool?</td><td>Your code. The LLM only generates the call parameters.</td></tr><tr><td>What is in-context memory?</td><td>The <code>messages</code> list you pass to every LLM call.</td></tr><tr><td>What does ReAct stand for?</td><td>Reason + Act — interleaved thinking and tool calls.</td></tr><tr><td>What happens if you don’t set a max iteration limit?</td><td>A stuck agent runs forever.</td></tr></tbody></table>
+<hr>
+<h2 id="vocabulary-glossary">Vocabulary glossary</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody><tr><td>Agent</td><td>An LLM-powered system that can take actions in a loop until a goal is met</td></tr><tr><td>Tool</td><td>A function the LLM can request; your code executes it</td></tr><tr><td>Tool call</td><td>Structured JSON emitted by the LLM specifying which tool to invoke</td></tr><tr><td>Tool result</td><td>The return value from your code, fed back to the LLM</td></tr><tr><td>Message history</td><td>The running list of user/assistant/tool messages — the agent’s short memory</td></tr><tr><td>Context window</td><td>The maximum tokens the LLM can receive in a single call</td></tr><tr><td>ReAct</td><td>Reason+Act loop: thought → action → observation → repeat</td></tr><tr><td>Stop condition</td><td>The rule that ends the loop (final answer, max steps, error, human gate)</td></tr><tr><td>StateGraph</td><td>LangGraph’s implementation of the execution loop</td></tr><tr><td>AgentExecutor</td><td>LangChain’s older implementation of the execution loop</td></tr></tbody></table>
+<hr>  </div> <!-- Other notes in this topic -->  <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/topic/agentic-ai" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Agentic AI notes
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#the-mental-model" data-slug="the-mental-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The mental model</a></li><li data-astro-cid-xvrfupwn><a href="#component-1--llm-large-language-model" data-slug="component-1--llm-large-language-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Component 1 — LLM (Large Language Model)</a></li><li data-astro-cid-xvrfupwn><a href="#component-2--tools" data-slug="component-2--tools" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Component 2 — Tools</a></li><li data-astro-cid-xvrfupwn><a href="#component-3--memory" data-slug="component-3--memory" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Component 3 — Memory</a></li><li data-astro-cid-xvrfupwn><a href="#component-4--planning" data-slug="component-4--planning" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Component 4 — Planning</a></li><li data-astro-cid-xvrfupwn><a href="#react-reason--act" data-slug="react-reason--act" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>ReAct (Reason + Act)</a></li><li data-astro-cid-xvrfupwn><a href="#plan-and-execute" data-slug="plan-and-execute" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Plan-and-Execute</a></li><li data-astro-cid-xvrfupwn><a href="#chain-of-thought-cot" data-slug="chain-of-thought-cot" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Chain-of-Thought (CoT)</a></li><li data-astro-cid-xvrfupwn><a href="#component-5--execution-loop" data-slug="component-5--execution-loop" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Component 5 — Execution Loop</a></li><li data-astro-cid-xvrfupwn><a href="#how-the-five-components-fit-together" data-slug="how-the-five-components-fit-together" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>How the five components fit together</a></li><li data-astro-cid-xvrfupwn><a href="#concept-check" data-slug="concept-check" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Concept check</a></li><li data-astro-cid-xvrfupwn><a href="#vocabulary-glossary" data-slug="vocabulary-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Vocabulary glossary</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

@@ -1,0 +1,399 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Code Standards — Notes — Amit Singh</title><meta name="description" content="This document defines the mandatory code standards for all services and infrastructure in this"><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/06-build-release/code-standards/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Code Standards — Notes — Amit Singh"><meta property="og:description" content="This document defines the mandatory code standards for all services and infrastructure in this"><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/06-build-release/code-standards/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Code Standards — Notes — Amit Singh"><meta name="twitter:description" content="This document defines the mandatory code standards for all services and infrastructure in this"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-06-build-release" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>06 Build Release</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Code Standards </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>This document defines the mandatory code standards for all services and infrastructure in this</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 1, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/ci/cd" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>CI/CD</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="code-standards">Code Standards</h1>
+<p>This document defines the mandatory code standards for all services and infrastructure in this
+monorepo. All contributors must follow these standards. PRs that violate these rules will be
+blocked.</p>
+<hr>
+<h2 id="1-language-specific-conventions">1. Language-Specific Conventions</h2>
+<h3 id="net-8-c">.NET 8 (C#)</h3>
+<ul>
+<li>Target framework: <code>net8.0</code>.</li>
+<li>Use nullable reference types (<code>&#x3C;Nullable>enable&#x3C;/Nullable></code>).</li>
+<li>Use file-scoped namespaces.</li>
+<li>Use <code>ILogger&#x3C;T></code> for all logging (no <code>Console.WriteLine</code> in production code).</li>
+<li>Use async/await for all I/O-bound operations.</li>
+<li>Follow the
+<a href="https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions">Microsoft C# coding conventions</a>.</li>
+<li>Use <code>record</code> types for DTOs and value objects where appropriate.</li>
+<li>Configuration via <code>IOptions&#x3C;T></code> pattern, not static config access.</li>
+</ul>
+<h3 id="python-311">Python 3.11+</h3>
+<ul>
+<li>Enforce type hints on all public functions and methods.</li>
+<li>Use <code>pathlib.Path</code> instead of <code>os.path</code>.</li>
+<li>Format with <code>black</code> (line length 88). Lint with <code>ruff</code>.</li>
+<li>Use <code>pydantic</code> for data validation in FastAPI services.</li>
+<li>Use <code>logging</code> module with structured output (JSON in production).</li>
+<li>Virtual environments required; never install globally.</li>
+</ul>
+<h3 id="java-17-spring-cloud">Java 17 (Spring Cloud)</h3>
+<ul>
+<li>Follow the <a href="https://google.github.io/styleguide/javaguide.html">Google Java Style Guide</a>.</li>
+<li>Use constructor injection (no field injection with <code>@Autowired</code>).</li>
+<li>Use <code>slf4j</code> with <code>logback</code> for logging.</li>
+<li>Use <code>record</code> types for DTOs where applicable.</li>
+<li>Spring profiles for environment-specific configuration.</li>
+</ul>
+<h3 id="terraform-1x">Terraform 1.x</h3>
+<ul>
+<li>Pin provider versions with pessimistic constraint (<code>~></code> operator).</li>
+<li>Pin Terraform version in <code>required_version</code>.</li>
+<li>Use <code>terraform fmt</code> before every commit.</li>
+<li>Use <code>terraform validate</code> as part of CI.</li>
+<li>All variables must have <code>description</code> and <code>type</code>.</li>
+<li>Sensitive variables must be marked with <code>sensitive = true</code>.</li>
+</ul>
+<hr>
+<h2 id="2-naming-conventions">2. Naming Conventions</h2>
+<h3 id="files-and-directories">Files and Directories</h3>
+<ul>
+<li>Lowercase with hyphens: <code>my-service-name/</code>.</li>
+<li>Pillar prefixes are alphabetical: <code>a-governance/</code>, <code>d-apps/</code>, etc.</li>
+<li>Service directories use a numeric prefix: <code>01-python-samples/</code>, <code>02-dotnet-FakeStoreIngestor/</code>.</li>
+</ul>
+<h3 id="code">Code</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Language</th><th>Classes/Types</th><th>Methods/Functions</th><th>Variables</th><th>Constants</th></tr></thead><tbody><tr><td>C#</td><td>PascalCase</td><td>PascalCase</td><td>camelCase</td><td>PascalCase</td></tr><tr><td>Python</td><td>PascalCase</td><td>snake_case</td><td>snake_case</td><td>UPPER_SNAKE_CASE</td></tr><tr><td>Java</td><td>PascalCase</td><td>camelCase</td><td>camelCase</td><td>UPPER_SNAKE_CASE</td></tr><tr><td>Terraform</td><td>snake_case</td><td>N/A</td><td>snake_case</td><td>N/A</td></tr></tbody></table>
+<h3 id="azure-resources">Azure Resources</h3>
+<p>Follow the pattern: <code>{project}-{environment}-{resource_type}</code>. See
+<a href="naming-conventions.md">naming-conventions.md</a> for full details.</p>
+<hr>
+<h2 id="3-required-patterns">3. Required Patterns</h2>
+<h3 id="health-checks">Health Checks</h3>
+<p>Every service must expose a health endpoint:</p>
+<ul>
+<li>.NET: Use <code>MapHealthChecks("/healthz")</code> with <code>Microsoft.Extensions.Diagnostics.HealthChecks</code>.</li>
+<li>Python/FastAPI: <code>GET /healthz</code> returning <code>{"status": "healthy"}</code>.</li>
+<li>Spring: Actuator health endpoint at <code>/actuator/health</code>.</li>
+<li>Health checks must verify downstream dependencies (database, external APIs).</li>
+</ul>
+<h3 id="structured-logging">Structured Logging</h3>
+<ul>
+<li>All services must use structured logging (key-value pairs, not string interpolation).</li>
+<li>Log levels: <code>DEBUG</code>, <code>INFO</code>, <code>WARN</code>, <code>ERROR</code>. Use them correctly.</li>
+<li>Every log entry must include: <code>timestamp</code>, <code>level</code>, <code>service</code>, <code>correlation_id</code>.</li>
+<li>JSON format in production; human-readable in local development.</li>
+</ul>
+<h3 id="opentelemetry-instrumentation">OpenTelemetry Instrumentation</h3>
+<ul>
+<li>All services must include OpenTelemetry SDK for traces and metrics.</li>
+<li>Propagate <code>traceparent</code> header across service boundaries.</li>
+<li>Use semantic conventions for span names and attributes.</li>
+<li>Export to the Grafana Cloud OTLP endpoint (configured via environment variables).</li>
+</ul>
+<hr>
+<h2 id="4-forbidden-patterns">4. Forbidden Patterns</h2>
+<p>The following are <strong>strictly prohibited</strong> and will cause PR rejection:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Pattern</th><th>Reason</th><th>Alternative</th></tr></thead><tbody><tr><td>Hardcoded secrets</td><td>Security risk</td><td>Use Azure Key Vault or environment vars</td></tr><tr><td><code>latest</code> Docker tag</td><td>Non-reproducible builds</td><td>Use semantic version or SHA digest</td></tr><tr><td>Root containers</td><td>Security risk</td><td>Use <code>USER nonroot</code> in Dockerfile</td></tr><tr><td>Password auth on VMs</td><td>Brute-force risk</td><td>Use SSH keys with Azure AD</td></tr><tr><td><code>SELECT *</code> in production code</td><td>Performance and schema coupling</td><td>Specify columns explicitly</td></tr><tr><td><code>TODO</code> without issue link</td><td>Untracked technical debt</td><td><code>TODO(#123): description</code></td></tr><tr><td>Disabling SSL verification</td><td>Man-in-the-middle risk</td><td>Fix certificates properly</td></tr><tr><td>Committing <code>.env</code> files</td><td>Credential leak</td><td>Use <code>.env.example</code> with placeholders</td></tr></tbody></table>
+<hr>
+<h2 id="5-testing-requirements">5. Testing Requirements</h2>
+<h3 id="unit-tests">Unit Tests</h3>
+<ul>
+<li><strong>Mandatory</strong> for all services.</li>
+<li>Minimum coverage target: 70% line coverage for new code.</li>
+<li>Test files live alongside source code or in a parallel <code>tests/</code> directory.</li>
+<li>Use the standard test framework for each language:
+<ul>
+<li>.NET: <code>xUnit</code> with <code>FluentAssertions</code>.</li>
+<li>Python: <code>pytest</code>.</li>
+<li>Java: <code>JUnit 5</code> with <code>Mockito</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="integration-tests">Integration Tests</h3>
+<ul>
+<li><strong>Required</strong> for all database-backed services.</li>
+<li>Use service containers (Docker) in CI for database dependencies.</li>
+<li>Integration tests must be idempotent and clean up after themselves.</li>
+<li>Tag integration tests so they can run separately: <code>[Trait("Category", "Integration")]</code> (.NET),
+<code>@pytest.mark.integration</code> (Python), <code>@Tag("integration")</code> (Java).</li>
+</ul>
+<h3 id="infrastructure-tests">Infrastructure Tests</h3>
+<ul>
+<li>Terraform plans must pass <code>terraform validate</code>.</li>
+<li>Use <code>checkov</code> or <code>tflint</code> for static analysis of Terraform code.</li>
+<li>Policy-as-code checks run in CI for all infrastructure changes.</li>
+</ul>
+<hr>
+<h2 id="6-docker-standards">6. Docker Standards</h2>
+<h3 id="dockerfile-requirements">Dockerfile Requirements</h3>
+<ul>
+<li>
+<p>Use multi-stage builds to minimize final image size.</p>
+</li>
+<li>
+<p>Pin base image versions (e.g., <code>mcr.microsoft.com/dotnet/aspnet:8.0.3</code>).</p>
+</li>
+<li>
+<p>Run as non-root user:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="dockerfile"><code><span class="line"><span style="color:#F97583">RUN</span><span style="color:#E1E4E8"> adduser --disabled-password --gecos </span><span style="color:#9ECBFF">""</span><span style="color:#E1E4E8"> appuser</span></span>
+<span class="line"><span style="color:#F97583">USER</span><span style="color:#E1E4E8"> appuser</span></span>
+<span class="line"></span></code></pre>
+</li>
+<li>
+<p>Include a <code>HEALTHCHECK</code> directive:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="dockerfile"><code><span class="line"><span style="color:#F97583">HEALTHCHECK</span><span style="color:#E1E4E8"> --interval=30s --timeout=5s --retries=3 \</span></span>
+<span class="line"><span style="color:#F97583">  CMD</span><span style="color:#E1E4E8"> curl -f http://localhost:8080/healthz || exit 1</span></span>
+<span class="line"></span></code></pre>
+</li>
+<li>
+<p>Use <code>.dockerignore</code> to exclude build artifacts, tests, and documentation.</p>
+</li>
+<li>
+<p>Do not install unnecessary packages.</p>
+</li>
+<li>
+<p>Order layers from least to most frequently changing.</p>
+</li>
+</ul>
+<h3 id="image-tagging">Image Tagging</h3>
+<ul>
+<li>Format: <code>ghcr.io/{org}/{service}:{semver}</code>.</li>
+<li>CI builds tag with Git SHA for traceability.</li>
+<li>Release builds tag with semantic version.</li>
+</ul>
+<hr>
+<h2 id="7-terraform-standards">7. Terraform Standards</h2>
+<h3 id="module-structure">Module Structure</h3>
+<p>Every module must include:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>modules/{domain}/{module_name}/</span></span>
+<span class="line"><span>  main.tf</span></span>
+<span class="line"><span>  variables.tf</span></span>
+<span class="line"><span>  outputs.tf</span></span>
+<span class="line"><span>  versions.tf</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="variable-validation">Variable Validation</h3>
+<p>All variables must include validation blocks where applicable:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#B392F0">variable</span><span style="color:#79B8FF"> "environment"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  type</span><span style="color:#F97583">        =</span><span style="color:#F97583"> string</span></span>
+<span class="line"><span style="color:#E1E4E8">  description</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "Deployment environment"</span></span>
+<span class="line"><span style="color:#B392F0">  validation</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">    condition</span><span style="color:#F97583">     =</span><span style="color:#79B8FF"> contains</span><span style="color:#E1E4E8">([</span><span style="color:#9ECBFF">"dev"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"qa"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"prod"</span><span style="color:#E1E4E8">], var</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">environment)</span></span>
+<span class="line"><span style="color:#E1E4E8">    error_message</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "Environment must be dev, qa, or prod."</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<h3 id="provider-version-pinning">Provider Version Pinning</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#B392F0">terraform</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  required_version</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> ">= 1.5.0"</span></span>
+<span class="line"><span style="color:#B392F0">  required_providers</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">    azurerm</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">      source  </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "hashicorp/azurerm"</span></span>
+<span class="line"><span style="color:#E1E4E8">      version </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "~> 3.80"</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<h3 id="state-management">State Management</h3>
+<ul>
+<li>Remote state in Azure Storage Account.</li>
+<li>State locking enabled.</li>
+<li>One state file per environment per deployment unit.</li>
+<li>Never store state locally in CI.</li>
+</ul>
+<h3 id="output-documentation">Output Documentation</h3>
+<p>All outputs must have a <code>description</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#B392F0">output</span><span style="color:#79B8FF"> "resource_group_name"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  description</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "Name of the created resource group"</span></span>
+<span class="line"><span style="color:#E1E4E8">  value</span><span style="color:#F97583">       =</span><span style="color:#E1E4E8"> azurerm_resource_group</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">this</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">name</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="8-api-standards">8. API Standards</h2>
+<ul>
+<li>RESTful APIs: use standard HTTP methods and status codes.</li>
+<li>All APIs must return JSON.</li>
+<li>Version APIs via URL path (<code>/api/v1/</code>) or header.</li>
+<li>Include request correlation ID in all responses.</li>
+<li>Rate limiting and circuit breakers for external-facing APIs.</li>
+<li>API documentation via OpenAPI/Swagger (auto-generated where possible).</li>
+</ul>
+<hr>
+<h2 id="9-cicd-standards">9. CI/CD Standards</h2>
+<ul>
+<li>All PRs must pass CI before merge.</li>
+<li>CI must include: lint, build, test, security scan.</li>
+<li>Use path-based triggers for monorepo efficiency.</li>
+<li>Secrets injected via GitHub Actions secrets, never committed.</li>
+<li>Container images pushed to GHCR (<code>ghcr.io</code>).</li>
+</ul>
+<hr>
+<h2 id="enforcement">Enforcement</h2>
+<ul>
+<li>Pre-commit hooks enforce formatting and linting locally.</li>
+<li>CI pipelines enforce all standards automatically.</li>
+<li>CODEOWNERS ensures the right team reviews each change.</li>
+<li>Violations discovered post-merge must be addressed within one sprint.</li>
+</ul>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#1-language-specific-conventions" data-slug="1-language-specific-conventions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Language-Specific Conventions</a></li><li data-astro-cid-xvrfupwn><a href="#net-8-c" data-slug="net-8-c" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>.NET 8 (C#)</a></li><li data-astro-cid-xvrfupwn><a href="#python-311" data-slug="python-311" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Python 3.11+</a></li><li data-astro-cid-xvrfupwn><a href="#java-17-spring-cloud" data-slug="java-17-spring-cloud" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Java 17 (Spring Cloud)</a></li><li data-astro-cid-xvrfupwn><a href="#terraform-1x" data-slug="terraform-1x" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Terraform 1.x</a></li><li data-astro-cid-xvrfupwn><a href="#2-naming-conventions" data-slug="2-naming-conventions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Naming Conventions</a></li><li data-astro-cid-xvrfupwn><a href="#files-and-directories" data-slug="files-and-directories" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Files and Directories</a></li><li data-astro-cid-xvrfupwn><a href="#code" data-slug="code" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Code</a></li><li data-astro-cid-xvrfupwn><a href="#azure-resources" data-slug="azure-resources" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Azure Resources</a></li><li data-astro-cid-xvrfupwn><a href="#3-required-patterns" data-slug="3-required-patterns" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Required Patterns</a></li><li data-astro-cid-xvrfupwn><a href="#health-checks" data-slug="health-checks" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Health Checks</a></li><li data-astro-cid-xvrfupwn><a href="#structured-logging" data-slug="structured-logging" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Structured Logging</a></li><li data-astro-cid-xvrfupwn><a href="#opentelemetry-instrumentation" data-slug="opentelemetry-instrumentation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>OpenTelemetry Instrumentation</a></li><li data-astro-cid-xvrfupwn><a href="#4-forbidden-patterns" data-slug="4-forbidden-patterns" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Forbidden Patterns</a></li><li data-astro-cid-xvrfupwn><a href="#5-testing-requirements" data-slug="5-testing-requirements" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Testing Requirements</a></li><li data-astro-cid-xvrfupwn><a href="#unit-tests" data-slug="unit-tests" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Unit Tests</a></li><li data-astro-cid-xvrfupwn><a href="#integration-tests" data-slug="integration-tests" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Integration Tests</a></li><li data-astro-cid-xvrfupwn><a href="#infrastructure-tests" data-slug="infrastructure-tests" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Infrastructure Tests</a></li><li data-astro-cid-xvrfupwn><a href="#6-docker-standards" data-slug="6-docker-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Docker Standards</a></li><li data-astro-cid-xvrfupwn><a href="#dockerfile-requirements" data-slug="dockerfile-requirements" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Dockerfile Requirements</a></li><li data-astro-cid-xvrfupwn><a href="#image-tagging" data-slug="image-tagging" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Image Tagging</a></li><li data-astro-cid-xvrfupwn><a href="#7-terraform-standards" data-slug="7-terraform-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. Terraform Standards</a></li><li data-astro-cid-xvrfupwn><a href="#module-structure" data-slug="module-structure" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Module Structure</a></li><li data-astro-cid-xvrfupwn><a href="#variable-validation" data-slug="variable-validation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Variable Validation</a></li><li data-astro-cid-xvrfupwn><a href="#provider-version-pinning" data-slug="provider-version-pinning" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Provider Version Pinning</a></li><li data-astro-cid-xvrfupwn><a href="#state-management" data-slug="state-management" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>State Management</a></li><li data-astro-cid-xvrfupwn><a href="#output-documentation" data-slug="output-documentation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Output Documentation</a></li><li data-astro-cid-xvrfupwn><a href="#8-api-standards" data-slug="8-api-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>8. API Standards</a></li><li data-astro-cid-xvrfupwn><a href="#9-cicd-standards" data-slug="9-cicd-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>9. CI/CD Standards</a></li><li data-astro-cid-xvrfupwn><a href="#enforcement" data-slug="enforcement" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Enforcement</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

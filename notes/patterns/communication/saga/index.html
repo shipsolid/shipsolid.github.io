@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Saga — Notes — Amit Singh</title><meta name="description" content="Manage distributed transactions across multiple services using a sequence of local transactions with compensating actions on failure. The microservices answer to 2PC."><link rel="canonical" href="https://shipsolid.github.io/notes/patterns/communication/saga/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Saga — Notes — Amit Singh"><meta property="og:description" content="Manage distributed transactions across multiple services using a sequence of local transactions with compensating actions on failure. The microservices answer to 2PC."><meta property="og:url" content="https://shipsolid.github.io/notes/patterns/communication/saga/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Saga — Notes — Amit Singh"><meta name="twitter:description" content="Manage distributed transactions across multiple services using a sequence of local transactions with compensating actions on failure. The microservices answer to 2PC."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/patterns" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Patterns</a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Saga </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Manage distributed transactions across multiple services using a sequence of local transactions with compensating actions on failure. The microservices answer to 2PC.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 30, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/patterns" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>patterns</a><a href="/notes/tag/distributed-systems" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>distributed-systems</a><a href="/notes/tag/data-consistency" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>data-consistency</a><a href="/notes/tag/maang-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>maang-prep</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="saga">Saga</h1>
+<blockquote>
+<p><strong>Interview level:</strong> Principal / Staff (L6/L7) — the definitive answer to “how do you handle
+distributed transactions in microservices?” The L5 answer names Saga. The L6/L7 answer covers
+choreography vs. orchestration, compensation design, idempotency, and the stuck-saga problem.</p>
+</blockquote>
+<hr>
+<h2 id="context">Context</h2>
+<p>A business operation spans multiple services, each with its own database. A traditional ACID
+transaction (or 2PC) requires all participants to hold locks until the coordinator decides to commit
+or abort. In a microservices system this creates: tight coupling between services, blocking during
+network partitions, and a coordinator that is a single point of failure. 2PC does not work at
+microservices scale.</p>
+<hr>
+<h2 id="problem">Problem</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Force</th><th>Description</th></tr></thead><tbody><tr><td>Distributed atomicity</td><td>”Either all steps succeed or none of their effects persist” — across service boundaries</td></tr><tr><td>2PC unavailability</td><td>Two-phase commit blocks all participants until coordinator responds; unacceptable in async systems</td></tr><tr><td>Service autonomy</td><td>Services own their databases; no shared transaction manager</td></tr><tr><td>Long-running workflows</td><td>A business process (book flight + hotel + car) may take seconds to minutes</td></tr></tbody></table>
+<hr>
+<h2 id="solution">Solution</h2>
+<p>A Saga decomposes the distributed transaction into a sequence of local transactions T1, T2, … Tn.
+Each Ti is committed immediately and locally. If Ti fails, compensating transactions C(i-1) … C1
+are executed to undo the preceding steps.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    T1["T1: Reserve Inventory\n(local commit)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    T2["T2: Charge Payment\n(local commit)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    T3["T3: Fulfill Order\n(local commit)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    DONE["Order Complete"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    T1 -->|success| T2 -->|success| T3 --> DONE</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    T2 -->|failure| C1["C1: Release Inventory\n(compensate T1)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    T3 -->|failure| C2["C2: Refund Payment\n(compensate T2)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    C2 --> C1</span></span>
+<span class="line"></span></code></pre>
+<h3 id="variant-1-choreography">Variant 1: Choreography</h3>
+<p>Each service publishes events; downstream services subscribe and react. No central coordinator.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">sequenceDiagram</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Order as Order Svc</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Inventory as Inventory Svc</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Payment as Payment Svc</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Fulfillment as Fulfillment Svc</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Order->>+Order: Create order (PENDING)</span></span>
+<span class="line"><span style="color:#E1E4E8">    Order-->>Inventory: OrderCreated event</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Inventory->>+Inventory: Reserve stock</span></span>
+<span class="line"><span style="color:#E1E4E8">    Inventory-->>Payment: StockReserved event</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Payment->>+Payment: Charge card</span></span>
+<span class="line"><span style="color:#E1E4E8">    Payment-->>Fulfillment: PaymentProcessed event</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Fulfillment->>+Fulfillment: Ship order</span></span>
+<span class="line"><span style="color:#E1E4E8">    Fulfillment-->>Order: OrderFulfilled event</span></span>
+<span class="line"><span style="color:#E1E4E8">    Order->>Order: Mark COMPLETE</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    note over Payment: If charge fails:</span></span>
+<span class="line"><span style="color:#E1E4E8">    Payment-->>Inventory: PaymentFailed event</span></span>
+<span class="line"><span style="color:#E1E4E8">    Inventory->>Inventory: Release stock (compensate)</span></span>
+<span class="line"><span style="color:#E1E4E8">    Inventory-->>Order: CompensationComplete</span></span>
+<span class="line"><span style="color:#E1E4E8">    Order->>Order: Mark FAILED</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Pros:</strong> No single point of failure; services are loosely coupled.</p>
+<p><strong>Cons:</strong> Hard to reason about the overall workflow state; debugging requires correlating events
+across multiple services; adding a new step means modifying multiple services; cyclic event chains
+are easy to create accidentally.</p>
+<h3 id="variant-2-orchestration">Variant 2: Orchestration</h3>
+<p>A central Saga Orchestrator coordinates the workflow by sending commands and receiving replies.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">sequenceDiagram</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Orch as Saga Orchestrator</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Inv as Inventory Svc</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Pay as Payment Svc</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Ful as Fulfillment Svc</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Orch->>Inv: ReserveStock command</span></span>
+<span class="line"><span style="color:#E1E4E8">    Inv-->>Orch: StockReserved reply</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Orch->>Pay: ChargeCard command</span></span>
+<span class="line"><span style="color:#E1E4E8">    Pay-->>Orch: PaymentProcessed reply</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Orch->>Ful: FulfillOrder command</span></span>
+<span class="line"><span style="color:#E1E4E8">    Ful-->>Orch: OrderFulfilled reply</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    note over Orch: On PaymentFailed reply:</span></span>
+<span class="line"><span style="color:#E1E4E8">    Orch->>Inv: ReleaseStock command (compensate)</span></span>
+<span class="line"><span style="color:#E1E4E8">    Inv-->>Orch: StockReleased reply</span></span>
+<span class="line"><span style="color:#E1E4E8">    Orch->>Orch: Mark saga FAILED</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Pros:</strong> Single place to see and change the workflow; easy to add steps; orchestrator holds the
+saga state; simpler to debug (one log stream for the full workflow).</p>
+<p><strong>Cons:</strong> Orchestrator is a new component to build, deploy, and operate; becomes a logic bottleneck
+if not designed carefully; coupling: all participants know the orchestrator’s API.</p>
+<p><strong>Default recommendation:</strong> orchestration for complex multi-step workflows (> 3 steps); choreography
+for simple 2-step reactions (event → one compensating action).</p>
+<hr>
+<h2 id="compensation-design">Compensation Design</h2>
+<p>Compensations are the hardest part. Rules:</p>
+<ol>
+<li><strong>Compensations must be idempotent.</strong> The orchestrator may retry a compensation if the reply is
+lost. A compensation that runs twice must produce the same result both times.</li>
+<li><strong>Compensations are not rollbacks.</strong> By the time compensation runs, T1 has committed and may
+have observable effects (an email was sent, a webhook fired). Compensation undoes the <em>business
+effect</em>, not the database row. “Send a cancellation email” compensates “send a confirmation
+email”.</li>
+<li><strong>Some steps are pivot points — they cannot be compensated.</strong> Sending a physical package is
+non-compensatable. Design the saga to place non-compensatable steps last.</li>
+<li><strong>Model compensation failure.</strong> What happens if <code>ReleaseStock</code> fails? The saga must retry
+compensation until it succeeds (requiring idempotency) or escalate to a human operator.</li>
+</ol>
+<hr>
+<h2 id="the-stuck-saga-problem">The Stuck-Saga Problem</h2>
+<p>A saga step receives no reply — the downstream service is down, the message was lost, the network
+partitioned. The saga is now stuck waiting. Mitigation:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Orchestrator                   Inventory Svc</span></span>
+<span class="line"><span>  |─── ReserveStock ──────────>|</span></span>
+<span class="line"><span>  |                            ✗ (service restarts, reply lost)</span></span>
+<span class="line"><span>  |</span></span>
+<span class="line"><span>  [timeout: 30s]</span></span>
+<span class="line"><span>  |─── ReserveStock (retry) ──>|  ← must be idempotent</span></span>
+<span class="line"><span>  |&#x3C;── StockReserved ──────────|</span></span>
+<span class="line"><span></span></span></code></pre>
+<ul>
+<li><strong>Timeout + retry</strong> on each step command; exponential backoff with jitter.</li>
+<li><strong>Idempotency key</strong> on every command so the retry is safe.</li>
+<li><strong>Max retry limit</strong> after which the orchestrator escalates to a dead-letter saga queue for
+operator intervention.</li>
+<li><strong>Saga state persistence</strong>: the orchestrator must persist its state (current step, command
+history) in a durable store. If the orchestrator restarts mid-saga, it recovers state and
+continues from the last confirmed step.</li>
+</ul>
+<hr>
+<h2 id="consequences">Consequences</h2>
+<h3 id="gains">Gains</h3>
+<ul>
+<li>No distributed locks or 2PC; each service commits locally and immediately</li>
+<li>Services remain autonomous; they only need to handle commands/events, not coordinate locks</li>
+<li>Long-running workflows (minutes to hours) are modelled explicitly with durable state</li>
+</ul>
+<h3 id="trade-offs">Trade-offs</h3>
+<ul>
+<li><strong>No isolation between T1 and T2</strong>: after T1 commits, other sagas can read the intermediate
+state (dirty reads across saga boundaries). This is ACD without I — accepted in most business
+workflows.</li>
+<li><strong>Compensation complexity</strong>: every forward step needs a compensating step; compensation can fail;
+compensation logic often mirrors business logic in complexity.</li>
+<li><strong>Eventual consistency</strong>: the system is inconsistent during saga execution; consumers may see
+partial states.</li>
+<li><strong>Stuck sagas require operational tooling</strong>: saga state dashboard, manual retry/abort UI for
+operators.</li>
+</ul>
+<hr>
+<h2 id="observability">Observability</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>saga_started_total{saga_type}                     # new sagas initiated</span></span>
+<span class="line"><span>saga_completed_total{saga_type, outcome}          # success | compensated | stuck</span></span>
+<span class="line"><span>saga_step_duration_seconds{saga_type, step}       # per-step latency</span></span>
+<span class="line"><span>saga_step_retries_total{saga_type, step}          # retry count per step</span></span>
+<span class="line"><span>saga_compensation_total{saga_type, step}          # how often each step was compensated</span></span>
+<span class="line"><span>saga_stuck_total{saga_type, step}                 # sagas that exceeded max retries</span></span>
+<span class="line"><span>saga_age_seconds{saga_type, state}                # how long sagas are in each state</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Alert: <code>saga_stuck_total > 0</code> — requires operator intervention. Alert: <code>saga_age_seconds{state="running"} > SLA</code> — saga taking longer than expected; risk of stuck transition.</p>
+<hr>
+<h2 id="maang-interview-anchors">MAANG Interview Anchors</h2>
+<ul>
+<li>
+<p>“2PC doesn’t work in microservices — it requires all participants to hold locks until the
+coordinator decides, which blocks under network partitions and creates tight coupling. Saga gives
+you ACD without I: each step commits locally; compensation undoes business effects, not database
+rows.”</p>
+</li>
+<li>
+<p>“I default to orchestration over choreography for anything beyond 2 steps. Choreography looks
+clean on a diagram but becomes a nightmare to debug in production — you’re correlating events
+across 5 service logs to reconstruct the flow. With orchestration, the saga log is the source of
+truth.”</p>
+</li>
+<li>
+<p>“Compensation failure is the edge case most candidates miss. If the compensating step for step 3
+fails, the saga is stuck in a partially compensated state. I’d design a dead-letter saga queue
+and an operator dashboard for manual resolution — some saga failures require human judgment, and
+the system must support that gracefully.”</p>
+</li>
+<li>
+<p>“Non-compensatable steps define the saga’s structure. Place them last so that if anything before
+them fails, you compensate before the non-reversible action. If the non-reversible step must come
+first, the saga needs a different design — consider an outbox-based notification that fires only
+after all preceding steps succeed.”</p>
+</li>
+</ul>
+<hr>
+<h2 id="known-uses">Known Uses</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>System</th><th>Saga application</th></tr></thead><tbody><tr><td>Uber Cadence / Temporal</td><td>Workflow engine for orchestration-style sagas at scale</td></tr><tr><td>Netflix Conductor</td><td>Saga orchestration for microservices workflows</td></tr><tr><td>Axon Framework</td><td>Saga support built into CQRS/ES framework</td></tr><tr><td>Amazon Step Functions</td><td>Serverless saga orchestrator; built-in retry and compensation</td></tr><tr><td>Eventuate Tram Sagas</td><td>Library for choreography and orchestration sagas in JVM</td></tr></tbody></table>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in Patterns</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/patterns/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Patterns </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Reusable engineering patterns for distributed systems, observability, reliability, and platform design — grounded in production experience at scale.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/communication/fan-out-fan-in" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Fan-Out / Fan-In </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Decompose a request into parallel sub-tasks (fan-out), execute concurrently, then merge results (fan-in). The foundational pattern for latency-bound aggregation.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/communication/backpressure" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Backpressure </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Signal from a slow consumer to a fast producer to slow down. Prevents unbounded queue growth, OOM, and cascading overload. The foundational flow-control pattern.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/communication/common/deadline-propagation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Deadline Propagation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How a client deadline must be inherited by every downstream goroutine or service call so that cancelled work stops consuming resources rather than running to completion unobserved.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/topic/patterns" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Patterns notes
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#context" data-slug="context" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Context</a></li><li data-astro-cid-xvrfupwn><a href="#problem" data-slug="problem" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Problem</a></li><li data-astro-cid-xvrfupwn><a href="#solution" data-slug="solution" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Solution</a></li><li data-astro-cid-xvrfupwn><a href="#variant-1-choreography" data-slug="variant-1-choreography" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Variant 1: Choreography</a></li><li data-astro-cid-xvrfupwn><a href="#variant-2-orchestration" data-slug="variant-2-orchestration" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Variant 2: Orchestration</a></li><li data-astro-cid-xvrfupwn><a href="#compensation-design" data-slug="compensation-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Compensation Design</a></li><li data-astro-cid-xvrfupwn><a href="#the-stuck-saga-problem" data-slug="the-stuck-saga-problem" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The Stuck-Saga Problem</a></li><li data-astro-cid-xvrfupwn><a href="#consequences" data-slug="consequences" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Consequences</a></li><li data-astro-cid-xvrfupwn><a href="#gains" data-slug="gains" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Gains</a></li><li data-astro-cid-xvrfupwn><a href="#trade-offs" data-slug="trade-offs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Trade-offs</a></li><li data-astro-cid-xvrfupwn><a href="#observability" data-slug="observability" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Observability</a></li><li data-astro-cid-xvrfupwn><a href="#maang-interview-anchors" data-slug="maang-interview-anchors" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>MAANG Interview Anchors</a></li><li data-astro-cid-xvrfupwn><a href="#known-uses" data-slug="known-uses" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Known Uses</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

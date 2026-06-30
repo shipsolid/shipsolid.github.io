@@ -1,0 +1,1132 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>System Design: Telemetry Ingestion Pipeline — Notes — Amit Singh</title><meta name="description" content="Principal/Staff-level design of a high-throughput telemetry ingestion pipeline — requirements, architecture, deep dives, and trade-offs at 10x scale."><link rel="canonical" href="https://shipsolid.github.io/notes/designs/01-observability-pipeline-and-data-infrastructure/telemetry-ingestion-pipeline/telemetry-ingestion-pipeline/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="System Design: Telemetry Ingestion Pipeline — Notes — Amit Singh"><meta property="og:description" content="Principal/Staff-level design of a high-throughput telemetry ingestion pipeline — requirements, architecture, deep dives, and trade-offs at 10x scale."><meta property="og:url" content="https://shipsolid.github.io/notes/designs/01-observability-pipeline-and-data-infrastructure/telemetry-ingestion-pipeline/telemetry-ingestion-pipeline/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="System Design: Telemetry Ingestion Pipeline — Notes — Amit Singh"><meta name="twitter:description" content="Principal/Staff-level design of a high-throughput telemetry ingestion pipeline — requirements, architecture, deep dives, and trade-offs at 10x scale."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/designs" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Designs</a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> System Design: Telemetry Ingestion Pipeline </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Principal/Staff-level design of a high-throughput telemetry ingestion pipeline — requirements, architecture, deep dives, and trade-offs at 10x scale.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/system-design" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>system-design</a><a href="/notes/tag/observability" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>observability</a><a href="/notes/tag/telemetry" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>telemetry</a><a href="/notes/tag/maang-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>maang-prep</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="system-design-telemetry-ingestion-pipeline">System Design: Telemetry Ingestion Pipeline</h1>
+<blockquote>
+<p><strong>Interview level:</strong> Principal / Staff Engineer (L6/L7 bar) <strong>Your angle:</strong> You have lived
+experience with Alloy → Mimir/Loki/Tempo at global scale. Use it to make every trade-off concrete,
+not theoretical.</p>
+</blockquote>
+<hr>
+<h2 id="how-to-use-this-doc">How to Use This Doc</h2>
+<p>Practice the five-step format from the study guide for each section:</p>
+<ol>
+<li>Clarify requirements</li>
+<li>High-level design</li>
+<li>Deep dive</li>
+<li>Observability of the system itself</li>
+<li>Trade-offs at 10x scale</li>
+</ol>
+<hr>
+<h2 id="1-clarify-requirements-first">1. Clarify Requirements First</h2>
+<p>The first 5 minutes of the interview is yours to steer. Ask these; the answers change the entire
+architecture.</p>
+<h3 id="signal-types">Signal types</h3>
+<ul>
+<li>Metrics only, or metrics + logs + traces (unified MELT pipeline)?</li>
+<li>Are traces sampled at head or tail? This determines whether spans need to be held in memory for
+assembly.</li>
+<li>Any profiling signals (continuous profiling, eBPF)?</li>
+</ul>
+<h3 id="scale-envelope">Scale envelope</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>Small (startup)</th><th>Mid (Netflix-class)</th><th>Large (hyper-scale)</th></tr></thead><tbody><tr><td>Agent count</td><td>~1K</td><td>~100K</td><td>~10M+</td></tr><tr><td>Metric series (active)</td><td>~10M</td><td>~1B</td><td>~100B+</td></tr><tr><td>Ingest rate</td><td>~1M pts/sec</td><td>~500M pts/sec</td><td>~50B pts/sec</td></tr><tr><td>Trace spans/sec</td><td>~100K</td><td>~10M</td><td>~1B</td></tr><tr><td>Log lines/sec</td><td>~1M</td><td>~500M</td><td>~50B</td></tr></tbody></table>
+<p>At MAANG interviews, assume Netflix/Google scale unless told otherwise.</p>
+<h3 id="consistency-and-durability">Consistency and durability</h3>
+<ul>
+<li>Can we drop data during a rolling restart? (Usually: yes for metrics, no for billing traces.)</li>
+<li>What is the maximum acceptable ingestion lag before data lands queryable? (SLO: typically &#x3C; 60s
+for metrics, &#x3C; 5 min for traces.)</li>
+<li>At-least-once or exactly-once? Exactly-once is expensive — push back unless there is a billing
+requirement.</li>
+</ul>
+<h3 id="multi-tenancy">Multi-tenancy</h3>
+<ul>
+<li>Single tenant (internal platform) or multi-tenant SaaS?</li>
+<li>Per-tenant quota enforcement? Isolation at the storage layer or earlier?</li>
+</ul>
+<h3 id="protocol">Protocol</h3>
+<ul>
+<li>Must support OTLP? Prometheus remote-write? Both? Datadog agent wire format?</li>
+<li>Is the interviewer implying a greenfield (pick the best protocol) or a brownfield (must accept
+legacy agents)?</li>
+</ul>
+<hr>
+<h2 id="2-high-level-architecture">2. High-Level Architecture</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Producers["Data Producers"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        P["[ OTel SDK ] · [ Prometheus ] \n [ Fluent Bit ] · [ eBPF Agent ] \n [ StatsD ]"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph L1["Ingestion Frontier — Layer 1"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        GW1["OTLP Gateway\n(gRPC / HTTP)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        GW2["RW Gateway\n(prom-rw)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        GW3["Syslog / HTTP\n(Gateway)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        AUTH["Auth · Rate-limit · Schema validation"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph L2["Durable Buffer — Layer 2"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        KAFKA["Kafka / Pulsar / Kinesis\nmetrics-raw · logs-raw · traces-raw · per-tenant shards"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph L3["Processing / Enrichment — Layer 3"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        MP["Metric Processor\n· relabeling \n· aggregation \n· cardinality enforcement"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        LP["Log Processor\n· parsing \n· dedup \n· enrichment \n· schema coerce"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        TP["Trace Processor\n· span assembly \n· tail sampling \n· service graph"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    MIMIR[("Mimir / Thanos\n(TSDB blocks)")]</span></span>
+<span class="line"><span style="color:#E1E4E8">    LOKI[("Loki\n(Log Store)")]</span></span>
+<span class="line"><span style="color:#E1E4E8">    TEMPO[("Tempo\n(Trace Store)")]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    P -->|"OTLP / gRPC"| GW1</span></span>
+<span class="line"><span style="color:#E1E4E8">    P -->|"Prometheus remote-write"| GW2</span></span>
+<span class="line"><span style="color:#E1E4E8">    P -->|"Syslog / HTTP"| GW3</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW1 &#x26; GW2 &#x26; GW3 --> AUTH --> KAFKA</span></span>
+<span class="line"><span style="color:#E1E4E8">    KAFKA --> MP --> MIMIR</span></span>
+<span class="line"><span style="color:#E1E4E8">    KAFKA --> LP --> LOKI</span></span>
+<span class="line"><span style="color:#E1E4E8">    KAFKA --> TP --> TEMPO</span></span>
+<span class="line"></span></code></pre>
+<h3 id="key-insight-to-state-early">Key insight to state early</h3>
+<p>“I’m designing for <a href="../../../common/push-vs-pull-ingestion/">push-based ingestion rather than pull</a>,
+because at 10M agents, a central scraper creates a fan-out coordination problem. Agents push over
+OTLP/gRPC. The gateway is stateless and scales horizontally. The buffer (Kafka) decouples ingestion
+rate from processing rate.”</p>
+<hr>
+<h2 id="3-deep-dives">3. Deep Dives</h2>
+<h3 id="31-layer-1-ingestion-frontier">3.1 Layer 1: Ingestion Frontier</h3>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Protocol termination (gRPC, HTTP/1.1, HTTP/2)</li>
+<li>TLS offload</li>
+<li>Authentication (mTLS, bearer token, API key)</li>
+<li>Tenant identification and routing</li>
+<li>Initial rate limiting (per-tenant, per-agent)</li>
+<li>Schema validation and rejection (fail fast before the buffer)</li>
+<li>ACK back to the agent (critical: drives agent retry behavior)</li>
+</ul>
+<p><strong>Fan-in problem at 100K+ agents:</strong></p>
+<p>Each agent maintains a persistent gRPC connection or reconnects on each push. The gateway fleet must
+handle:</p>
+<ul>
+<li>Connection establishment storms (e.g., after a cluster rolling restart, 50K agents reconnect
+simultaneously)</li>
+<li>Thundering herd: use exponential backoff with jitter in agents; the gateway must not be the
+coordination point</li>
+</ul>
+<p><strong>Protocol negotiation:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">sequenceDiagram</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Agent</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant Gateway</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Agent->>+Gateway: gRPC OTLP Export (preferred: HTTP/2 multiplexed, binary)</span></span>
+<span class="line"><span style="color:#E1E4E8">    Gateway-->>-Agent: 200 OK + PartialSuccess (signals which spans were dropped)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Agent->>Gateway: HTTP/1.1 fallback (agents without HTTP/2 support)</span></span>
+<span class="line"><span style="color:#E1E4E8">    Agent->>Gateway: Prometheus remote-write (legacy scrape-push compatibility)</span></span>
+<span class="line"></span></code></pre>
+<p>OTLP PartialSuccess is a critical protocol feature: the gateway can signal partial acceptance (e.g.,
+“I accepted your metrics batch but dropped 3 spans because they exceeded cardinality budget”). The
+agent can then decide whether to retry or log and move on.</p>
+<p><strong>Backpressure — how it flows upstream:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    A["Storage full"] --> B["Processor slows\nconsumer group lag grows"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    B --> C["Kafka consumer lag alarm fires\n→ scale out processors via HPA"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    C --> D{"Lag persists?"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    D -->|No| DONE["Normal operation resumes"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    D -->|Yes| E["Gateway returns gRPC RESOURCE_EXHAUSTED"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    E --> F["Agent receives 429\n→ backs off with jitter"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    F --> G["Agent local buffer absorbs burst\nWAL / memory queue"]</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Rate limiting architecture:</strong></p>
+<p>Do NOT implement per-request rate limiting inside the gateway pod — state won’t be shared across
+replicas. Use one of:</p>
+<ul>
+<li><strong>Token bucket in Redis / Dragonfly</strong> (centralized, millisecond latency): each gateway pod checks
+Redis before accepting. Works at 100K agents; at 10M, Redis becomes a bottleneck.</li>
+<li><strong>Gossip-based distributed rate limiting</strong> (Netflix Concurrency Limits, Envoy’s global rate
+limit): each pod maintains a local estimate of the global rate, exchanges periodically. Slightly
+imprecise but no single point of failure.</li>
+<li><strong>Envoy sidecar with global rate limit service</strong> (xDS-integrated): gRPC interceptor calls rate
+limit service per request. Adds latency (~2ms) but decouples the logic from business code.</li>
+</ul>
+<p>At MAANG scale, the answer is usually: coarse-grained enforcement at the load balancer (LB token
+bucket), fine-grained enforcement at the gateway with eventually-consistent distributed counters.</p>
+<hr>
+<h3 id="32-layer-2-durable-buffer-kafka">3.2 Layer 2: Durable Buffer (Kafka)</h3>
+<p><strong>Why Kafka here?</strong></p>
+<p>The ingestion rate peaks are spiky (deployments, incident storms). Without the buffer, the
+processing layer must either overprovision to handle peaks or drop data. Kafka absorbs the burst and
+allows processors to drain at their own pace.</p>
+<p><strong>Topic design:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>telemetry.metrics.raw       ← raw OTLP metric payloads</span></span>
+<span class="line"><span>telemetry.logs.raw</span></span>
+<span class="line"><span>telemetry.traces.raw</span></span>
+<span class="line"><span>telemetry.metrics.tenant-{id}   ← per-tenant topics for strong isolation</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Per-tenant topics are expensive (each topic = directory on broker disk). Use them only when:</p>
+<ul>
+<li>Different retention policies per tenant are required</li>
+<li>Hard isolation is a contractual requirement</li>
+<li>Otherwise, use a <code>tenant_id</code> field inside the message + consumer-side filtering</li>
+</ul>
+<p><strong>Partitioning strategy:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Signal</th><th>Partition key</th><th>Why</th></tr></thead><tbody><tr><td>Metrics</td><td><code>hash(job + instance)</code></td><td>Keeps same time series on same partition → ordered writes per series</td></tr><tr><td>Logs</td><td><code>hash(service + pod)</code></td><td>Ordering within a log stream</td></tr><tr><td>Traces</td><td><code>trace_id</code></td><td>All spans of a trace land on the same partition → assembly is local</td></tr></tbody></table>
+<p><strong>Retention:</strong></p>
+<ul>
+<li>Raw metrics: 2–4 hours (enough to drain any processor outage)</li>
+<li>Raw traces: 4–24 hours (tail sampling needs to hold spans until the root span arrives)</li>
+<li>Raw logs: 1–6 hours</li>
+</ul>
+<p>After retention, data is considered lost from the buffer. The downstream stores (Mimir/Loki/Tempo)
+are the durable source of truth.</p>
+<p><strong>Exactly-once vs at-least-once:</strong></p>
+<p>Kafka supports exactly-once semantics (idempotent producers + transactional consumers) but it adds
+latency and complexity. For telemetry:</p>
+<ul>
+<li>Metrics: at-least-once is fine (duplicate samples are typically deduplicated by the TSDB based on
+timestamp + label fingerprint)</li>
+<li>Logs: at-least-once with deduplication on a content hash + timestamp window</li>
+<li>Traces: at-least-once; trace stores handle duplicate spans by span ID deduplication</li>
+</ul>
+<p>Only use exactly-once if there is a billing or compliance requirement (e.g., if metric samples drive
+invoicing).</p>
+<p><strong>Kafka producer configuration — load-bearing at scale:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">acks</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">all</span><span style="color:#6A737D">                                      # all ISR replicas must confirm — durability over throughput</span></span>
+<span class="line"><span style="color:#85E89D">enable.idempotence</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span><span style="color:#6A737D">                       # no duplicate messages on retry (requires acks=all)</span></span>
+<span class="line"><span style="color:#85E89D">retries</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">2147483647</span><span style="color:#6A737D">                            # effectively infinite — let delivery.timeout.ms cap it</span></span>
+<span class="line"><span style="color:#85E89D">delivery.timeout.ms</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">120000</span><span style="color:#6A737D">                    # 2 min total delivery window; fail the batch after this</span></span>
+<span class="line"><span style="color:#85E89D">linger.ms</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">5</span><span style="color:#6A737D">                                   # batch for 5ms — 10–50× throughput at cost of tail latency</span></span>
+<span class="line"><span style="color:#85E89D">batch.size</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">65536</span><span style="color:#6A737D">                              # 64KB default; increase to 1MB for high-volume metric paths</span></span>
+<span class="line"><span style="color:#85E89D">compression.type</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">zstd</span><span style="color:#6A737D">                         # best ratio at lowest CPU cost for protobuf payloads</span></span>
+<span class="line"><span style="color:#85E89D">max.in.flight.requests.per.connection</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">5</span><span style="color:#6A737D">       # safe up to 5 with idempotence enabled</span></span>
+<span class="line"></span></code></pre>
+<p>Hidden gotcha: <code>max.message.bytes</code> defaults to 1MB on the broker. A single trace from a long-running
+distributed transaction (thousands of spans) can exceed this. Options:</p>
+<ul>
+<li>Split large OTLP batches at the gateway before producing (preferred — keeps Kafka tuned for the
+common case)</li>
+<li>Increase <code>max.message.bytes</code> broker-wide (affects all producers; raises memory pressure on the
+broker)</li>
+</ul>
+<hr>
+<h3 id="33-layer-3-processing--enrichment">3.3 Layer 3: Processing / Enrichment</h3>
+<p><strong>Metric processor:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    A["Read from Kafka partition"] --> B["Deserialize OTLP protobuf"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    B --> C["Enrich: inject k8s metadata\nnode · namespace · cluster via resource attributes"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    C --> D["Relabel: rename / drop labels\nper schema — cardinality enforcement"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    D --> E{"Active series\n> tenant budget?"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    E -->|Yes| REJ["Reject batch\nemit cardinality_limit_exceeded counter"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    E -->|No| F["Aggregate optional\npre-aggregate histograms to reduce storage fan-out"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    F --> G["Write to Mimir\nremote-write or gRPC ingest"]</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Cardinality enforcement is non-negotiable at scale.</strong> A single misbehaving service can send 10M
+unique label combinations and collapse a shared TSDB. Enforce at the processor:</p>
+<ul>
+<li>Track active series per tenant with an approximate data structure (HyperLogLog or Count-Min
+Sketch)</li>
+<li>Reject or drop metric families that exceed budget; emit a “cardinality limit exceeded” counter
+visible in the platform’s self-telemetry</li>
+<li>Send the OTLP PartialSuccess signal back through the buffer (or emit a platform-level alert to the
+tenant)</li>
+</ul>
+<p><strong>Trace processor — tail-based sampling:</strong></p>
+<p>Head-based sampling (decide at trace start) is simple but blind: you don’t know if the trace will be
+interesting (slow, errored) until it completes. Tail-based sampling is the right answer at MAANG:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    A["Spans arrive\npartitioned by trace_id"] --> B["Span assembler\nholds spans in memory or Redis"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    B --> C{"Root span\narrived?"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    C -->|"Still waiting"| B</span></span>
+<span class="line"><span style="color:#E1E4E8">    C -->|"Yes — evaluate policy"| D{"Sampling\ndecision"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    D -->|"Error or latency > P99"| SAM["Write to Tempo"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    D -->|"Healthy trace"| RATE{"Within 1%\nsample rate?"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    RATE -->|Yes| SAM</span></span>
+<span class="line"><span style="color:#E1E4E8">    RATE -->|No| DROP["Drop"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    B -->|"TTL expired — no root span"| ORPHAN["Orphan flush\nlow-rate sample or drop"]</span></span>
+<span class="line"></span></code></pre>
+<p>The span assembler is the hardest part: at 1B spans/sec, you cannot hold everything in memory.
+Solutions:</p>
+<ul>
+<li>Hash-partition spans to processors by trace_id so all spans of a trace land on the same worker</li>
+<li>Use a bounded in-memory LRU (hold spans for the last N seconds) + overflow to local disk or Redis</li>
+<li>TTL-based flush: if root span hasn’t arrived in 30s, treat as orphan and drop or sample at low
+rate</li>
+</ul>
+<p><strong>Log processor:</strong></p>
+<ul>
+<li>Parse structured (JSON, logfmt) vs unstructured (regex extraction, drain/spell-based pattern
+mining)</li>
+<li>Schema-on-read (Loki model): store raw, parse at query time via LogQL → lower write cost, higher
+query cost</li>
+<li>Schema-on-write (pre-structured model): parse at ingest, enforce schema → higher write cost, much
+faster queries</li>
+<li>Deduplication: hash(timestamp + body) within a sliding 5-minute window per stream</li>
+</ul>
+<p><strong>Metric temporality — the silent OTLP impedance mismatch:</strong></p>
+<p>OTLP defines two temporality modes for metrics:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Mode</th><th>Description</th><th>Default for</th></tr></thead><tbody><tr><td>Cumulative</td><td>Value accumulates from process start; <code>rate()</code> works directly</td><td>Prometheus native</td></tr><tr><td>Delta</td><td>Value = change since last export; must be summed before storage</td><td>Most OTel SDK langs (Java, Node, Go)</td></tr></tbody></table>
+<p>The problem: OTel SDKs often default to delta temporality. Prometheus remote-write and Mimir expect
+cumulative. The processor must convert:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Delta(t=100, value=5) + previous_cumulative(95) = Cumulative(t=100, value=100)</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This requires <strong>stateful per-series accumulation</strong> in the processor. At 1B active series that state
+doesn’t fit on one machine:</p>
+<ul>
+<li><strong>Preferred fix:</strong> Force agents to emit cumulative at the SDK level — one config flag
+(<code>temporality_preference: cumulative</code>), eliminates a stateful component from the pipeline
+entirely.</li>
+<li><strong>Pipeline fix:</strong> The OTel Collector <code>deltaToCumulative</code> processor uses a local state store
+(bounded LRU). It leaks state on restart, causing counter resets visible as negative <code>rate()</code>
+values in dashboards.</li>
+<li><strong>Always ask the interviewer:</strong> “Are agents sending delta or cumulative? Delta changes the
+processor from stateless to stateful, which changes the memory footprint, failure model, and
+restart semantics.”</li>
+</ul>
+<p><strong>Kubernetes metadata enrichment:</strong></p>
+<p>A pod emits spans with <code>service.name = payment-service</code>. Queries filter by <code>namespace</code>, <code>cluster</code>,
+<code>node</code> — labels the SDK doesn’t inject. The processor must join on k8s state:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Span arrives: pod_name="payment-xyz-abc"</span></span>
+<span class="line"><span>  → Join k8s metadata: namespace, node_name, cluster, app.kubernetes.io/version</span></span>
+<span class="line"><span>  → Attach as resource attributes</span></span>
+<span class="line"><span>  → Forward enriched span to Tempo</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>At 10K pods and 1M spans/sec you cannot call the k8s API per span:</p>
+<ol>
+<li><strong>In-memory pod cache with informer watch:</strong> Processor watches k8s pod events and caches metadata
+locally. Cache size = O(pod count), manageable. Cache invalidation happens on pod lifecycle
+events. Cold start gap: brief window after processor restart where enrichment is incomplete.</li>
+<li><strong>Enrich at the agent (preferred):</strong> Alloy/OTel Collector DaemonSet has local node access via
+downward API and can inject labels at source. Moves enrichment left, removes the hot path on the
+k8s API server, and survives processor restarts without gaps.</li>
+<li><strong>OTel <code>k8sattributes</code> processor:</strong> Standard implementation of option 1. Use this; don’t reinvent
+it.</li>
+</ol>
+<hr>
+<h3 id="34-scaling-each-layer">3.4 Scaling Each Layer</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Layer</th><th>Scaling unit</th><th>Scaling trigger</th><th>Notes</th></tr></thead><tbody><tr><td>Ingestion gateway</td><td>Pod replicas (HPA)</td><td>CPU > 70% OR active connections > 10K</td><td>Stateless; L7 load balancer distributes</td></tr><tr><td>Kafka brokers</td><td>Partition count</td><td>Consumer lag growing + broker CPU > 80%</td><td>Increase partitions; re-assign partition leaders</td></tr><tr><td>Metric processor</td><td>Consumer group pods</td><td>Consumer lag > target (e.g., 60s worth)</td><td>Pods = partition count for maximum parallelism</td></tr><tr><td>Trace assembler</td><td>Stateful shard pods</td><td>Memory > 70% OR assembly latency rising</td><td>Resharding is costly; over-provision or use consistent hashing</td></tr><tr><td>Log processor</td><td>Consumer group pods</td><td>Consumer lag</td><td>Stateless; easy to scale</td></tr><tr><td>Storage (Mimir)</td><td>Ingester pods</td><td>Series per ingester > target</td><td>Cortex/Mimir uses ring-based consistent hashing for ingesters</td></tr></tbody></table>
+<hr>
+<h3 id="35-failure-modes-and-mitigations">3.5 Failure Modes and Mitigations</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Failure</th><th>Impact</th><th>Mitigation</th></tr></thead><tbody><tr><td>Gateway pod crash</td><td>In-flight requests lost (small window)</td><td>Agents retry with backoff; gRPC deadline ensures fast failure; stateless so restart fast</td></tr><tr><td>Kafka broker failure</td><td>Partition leaders re-elected (10–30s)</td><td>RF=3, unclean.leader.election=false; producers retry; consumer lag grows briefly</td></tr><tr><td>Processor crash mid-batch</td><td>Messages re-consumed from Kafka offset</td><td>At-least-once; downstream TSDB deduplicates</td></tr><tr><td>Trace assembler OOM (span explosion)</td><td>Incomplete traces flushed or dropped</td><td>Hard memory limit + backpressure to Kafka; alert on orphan span rate</td></tr><tr><td>TSDB write rejection (cardinality)</td><td>Metric data loss for offending tenant</td><td>Cardinality check upstream (processor) to reject early; platform alert to tenant</td></tr><tr><td>Storage tier full</td><td>Write rejection cascade</td><td>Backpressure to Kafka → gateway 429 → agent backoff; auto-scale storage (object store)</td></tr><tr><td>Clock skew between agents</td><td>Out-of-order samples rejected by TSDB</td><td>Mimir/Prometheus accept samples up to 1h out of order with out-of-order ingestion enabled</td></tr></tbody></table>
+<hr>
+<h3 id="36-multi-tenancy">3.6 Multi-Tenancy</h3>
+<p>This is the principal-level differentiator question: “how do you add a new tenant without affecting
+existing ones?”</p>
+<p><strong>Isolation layers:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    NET["Network\nSNI routing\n/v1/{tenant} path prefix"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    AUTH["Auth\nPer-tenant API key\nor mTLS cert"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW["Gateway\nExtract tenant ID\nadd as label/attribute"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    BUF["Buffer\nTenant ID in message header\nper-tenant topic or consumer-filtered"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    PROC["Processing\nPer-tenant cardinality budget\nsampling policy · retention override"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    STORE["Storage\nMimir: X-Scope-OrgID\nLoki: X-Scope-OrgID"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    NET --> AUTH --> GW --> BUF --> PROC --> STORE</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Quota enforcement points:</strong></p>
+<ol>
+<li><strong>Gateway</strong> — connection-level and request-rate limits (coarse)</li>
+<li><strong>Processor</strong> — cardinality budget, series-per-minute cap (fine-grained)</li>
+<li><strong>Storage</strong> — Mimir/Loki/Cortex all have per-tenant limits (bytes-per-second, active series cap)
+as a safety net</li>
+</ol>
+<p>Always enforce at multiple layers. Never rely on a single enforcement point.</p>
+<hr>
+<h3 id="37-data-tiering-and-compaction-mimirthanos">3.7 Data Tiering and Compaction (Mimir/Thanos)</h3>
+<p>This section is commonly missing from candidate answers. The architecture diagram shows Mimir as a
+black box, but the ingester → blocks → object store journey matters for durability, query latency,
+and cost.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    PROC["Processor"] -->|write| ING["Mimir Ingester\nhot tier — in-memory block\nlast 2h"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    ING -->|"flush every 2h"| OBJ[("Object Store\ncold tier\n/tenant_id/blocks/")]</span></span>
+<span class="line"><span style="color:#E1E4E8">    OBJ -.->|"async reads"| COMP["Compactor\nmerge overlapping ranges\ndeduplicate RF=3 replicas"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    COMP -->|"compacted blocks"| OBJ</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    QR["Querier"] -->|"recent 2h from memory"| ING</span></span>
+<span class="line"><span style="color:#E1E4E8">    QR --> SG["Store-gateway\nblock index from object store"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    SG -->|"block reads"| OBJ</span></span>
+<span class="line"><span style="color:#E1E4E8">    ING &#x26; SG --> MERGE["Merge + sort results"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    style PROC fill:#4a9eff,color:#fff</span></span>
+<span class="line"><span style="color:#E1E4E8">    style QR fill:#4a9eff,color:#fff</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Compaction levels:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Level</th><th>Time range</th><th>Produced from</th><th>Purpose</th></tr></thead><tbody><tr><td>L1</td><td>2h</td><td>Ingester flush</td><td>Raw blocks; many small files</td></tr><tr><td>L2</td><td>12h</td><td>Compact L1 × 6</td><td>Fewer files; faster range queries</td></tr><tr><td>L3</td><td>24h</td><td>Compact L2 × 2</td><td></td></tr><tr><td>L4</td><td>7d</td><td>Compact L3 × 7</td><td>Long-range scan efficiency</td></tr></tbody></table>
+<p><strong>Vertical compaction (deduplication):</strong> With RF=3 ingesters, each series is written to three
+ingesters simultaneously. After flush, the compactor deduplicates overlapping blocks by label
+fingerprint + timestamp. Without vertical compaction, storage cost is 3×.</p>
+<p><strong>Compaction storms:</strong> When many tenants flush large volumes simultaneously, the compactor queue
+backs up. Symptoms: query latency spikes as the store-gateway must scan un-compacted L1 blocks.
+Mitigation: rate-limit ingester flushes per tenant, or run compactors per-tenant shard.</p>
+<p><strong>Key config knobs to know:</strong></p>
+<ul>
+<li><code>max-block-duration</code>: longer = fewer files per query; shorter = faster flush cycle (2h is the
+Mimir default)</li>
+<li>Compaction concurrency: limits CPU spike on the compactor</li>
+<li>Store-gateway lazy loading: don’t load all block indices into memory at startup (critical at
+millions of blocks)</li>
+</ul>
+<hr>
+<h3 id="38-global-deployment-topology">3.8 Global Deployment Topology</h3>
+<p>At Netflix/Google scale, a single-region ingestion cluster is both a single point of failure and
+introduces cross-region write latency for globally distributed agents.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph US["US-EAST"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A1["Agents"] --> GW1["Regional Ingestion\nGateway"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        GW1 --> KF1["Regional Kafka\nCluster"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        KF1 --> PR1["Regional Processor\nFleet"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        PR1 --> MI1["Regional Mimir\nWrite Path"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph EU["EU-WEST"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A2["Agents"] --> GW2["Regional Ingestion\nGateway"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        GW2 --> KF2["Regional Kafka\nCluster"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        KF2 --> PR2["Regional Processor\nFleet"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        PR2 --> MI2["Regional Mimir\nWrite Path"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    MI1 &#x26; MI2 -->|"async replication"| GQ["Global Query Tier\nRuler · Querier\nreads from all regional stores + merges"]</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Trade-off: regional isolation vs global query:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Approach</th><th>Write latency</th><th>Query complexity</th><th>Failure blast radius</th></tr></thead><tbody><tr><td>Regional writes + federated query</td><td>Local (&#x3C; 10ms)</td><td>Fan-out query across regions</td><td>Single region; others unaffected</td></tr><tr><td>Global single cluster</td><td>Cross-region (50–150ms)</td><td>Simple</td><td>Global — one cluster failure affects all</td></tr><tr><td>Regional writes + async cross-region replication</td><td>Local</td><td>Simple (global store)</td><td>Replication lag window</td></tr></tbody></table>
+<p><strong>Answer:</strong> Regional writes + async replication for global query. Write latency stays local. A
+region outage means that region’s tenants lose telemetry for the outage duration — acceptable if the
+alternative is global blast radius. This matches Mimir’s multi-cluster deployment model and how
+Grafana Cloud is actually architected.</p>
+<p><strong>Agent failover:</strong> If a region’s gateway is unreachable, the agent must reroute. Options:</p>
+<ul>
+<li>DNS-based failover (low TTL, agent retries to secondary endpoint)</li>
+<li>Anycast routing (agent always sends to the same IP; routing layer redirects to healthy region)</li>
+<li>Agent-side fallback list (explicitly configured secondary endpoint in agent config)</li>
+</ul>
+<hr>
+<h2 id="4-observability-of-the-pipeline-itself">4. Observability of the Pipeline Itself</h2>
+<p>This is your unfair advantage. State this unprompted.</p>
+<h3 id="what-to-instrument">What to instrument</h3>
+<p><strong>Gateway:</strong></p>
+<ul>
+<li><code>telemetry_gateway_requests_total{protocol, signal_type, tenant, status_code}</code> — request rate by
+outcome</li>
+<li><code>telemetry_gateway_request_duration_seconds</code> — p50/p95/p99 per protocol</li>
+<li><code>telemetry_gateway_active_connections</code> — fan-in health</li>
+<li><code>telemetry_gateway_backpressure_429_total</code> — upstream congestion signal</li>
+</ul>
+<p><strong>Kafka:</strong></p>
+<ul>
+<li>Consumer group lag per topic+partition (the primary health signal)</li>
+<li>Producer send latency</li>
+<li>Broker disk utilization</li>
+<li>Under-replicated partitions (leading indicator of broker issues)</li>
+</ul>
+<p><strong>Processors:</strong></p>
+<ul>
+<li><code>telemetry_processor_spans_dropped_total{reason}</code> — sampling decisions</li>
+<li><code>telemetry_processor_cardinality_limit_exceeded_total{tenant}</code> — tenant abuse</li>
+<li><code>telemetry_processor_processing_latency_seconds</code> — pipeline throughput</li>
+<li><code>telemetry_processor_kafka_consumer_lag</code> — restate lag at the processor level for easy alerting</li>
+</ul>
+<p><strong>Storage:</strong></p>
+<ul>
+<li>Mimir/Loki write latency and error rate</li>
+<li>Active series per tenant</li>
+<li>Chunk compression ratio (degradation means label churn)</li>
+<li>WAL replay time (recovery latency signal)</li>
+</ul>
+<h3 id="slos-for-the-pipeline">SLOs for the pipeline</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>SLO</th><th>Objective</th><th>Measurement</th></tr></thead><tbody><tr><td>Ingestion success rate</td><td>99.9%</td><td><code>1 - (errors / total_requests)</code> at gateway</td></tr><tr><td>End-to-end latency (metric)</td><td>P99 &#x3C; 60s</td><td>Time from agent send to Mimir queryable (timestamp delta)</td></tr><tr><td>End-to-end latency (trace)</td><td>P99 &#x3C; 5m</td><td>Time from first span received to trace queryable in Tempo</td></tr><tr><td>Tail sampling decision latency</td><td>P99 &#x3C; 30s</td><td>Time from root span arrival to sampling decision</td></tr><tr><td>Cardinality budget breach rate</td><td>&#x3C; 0.1%</td><td>Tenants hitting cardinality limits per day</td></tr></tbody></table>
+<h3 id="distributed-tracing-of-the-pipeline-itself">Distributed tracing of the pipeline itself</h3>
+<p>Instrument the pipeline with OTel traces that follow a telemetry batch through each layer. A trace
+that starts at the gateway and ends at the storage write gives you end-to-end visibility. At MAANG
+scale, sample these at 1% (head-based is fine here — you’re tracing the pipeline, not the business
+traces).</p>
+<h3 id="synthetic-canary--end-to-end-slo-verification">Synthetic canary — end-to-end SLO verification</h3>
+<p>The canary is the most important operational signal: it catches pipeline stalls that no individual
+component metric will surface (e.g., a processor consuming from Kafka but writing to a dead Mimir
+ingester). Run it as a sidecar or scheduled job in each region:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Canary pseudocode — one cycle every 60 seconds</span></span>
+<span class="line"><span style="color:#E1E4E8">canary_id </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(uuid4())</span></span>
+<span class="line"><span style="color:#E1E4E8">t0 </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> time.monotonic()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># 1. Emit a canary metric with a unique trace label</span></span>
+<span class="line"><span style="color:#E1E4E8">push_otlp_metric(</span></span>
+<span class="line"><span style="color:#FFAB70">    name</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"telemetry_canary_probe"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">    value</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">    labels</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">{</span><span style="color:#9ECBFF">"canary_id"</span><span style="color:#E1E4E8">: canary_id, </span><span style="color:#9ECBFF">"region"</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">REGION</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># 2. Poll query endpoint until the metric appears or SLO window expires</span></span>
+<span class="line"><span style="color:#F97583">while</span><span style="color:#E1E4E8"> time.monotonic() </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> t0 </span><span style="color:#F97583">&#x3C;</span><span style="color:#79B8FF"> SLO_WINDOW_SECONDS</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    result </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> query_mimir(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">'telemetry_canary_probe</span><span style="color:#79B8FF">{{</span><span style="color:#9ECBFF">canary_id="</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">canary_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">}}</span><span style="color:#9ECBFF">'</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> result:</span></span>
+<span class="line"><span style="color:#E1E4E8">        latency </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> time.monotonic() </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> t0</span></span>
+<span class="line"><span style="color:#E1E4E8">        push_metric(</span><span style="color:#9ECBFF">"telemetry_canary_e2e_latency_seconds"</span><span style="color:#E1E4E8">, latency)</span></span>
+<span class="line"><span style="color:#F97583">        break</span></span>
+<span class="line"><span style="color:#E1E4E8">    sleep(</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">else</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    fire_alert(</span><span style="color:#9ECBFF">"TelemetryPipelineSLOBreach"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">region</span><span style="color:#F97583">=</span><span style="color:#79B8FF">REGION</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<p>The canary exercises: gateway → Kafka produce → consumer lag → processor → Mimir write → Mimir query
+path. It does <strong>not</strong> cover the agent-to-gateway path — test that separately with a synthetic agent.</p>
+<p>Alert: <code>telemetry_canary_e2e_latency_seconds > 60</code> for 2 consecutive windows → page on-call. At
+MAANG scale, run one canary per region per signal type (metrics / logs / traces).</p>
+<hr>
+<h2 id="5-trade-offs-at-10x-scale">5. Trade-offs at 10x Scale</h2>
+<p>These are the “what would you do differently” questions the interviewer will ask.</p>
+<h3 id="kafka-vs-direct-write-to-storage">Kafka vs. direct write to storage</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Option</th><th>Pros</th><th>Cons</th></tr></thead><tbody><tr><td>Kafka buffer</td><td>Absorbs bursts; decouples ingestion from processing rate; replay</td><td>Extra hop adds latency; Kafka operational overhead; partition rebalancing</td></tr><tr><td>Direct write</td><td>Lower latency; simpler path; one less component</td><td>Processor must match ingest rate; burst causes write pressure on storage</td></tr></tbody></table>
+<p><strong>Answer:</strong> Kafka at MAANG scale. Direct write only if latency SLO is &#x3C; 5 seconds and burst ratio is
+low (&#x3C; 2x average). McCain uses Alloy with WAL as the agent-side buffer, which shifts the buffering
+left — but a central Kafka tier is still needed between Alloy and Mimir at 10x scale.</p>
+<h3 id="horizontal-sharding-vs-vertical-scaling-for-trace-assembly">Horizontal sharding vs. vertical scaling for trace assembly</h3>
+<p>Trace assembly is inherently stateful (all spans of a trace must land on the same node). Two
+approaches:</p>
+<ul>
+<li><strong>Consistent hashing ring</strong> (Cortex/Mimir style): each trace_id maps to a node via the ring.
+Adding nodes triggers rebalancing. Fast at steady state; painful during scale events.</li>
+<li><strong>Kafka partitioning as the coordinator</strong>: partition by <code>hash(trace_id) % N</code> in Kafka. Processors
+are pinned to partitions. Scale by adding partitions + processors. Rebalancing is a Kafka
+partition reassignment, which Kafka handles well.</li>
+</ul>
+<p><strong>Answer:</strong> Kafka-partitioned approach is operationally simpler at scale. The trade-off is that
+increasing partition count causes a brief lag spike during reassignment.</p>
+<h3 id="schema-on-read-vs-schema-on-write-for-logs">Schema-on-read vs. schema-on-write for logs</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Option</th><th>Write cost</th><th>Query cost</th><th>Flexibility</th><th>When to use</th></tr></thead><tbody><tr><td>Schema-on-read</td><td>Low</td><td>High</td><td>Very high (log structure evolves)</td><td>Loki model; default for greenfield</td></tr><tr><td>Schema-on-write</td><td>High</td><td>Low</td><td>Low (schema changes need migration)</td><td>When query latency SLO &#x3C; 1s on full scans</td></tr></tbody></table>
+<p><strong>Answer:</strong> Schema-on-read (Loki model) for the majority. Add a schema-on-write fast path for
+high-frequency structured logs from a small set of known services (e.g., access logs, audit logs).</p>
+<h3 id="head-based-vs-tail-based-sampling">Head-based vs. tail-based sampling</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Option</th><th>Pros</th><th>Cons</th></tr></thead><tbody><tr><td>Head-based</td><td>Simple; no span buffering needed; low latency</td><td>Blind to outcomes; can’t bias toward error/slow traces</td></tr><tr><td>Tail-based</td><td>Intelligent; always captures anomalies</td><td>Requires span buffering (memory/storage); assembly complexity</td></tr></tbody></table>
+<p><strong>Answer:</strong> Tail-based for business-critical services. Head-based (at high rate, e.g., 10%) for
+internal infrastructure services where you mostly care about aggregate rates. Never both at the same
+layer — it multiplies complexity.</p>
+<h3 id="otlp-grpc-vs-prometheus-remote-write">OTLP gRPC vs. Prometheus remote-write</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Protocol</th><th>Strengths</th><th>Weaknesses</th></tr></thead><tbody><tr><td>OTLP gRPC</td><td>Binary efficient; HTTP/2 multiplexed; supports all signal types</td><td>Newer; not all agents support it</td></tr><tr><td>Prometheus remote-write</td><td>Ubiquitous; proven at scale; good library support</td><td>Metrics only; snappy+protobuf but no HTTP/2 multiplexing natively</td></tr><tr><td>OTLP HTTP</td><td>Works through proxies that block gRPC; easier firewall traversal</td><td>Less efficient than gRPC</td></tr></tbody></table>
+<p><strong>Answer:</strong> OTLP gRPC as the primary protocol for new deployments. Prometheus remote-write as a
+compatibility shim for existing agents. Never negotiate down to HTTP/1.1 + JSON for high-volume
+paths — the serialization overhead is prohibitive.</p>
+<h3 id="push-vs-pull-for-metrics">Push vs. Pull (for metrics)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Model</th><th>Pros</th><th>Cons</th><th>When to choose</th></tr></thead><tbody><tr><td>Pull (Prometheus scrape)</td><td>Service discovery driven; exporter is simple; central control of scrape interval</td><td>Central scraper must reach every target; N targets × scrape interval = N HTTP calls; doesn’t scale past ~500K targets without shard coordination</td><td>Monolith / VM era; when teams own the collector</td></tr><tr><td>Push (OTLP / remote-write)</td><td>Agent controls send rate; works through NAT and firewall; no central fan-out problem</td><td>Agent must be configured with endpoint; agent failure = data loss unless WAL mitigates</td><td>Microservices at scale; multi-cloud / multi-region</td></tr></tbody></table>
+<p>At 100K+ services, pull-based scraping requires a distributed scraper fleet with shard assignment
+and leader election (Prometheus sharding, Alloy cluster mode). Beyond ~500K targets the coordination
+overhead becomes the dominant problem. Netflix and Google use push-based pipelines. For brownfield
+Prometheus environments, the answer is “accept remote-write as the push shim while migrating agents
+to OTLP.”</p>
+<hr>
+<h2 id="6-interview-anchor-points-what-to-say-out-loud">6. Interview Anchor Points (What to Say Out Loud)</h2>
+<p>These are the sentences that signal principal-level thinking:</p>
+<ul>
+<li>
+<p>“The cardinality problem is what kills most ingestion pipelines at scale. I’d enforce a budget at
+the processor layer using approximate counting, not exact, because exact counting at 1B series
+doesn’t fit in memory.”</p>
+</li>
+<li>
+<p>“Backpressure is the contract between producers and consumers. If the gateway can’t propagate 429
+back to agents as a first-class signal, you’ll eventually drop data silently instead of dropping
+it predictably. I’d surface this as a gRPC status code and make agents retry-aware.”</p>
+</li>
+<li>
+<p>“Tail-based sampling solves the right problem but the span assembler is the hardest operational
+piece. I’ve seen teams underestimate the memory pressure when trace volumes spike during incidents
+— which is exactly when you most need tail sampling to work. Design the assembler with a hard
+memory cap and graceful degradation to head-based sampling.”</p>
+</li>
+<li>
+<p>“Multi-tenancy isn’t just namespacing in storage. It needs to be enforced at every layer from the
+network inbound to the storage write path, or one noisy tenant can take down the platform.”</p>
+</li>
+<li>
+<p>“I’d make the pipeline observable from day one with an end-to-end trace of a synthetic batch — a
+canary payload that flows from the gateway through Kafka through the processor into storage every
+60 seconds. If the synthetic trace doesn’t show up queryable within the SLO window, page the
+on-call before any user notices.”</p>
+</li>
+<li>
+<p>“The delta-to-cumulative temporality mismatch is the silent killer in OTLP migrations. If agents
+send delta and storage expects cumulative, every counter is wrong. The fix looks simple — a
+<code>deltaToCumulative</code> processor — but it requires per-series state that doesn’t survive restarts
+cleanly, which means counter resets appear in every dashboard after a deploy. My answer: enforce
+cumulative at the agent SDK level. One config flag eliminates a stateful component from the
+pipeline entirely.”</p>
+</li>
+<li>
+<p>“I’d deploy the pipeline regionally, not globally. At 10M agents across three continents, a single
+global cluster means 150ms write latency from EU agents plus a global failure domain. Regional
+writes with async replication to a global query tier gives you local write latency, regional fault
+isolation, and still allows cross-region dashboards. This is how Grafana Cloud is actually built.”</p>
+</li>
+</ul>
+<hr>
+<h2 id="7-component-map-what-exists-in-the-wild">7. Component Map (What Exists in the Wild)</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Layer</th><th>OSS option</th><th>Managed/SaaS option</th><th>Your experience</th></tr></thead><tbody><tr><td>Agent</td><td>OTel Collector, Grafana Alloy</td><td>Datadog Agent, New Relic</td><td>Alloy at McCain (production)</td></tr><tr><td>Ingestion gateway</td><td>OTel Collector (gateway mode)</td><td>Grafana Cloud ingest</td><td>Alloy gateway mode</td></tr><tr><td>Buffer</td><td>Kafka (Apache), Pulsar, Kinesis</td><td>Confluent Cloud, MSK</td><td>—</td></tr><tr><td>Metric processor</td><td>OTel Collector processors</td><td>Custom Flink/Spark job</td><td>Alloy pipelines</td></tr><tr><td>Trace processor</td><td>OTel Collector (tail sampler)</td><td>Jaeger, Tempo with tail samp</td><td>Tempo at McCain</td></tr><tr><td>Metric store</td><td>Prometheus, Mimir, Thanos, Cortex</td><td>Grafana Cloud Mimir</td><td>Mimir (production)</td></tr><tr><td>Log store</td><td>Loki, Elasticsearch, ClickHouse</td><td>Grafana Cloud Loki</td><td>Loki (production)</td></tr><tr><td>Trace store</td><td>Tempo, Jaeger, Zipkin</td><td>Grafana Cloud Tempo</td><td>Tempo (production)</td></tr></tbody></table>
+<hr>
+<h2 id="8-quick-reference-cheat-sheet">8. Quick-Reference Cheat Sheet</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Fan-in at scale          → stateless gateway + persistent gRPC connections + connection pooling</span></span>
+<span class="line"><span>Backpressure             → gRPC RESOURCE_EXHAUSTED (429) → agent WAL absorbs burst</span></span>
+<span class="line"><span>Burst absorption         → Kafka between gateway and processor; 2-4h retention</span></span>
+<span class="line"><span>Cardinality enforcement  → approximate counting (HyperLogLog) at processor; reject early</span></span>
+<span class="line"><span>Tail sampling            → hash-partition by trace_id in Kafka; assemble per-partition</span></span>
+<span class="line"><span>Multi-tenancy            → enforce at: network / auth / gateway / processor / storage (all layers)</span></span>
+<span class="line"><span>Deduplication            → at-least-once + TSDB fingerprint dedup (metrics), hash dedup (logs)</span></span>
+<span class="line"><span>Out-of-order samples     → Mimir out-of-order ingestion window (up to 1h)</span></span>
+<span class="line"><span>End-to-end SLO           → synthetic canary batch every 60s through the full pipeline</span></span>
+<span class="line"><span>Self-observability       → consumer lag (Kafka) is the single most important operational metric</span></span>
+<span class="line"><span>Delta vs cumulative      → enforce cumulative at agent SDK; deltaToCumulative processor = stateful + restarts cause counter resets</span></span>
+<span class="line"><span>k8s enrichment           → enrich at agent (DaemonSet downward API); avoid per-span k8s API calls</span></span>
+<span class="line"><span>Data tiering             → ingester (hot, 2h) → object store (cold) → compactor (merge + dedup RF=3 blocks)</span></span>
+<span class="line"><span>Global topology          → regional writes + async replication → global query tier; never single global cluster at 10M agents</span></span>
+<span class="line"><span>Kafka producer gotcha    → max.message.bytes=1MB default; split large trace batches at gateway before produce</span></span>
+<span class="line"><span></span></span></code></pre>
+<hr>
+<h2 id="9-practice-questions">9. Practice Questions</h2>
+<ol>
+<li>
+<p><a href="500m-ingest-zero-drop-rolling-deploy.md">Design a telemetry ingestion pipeline that can ingest 500M metric</a>
+samples/sec from 100K services globally. The system must never drop data during a rolling
+deployment of the ingestion tier.</p>
+</li>
+<li>
+<p>“A tenant is sending 50M unique label combinations per minute and causing TSDB compaction storms.
+How does your pipeline detect and mitigate this without affecting other tenants?”</p>
+</li>
+<li>
+<p>“Your trace sampling pipeline is losing spans during incident peaks — exactly when you need
+traces most. How do you redesign it?”</p>
+</li>
+<li>
+<p>“Walk me through how a single metric data point travels from a Kubernetes pod to being queryable
+in a dashboard. Identify every failure point and how you’d detect it.”</p>
+</li>
+<li>
+<p>“How would you add a new signal type (continuous profiling) to an existing metrics + logs +
+traces pipeline without a full redesign?”</p>
+</li>
+</ol>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in Designs</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/designs/01-observability-pipeline-and-data-infrastructure/telemetry-ingestion-pipeline/500m-ingest-zero-drop-rolling-deploy" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q1: 500M Samples/Sec, Zero Drop on Rolling Deploy </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Full principal-level solution: design a telemetry ingestion pipeline for 500M metric samples/sec from 100K services globally with a zero-drop guarantee during rolling deployment of the ingestion tier.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/designs/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> System Design </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Principal/Staff-level system design reference collection for MAANG interview preparation — observability pipelines, distributed systems, reliability engineering, and beyond.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/designs/common/push-vs-pull-ingestion" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Push-Based vs Pull-Based Ingestion </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Core mental model for telemetry and data ingestion patterns — when to push, when to pull, and how to reason about the trade-offs at principal/staff interview bar.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/designs/common/questions-to-ask" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Observability Architecture: Questions to Ask </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A chronological sequence of 216 questions an architect asks when designing a production-grade observability platform — from business context through multi-tenancy, SLOs, onboarding, and validation.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/topic/designs" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Designs notes
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#how-to-use-this-doc" data-slug="how-to-use-this-doc" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>How to Use This Doc</a></li><li data-astro-cid-xvrfupwn><a href="#1-clarify-requirements-first" data-slug="1-clarify-requirements-first" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Clarify Requirements First</a></li><li data-astro-cid-xvrfupwn><a href="#signal-types" data-slug="signal-types" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Signal types</a></li><li data-astro-cid-xvrfupwn><a href="#scale-envelope" data-slug="scale-envelope" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Scale envelope</a></li><li data-astro-cid-xvrfupwn><a href="#consistency-and-durability" data-slug="consistency-and-durability" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Consistency and durability</a></li><li data-astro-cid-xvrfupwn><a href="#multi-tenancy" data-slug="multi-tenancy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Multi-tenancy</a></li><li data-astro-cid-xvrfupwn><a href="#protocol" data-slug="protocol" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Protocol</a></li><li data-astro-cid-xvrfupwn><a href="#2-high-level-architecture" data-slug="2-high-level-architecture" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. High-Level Architecture</a></li><li data-astro-cid-xvrfupwn><a href="#key-insight-to-state-early" data-slug="key-insight-to-state-early" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Key insight to state early</a></li><li data-astro-cid-xvrfupwn><a href="#3-deep-dives" data-slug="3-deep-dives" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Deep Dives</a></li><li data-astro-cid-xvrfupwn><a href="#31-layer-1-ingestion-frontier" data-slug="31-layer-1-ingestion-frontier" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.1 Layer 1: Ingestion Frontier</a></li><li data-astro-cid-xvrfupwn><a href="#32-layer-2-durable-buffer-kafka" data-slug="32-layer-2-durable-buffer-kafka" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.2 Layer 2: Durable Buffer (Kafka)</a></li><li data-astro-cid-xvrfupwn><a href="#33-layer-3-processing--enrichment" data-slug="33-layer-3-processing--enrichment" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.3 Layer 3: Processing / Enrichment</a></li><li data-astro-cid-xvrfupwn><a href="#34-scaling-each-layer" data-slug="34-scaling-each-layer" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.4 Scaling Each Layer</a></li><li data-astro-cid-xvrfupwn><a href="#35-failure-modes-and-mitigations" data-slug="35-failure-modes-and-mitigations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.5 Failure Modes and Mitigations</a></li><li data-astro-cid-xvrfupwn><a href="#36-multi-tenancy" data-slug="36-multi-tenancy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.6 Multi-Tenancy</a></li><li data-astro-cid-xvrfupwn><a href="#37-data-tiering-and-compaction-mimirthanos" data-slug="37-data-tiering-and-compaction-mimirthanos" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.7 Data Tiering and Compaction (Mimir/Thanos)</a></li><li data-astro-cid-xvrfupwn><a href="#38-global-deployment-topology" data-slug="38-global-deployment-topology" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3.8 Global Deployment Topology</a></li><li data-astro-cid-xvrfupwn><a href="#4-observability-of-the-pipeline-itself" data-slug="4-observability-of-the-pipeline-itself" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Observability of the Pipeline Itself</a></li><li data-astro-cid-xvrfupwn><a href="#what-to-instrument" data-slug="what-to-instrument" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>What to instrument</a></li><li data-astro-cid-xvrfupwn><a href="#slos-for-the-pipeline" data-slug="slos-for-the-pipeline" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>SLOs for the pipeline</a></li><li data-astro-cid-xvrfupwn><a href="#distributed-tracing-of-the-pipeline-itself" data-slug="distributed-tracing-of-the-pipeline-itself" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Distributed tracing of the pipeline itself</a></li><li data-astro-cid-xvrfupwn><a href="#synthetic-canary--end-to-end-slo-verification" data-slug="synthetic-canary--end-to-end-slo-verification" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Synthetic canary — end-to-end SLO verification</a></li><li data-astro-cid-xvrfupwn><a href="#5-trade-offs-at-10x-scale" data-slug="5-trade-offs-at-10x-scale" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Trade-offs at 10x Scale</a></li><li data-astro-cid-xvrfupwn><a href="#kafka-vs-direct-write-to-storage" data-slug="kafka-vs-direct-write-to-storage" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Kafka vs. direct write to storage</a></li><li data-astro-cid-xvrfupwn><a href="#horizontal-sharding-vs-vertical-scaling-for-trace-assembly" data-slug="horizontal-sharding-vs-vertical-scaling-for-trace-assembly" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Horizontal sharding vs. vertical scaling for trace assembly</a></li><li data-astro-cid-xvrfupwn><a href="#schema-on-read-vs-schema-on-write-for-logs" data-slug="schema-on-read-vs-schema-on-write-for-logs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Schema-on-read vs. schema-on-write for logs</a></li><li data-astro-cid-xvrfupwn><a href="#head-based-vs-tail-based-sampling" data-slug="head-based-vs-tail-based-sampling" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Head-based vs. tail-based sampling</a></li><li data-astro-cid-xvrfupwn><a href="#otlp-grpc-vs-prometheus-remote-write" data-slug="otlp-grpc-vs-prometheus-remote-write" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>OTLP gRPC vs. Prometheus remote-write</a></li><li data-astro-cid-xvrfupwn><a href="#push-vs-pull-for-metrics" data-slug="push-vs-pull-for-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Push vs. Pull (for metrics)</a></li><li data-astro-cid-xvrfupwn><a href="#6-interview-anchor-points-what-to-say-out-loud" data-slug="6-interview-anchor-points-what-to-say-out-loud" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Interview Anchor Points (What to Say Out Loud)</a></li><li data-astro-cid-xvrfupwn><a href="#7-component-map-what-exists-in-the-wild" data-slug="7-component-map-what-exists-in-the-wild" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. Component Map (What Exists in the Wild)</a></li><li data-astro-cid-xvrfupwn><a href="#8-quick-reference-cheat-sheet" data-slug="8-quick-reference-cheat-sheet" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>8. Quick-Reference Cheat Sheet</a></li><li data-astro-cid-xvrfupwn><a href="#9-practice-questions" data-slug="9-practice-questions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>9. Practice Questions</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

@@ -1,0 +1,796 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>grafana_tf — Products Registry — Notes — Amit Singh</title><meta name="description" content="[`products."><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/05-platform-configuration/grafana-tf/products/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="grafana_tf — Products Registry — Notes — Amit Singh"><meta property="og:description" content="[`products."><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/05-platform-configuration/grafana-tf/products/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="grafana_tf — Products Registry — Notes — Amit Singh"><meta name="twitter:description" content="[`products."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-05-platform-configuration" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>05 Platform Configuration</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> grafana_tf — Products Registry </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>[`products.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 1, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/configuration" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Configuration</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="products-registry">Products Registry</h1>
+<p><code>products.yml</code> is the single source of truth
+for all product observability configuration in this repository. It drives Grafana dashboards, alert
+rules, contact routing, team membership, and synthetic monitoring checks across all Terraform
+environments.</p>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#file-structure">File structure</a></li>
+<li><a href="#field-reference">Field reference</a></li>
+<li><a href="#platform-types">Platform types</a></li>
+<li><a href="#flavour-system">Flavour system</a></li>
+<li><a href="#synthetics">Synthetics</a></li>
+<li><a href="#terraform-environments">Terraform environments</a></li>
+<li><a href="#team-membership">Team membership</a></li>
+<li><a href="#frontend-observability-faro">Frontend Observability (Faro)</a></li>
+<li><a href="#how-to-add-a-new-environment-to-an-existing-product">How to: add a new environment to an existing product</a></li>
+<li><a href="#how-to-onboard-a-new-product">How to: onboard a new product</a></li>
+<li><a href="#current-product-status">Current product status</a></li>
+</ul>
+<hr>
+<h2 id="file-structure">File structure</h2>
+<p>Each product is a top-level key under <code>products:</code>. The structure is:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">products</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  &#x3C;product-key></span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    platform</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">aks | aca | onprem</span></span>
+<span class="line"><span style="color:#85E89D">    team</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;display name></span></span>
+<span class="line"><span style="color:#85E89D">      email</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;team email></span></span>
+<span class="line"><span style="color:#85E89D">      dashboardRole</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Editor | Viewer</span><span style="color:#6A737D">  # Grafana folder permission for this team</span></span>
+<span class="line"><span style="color:#85E89D">      members</span><span style="color:#E1E4E8">: []                     </span><span style="color:#6A737D"># Grafana login emails (Azure AD UPN)</span></span>
+<span class="line"><span style="color:#85E89D">    terraform_envs</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">shipsoliddev</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">shipsolid</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">    oncall</span><span style="color:#E1E4E8">:                           </span><span style="color:#6A737D"># optional</span></span>
+<span class="line"><span style="color:#85E89D">      enabled</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">true | false</span></span>
+<span class="line"><span style="color:#85E89D">      schedule</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        timezone</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"Asia/Kolkata"</span></span>
+<span class="line"><span style="color:#85E89D">      escalation</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        wait_1_minutes</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">5</span></span>
+<span class="line"><span style="color:#85E89D">        wait_2_minutes</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">10</span></span>
+<span class="line"><span style="color:#85E89D">    contact_points</span><span style="color:#E1E4E8">:                   </span><span style="color:#6A737D"># optional — contact point definitions owned by this product</span></span>
+<span class="line"><span style="color:#85E89D">      teams</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        &#x3C;cp-key></span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;grafana-cp-name></span></span>
+<span class="line"><span style="color:#85E89D">          section_title</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;teams-card-title></span></span>
+<span class="line"><span style="color:#85E89D">          kv_secret_slug</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;kv-secret-name-suffix></span></span>
+<span class="line"><span style="color:#85E89D">      webhook</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        &#x3C;cp-key></span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;grafana-cp-name></span></span>
+<span class="line"><span style="color:#85E89D">          kv_secret_slug</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;kv-secret-name-suffix></span></span>
+<span class="line"><span style="color:#85E89D">      email</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        &#x3C;cp-key></span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;grafana-cp-name></span></span>
+<span class="line"><span style="color:#85E89D">          addresses</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">user@shipsolid.com</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">    faro</span><span style="color:#E1E4E8">:                             </span><span style="color:#6A737D"># optional — products using Grafana Faro for browser telemetry</span></span>
+<span class="line"><span style="color:#85E89D">      &#x3C;terraform_env></span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        app_id</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;numeric-app-id></span></span>
+<span class="line"><span style="color:#85E89D">        collection_url</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">https://faro-collector-&#x3C;region>.grafana.net/collect/&#x3C;token></span></span>
+<span class="line"><span style="color:#85E89D">        api_endpoint</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">https://faro-api-&#x3C;region>.grafana.net/faro/api/v1</span></span>
+<span class="line"><span style="color:#85E89D">    grafana</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      folder_key</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;folder-key></span><span style="color:#6A737D">        # e.g. golden-aks-daia</span></span>
+<span class="line"><span style="color:#85E89D">      folder_title</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;display name></span></span>
+<span class="line"><span style="color:#85E89D">      dashboard_flavours</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        - </span><span style="color:#9ECBFF">&#x3C;flavour-path></span><span style="color:#6A737D">              # see Flavour system section</span></span>
+<span class="line"><span style="color:#85E89D">      alert_flavours</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        - </span><span style="color:#9ECBFF">&#x3C;flavour-path></span></span>
+<span class="line"><span style="color:#85E89D">    environments</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      &#x3C;env></span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        status</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">active | planned</span></span>
+<span class="line"><span style="color:#85E89D">        deployment_environment</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;env-label></span></span>
+<span class="line"><span style="color:#85E89D">        use_contact_points</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">          - </span><span style="color:#9ECBFF">&#x3C;primary-cp-name></span><span style="color:#6A737D">         # index 0 → contact point in generated alert JSON</span></span>
+<span class="line"><span style="color:#E1E4E8">          - </span><span style="color:#9ECBFF">&#x3C;extra-cp-name></span><span style="color:#6A737D">           # index 1+ → additional continue=true notification routes</span></span>
+<span class="line"><span style="color:#85E89D">        synthetics</span><span style="color:#E1E4E8">:                   </span><span style="color:#6A737D"># optional — list of synthetic monitoring checks for this env</span></span>
+<span class="line"><span style="color:#E1E4E8">          - </span><span style="color:#85E89D">key</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;check-key></span></span>
+<span class="line"><span style="color:#85E89D">            type</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">browser | http | tcp</span></span>
+<span class="line"><span style="color:#85E89D">            job</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;job-name></span></span>
+<span class="line"><span style="color:#85E89D">            target</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;url-or-host:port></span></span>
+<span class="line"><span style="color:#85E89D">            frequency</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;milliseconds></span></span>
+<span class="line"><span style="color:#85E89D">            timeout</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;milliseconds></span></span>
+<span class="line"><span style="color:#85E89D">            probes</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">&#x3C;probe-id></span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">...</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#6A737D">            # http-only options:</span></span>
+<span class="line"><span style="color:#85E89D">            method</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">GET | POST</span><span style="color:#6A737D">                    # optional, default GET</span></span>
+<span class="line"><span style="color:#85E89D">            bearer_token_kv_slug</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;kv-slug></span><span style="color:#6A737D">       # optional, KV secret suffix for bearer auth</span></span>
+<span class="line"><span style="color:#85E89D">            tls_insecure_skip_verify</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">false</span><span style="color:#6A737D">        # optional</span></span>
+<span class="line"><span style="color:#85E89D">        clusters</span><span style="color:#E1E4E8">: [</span><span style="color:#79B8FF">...</span><span style="color:#E1E4E8">]               </span><span style="color:#6A737D"># AKS products only — reserved for future Alloy deployment</span></span>
+<span class="line"><span style="color:#85E89D">        azure</span><span style="color:#E1E4E8">: {</span><span style="color:#79B8FF">...</span><span style="color:#E1E4E8">}                  </span><span style="color:#6A737D"># ACA products only — ARM resource identifiers for alert tokens</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="field-reference">Field reference</h2>
+<h3 id="product-level-fields">Product-level fields</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody><tr><td><code>platform</code></td><td>Infrastructure type: <code>aks</code>, <code>aca</code>, or <code>onprem</code>. Drives default dashboard and alert flavours when not explicitly set.</td></tr><tr><td><code>team.name</code></td><td>Display name shown in Grafana for this team.</td></tr><tr><td><code>team.email</code></td><td>Team contact email.</td></tr><tr><td><code>team.dashboardRole</code></td><td>Grafana folder permission for this team: <code>Editor</code> or <code>Viewer</code>. SRE always gets Admin.</td></tr><tr><td><code>team.members</code></td><td>List of Grafana login emails (Azure AD UPN). User must have logged in via SSO at least once before Terraform can add them.</td></tr><tr><td><code>terraform_envs</code></td><td>Which Terraform stacks deploy this product: <code>shipsoliddev</code> (nonprod), <code>shipsolid</code> (prod). Removing an env from this list automatically destroys its resources on next apply.</td></tr><tr><td><code>contact_points</code></td><td>Contact point definitions owned by this product, grouped by type: <code>teams</code>, <code>webhook</code>, or <code>email</code>. All products’ contact_points are merged into a single flat map by the observability-stack module.</td></tr><tr><td><code>faro</code></td><td>Optional. Per-stack Faro frontend observability config, keyed by terraform_env. Terraform writes the values to Azure Key Vault.</td></tr></tbody></table>
+<h3 id="grafana-block"><code>grafana</code> block</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody><tr><td><code>folder_key</code></td><td>Key identifying this product’s Grafana folder (e.g. <code>golden-aks-daia</code>). Used as both the Terraform resource key and Grafana folder UID. Auto-creates the folder under <code>sre-root</code>.</td></tr><tr><td><code>folder_title</code></td><td>Human-readable folder name shown in the Grafana UI.</td></tr><tr><td><code>dashboard_flavours</code></td><td>List of dashboard flavour paths to deploy. If omitted, the platform default is used. See <a href="#flavour-system">Flavour system</a>.</td></tr><tr><td><code>alert_flavours</code></td><td>List of alert flavour paths to deploy. If omitted, the platform default is used.</td></tr></tbody></table>
+<h3 id="environmentsenv-block"><code>environments.&#x3C;env></code> block</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody><tr><td><code>status</code></td><td><code>active</code> — deployed and actively evaluated. <code>planned</code> — entry exists in YAML but Terraform skips it.</td></tr><tr><td><code>deployment_environment</code></td><td>Value of the <code>deployment_environment</code> Prometheus/Loki label (e.g. <code>daia-dev</code>, <code>aca-dgeg-mdixai-dev</code>). Used in PromQL selectors, LBAC rules, and alert rule token substitution.</td></tr><tr><td><code>use_contact_points</code></td><td>List of contact point names. Index 0 → primary contact point in generated alert JSON. Indexes 1+ → additional <code>continue=true</code> notification policy routes for this environment.</td></tr><tr><td><code>synthetics</code></td><td>Optional list of synthetic monitoring checks for this environment. See <a href="#synthetics">Synthetics</a>.</td></tr></tbody></table>
+<h3 id="clusters-block-aks-products-only"><code>clusters</code> block (AKS products only)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody><tr><td><code>cluster_name</code></td><td>AKS cluster name.</td></tr><tr><td><code>subscription_id</code></td><td>Azure subscription containing the cluster.</td></tr><tr><td><code>resource_group</code></td><td>Resource group containing the cluster.</td></tr><tr><td><code>namespace</code></td><td>Kubernetes namespace where the monitoring agent is deployed.</td></tr><tr><td><code>credentials_secret</code></td><td>GitHub Actions secret name holding Azure credentials for this cluster.</td></tr></tbody></table>
+<h3 id="azure-block-aca-products-only"><code>azure</code> block (ACA products only)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Description</th></tr></thead><tbody><tr><td><code>subscription_id</code></td><td>Azure subscription for this environment.</td></tr><tr><td><code>resource_groups</code></td><td>List of resource groups, each with a <code>name</code> and a <code>resources</code> list of <code>{name, type}</code> entries. Types: <code>container_app</code>, <code>app_gateway</code>, <code>key_vault</code>, <code>sql_mi</code>.</td></tr></tbody></table>
+<hr>
+<h2 id="platform-types">Platform types</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Platform</th><th>Metrics source</th><th>Azure Monitor</th><th>Default dashboard flavour</th><th>Default alert flavour</th></tr></thead><tbody><tr><td><code>aks</code></td><td>Prometheus (<code>node_exporter</code>, <code>kube-state-metrics</code>)</td><td>No</td><td><code>aks/standard</code></td><td><code>aks/standard</code></td></tr><tr><td><code>aca</code></td><td>Azure Monitor + Faro OTEL</td><td>Yes</td><td><code>aca/standard</code></td><td><code>aca/standard</code></td></tr><tr><td><code>onprem</code></td><td>Prometheus</td><td>No</td><td><code>onprem/standard</code></td><td><em>(none)</em></td></tr><tr><td><code>sap</code></td><td>SAP-native metrics</td><td>No</td><td><em>(planned)</em></td><td><em>(planned)</em></td></tr></tbody></table>
+<p>Platform defaults apply only when <code>dashboard_flavours</code> / <code>alert_flavours</code> are omitted from the
+product’s <code>grafana</code> block. Explicit flavour lists override the defaults entirely.</p>
+<hr>
+<h2 id="flavour-system">Flavour system</h2>
+<p>Dashboard and alert JSON files are <strong>pre-generated</strong> by <code>grafana_tf/tools/generate.py</code> and committed
+to the repository. Terraform consumes them as-is — no token substitution at apply time.</p>
+<h3 id="generator">Generator</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Generate all stacks</span></span>
+<span class="line"><span style="color:#B392F0">python</span><span style="color:#9ECBFF"> grafana_tf/tools/generate.py</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Generate a single stack</span></span>
+<span class="line"><span style="color:#B392F0">python</span><span style="color:#9ECBFF"> grafana_tf/tools/generate.py</span><span style="color:#79B8FF"> --stack</span><span style="color:#9ECBFF"> shipsoliddev</span></span>
+<span class="line"></span></code></pre>
+<p>Run the generator after any change to <code>products.yml</code> and commit the updated files under
+<code>grafana_tf/alert_rules/generated/</code> and <code>grafana_tf/dashboards/generated/</code>. CI enforces that
+committed files match the generator output.</p>
+<p><strong>Templates</strong> (Jinja2, <code>[[ ]]</code> variable delimiters to avoid conflict with Grafana’s <code>{{ $labels }}</code>
+syntax):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Directory</th><th>Purpose</th></tr></thead><tbody><tr><td><code>grafana_tf/alert_rules/templates/aks/standard.json.j2</code></td><td>AKS alert rules template</td></tr><tr><td><code>grafana_tf/alert_rules/templates/aca/standard.json.j2</code></td><td>ACA alert rules template — loops over <code>azure.container_apps</code> dynamically</td></tr><tr><td><code>grafana_tf/dashboards/templates/aks/standard/*.json.j2</code></td><td>AKS dashboard templates</td></tr><tr><td><code>grafana_tf/dashboards/templates/aca/standard/*.json.j2</code></td><td>ACA dashboard templates</td></tr><tr><td><code>grafana_tf/dashboards/templates/onprem/standard/*.json.j2</code></td><td>On-prem dashboard templates</td></tr><tr><td><code>grafana_tf/dashboards/templates/products/mdixai/*.json.j2</code></td><td>Bespoke MDIxAI dashboards</td></tr></tbody></table>
+<p><strong>Generated output</strong> (committed, one subdirectory per stack):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Directory</th><th>Contents</th></tr></thead><tbody><tr><td><code>grafana_tf/alert_rules/generated/&#x3C;stack>/</code></td><td><code>&#x3C;prod_key>-&#x3C;env_key>.json</code> — one file per active product environment</td></tr><tr><td><code>grafana_tf/dashboards/generated/&#x3C;stack>/</code></td><td><code>&#x3C;prod_key>-&#x3C;stem>.json</code> — one file per product per dashboard template</td></tr></tbody></table>
+<h3 id="alert-flavours">Alert flavours</h3>
+<p><code>alert_flavours</code> in each environment selects which template set to use. Standard flavours
+(<code>aks/standard</code>, <code>aca/standard</code>) are rendered by the generator. Product flavours (<code>products/&#x3C;name></code>)
+point to hand-crafted JSON files in <code>grafana_tf/alert_rules/products/&#x3C;name>/</code> — these are used as-is
+and are not rendered by the generator.</p>
+<p>Available standard flavours:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Path</th><th>Rules</th><th>Platform</th></tr></thead><tbody><tr><td><code>aks/standard</code></td><td>Cluster CPU/mem, node CPU/mem, OOM, container restarts</td><td>AKS</td></tr><tr><td><code>aca/standard</code></td><td>Container CPU/mem (dynamic per container app count), ACA metrics, restarts, failed requests, latency, APPGW, KV, SQL MI, synthetics</td><td>ACA</td></tr></tbody></table>
+<h3 id="dashboard-flavours">Dashboard flavours</h3>
+<p><code>dashboard_flavours</code> selects which template directory to render. The generator produces one output
+file per <code>.json.j2</code> template per product.</p>
+<p>Available standard flavours:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Path</th><th>Dashboards included</th></tr></thead><tbody><tr><td><code>aks/standard</code></td><td>Global, Namespaces, Nodes, Pods</td></tr><tr><td><code>aca/standard</code></td><td>Landing page, SRE persona, Developer persona, Product persona</td></tr><tr><td><code>onprem/standard</code></td><td>Landing page, SRE persona, Developer persona, Product persona</td></tr><tr><td><code>products/mdixai</code></td><td>Bespoke MDIxAI dashboards</td></tr></tbody></table>
+<p>Dashboard key format: <code>&#x3C;product-key>-&#x3C;filename-stem></code> (filename lowercased, spaces → hyphens). This
+is the Terraform state key — renaming a template file will destroy and recreate the dashboard
+resource.</p>
+<p>Alert rule key format (state key): <code>&#x3C;prod_key>-&#x3C;env_key></code> for standard flavours, <code>&#x3C;filename-stem></code>
+for product flavours (e.g. <code>hwa-dev.json</code> → key <code>hwa-dev</code>).</p>
+<hr>
+<h2 id="synthetics">Synthetics</h2>
+<p>Synthetic monitoring checks are defined per-environment under <code>environments.&#x3C;env>.synthetics</code>.
+Terraform auto-derives the <code>product_synthetic_checks</code> local from this structure and passes it to
+<code>module "synthetic_monitoring"</code>.</p>
+<h3 id="check-types">Check types</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Type</th><th>Description</th><th>Required extra fields</th></tr></thead><tbody><tr><td><code>browser</code></td><td>K6 browser script — file resolved at <code>grafana_tf/synthetics/&#x3C;product>/&#x3C;env>.js</code></td><td>—</td></tr><tr><td><code>http</code></td><td>HTTP probe with optional auth and TLS options</td><td><code>method</code>, <code>bearer_token</code>, <code>tls_insecure_skip_verify</code></td></tr><tr><td><code>tcp</code></td><td>TCP connectivity probe</td><td>—</td></tr></tbody></table>
+<h3 id="bearer-tokens">Bearer tokens</h3>
+<p>For HTTP checks requiring authentication, set <code>bearer_token_kv_slug</code> to the Azure Key Vault secret
+name suffix:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">synthetics</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">key</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">master-api</span></span>
+<span class="line"><span style="color:#85E89D">    type</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">http</span></span>
+<span class="line"><span style="color:#85E89D">    bearer_token_kv_slug</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">hwa-master-api-bearer-token</span><span style="color:#6A737D">  # KV secret: grafana-{stack}-hwa-master-api-bearer-token</span></span>
+<span class="line"></span></code></pre>
+<p>Terraform reads the secret via a <code>for_each</code> data source in <code>shipsolid/main.tf</code> — no code changes
+needed. The full KV secret name is <code>grafana-&#x3C;stack_slug>-&#x3C;bearer_token_kv_slug></code>. Pre-populate the
+secret in AKV before applying.</p>
+<h3 id="probe-ids">Probe IDs</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>ID</th><th>Region</th></tr></thead><tbody><tr><td>44</td><td><code>grafana-prod-44</code> (EU)</td></tr><tr><td>45</td><td><code>grafana-prod-45</code> (US East)</td></tr><tr><td>106</td><td><code>grafana-prod-106</code> (US West)</td></tr></tbody></table>
+<hr>
+<h2 id="terraform-environments">Terraform environments</h2>
+<p><code>terraform_envs</code> controls which Terraform stacks deploy a product. Products are filtered at plan
+time:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#6A737D"># In environments/shipsoliddev/main.tf</span></span>
+<span class="line"><span style="color:#E1E4E8">local</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">products = { </span><span style="color:#F97583">for</span><span style="color:#E1E4E8"> k, v </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> yamldecode</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">...</span><span style="color:#E1E4E8">)</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">products </span><span style="color:#F97583">:</span><span style="color:#E1E4E8"> k </span><span style="color:#F97583">=></span><span style="color:#E1E4E8"> v </span><span style="color:#F97583">if</span><span style="color:#79B8FF"> contains</span><span style="color:#E1E4E8">(v</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">terraform_envs, </span><span style="color:#9ECBFF">"shipsoliddev"</span><span style="color:#E1E4E8">) }</span></span>
+<span class="line"></span></code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Environment</th><th>Directory</th><th>Grafana stack</th><th>Scope</th></tr></thead><tbody><tr><td><code>shipsoliddev</code></td><td><code>environments/shipsoliddev/</code></td><td>Non-prod stack</td><td>dev, qa, train environments</td></tr><tr><td><code>shipsolid</code></td><td><code>environments/shipsolid/</code></td><td>Prod stack</td><td>prod environments (and any envs needing prod-level access)</td></tr></tbody></table>
+<p>Validate all changes in <code>shipsoliddev</code> before promoting to <code>shipsolid</code>.</p>
+<hr>
+<h2 id="team-membership">Team membership</h2>
+<p>Each product defines its team inline in <code>products.yml</code> under <code>team:</code>. There is no separate teams
+file.</p>
+<p><code>team.members</code> is a list of individual Grafana login emails (Azure AD UPN format). Users must have
+logged into the Grafana instance via SSO at least once before Terraform can add them.</p>
+<p>The SRE team always receives Admin on every folder regardless of product team role.</p>
+<hr>
+<h2 id="frontend-observability-faro">Frontend Observability (Faro)</h2>
+<p>Products using Grafana Faro for browser/frontend telemetry include a <code>faro</code> block at the product
+level:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">faro</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  app_id</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;numeric-app-id></span><span style="color:#6A737D">          # assigned in Grafana Cloud UI → Frontend Observability → Apps</span></span>
+<span class="line"><span style="color:#85E89D">  collection_url</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">https://faro-collector-&#x3C;region>.grafana.net/collect/&#x3C;token></span></span>
+<span class="line"><span style="color:#85E89D">  api_endpoint</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">https://faro-api-&#x3C;region>.grafana.net/faro/api/v1</span></span>
+<span class="line"></span></code></pre>
+<p>The Faro app is registered manually in the Grafana Cloud UI. Terraform then writes <code>collection_url</code>,
+<code>api_endpoint</code>, <code>app_id</code>, and a sourcemap token into Azure Key Vault for CI/CD and frontend team
+consumption.</p>
+<p>KV secret naming (all prefixed <code>grafana-{stack_slug}-faro-{product}-</code>):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Suffix</th><th>Purpose</th></tr></thead><tbody><tr><td><code>collection-url</code></td><td>Faro SDK collector endpoint — injected into the frontend app at build time</td></tr><tr><td><code>api-endpoint</code></td><td>Faro REST API base URL — used for sourcemap uploads</td></tr><tr><td><code>app-id</code></td><td>Numeric app ID within Frontend Observability</td></tr><tr><td><code>sourcemap-token</code></td><td>Cloud Access Policy token with <code>sourcemaps:read/write/delete</code> scopes</td></tr></tbody></table>
+<p>Currently <code>signal-forge</code> has a fully populated <code>faro</code> block (app ID 128, <code>shipsoliddev</code> stack).
+<code>mdixai</code> has a placeholder block for future onboarding — populate <code>app_id</code> and <code>collection_url</code>
+after registering the app in the Grafana Cloud UI.</p>
+<hr>
+<h2 id="how-to-add-a-new-environment-to-an-existing-product">How to: add a new environment to an existing product</h2>
+<p><strong>Example:</strong> adding <code>ieo-qa</code> (IEO on AKS, qa environment).</p>
+<p><strong>1. Update <code>products.yml</code></strong> — set <code>status: active</code> and fill in the environment block:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">ieo</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  environments</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    qa</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      status</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">active</span></span>
+<span class="line"><span style="color:#85E89D">      deployment_environment</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">ieo-qa</span></span>
+<span class="line"><span style="color:#85E89D">      use_contact_points</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        - </span><span style="color:#9ECBFF">teams-aks-ieo-nonprod</span></span>
+<span class="line"><span style="color:#85E89D">      clusters</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        - </span><span style="color:#85E89D">cluster_name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;qa-cluster-name></span></span>
+<span class="line"><span style="color:#85E89D">          subscription_id</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;subscription-id></span></span>
+<span class="line"><span style="color:#85E89D">          resource_group</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;resource-group></span></span>
+<span class="line"><span style="color:#85E89D">          namespace</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">ieo-sre-monitoring-ns-qa</span></span>
+<span class="line"><span style="color:#85E89D">          credentials_secret</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">AZURE_CREDENTIALS_IEO_QA</span></span>
+<span class="line"></span></code></pre>
+<p><strong>2. Add a synthetic check</strong> (optional) — add a <code>synthetics:</code> block under the environment and place
+the K6 script at <code>grafana_tf/synthetics/ieo/qa.js</code> for browser checks.</p>
+<p><strong>3. Run the generator</strong> — regenerate and commit the updated JSON files:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">python</span><span style="color:#9ECBFF"> grafana_tf/tools/generate.py</span></span>
+<span class="line"><span style="color:#B392F0">git</span><span style="color:#9ECBFF"> add</span><span style="color:#9ECBFF"> grafana_tf/alert_rules/generated/</span><span style="color:#9ECBFF"> grafana_tf/dashboards/generated/</span></span>
+<span class="line"></span></code></pre>
+<p><strong>4. Run <code>terraform plan</code> on <code>shipsoliddev</code></strong> — verify the expected alert rules and dashboards appear,
+then apply.</p>
+<p><strong>5. Promote to <code>shipsolid</code></strong> when the environment targets the prod stack.</p>
+<p>No changes to any <code>.tf</code> file are needed. Alert groups, dashboards, LBAC rules, and notification
+routes are all auto-derived from <code>products.yml</code>.</p>
+<hr>
+<h2 id="how-to-onboard-a-new-product">How to: onboard a new product</h2>
+<p><strong>1. Determine the platform</strong> (<code>aks</code>, <code>aca</code>, or <code>onprem</code>) — platform drives default flavours.
+Explicit <code>dashboard_flavours</code> / <code>alert_flavours</code> override the default.</p>
+<p><strong>2. Add the product block to <code>products.yml</code></strong> — use an existing product of the same platform as a
+template. Set <code>status: planned</code> for environments not yet wired.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">my-product</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  platform</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">aks</span></span>
+<span class="line"><span style="color:#85E89D">  team</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"My Product Team"</span></span>
+<span class="line"><span style="color:#85E89D">    email</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"myteam@shipsolid.com"</span></span>
+<span class="line"><span style="color:#85E89D">    dashboardRole</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Editor</span></span>
+<span class="line"><span style="color:#85E89D">    members</span><span style="color:#E1E4E8">: []</span></span>
+<span class="line"><span style="color:#85E89D">  terraform_envs</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">shipsoliddev</span><span style="color:#E1E4E8">]   </span><span style="color:#6A737D"># add shipsolid when prod environments are ready</span></span>
+<span class="line"><span style="color:#85E89D">  grafana</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    folder_key</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">golden-aks-my-product</span></span>
+<span class="line"><span style="color:#85E89D">    folder_title</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Golden-AKS-MyProduct</span></span>
+<span class="line"><span style="color:#6A737D">    # dashboard_flavours and alert_flavours are optional — platform defaults apply</span></span>
+<span class="line"><span style="color:#85E89D">  environments</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    dev</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      status</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">active</span></span>
+<span class="line"><span style="color:#85E89D">      deployment_environment</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">my-product-dev</span></span>
+<span class="line"><span style="color:#85E89D">      use_contact_points</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        - </span><span style="color:#9ECBFF">teams-my-product-nonprod</span></span>
+<span class="line"></span></code></pre>
+<p><strong>3. Run the generator</strong> — regenerate and commit the updated JSON files:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">python</span><span style="color:#9ECBFF"> grafana_tf/tools/generate.py</span></span>
+<span class="line"><span style="color:#B392F0">git</span><span style="color:#9ECBFF"> add</span><span style="color:#9ECBFF"> grafana_tf/alert_rules/generated/</span><span style="color:#9ECBFF"> grafana_tf/dashboards/generated/</span></span>
+<span class="line"></span></code></pre>
+<p><strong>4. Add product alert JSON files</strong> (for <code>products/&#x3C;name></code> flavour) — place files in
+<code>grafana_tf/alert_rules/products/my-product/</code>. Use dash-separated filenames (<code>my-product-dev.json</code>).
+They are auto-scanned and used as-is (not rendered by the generator).</p>
+<p><strong>5. Run <code>terraform plan</code> on <code>shipsoliddev</code> first</strong> — verify dashboards, alert groups, folder, team,
+and LBAC rules are as expected. Apply, then validate in the UI.</p>
+<p><strong>6. Add to <code>shipsolid</code></strong> — change <code>terraform_envs</code> to <code>[shipsoliddev, shipsolid]</code>, run the generator again,
+and apply to shipsolid when prod environments are onboarded.</p>
+<hr>
+<h2 id="current-product-status">Current product status</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Product</th><th>Platform</th><th>dev</th><th>qa</th><th>train</th><th>prod</th><th>Synthetics</th><th>Faro</th></tr></thead><tbody><tr><td>daia</td><td>aks</td><td>active</td><td>active</td><td>—</td><td>planned</td><td>—</td><td>—</td></tr><tr><td>ieo</td><td>aks</td><td>active</td><td>planned</td><td>—</td><td>planned</td><td>—</td><td>—</td></tr><tr><td>mdixai</td><td>aca</td><td>active</td><td>active</td><td>active</td><td>active</td><td>browser (all envs)</td><td>placeholder</td></tr><tr><td>passport</td><td>aca</td><td>active</td><td>active</td><td>planned</td><td>planned</td><td>—</td><td>—</td></tr><tr><td>hwa</td><td>onprem</td><td>active</td><td>—</td><td>—</td><td>active</td><td>browser + http + tcp (prod)</td><td>—</td></tr><tr><td>ot</td><td>onprem</td><td>global</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr><td>signal-forge</td><td>aks</td><td>active</td><td>—</td><td>—</td><td>—</td><td>—</td><td>active (shipsoliddev)</td></tr></tbody></table>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#table-of-contents" data-slug="table-of-contents" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Table of Contents</a></li><li data-astro-cid-xvrfupwn><a href="#file-structure" data-slug="file-structure" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>File structure</a></li><li data-astro-cid-xvrfupwn><a href="#field-reference" data-slug="field-reference" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Field reference</a></li><li data-astro-cid-xvrfupwn><a href="#product-level-fields" data-slug="product-level-fields" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Product-level fields</a></li><li data-astro-cid-xvrfupwn><a href="#grafana-block" data-slug="grafana-block" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>grafana block</a></li><li data-astro-cid-xvrfupwn><a href="#environmentsenv-block" data-slug="environmentsenv-block" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>environments.&lt;env&gt; block</a></li><li data-astro-cid-xvrfupwn><a href="#clusters-block-aks-products-only" data-slug="clusters-block-aks-products-only" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>clusters block (AKS products only)</a></li><li data-astro-cid-xvrfupwn><a href="#azure-block-aca-products-only" data-slug="azure-block-aca-products-only" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>azure block (ACA products only)</a></li><li data-astro-cid-xvrfupwn><a href="#platform-types" data-slug="platform-types" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Platform types</a></li><li data-astro-cid-xvrfupwn><a href="#flavour-system" data-slug="flavour-system" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Flavour system</a></li><li data-astro-cid-xvrfupwn><a href="#generator" data-slug="generator" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Generator</a></li><li data-astro-cid-xvrfupwn><a href="#alert-flavours" data-slug="alert-flavours" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Alert flavours</a></li><li data-astro-cid-xvrfupwn><a href="#dashboard-flavours" data-slug="dashboard-flavours" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Dashboard flavours</a></li><li data-astro-cid-xvrfupwn><a href="#synthetics" data-slug="synthetics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Synthetics</a></li><li data-astro-cid-xvrfupwn><a href="#check-types" data-slug="check-types" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Check types</a></li><li data-astro-cid-xvrfupwn><a href="#bearer-tokens" data-slug="bearer-tokens" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Bearer tokens</a></li><li data-astro-cid-xvrfupwn><a href="#probe-ids" data-slug="probe-ids" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Probe IDs</a></li><li data-astro-cid-xvrfupwn><a href="#terraform-environments" data-slug="terraform-environments" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Terraform environments</a></li><li data-astro-cid-xvrfupwn><a href="#team-membership" data-slug="team-membership" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Team membership</a></li><li data-astro-cid-xvrfupwn><a href="#frontend-observability-faro" data-slug="frontend-observability-faro" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Frontend Observability (Faro)</a></li><li data-astro-cid-xvrfupwn><a href="#how-to-add-a-new-environment-to-an-existing-product" data-slug="how-to-add-a-new-environment-to-an-existing-product" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>How to: add a new environment to an existing product</a></li><li data-astro-cid-xvrfupwn><a href="#how-to-onboard-a-new-product" data-slug="how-to-onboard-a-new-product" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>How to: onboard a new product</a></li><li data-astro-cid-xvrfupwn><a href="#current-product-status" data-slug="current-product-status" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Current product status</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

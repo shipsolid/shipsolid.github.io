@@ -1,0 +1,339 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>SLO Registry — Notes — Amit Singh</title><meta name="description" content="Registry of all SLOs across ShipSolid platform services."><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/03-reliability-engineering/slo-registry/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="SLO Registry — Notes — Amit Singh"><meta property="og:description" content="Registry of all SLOs across ShipSolid platform services."><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/03-reliability-engineering/slo-registry/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="SLO Registry — Notes — Amit Singh"><meta name="twitter:description" content="Registry of all SLOs across ShipSolid platform services."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-03-reliability-engineering" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>03 Reliability Engineering</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> SLO Registry </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Registry of all SLOs across ShipSolid platform services.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 9, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/sre" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>SRE</a><a href="/notes/tag/reliability" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Reliability</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="slo-registry">SLO Registry</h1>
+<h2 id="purpose">Purpose</h2>
+<p>Registry of all SLOs across ShipSolid platform services. This is the single source of truth for what
+each service promises, how it is measured, and who owns the budget. Estate: ~40 services across 3
+AKS clusters (dev/qa/prod) on Azure; signals flow through OpenTelemetry → Grafana Alloy → Grafana
+Cloud (Mimir/Loki/Tempo).</p>
+<h2 id="canonical-template">Canonical template</h2>
+<p>New SLOs use <a href="slo-template.md">slo-template.md</a>.</p>
+<h2 id="registry">Registry</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Service</th><th>SLI</th><th>Objective</th><th>Window</th><th>Owner</th><th>Status</th></tr></thead><tbody><tr><td>api-gateway</td><td>availability (success ratio)</td><td>99.9%</td><td>30d rolling</td><td>Platform SRE</td><td>active</td></tr><tr><td>api-gateway</td><td>latency (p99 &#x3C; 300ms)</td><td>99.0%</td><td>30d rolling</td><td>Platform SRE</td><td>active</td></tr><tr><td>auth-service</td><td>availability (success ratio)</td><td>99.95%</td><td>30d rolling</td><td>Service Team Lead</td><td>active</td></tr><tr><td>billing-service</td><td>correctness (charge success ratio)</td><td>99.99%</td><td>30d rolling</td><td>Service Team Lead</td><td>active</td></tr><tr><td>notification-service</td><td>freshness (dispatch &#x3C; 60s)</td><td>99.0%</td><td>30d rolling</td><td>Service Team Lead</td><td>draft</td></tr><tr><td>tenant-service</td><td>availability (success ratio)</td><td>99.9%</td><td>30d rolling</td><td>Service Team Lead</td><td>active</td></tr></tbody></table>
+<blockquote>
+<p>Tiering: api-gateway, auth-service and billing-service are Tier 1 (customer-facing, on the
+synchronous critical path). tenant-service is Tier 1 control-plane. notification-service is Tier 2
+(async, degrades gracefully).</p>
+</blockquote>
+<hr>
+<h2 id="worked-example--api-gateway">Worked example — api-gateway</h2>
+<p><code>api-gateway</code> is the single ingress for all north-south traffic into the ShipSolid platform. Every
+authenticated customer request transits it before fan-out to <code>auth-service</code>, <code>billing-service</code>,
+<code>tenant-service</code>, and downstream. It is the highest-blast-radius service in the estate, so it gets
+the most scrutiny here.</p>
+<ul>
+<li><strong>Service</strong>: api-gateway</li>
+<li><strong>Owner</strong>: Platform SRE</li>
+<li><strong>Service Tier</strong>: Tier 1</li>
+<li><strong>Status</strong>: active</li>
+<li><strong>Window</strong>: 30-day rolling</li>
+<li><strong>Error Budget Dashboard</strong>:
+<code>[FILL: Grafana Cloud dashboard URL — folder /reliability/api-gateway]</code></li>
+</ul>
+<h3 id="1-slis-service-level-indicators">1. SLIs (Service Level Indicators)</h3>
+<p>Request-based SLIs measured at the gateway boundary. The metric <code>http_server_requests_total</code> is
+emitted by the OTel HTTP instrumentation and carries a <code>status</code> label normalized to status class
+(<code>2xx</code>/<code>3xx</code>/<code>4xx</code>/<code>5xx</code>) at the Alloy processor to keep cardinality bounded.</p>
+<p><strong>Availability — success ratio of <code>http_server_requests_total</code> by status class:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>sum(rate(http_server_requests_total{service="api-gateway", status=~"2..|3.."}[5m]))</span></span>
+<span class="line"><span>/</span></span>
+<span class="line"><span>sum(rate(http_server_requests_total{service="api-gateway"}[5m]))</span></span>
+<span class="line"><span></span></span></code></pre>
+<ul>
+<li><strong>Good event</strong>: HTTP 2xx + 3xx responses.</li>
+<li>4xx responses are <strong>client errors</strong> and excluded from the bad-event count (the gateway did its
+job). 5xx responses are bad events.</li>
+<li><strong>Excluded traffic</strong>: <code>/healthz</code>, <code>/readyz</code>, synthetic probes (<code>user_agent="grafana-synthetic"</code>),
+and internal admin endpoints under <code>/admin/*</code>.</li>
+</ul>
+<p><strong>Latency — p99 of the request-duration histogram below 300ms:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>histogram_quantile(</span></span>
+<span class="line"><span>  0.99,</span></span>
+<span class="line"><span>  sum(rate(http_server_request_duration_seconds_bucket{service="api-gateway"}[5m])) by (le)</span></span>
+<span class="line"><span>) &#x3C; 0.3</span></span>
+<span class="line"><span></span></span></code></pre>
+<ul>
+<li><strong>Good event</strong>: a request served in &#x3C; 300ms at the gateway boundary.</li>
+<li>Measured at the gateway, not at the client, so it excludes network RTT to the customer.</li>
+</ul>
+<blockquote>
+<p><strong>Cardinality note</strong>: <code>status</code> is collapsed to 4 classes and <code>le</code> buckets are pinned to the OTel
+default histogram boundaries. No per-route or per-tenant label on the SLI series — route/tenant
+breakdowns live in exemplars and Tempo traces, not in the SLI metric, to keep the active-series
+budget flat.</p>
+</blockquote>
+<h3 id="2-slo-service-level-objective">2. SLO (Service Level Objective)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>SLI</th><th>Target</th><th>Window</th><th>Error Budget</th></tr></thead><tbody><tr><td>Availability</td><td>99.9%</td><td>30-day rolling</td><td>0.1% = <strong>~43.8 min/month</strong> of allowed unavailability</td></tr><tr><td>Latency (p99 &#x3C; 300ms)</td><td>99.0% of windows</td><td>30-day rolling</td><td>1% = <strong>~7.2 hr/month</strong> of windows over 300ms</td></tr></tbody></table>
+<p><strong>Rationale for 99.9% (not 99.95%):</strong></p>
+<ul>
+<li>Customer SLA commits to 99.9% on the API surface; matching the internal SLO to the contract avoids
+burning engineering effort on reliability the contract does not require.</li>
+<li>The synchronous dependency chain (<code>auth-service</code> at 99.95%, <code>tenant-service</code> at 99.9%) means a
+gateway target above 99.9% would be dominated by dependency budget anyway.</li>
+<li>43.8 min/month is enough headroom for routine AKS node rotations and Alloy/Helm rollouts without
+freezing the release train.</li>
+</ul>
+<h3 id="3-multi-window-multi-burn-rate-alert-tiers">3. Multi-window, multi-burn-rate alert tiers</h3>
+<p>Short windows catch fast burns (something is on fire now); long windows catch slow burns (a steady
+drizzle of errors eating the budget). Burn rate <code>N×</code> means the budget is being consumed <code>N</code> times
+faster than the steady-state rate that would exhaust it exactly at the end of the 30-day window.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Tier</th><th>Burn rate</th><th>Short window</th><th>Long window (guard)</th><th>Severity</th><th>Routing</th></tr></thead><tbody><tr><td>Fast</td><td>14.4×</td><td>1h</td><td>5m</td><td><strong>SEV1</strong></td><td>Page on-call immediately via Grafana IRM</td></tr><tr><td>Medium</td><td>6×</td><td>6h</td><td>30m</td><td><strong>SEV2</strong></td><td>Page within 30 min via Grafana IRM</td></tr><tr><td>Slow</td><td>1×</td><td>3d</td><td>6h</td><td><strong>SEV3</strong></td><td>Ticket — no page</td></tr></tbody></table>
+<ul>
+<li><strong>14.4× / 1h (SEV1)</strong> — exhausts the full 30-day budget in ~50 hours. The 5m guard window must
+also be burning before it pages, to suppress single-scrape blips.</li>
+<li><strong>6× / 6h (SEV2)</strong> — exhausts the budget in ~5 days. Guarded by a 30m window.</li>
+<li><strong>1× / 3d (SEV3)</strong> — exactly on track to exhaust the budget at the 30-day mark. Guarded by a 6h
+window. Ticket only; sustained-degradation signal, not a fire.</li>
+</ul>
+<blockquote>
+<p>Alert rule expressions are catalogued in
+<a href="../05-platform-configuration/alert-rules-catalog.md">Alert Rules Catalog</a>; burn-rate mechanics
+are defined in <a href="error-budget-policy.md">Error Budget Policy</a>.</p>
+</blockquote>
+<h3 id="4-error-budget-release-gates">4. Error-budget release gates</h3>
+<p>Release velocity is gated on remaining 30-day budget. The On-call Engineer reads the budget off the
+error-budget dashboard before approving a change to api-gateway.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Budget remaining</th><th>Gate</th><th>Who decides exceptions</th></tr></thead><tbody><tr><td><strong>> 50%</strong></td><td><strong>Normal</strong> — ship freely at full velocity</td><td>—</td></tr><tr><td><strong>25–50%</strong></td><td><strong>Caution</strong> — non-critical changes on hold; risky/large changes need review</td><td>Service Team Lead</td></tr><tr><td><strong>&#x3C; 25%</strong></td><td><strong>Freeze risky changes</strong> — reliability work and incident fixes only</td><td>Service Team Lead + Platform SRE</td></tr><tr><td><strong>Exhausted</strong></td><td><strong>Freeze</strong> — no changes except incident fixes until budget recovers</td><td>Platform SRE owner of api-gateway</td></tr></tbody></table>
+<p>Full policy, including the exception-release process and how budget recovery is measured, lives in
+<a href="error-budget-policy.md">Error Budget Policy</a>. New api-gateway changes must clear the
+<a href="production-readiness-review.md">Production Readiness Review</a> gate before first prod deploy
+regardless of budget state.</p>
+<hr>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="error-budget-policy.md">Error Budget Policy</a></li>
+<li><a href="production-readiness-review.md">Production Readiness Review</a></li>
+</ul>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#purpose" data-slug="purpose" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Purpose</a></li><li data-astro-cid-xvrfupwn><a href="#canonical-template" data-slug="canonical-template" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Canonical template</a></li><li data-astro-cid-xvrfupwn><a href="#registry" data-slug="registry" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Registry</a></li><li data-astro-cid-xvrfupwn><a href="#worked-example--api-gateway" data-slug="worked-example--api-gateway" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Worked example — api-gateway</a></li><li data-astro-cid-xvrfupwn><a href="#1-slis-service-level-indicators" data-slug="1-slis-service-level-indicators" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>1. SLIs (Service Level Indicators)</a></li><li data-astro-cid-xvrfupwn><a href="#2-slo-service-level-objective" data-slug="2-slo-service-level-objective" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>2. SLO (Service Level Objective)</a></li><li data-astro-cid-xvrfupwn><a href="#3-multi-window-multi-burn-rate-alert-tiers" data-slug="3-multi-window-multi-burn-rate-alert-tiers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3. Multi-window, multi-burn-rate alert tiers</a></li><li data-astro-cid-xvrfupwn><a href="#4-error-budget-release-gates" data-slug="4-error-budget-release-gates" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4. Error-budget release gates</a></li><li data-astro-cid-xvrfupwn><a href="#related" data-slug="related" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Related</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

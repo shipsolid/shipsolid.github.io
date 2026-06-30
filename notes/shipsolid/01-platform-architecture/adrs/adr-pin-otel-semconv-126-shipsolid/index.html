@@ -1,0 +1,257 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline — Notes — Amit Singh</title><meta name="description" content="- **Status**: Proposed - **Date**: 2026-05-07"><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline — Notes — Amit Singh"><meta property="og:description" content="- **Status**: Proposed - **Date**: 2026-05-07"><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline — Notes — Amit Singh"><meta name="twitter:description" content="- **Status**: Proposed - **Date**: 2026-05-07"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-01-platform-architecture" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>01 Platform Architecture</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>- **Status**: Proposed - **Date**: 2026-05-07</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 9, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/architecture" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Architecture</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="adr-006-pin-opentelemetry-semantic-conventions-to-v126-as-platform-baseline">ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline</h1>
+<ul>
+<li><strong>Status</strong>: Proposed</li>
+<li><strong>Date</strong>: 2026-05-07</li>
+<li><strong>Authors</strong>: <a href="mailto:amit.singh@shipsolid.com">Amit Singh</a></li>
+<li><strong>Deciders</strong>: <a href="mailto:amit.singh@shipsolid.com">Amit Singh</a> — pending platform team review</li>
+<li><strong>Supersedes</strong>: N/A</li>
+<li><strong>Related RFC</strong>: N/A</li>
+<li><strong>Project/Context</strong>: ShipSolid observability platform — Azure Container Apps (.NET + Python) on
+Grafana Cloud (Mimir + Loki + Tempo)</li>
+</ul>
+<hr>
+<h2 id="1-context">1. Context</h2>
+<p>The ShipSolid observability platform serves 50+ Azure Container Apps across 12+ engineering teams in
+two SDK languages (.NET 8 and Python 3.11+), exporting to Grafana Cloud. OpenTelemetry semantic
+conventions (semconv) define the canonical names and shapes of metrics, span attributes, and
+resource attributes — they are the schema contract that dashboards, alerts, and SLOs query against.</p>
+<p>Three forces make an explicit version pin necessary:</p>
+<ol>
+<li><strong>Breaking renames in upstream semconv.</strong> Between semconv 1.21 and 1.23, <code>http.server.duration</code>
+was renamed to <code>http.server.request.duration</code>, status code attribute moved from
+<code>http.status_code</code> to <code>http.response.status_code</code>, and several queue / messaging attributes were
+renamed. SDK auto-instrumentation libraries follow these renames on their own release cadence.</li>
+<li><strong>Heterogeneous SDK upgrade cadence across teams.</strong> With 12+ teams owning their own service
+templates and dependency upgrades, two services in the same regional fleet can emit
+differently-named telemetry for the same operation if no platform pin is enforced. Dashboards
+built against one name silently lose half their data.</li>
+<li><strong>Alert / dashboard contract.</strong> Recording rules, SLO definitions, and Grafana panels reference
+attribute names directly. Any silent rename invalidates the alerting layer without producing a
+“config error” — it produces missing data and false-quiet alerts.</li>
+</ol>
+<p>The <a href="../designs/telemetry-schema-design.md">telemetry-schema-design.md</a> document references
+semconv 1.26 as its baseline (§15) but no standalone ADR captures the decision, the rejected
+alternatives, or the upgrade process. Without a load-bearing ADR, a future SDK bump in any one
+service’s <code>Dockerfile</code> could unilaterally break the platform’s observability contract.</p>
+<hr>
+<h2 id="2-decision">2. Decision</h2>
+<p>Pin OpenTelemetry <strong>semantic conventions to v1.26</strong> as the platform baseline for all ShipSolid Azure
+Container Apps services and the Grafana Alloy gateway tier.</p>
+<p>The pin is enforced at three layers:</p>
+<ul>
+<li><strong>Service template</strong> (a-governance/service-template/) pins
+SDK package versions whose semconv-version metadata corresponds to 1.26.</li>
+<li><strong>Alloy gateway</strong> runs the matching processor pipeline (e.g., <code>transform</code> rules expecting 1.26
+attribute names).</li>
+<li><strong>Schema registry / dashboards</strong> reference attribute names from 1.26 only.</li>
+</ul>
+<p>Bumping the platform-wide pin requires:</p>
+<ol>
+<li>A new ADR superseding this one.</li>
+<li>A cardinality and query-impact assessment against the dashboard inventory.</li>
+<li>A <strong>six-week dual-emission window</strong> (<code>emit_old: true</code> on the SDK exporter where the upstream
+library supports it, otherwise an Alloy <code>transform</code> processor that re-asserts old attribute names
+alongside new) before any dashboard or alert is migrated.</li>
+<li>Dashboard and alert rule update PRs landing <strong>before</strong> the pin flips.</li>
+<li>Registry update with the new version.</li>
+</ol>
+<hr>
+<h2 id="3-rationale">3. Rationale</h2>
+<h3 id="why-pin-and-why-126">Why pin, and why 1.26?</h3>
+<p>Pinning is the only mechanism that prevents silent observability regression when a team upgrades an
+unrelated dependency. v1.26 is selected because:</p>
+<ul>
+<li>It is the most recent semconv release where the <strong>HTTP, queue, messaging, and database</strong> attribute
+groups have all reached <code>stable</code> status. Earlier (1.21) still had <code>http.server.duration</code> as the
+canonical name; later “latest” trains still have <code>experimental</code> flux in the database group.</li>
+<li>Both <code>OpenTelemetry-DotNet</code> and <code>opentelemetry-python</code> ship contract-compatible releases that
+adopt 1.26 naming under their stable channels.</li>
+<li>Mimir / Loki / Tempo in Grafana Cloud all accept 1.26-named attributes natively without bridge
+configuration.</li>
+</ul>
+<h3 id="why-not-track-latest">Why not “track latest”?</h3>
+<p>Auto-tracking upstream means a 1.27 release in upstream OTel auto-propagates to whichever team
+upgrades first. That team’s services emit new names; every other team continues emitting old names;
+every dashboard breaks for a subset of services. The whole platform’s observability quality becomes
+a function of who ran <code>dotnet outdated</code> last.</p>
+<h3 id="why-a-dual-emission-window">Why a dual-emission window?</h3>
+<p>Cutover-without-overlap means dashboards and alerts go dark between the SDK rollout and the
+dashboard migration. Dual-emission keeps the old name flowing alongside the new for the duration of
+the migration, removing the all-or-nothing failure mode.</p>
+<hr>
+<h2 id="4-alternatives-considered">4. Alternatives Considered</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Alternative</th><th>Reason for Rejection</th></tr></thead><tbody><tr><td>Track upstream “latest” semconv</td><td>Silent platform-wide regression risk on every minor upstream release; no central control over upgrade timing</td></tr><tr><td>Pin per-team (no platform-wide baseline)</td><td>Same data shape diverges across services; cross-team dashboards become unreliable; recording rules cannot be authored once</td></tr><tr><td>Pin to v1.21 (pre-rename, fewer changes)</td><td>Forecloses access to stable HTTP/messaging conventions; locks the platform into an end-of-life version with no upstream patching</td></tr><tr><td>Use only <code>stable</code> attributes, no version pin</td><td>Underspecified — “stable” is a per-version flag and changes between releases; doesn’t fix the silent-rename failure mode</td></tr><tr><td>Author ShipSolid-internal attribute schema and translate at the gateway</td><td>Maximum control but maximum work — duplicates upstream’s effort, adds a translation processor on every signal, alienates teams from the OTel ecosystem</td></tr></tbody></table>
+<hr>
+<h2 id="5-consequences">5. Consequences</h2>
+<h3 id="positive">Positive</h3>
+<ul>
+<li>Single attribute schema across all services, all teams, both SDK languages.</li>
+<li>Recording rules and SLO definitions can be authored once and reused.</li>
+<li>Dashboard library (k-docs/technical-designs/grafana-tf/) can
+be templated against a known attribute set.</li>
+<li>Upgrades are deliberate, observable, and reversible (dual-emission window).</li>
+</ul>
+<h3 id="negative--accepted-costs">Negative / accepted costs</h3>
+<ul>
+<li><strong>Drift cost as upstream advances.</strong> v1.26 will eventually be N versions behind. The platform team
+accepts the cost of curating an upgrade ADR roughly every 12–18 months.</li>
+<li><strong>Lock-out of newer SDK features tied to newer semconv.</strong> Teams cannot opportunistically adopt a
+1.28-only feature without going through the upgrade ADR. The platform accepts this friction as the
+price of consistency.</li>
+<li><strong>Service-template version pinning becomes a maintenance surface.</strong> The platform team owns keeping
+the template’s pinned SDK versions current with security patches without crossing the semconv
+boundary.</li>
+</ul>
+<h3 id="follow-ups-required">Follow-ups required</h3>
+<ul>
+<li>Update a-governance/service-template/ (.NET and Python
+variants) to pin SDK package versions whose semconv metadata = 1.26. Document the pin alongside
+each pinned package.</li>
+<li>Add CI check in service templates that fails if <code>OpenTelemetry.SemanticConventions</code> (or equivalent
+Python <code>opentelemetry-semantic-conventions</code>) resolves to a version outside the approved range.</li>
+<li>Build the Alloy <code>transform</code> dual-emission profile as a reusable module so the next ADR upgrade has
+plumbing already in place.</li>
+<li>Update
+<a href="../designs/telemetry-schema-design.md">k-docs/system-designs/telemetry-schema-design.md</a>
+§15 to reference this ADR by number.</li>
+<li>Author a runbook for the upgrade process (cardinality review → dual-emission → flip → tear-down).</li>
+</ul>
+<hr>
+<h2 id="6-reconsideration-criteria">6. Reconsideration Criteria</h2>
+<p>This decision should be revisited if any of the following occur:</p>
+<ol>
+<li><strong>Upstream stabilises a new semconv major</strong> (e.g., v2.x) with non-cosmetic improvements — log
+conventions, GenAI, profiling — that the ShipSolid platform wants to adopt.</li>
+<li><strong>Security or compliance vulnerability</strong> in a SDK version covered by the v1.26-compatible range,
+where the patched release also bumps semconv.</li>
+<li><strong>Vendor (Grafana Cloud) deprecates support</strong> for v1.26-named attributes in Mimir / Loki / Tempo.</li>
+<li><strong>Two or more ShipSolid services need an attribute that does not exist in v1.26</strong>, and the cost of
+waiting outweighs the upgrade cost.</li>
+<li><strong>Recording-rule maintenance burden</strong> from the version lag becomes structurally larger than a
+planned upgrade would cost.</li>
+</ol>
+<p>When triggered, author a new ADR proposing the new pinned version, the dual-emission timeline, and
+the dashboard migration plan. Mark this ADR as <code>Superseded</code> and reference the new ADR.</p>
+<hr>
+<h2 id="7-references">7. References</h2>
+<ul>
+<li><a href="../designs/telemetry-schema-design.md">k-docs/system-designs/telemetry-schema-design.md §15 — Semantic Conventions Versioning</a></li>
+<li><a href="https://github.com/open-telemetry/semantic-conventions">OpenTelemetry semantic conventions repository</a></li>
+<li><a href="https://opentelemetry.io/docs/specs/semconv/http/">OTel HTTP semconv stability statement (v1.23 stable promotion)</a></li>
+<li>ADR-002: Adopt Grafana Cloud for Unified Observability (lab)</li>
+<li>ADR-003: Adopt Grafana Cloud for Centralized Observability (ShipSolid platform)</li>
+</ul>
+<hr>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#1-context" data-slug="1-context" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Context</a></li><li data-astro-cid-xvrfupwn><a href="#2-decision" data-slug="2-decision" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Decision</a></li><li data-astro-cid-xvrfupwn><a href="#3-rationale" data-slug="3-rationale" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Rationale</a></li><li data-astro-cid-xvrfupwn><a href="#why-pin-and-why-126" data-slug="why-pin-and-why-126" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Why pin, and why 1.26?</a></li><li data-astro-cid-xvrfupwn><a href="#why-not-track-latest" data-slug="why-not-track-latest" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Why not “track latest”?</a></li><li data-astro-cid-xvrfupwn><a href="#why-a-dual-emission-window" data-slug="why-a-dual-emission-window" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Why a dual-emission window?</a></li><li data-astro-cid-xvrfupwn><a href="#4-alternatives-considered" data-slug="4-alternatives-considered" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Alternatives Considered</a></li><li data-astro-cid-xvrfupwn><a href="#5-consequences" data-slug="5-consequences" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Consequences</a></li><li data-astro-cid-xvrfupwn><a href="#positive" data-slug="positive" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Positive</a></li><li data-astro-cid-xvrfupwn><a href="#negative--accepted-costs" data-slug="negative--accepted-costs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Negative / accepted costs</a></li><li data-astro-cid-xvrfupwn><a href="#follow-ups-required" data-slug="follow-ups-required" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Follow-ups required</a></li><li data-astro-cid-xvrfupwn><a href="#6-reconsideration-criteria" data-slug="6-reconsideration-criteria" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Reconsideration Criteria</a></li><li data-astro-cid-xvrfupwn><a href="#7-references" data-slug="7-references" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. References</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

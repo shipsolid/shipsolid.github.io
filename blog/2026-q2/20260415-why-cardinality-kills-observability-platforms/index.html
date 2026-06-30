@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Why Cardinality Kills Observability Platforms (and How to Stop It) — Amit Singh</title><meta name="description" content="Cardinality is the silent killer of Prometheus-based observability platforms. Here's how it happens, how to detect it early, and the label schema discipline that keeps ingestion costs sane at scale."><link rel="canonical" href="https://shipsolid.github.io/blog/2026-q2/20260415-why-cardinality-kills-observability-platforms/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Why Cardinality Kills Observability Platforms (and How to Stop It) — Amit Singh"><meta property="og:description" content="Cardinality is the silent killer of Prometheus-based observability platforms. Here's how it happens, how to detect it early, and the label schema discipline that keeps ingestion costs sane at scale."><meta property="og:url" content="https://shipsolid.github.io/blog/2026-q2/20260415-why-cardinality-kills-observability-platforms/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Why Cardinality Kills Observability Platforms (and How to Stop It) — Amit Singh"><meta name="twitter:description" content="Cardinality is the silent killer of Prometheus-based observability platforms. Here's how it happens, how to detect it early, and the label schema discipline that keeps ingestion costs sane at scale."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-bvzihdzo]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-bvzihdzo] svg[data-astro-cid-bvzihdzo]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-bvzihdzo]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-bvzihdzo]:hover .copy-btn[data-astro-cid-bvzihdzo],.copy-btn[data-astro-cid-bvzihdzo]:focus-visible{opacity:1}.copy-btn[data-astro-cid-bvzihdzo]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CIHCLQex.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-bvzihdzo></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-bvzihdzo> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-bvzihdzo> <div class="flex flex-wrap gap-2 mb-4" data-astro-cid-bvzihdzo> <a href="/blog/tag/observability" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Observability </a><a href="/blog/tag/prometheus" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Prometheus </a><a href="/blog/tag/mimir" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Mimir </a><a href="/blog/tag/finops" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> FinOps </a><a href="/blog/tag/opentelemetry" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> OpenTelemetry </a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-bvzihdzo> Why Cardinality Kills Observability Platforms (and How to Stop It) </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-bvzihdzo>Cardinality is the silent killer of Prometheus-based observability platforms. Here&#39;s how it happens, how to detect it early, and the label schema discipline that keeps ingestion costs sane at scale.</p> <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-bvzihdzo> <time datetime="2026-04-15T00:00:00.000Z" data-astro-cid-bvzihdzo>April 15, 2026</time> <span data-astro-cid-bvzihdzo>·</span> <span data-astro-cid-bvzihdzo>8 min read</span>  <div class="ml-auto flex items-center gap-4" data-astro-cid-bvzihdzo> <img src="https://hits.sh/shipsolid.github.io/blog/2026-q2/20260415-why-cardinality-kills-observability-platforms.svg?style=flat-square&color=00d9a6&labelColor=1e293b&label=views" alt="view count" class="h-5 rounded" loading="eager" data-astro-cid-bvzihdzo> <a href="/rss.xml" class="flex items-center gap-1.5 text-slate-600 hover:text-accent transition-colors" title="RSS feed" data-astro-cid-bvzihdzo> <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20 4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" data-astro-cid-bvzihdzo></path> </svg>
+RSS
+</a> </div> </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-bvzihdzo> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-bvzihdzo> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Post" data-astro-cid-bvzihdzo> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-bvzihdzo>  <p>I’ve seen it happen three times now at different organisations. The team rolls out Prometheus.
+Everyone loves it. Then, six months in, someone adds a <code>request_id</code> label to an HTTP duration
+histogram, and ingestion costs triple overnight.</p>
+<p>Cardinality isn’t just a performance problem. It’s a cost problem, a reliability problem, and — if
+left unchecked — a reason the platform gets defunded.</p>
+<h2 id="what-cardinality-actually-means">What cardinality actually means</h2>
+<p>Every unique combination of label values creates a new time series. A metric like:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>http_request_duration_seconds{method="GET", status="200", path="/api/v1/users"}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>…is one time series. Add a <code>user_id</code> label with a million distinct users, and you now have a
+million time series from a single metric.</p>
+<p><strong>Active series</strong> are what Prometheus and Mimir actually store in memory and on disk. The ingestion
+cost of Grafana Cloud (or any hosted Prometheus service) scales directly with active series count.
+At the time of writing, most providers charge in the range of $0.50–$1.00 per million active series
+per month. That sounds cheap until you have 50 million series from a careless label.</p>
+<h2 id="the-patterns-that-cause-cardinality-explosions">The patterns that cause cardinality explosions</h2>
+<p><strong>High-churn labels.</strong> Anything that’s unique per request or session:</p>
+<ul>
+<li><code>request_id</code>, <code>trace_id</code>, <code>session_id</code></li>
+<li><code>user_id</code>, <code>customer_id</code> (unless cardinality is genuinely bounded)</li>
+<li>Raw timestamps in any form</li>
+<li>Kubernetes pod names without aggregation (pods restart and generate new unique values)</li>
+</ul>
+<p><strong>Unbounded enumerations.</strong> Labels where the value space grows with data:</p>
+<ul>
+<li>URL paths without normalisation (<code>/user/12345</code> vs <code>/user/67890</code> are two different series)</li>
+<li>Free-text error messages</li>
+<li>Version strings without a cardinality cap</li>
+</ul>
+<p><strong>Metric explosion from instrumentation libraries.</strong> Some framework-level auto-instrumentation
+(looking at you, some JDBC integrations) emits per-query metrics with the raw SQL as a label. This
+is catastrophic.</p>
+<h2 id="how-to-detect-it-before-it-kills-you">How to detect it before it kills you</h2>
+<p>Mimir and Prometheus both expose cardinality APIs:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Top series contributors — run this before any new label ships</span></span>
+<span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> 'http://prometheus:9090/api/v1/label/__name__/values'</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> jq</span><span style="color:#9ECBFF"> '.data | length'</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Per-metric cardinality (Mimir)</span></span>
+<span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> 'https://mimir.your-tenant.grafana.net/api/v1/cardinality/active_series?selector={job="my-service"}'</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  -H</span><span style="color:#9ECBFF"> "Authorization: Bearer </span><span style="color:#E1E4E8">$MIMIR_TOKEN</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> jq</span><span style="color:#9ECBFF"> '.cardinality_sum'</span></span>
+<span class="line"></span></code></pre>
+<p>At McCain, we added a cardinality gate as part of every Alloy pipeline review. Before any new label
+ships to Grafana Cloud, we run:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">promtool</span><span style="color:#9ECBFF"> check</span><span style="color:#9ECBFF"> rules</span><span style="color:#9ECBFF"> rules.yml</span></span>
+<span class="line"><span style="color:#B392F0">alloy</span><span style="color:#9ECBFF"> fmt</span><span style="color:#9ECBFF"> config.alloy</span></span>
+<span class="line"></span></code></pre>
+<p>…and estimate the series count manually using this formula:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>active_series ≈ unique_values(label_A) × unique_values(label_B) × ... × scrape_interval_multiplier</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>If the estimate exceeds our cardinality budget for that team (typically 50k series per service), the
+label gets pushed to logs or traces as an attribute instead.</p>
+<h2 id="the-label-schema-discipline-that-scales">The label schema discipline that scales</h2>
+<p>The rule we enforce across our fleet:</p>
+<blockquote>
+<p><strong>High-churn labels belong in logs and traces, not metrics.</strong></p>
+</blockquote>
+<p>Metrics are aggregates. They answer “how many requests failed with a 500 in the last 5 minutes?” —
+not “which user saw this specific error?” That question belongs in Loki or Tempo with an exemplar
+linking the metric to the trace.</p>
+<p>Our label policy in practice:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Label type</th><th>Destination</th></tr></thead><tbody><tr><td><code>status_code</code>, <code>method</code>, <code>region</code></td><td>Metrics (bounded, low cardinality)</td></tr><tr><td><code>service_name</code>, <code>cluster</code>, <code>env</code></td><td>Metrics (bounded by design)</td></tr><tr><td><code>user_id</code>, <code>request_id</code>, <code>trace_id</code></td><td>Logs + Traces only</td></tr><tr><td><code>pod_name</code></td><td>Metrics only via <code>_info</code> metric pattern</td></tr><tr><td>Raw error messages</td><td>Logs only</td></tr></tbody></table>
+<p>The OpenTelemetry Collector (and Grafana Alloy) both support label transforms that let you drop,
+hash, or aggregate before data reaches the TSDB. We use <code>transform/drop_high_churn</code> processors
+heavily:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># Alloy pipeline: drop high-churn labels before Mimir write</span></span>
+<span class="line"><span style="color:#9ECBFF">prometheus.relabel "cardinality_guard" {</span></span>
+<span class="line"><span style="color:#9ECBFF">  rule {</span></span>
+<span class="line"><span style="color:#9ECBFF">    source_labels = ["request_id"]</span></span>
+<span class="line"><span style="color:#9ECBFF">    action = "labeldrop"</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#9ECBFF">  rule {</span></span>
+<span class="line"><span style="color:#9ECBFF">    source_labels = ["user_id"]</span></span>
+<span class="line"><span style="color:#9ECBFF">    action = "labeldrop"</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<h2 id="the-finops-lens">The FinOps lens</h2>
+<p>At the scale we operate (hundreds of services, multiple AKS clusters), a cardinality discipline is a
+direct budget control. We run a monthly ingestion report against our Grafana Cloud usage API and
+attribute costs back to teams by <code>job</code> label. When a team’s ingestion spikes, the first question is
+always: <em>what new label did you add?</em></p>
+<p>This accountability loop — cost visibility to team level — is what actually changes behaviour. Rules
+and docs don’t. Seeing your team’s line item double on the monthly dashboard does.</p>
+<h2 id="closing-thought">Closing thought</h2>
+<p>Cardinality governance isn’t glamorous, but it’s one of the highest-leverage practices in platform
+observability. Every label you add is a commitment to carrying that cardinality for the life of the
+service. Treat label additions the way you treat adding a new column to a high-traffic database
+table: plan it, estimate it, gate it.</p>
+<p>The platforms that scale well are the ones where engineers understand that <strong>metrics are
+contracts</strong>, not free annotations.</p>  </div> <!-- Related posts --> <div class="mt-16 pt-8 border-t border-slate-800"><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Related posts</p><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><a href="/blog/2026-q2/20260610-grafana-azure-monitor-plugin-limitations-push-exporter" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">Observability</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">Unbounded Cardinality, Zero Alerts, and 14-Second Dashboard Loads: The Structural Limits of the Grafana Azure Monitor Plugin</h3><p class="text-xs font-mono text-slate-600">Jun 10, 2026</p></a><a href="/blog/2026-q2/20260525-self-silencing-observability" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">GrafanaAlloy</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">The Self-Silencing Anti-Pattern: Why Your Observability Stack Goes Blind When You Need It Most</h3><p class="text-xs font-mono text-slate-600">May 25, 2026</p></a><a href="/blog/2026-q2/20260526-alloy-max-shards-monitoring-blackout" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">Observability</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">How Alloy&#39;s Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout</h3><p class="text-xs font-mono text-slate-600">May 26, 2026</p></a></div></div> <!-- Prev / Next navigation --> <div class="mt-16 pt-8 border-t border-slate-800 grid grid-cols-2 gap-4" data-astro-cid-bvzihdzo> <div data-astro-cid-bvzihdzo></div> <a href="/blog/2026-q2/20260501-sre-agent-autonomous-incident-response" class="card group block hover:-translate-y-0.5 no-underline text-right" data-astro-cid-bvzihdzo> <p class="text-xs font-mono text-slate-600 mb-1.5 flex items-center gap-1 justify-end" data-astro-cid-bvzihdzo>
+Newer
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-bvzihdzo></path> </svg> </p> <p class="text-sm text-slate-300 group-hover:text-accent transition-colors leading-snug" data-astro-cid-bvzihdzo> Building an SRE Agent: From Playbook to Autonomous Incident Response </p> </a> </div> <!-- Back / Home links --> <div class="mt-8 flex items-center justify-between" data-astro-cid-bvzihdzo> <a href="/blog" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-bvzihdzo>
+← All posts
+</a> <a href="/" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-bvzihdzo>Home</a> </div> <!-- Comments --> <div class="mt-16 pt-8 border-t border-slate-800"> <p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Discussion</p> <script src="https://giscus.app/client.js" data-repo="shipsolid/shipsolid.github.io" data-repo-id="R_kgDOOr14lw" data-category="General" data-category-id="DIC_kwDOOr14l84C9sb9" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async></script> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-bvzihdzo> <div class="sticky top-24" data-astro-cid-bvzihdzo> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#what-cardinality-actually-means" data-slug="what-cardinality-actually-means" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What cardinality actually means</a></li><li data-astro-cid-xvrfupwn><a href="#the-patterns-that-cause-cardinality-explosions" data-slug="the-patterns-that-cause-cardinality-explosions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The patterns that cause cardinality explosions</a></li><li data-astro-cid-xvrfupwn><a href="#how-to-detect-it-before-it-kills-you" data-slug="how-to-detect-it-before-it-kills-you" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>How to detect it before it kills you</a></li><li data-astro-cid-xvrfupwn><a href="#the-label-schema-discipline-that-scales" data-slug="the-label-schema-discipline-that-scales" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The label schema discipline that scales</a></li><li data-astro-cid-xvrfupwn><a href="#the-finops-lens" data-slug="the-finops-lens" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The FinOps lens</a></li><li data-astro-cid-xvrfupwn><a href="#closing-thought" data-slug="closing-thought" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Closing thought</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

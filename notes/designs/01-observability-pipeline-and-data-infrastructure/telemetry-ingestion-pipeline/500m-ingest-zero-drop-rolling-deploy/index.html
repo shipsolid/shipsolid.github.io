@@ -1,0 +1,550 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Q1: 500M Samples/Sec, Zero Drop on Rolling Deploy — Notes — Amit Singh</title><meta name="description" content="Full principal-level solution: design a telemetry ingestion pipeline for 500M metric samples/sec from 100K services globally with a zero-drop guarantee during rolling deployment of the ingestion tier."><link rel="canonical" href="https://shipsolid.github.io/notes/designs/01-observability-pipeline-and-data-infrastructure/telemetry-ingestion-pipeline/500m-ingest-zero-drop-rolling-deploy/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Q1: 500M Samples/Sec, Zero Drop on Rolling Deploy — Notes — Amit Singh"><meta property="og:description" content="Full principal-level solution: design a telemetry ingestion pipeline for 500M metric samples/sec from 100K services globally with a zero-drop guarantee during rolling deployment of the ingestion tier."><meta property="og:url" content="https://shipsolid.github.io/notes/designs/01-observability-pipeline-and-data-infrastructure/telemetry-ingestion-pipeline/500m-ingest-zero-drop-rolling-deploy/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Q1: 500M Samples/Sec, Zero Drop on Rolling Deploy — Notes — Amit Singh"><meta name="twitter:description" content="Full principal-level solution: design a telemetry ingestion pipeline for 500M metric samples/sec from 100K services globally with a zero-drop guarantee during rolling deployment of the ingestion tier."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/designs" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Designs</a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Q1: 500M Samples/Sec, Zero Drop on Rolling Deploy </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Full principal-level solution: design a telemetry ingestion pipeline for 500M metric samples/sec from 100K services globally with a zero-drop guarantee during rolling deployment of the ingestion tier.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/system-design" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>system-design</a><a href="/notes/tag/observability" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>observability</a><a href="/notes/tag/telemetry" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>telemetry</a><a href="/notes/tag/maang-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>maang-prep</a><a href="/notes/tag/practice-q" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>practice-q</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="q1-design-a-telemetry-ingestion-pipeline">Q1: Design a Telemetry Ingestion Pipeline</h1>
+<blockquote>
+<p><strong>Prompt:</strong> Design a telemetry ingestion pipeline that can ingest 500M metric samples/sec from
+100K services globally. The system must never drop data during a rolling deployment of the
+ingestion tier.</p>
+</blockquote>
+<blockquote>
+<p><strong>The examiner’s intent:</strong> Can you design for operational continuity, not just steady-state
+throughput? The “never drop” constraint is the differentiator — it forces you to reason about the
+durability boundary, graceful shutdown, and agent-side resilience, not just raw scale math.</p>
+</blockquote>
+<hr>
+<h2 id="step-1-clarify-requirements">Step 1: Clarify Requirements</h2>
+<p>Before drawing a box diagram, nail down the constraints. For this prompt:</p>
+<p><strong>Confirm scale:</strong></p>
+<ul>
+<li>500M samples/sec — is this peak or sustained? (Assume sustained; peaks will be higher.)</li>
+<li>100K services — are these 100K unique Prometheus targets or 100K pods? (Pods → more agents.)</li>
+<li>“Globally” — how many regions? (Assume 3: US, EU, APAC. Roughly equal distribution.)</li>
+</ul>
+<p><strong>Confirm the zero-drop constraint scope:</strong></p>
+<ul>
+<li>“Ingestion tier” only, or the full pipeline including processors and storage?</li>
+<li>Rolling deploy = one pod replaced at a time, or a percent-at-a-time canary? (Assume
+one-at-a-time.)</li>
+<li>What is the acceptable delay SLO for data in-flight during a restart? (Assume data must be
+queryable within 60 seconds of the agent sending it, even through a deploy.)</li>
+</ul>
+<p><strong>Confirm signal type:</strong></p>
+<ul>
+<li>Metrics only (the prompt says “metric samples”) — no traces or logs in scope.</li>
+<li>Protocol: OTLP remote-write, Prometheus remote-write, or both? (Assume OTLP as primary, prom-rw as
+compat.)</li>
+</ul>
+<p><strong>What I’m NOT designing here:</strong></p>
+<ul>
+<li>Log or trace ingestion</li>
+<li>Query path (Mimir querier, Grafana dashboards)</li>
+<li>Multi-tenancy isolation (single internal platform assumed)</li>
+</ul>
+<hr>
+<h2 id="step-2-scale-math">Step 2: Scale Math</h2>
+<p>Do this out loud in an interview. Numbers anchor every component decision.</p>
+<h3 id="throughput">Throughput</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Value</th><th>Derivation</th></tr></thead><tbody><tr><td>Global ingest rate</td><td>500M samples/sec</td><td>Given</td></tr><tr><td>Per-region ingest rate</td><td>~167M samples/sec</td><td>500M / 3 regions</td></tr><tr><td>Services per region</td><td>~33K</td><td>100K / 3</td></tr><tr><td>Avg samples/sec per service</td><td>5,000</td><td>500M / 100K</td></tr><tr><td>Sample size (OTLP protobuf, compressed)</td><td>~20 bytes</td><td>Prometheus label set + timestamp + value, zstd</td></tr><tr><td>Raw ingest bandwidth</td><td><strong>~10 GB/s</strong></td><td>500M × 20 bytes</td></tr><tr><td>Per-region bandwidth</td><td><strong>~3.3 GB/s</strong></td><td>10 GB/s / 3</td></tr></tbody></table>
+<h3 id="active-series">Active series</h3>
+<p>Each service sends ~5,000 samples/sec. If the scrape interval is 15s, that implies:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>active_series ≈ 5,000 samples/sec × 15s = 75,000 series per service</span></span>
+<span class="line"><span>active_series global = 75,000 × 100K = 7.5B series</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>7.5B active series is at the high end of a Mimir deployment. This will matter for ingester sizing
+(we’ll handle this in the storage deep dive).</p>
+<h3 id="gateway-fleet-sizing">Gateway fleet sizing</h3>
+<p>Each gateway pod handles ~10K concurrent gRPC connections (Go / gRPC tuning). At 100K agents per
+region, that means:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>gateway_pods_per_region = 33K agents / 10K connections per pod = ~4 pods minimum</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>At 3.3 GB/s bandwidth per region, each pod handles ~825 MB/s. A 4-core gateway pod saturates at ~500
+MB/s on TLS + protobuf deserialization. Real sizing: <strong>~8 pods per region at steady state</strong>, with
+HPA to 24 pods at peak. This also gives headroom during rolling restarts (discussed below).</p>
+<h3 id="kafka-sizing">Kafka sizing</h3>
+<p>At 3.3 GB/s per region (uncompressed), the Kafka write rate after compression (~3:1 for zstd on
+protobuf) is ~1.1 GB/s. With RF=3, total broker write throughput is 3.3 GB/s.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>partitions_needed = ceiling(throughput / partition_throughput)</span></span>
+<span class="line"><span>                  = ceiling(1.1 GB/s / 100 MB/s) = ~12 partitions</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>In practice, use 120 partitions for operational headroom and future growth without rebalancing.</p>
+<hr>
+<h2 id="step-3-architecture">Step 3: Architecture</h2>
+<h3 id="high-level-diagram">High-level diagram</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Agents["100K Agents (OTel Collector / Grafana Alloy)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A1["Agent\n+ WAL on local disk"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A2["Agent\n+ WAL on local disk"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        AN["..."]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph GW["Ingestion Gateway Fleet (stateless, HPA)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        G1["Gateway Pod"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        G2["Gateway Pod"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        GN["... N pods"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        LB["L7 Load Balancer\n(Envoy / NLB)\nconnection draining enabled"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph BUF["Durable Buffer"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        K["Kafka\ntelemetry.metrics.raw\n120 partitions, RF=3, acks=all"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph PROC["Processor Fleet (stateless, HPA)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        P1["Metric Processor"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        P2["Metric Processor"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    STORE[("Mimir\nIngester → Object Store")]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    A1 &#x26; A2 &#x26; AN -->|"OTLP gRPC\nretry + WAL"| LB</span></span>
+<span class="line"><span style="color:#E1E4E8">    LB --> G1 &#x26; G2 &#x26; GN</span></span>
+<span class="line"><span style="color:#E1E4E8">    G1 &#x26; G2 &#x26; GN -->|"Kafka produce\nacks=all"| K</span></span>
+<span class="line"><span style="color:#E1E4E8">    K -->|"consumer group"| P1 &#x26; P2</span></span>
+<span class="line"><span style="color:#E1E4E8">    P1 &#x26; P2 -->|"remote-write"| STORE</span></span>
+<span class="line"></span></code></pre>
+<h3 id="durability-boundary">Durability boundary</h3>
+<p>The single most important design decision: <strong>Kafka is the durability boundary, not the gateway.</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Agent WAL  →  Gateway (stateless)  →  Kafka (durable)  →  Processor  →  Mimir</span></span>
+<span class="line"><span>                                          ↑</span></span>
+<span class="line"><span>                              Data is safe once it lands here.</span></span>
+<span class="line"><span>                              Gateway can be killed at any point</span></span>
+<span class="line"><span>                              before this without data loss,</span></span>
+<span class="line"><span>                              because the agent WAL replays.</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This is the answer to “never drop during rolling deployment.” The gateway fleet is intentionally
+stateless and expendable. The agent absorbs the disruption.</p>
+<hr>
+<h2 id="step-4-deep-dive--zero-drop-rolling-deployment">Step 4: Deep Dive — Zero-Drop Rolling Deployment</h2>
+<p>This is the core of the question. Cover all four layers of the zero-drop contract.</p>
+<h3 id="layer-1-agent-side-wal-first-line-of-defense">Layer 1: Agent-side WAL (first line of defense)</h3>
+<p>Every agent (Grafana Alloy, OTel Collector) runs with a write-ahead log enabled. Before sending, the
+agent persists the metric batch to local disk. It marks the batch as sent only after receiving a
+confirmed ACK from the gateway (gRPC OK status, HTTP 200).</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">sequenceDiagram</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant WAL as Agent WAL (disk)</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant SDK as Agent Export Loop</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant GW as Gateway Pod</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    SDK->>WAL: write batch (pre-send)</span></span>
+<span class="line"><span style="color:#E1E4E8">    SDK->>GW: OTLP Export RPC</span></span>
+<span class="line"><span style="color:#E1E4E8">    alt Gateway healthy</span></span>
+<span class="line"><span style="color:#E1E4E8">        GW-->>SDK: OK (PartialSuccess or full)</span></span>
+<span class="line"><span style="color:#E1E4E8">        SDK->>WAL: mark batch as sent (trim WAL)</span></span>
+<span class="line"><span style="color:#E1E4E8">    else Gateway restarting (connection refused / UNAVAILABLE)</span></span>
+<span class="line"><span style="color:#E1E4E8">        GW--xSDK: connection error</span></span>
+<span class="line"><span style="color:#E1E4E8">        SDK->>SDK: exponential backoff + jitter (1s → 2s → 4s … max 60s)</span></span>
+<span class="line"><span style="color:#E1E4E8">        SDK->>WAL: batch remains; retry to secondary gateway</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Key config in Alloy / OTel Collector:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># Grafana Alloy WAL config</span></span>
+<span class="line"><span style="color:#9ECBFF">prometheus.remote_write "mimir" {</span></span>
+<span class="line"><span style="color:#9ECBFF">  endpoint {</span></span>
+<span class="line"><span style="color:#9ECBFF">    url = "https://gateway.internal/api/v1/push"</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#9ECBFF">  wal {</span></span>
+<span class="line"><span style="color:#9ECBFF">    enabled   = true</span></span>
+<span class="line"><span style="color:#9ECBFF">    path      = "/var/lib/alloy/wal"</span></span>
+<span class="line"><span style="color:#9ECBFF">    max_age   = "4h"</span><span style="color:#6A737D">        # how long to retain unsent data on disk</span></span>
+<span class="line"><span style="color:#9ECBFF">    min_age   = "5m"</span><span style="color:#6A737D">        # minimum time before a segment is eligible for truncation</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#9ECBFF">  queue_config {</span></span>
+<span class="line"><span style="color:#9ECBFF">    max_samples_per_send  = 10000</span></span>
+<span class="line"><span style="color:#9ECBFF">    batch_send_deadline   = "5s"</span></span>
+<span class="line"><span style="color:#9ECBFF">    min_backoff           = "1s"</span></span>
+<span class="line"><span style="color:#9ECBFF">    max_backoff           = "60s"</span></span>
+<span class="line"><span style="color:#9ECBFF">    retry_on_http_429     = true</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>The WAL provides: <strong>up to 4 hours of resilience to a total gateway outage</strong>. A rolling restart that
+takes 10 minutes per pod is invisible to data completeness.</p>
+<p><strong>Important:</strong> The WAL does not help if the agent’s local disk fills. Monitor
+<code>prometheus_remote_storage_samples_pending</code> and <code>prometheus_wal_watcher_current_segment</code> on every
+agent.</p>
+<hr>
+<h3 id="layer-2-gateway-graceful-shutdown-second-line-of-defense">Layer 2: Gateway graceful shutdown (second line of defense)</h3>
+<p>When Kubernetes sends <code>SIGTERM</code> to a gateway pod, the pod must:</p>
+<ol>
+<li>Stop accepting <strong>new</strong> connections immediately (signal the load balancer)</li>
+<li>Finish draining <strong>in-flight</strong> requests (connections already established)</li>
+<li>ACK all in-flight metric batches to Kafka with <code>acks=all</code> before exiting</li>
+<li>Exit cleanly</li>
+</ol>
+<p>Without explicit handling, <code>SIGTERM</code> terminates the process immediately, dropping in-flight batches
+that have been received but not yet produced to Kafka.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">sequenceDiagram</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant K8s as Kubernetes</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant LB as Load Balancer (Envoy)</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant GW as Gateway Pod</span></span>
+<span class="line"><span style="color:#E1E4E8">    participant KF as Kafka</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    K8s->>GW: SIGTERM</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW->>GW: preStop hook: sleep 5s (allow LB to drain)</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW->>LB: GOAWAY frame (HTTP/2 — no new streams)</span></span>
+<span class="line"><span style="color:#E1E4E8">    Note over LB: LB stops routing new requests to this pod</span></span>
+<span class="line"><span style="color:#E1E4E8">    Note over GW: In-flight RPCs continue to completion</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW->>KF: produce remaining batches (acks=all)</span></span>
+<span class="line"><span style="color:#E1E4E8">    KF-->>GW: ACK</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW-->>GW: flush WAL of in-progress batches</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW->>K8s: exit(0)</span></span>
+<span class="line"><span style="color:#E1E4E8">    Note over K8s: terminationGracePeriodSeconds = 60s</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Kubernetes manifest — critical settings:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">spec</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  terminationGracePeriodSeconds</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">60</span><span style="color:#6A737D">        # must be > max expected drain time</span></span>
+<span class="line"><span style="color:#85E89D">  containers</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">gateway</span></span>
+<span class="line"><span style="color:#85E89D">      lifecycle</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        preStop</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          exec</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">            command</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">"/bin/sleep"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"5"</span><span style="color:#E1E4E8">]   </span><span style="color:#6A737D"># give Envoy time to deregister this pod</span></span>
+<span class="line"><span style="color:#85E89D">      env</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">GRPC_GRACEFUL_SHUTDOWN_TIMEOUT</span></span>
+<span class="line"><span style="color:#85E89D">          value</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"45s"</span><span style="color:#6A737D">                     # drain window for active RPCs</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>preStop</code> sleep of 5 seconds gives the load balancer time to remove this pod from its upstream
+pool before the process starts refusing connections. Without it, there is a race condition where the
+LB still routes requests to a pod that is shutting down.</p>
+<hr>
+<h3 id="layer-3-load-balancer-connection-draining-third-line-of-defense">Layer 3: Load balancer connection draining (third line of defense)</h3>
+<p>The load balancer (Envoy, AWS NLB, GCP NEG) must be configured to <strong>drain</strong> connections from a pod
+being replaced, not hard-cut them.</p>
+<p>For gRPC over HTTP/2: the LB sends a <code>GOAWAY</code> frame to the client, which signals “stop opening new
+streams; existing streams complete normally.” The client (agent) receives <code>GOAWAY</code> and opens a new
+connection to a healthy pod. In-flight RPCs finish on the old connection.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    A["Agent\n(gRPC client)"] -->|"stream 1 in-flight"| GW1["Gateway Pod 1\n(draining)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    A -->|"new streams route here"| GW2["Gateway Pod 2\n(healthy)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    LB["Envoy LB"] -->|"GOAWAY to agent"| GW1</span></span>
+<span class="line"><span style="color:#E1E4E8">    LB -->|"route new connections"| GW2</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Envoy configuration for gRPC connection draining:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">static_resources</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  clusters</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">gateway_cluster</span></span>
+<span class="line"><span style="color:#85E89D">      connect_timeout</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">1s</span></span>
+<span class="line"><span style="color:#85E89D">      type</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">STRICT_DNS</span></span>
+<span class="line"><span style="color:#85E89D">      lb_policy</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">ROUND_ROBIN</span></span>
+<span class="line"><span style="color:#85E89D">      http2_protocol_options</span><span style="color:#E1E4E8">: {}</span></span>
+<span class="line"><span style="color:#85E89D">      drain_connections_on_host_removal</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span><span style="color:#6A737D">   # send GOAWAY on pod removal</span></span>
+<span class="line"><span style="color:#85E89D">      common_lb_config</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        healthy_panic_threshold</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          value</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">30</span><span style="color:#6A737D">   # % healthy pods below which panic mode kicks in</span></span>
+<span class="line"></span></code></pre>
+<p><strong>PodDisruptionBudget — non-negotiable at scale:</strong></p>
+<p>During a rolling deploy, Kubernetes must guarantee that enough pods remain healthy to absorb traffic
+from the pod being replaced. Without a PDB, Kubernetes could evict multiple pods simultaneously,
+exceeding the WAL retry window.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">apiVersion</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">policy/v1</span></span>
+<span class="line"><span style="color:#85E89D">kind</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">PodDisruptionBudget</span></span>
+<span class="line"><span style="color:#85E89D">metadata</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">gateway-pdb</span></span>
+<span class="line"><span style="color:#85E89D">spec</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  maxUnavailable</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">1</span><span style="color:#6A737D">          # only one pod can be down at a time</span></span>
+<span class="line"><span style="color:#85E89D">  selector</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    matchLabels</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      app</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">telemetry-gateway</span></span>
+<span class="line"></span></code></pre>
+<p>With 8 pods per region and <code>maxUnavailable: 1</code>, the rolling deploy maintains 7/8 capacity at all
+times. The remaining 7 pods must absorb the load from the 8th. Confirm this in your sizing:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>capacity per pod = 3.3 GB/s / 8 = 413 MB/s</span></span>
+<span class="line"><span>capacity with 7 pods = 413 MB/s × 7 = 2.9 GB/s (vs 3.3 GB/s required)</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This is a <strong>capacity gap</strong> — at steady-state 100% load, removing one pod puts the fleet at 87%
+capacity, which is insufficient for peak. The fix: <strong>steady-state target at 65% utilization</strong>, so
+that a one-pod-down scenario leaves the fleet at 65% / 87% × 100 = ~75% — still headroom for peaks.</p>
+<p>HPA should target CPU at 65%, not 80%.</p>
+<hr>
+<h3 id="layer-4-kafka-as-the-commit-point-final-guarantee">Layer 4: Kafka as the commit point (final guarantee)</h3>
+<p>Once a batch is produced to Kafka with <code>acks=all</code>, the data is durable regardless of what happens to
+the gateway. This is the final and unconditional guarantee.</p>
+<p><strong>Producer config for zero-drop:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># Every gateway produces with these settings — non-negotiable</span></span>
+<span class="line"><span style="color:#85E89D">acks</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">all</span><span style="color:#6A737D">                         # all in-sync replicas must confirm</span></span>
+<span class="line"><span style="color:#85E89D">enable.idempotence</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span><span style="color:#6A737D">          # exactly-once per partition — no duplicates on retry</span></span>
+<span class="line"><span style="color:#85E89D">retries</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">2147483647</span><span style="color:#6A737D">               # effectively infinite</span></span>
+<span class="line"><span style="color:#85E89D">delivery.timeout.ms</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">120000</span><span style="color:#6A737D">       # 2-minute hard cap; if not delivered in 2min, the agent gets an error and retries from WAL</span></span>
+<span class="line"><span style="color:#85E89D">linger.ms</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">5</span><span style="color:#6A737D">                      # 5ms batching window — 5000 samples/batch at 1M samples/sec per pod</span></span>
+<span class="line"><span style="color:#85E89D">batch.size</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">1048576</span><span style="color:#6A737D">               # 1MB batch size — tune up from 64KB default for throughput</span></span>
+<span class="line"><span style="color:#85E89D">compression.type</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">zstd</span><span style="color:#6A737D">            # best ratio for protobuf</span></span>
+<span class="line"></span></code></pre>
+<p><strong>What happens during a broker failure during a rolling gateway deploy:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    A["Gateway produces batch"] --> B{"Kafka broker\nleader up?"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    B -->|Yes| C["Batch written to all ISR replicas"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    C --> D["ACK returned to gateway"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    D --> E["Gateway ACKs agent via gRPC OK"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    E --> F["Agent trims WAL entry"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    B -->|"Leader election in progress (10-30s)"| G["Producer: LEADER_NOT_AVAILABLE error"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    G --> H["Producer retries with backoff\n(delivery.timeout.ms = 120s)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    H --> I["New leader elected"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    I --> C</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    B -->|"2min timeout exceeded"| J["Gateway returns UNAVAILABLE to agent"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    J --> K["Agent WAL: batch remains\nagent retries to next available gateway"]</span></span>
+<span class="line"></span></code></pre>
+<p>The agent’s WAL provides the outer retry loop. Kafka’s producer retry provides the inner loop.
+Between the two, the 2-minute delivery window covers any realistic leader election or broker restart
+scenario.</p>
+<hr>
+<h2 id="step-5-observability-of-the-zero-drop-guarantee">Step 5: Observability of the Zero-Drop Guarantee</h2>
+<p>You cannot claim “never drop” without proving it. These are the signals to instrument.</p>
+<h3 id="key-metrics">Key metrics</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>What it tells you</th></tr></thead><tbody><tr><td><code>telemetry_gateway_inbound_samples_total</code></td><td>Samples received from agents</td></tr><tr><td><code>telemetry_gateway_kafka_produced_total</code></td><td>Samples durably committed to Kafka</td></tr><tr><td><code>telemetry_gateway_drop_total{reason}</code></td><td>The gap between the two — should be zero during a normal deploy</td></tr><tr><td><code>kafka_consumer_group_lag{topic="telemetry.metrics.raw"}</code></td><td>Processing backlog — should not grow during a deploy</td></tr><tr><td><code>prometheus_wal_watcher_samples_pending</code></td><td>WAL backlog at agents — grows during a deploy; should drain within 60s</td></tr><tr><td><code>prometheus_remote_storage_failed_samples_total</code></td><td>Agent-level drop counter — alert immediately if > 0</td></tr><tr><td><code>gateway_graceful_shutdown_drain_duration_seconds</code></td><td>How long drain takes — must be &#x3C; terminationGracePeriodSeconds</td></tr></tbody></table>
+<h3 id="the-zero-drop-slo">The zero-drop SLO</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>drop_rate = sum(telemetry_gateway_drop_total) / sum(telemetry_gateway_inbound_samples_total)</span></span>
+<span class="line"><span>SLO: drop_rate = 0.00% during any rolling deploy window</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>To measure this during a deploy:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span># Drop rate during the last 10 minutes (rolling deploy window)</span></span>
+<span class="line"><span>sum(rate(telemetry_gateway_drop_total[10m]))</span></span>
+<span class="line"><span>/</span></span>
+<span class="line"><span>sum(rate(telemetry_gateway_inbound_samples_total[10m]))</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Alert: <code>> 0.001%</code> (one-in-a-hundred-thousand samples) should page on-call. In practice, this
+threshold should never fire if the WAL, graceful shutdown, and PDB are correctly configured.</p>
+<h3 id="canary-validation-during-every-deploy">Canary validation during every deploy</h3>
+<p>Before a rolling deploy starts, trigger a canary check: push a labeled sentinel metric through the
+full pipeline and verify it appears in Mimir within the SLO window. If the canary fails, halt the
+deploy.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    CD["CI/CD\n(deploy trigger)"] -->|"pre-deploy gate"| CAN["Canary runner"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    CAN -->|"push sentinel metric"| GW["Gateway"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    GW --> K["Kafka"] --> P["Processor"] --> M["Mimir"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    CAN -->|"poll query"| M</span></span>
+<span class="line"><span style="color:#E1E4E8">    M -->|"metric found &#x3C; 60s"| CD</span></span>
+<span class="line"><span style="color:#E1E4E8">    M -->|"not found > 60s"| HALT["Halt deploy\npage on-call"]</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="summary-zero-drop-contract">Summary: Zero-Drop Contract</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Layer</th><th>Mechanism</th><th>What it covers</th></tr></thead><tbody><tr><td>Agent</td><td>WAL + retry with exponential backoff</td><td>Gateway pod restart (any duration up to WAL max_age)</td></tr><tr><td>Gateway</td><td><code>preStop</code> hook + gRPC <code>GOAWAY</code> drain</td><td>In-flight RPCs at the moment of <code>SIGTERM</code></td></tr><tr><td>Load balancer</td><td>Connection draining + <code>GOAWAY</code></td><td>Graceful client rerouting without dropping streams</td></tr><tr><td>Kafka</td><td><code>acks=all</code> + idempotent producer</td><td>Durability once received; survives broker restarts</td></tr><tr><td>Kubernetes</td><td>PodDisruptionBudget (<code>maxUnavailable: 1</code>)</td><td>Prevents simultaneous eviction of multiple pods</td></tr><tr><td>Capacity</td><td>HPA target at 65%</td><td>Ensures remaining fleet absorbs the load from a draining pod</td></tr></tbody></table>
+<p>The zero-drop guarantee is not a single feature — it is the composition of all six layers. Any one
+of them missing creates a gap.</p>
+<hr>
+<h2 id="trade-offs-stated-what-to-say-out-loud">Trade-offs Stated (What to Say Out Loud)</h2>
+<p><strong>“I chose agent-side WAL as the primary protection, not gateway-side buffering.”</strong> Gateway-side
+buffering (in-memory queue before Kafka produce) is tempting but wrong: if the gateway crashes
+before flushing its in-memory buffer, data is lost. The WAL is on disk, survives crashes, and is
+replayed by the agent on reconnect. This pushes durability to the edge, where it belongs.</p>
+<p><strong>“The capacity gap during rolling deploy is the silent failure mode most teams miss.”</strong> You can
+have perfect graceful shutdown and still drop data if the remaining fleet can’t absorb 100% of
+traffic. HPA at 65% utilization is the answer — it costs ~35% over-provisioning but buys the
+headroom to tolerate any single pod going dark at peak.</p>
+<p><strong>“Exactly-once from agent to Kafka would add ~15ms of latency per batch — not worth it here.”</strong> The
+WAL + idempotent producer gives at-least-once with deduplication at the Mimir layer (by timestamp +
+label fingerprint). Exactly-once (Kafka transactions) is a correctness guarantee for ordered
+stateful streams — not needed when the downstream TSDB handles duplicates natively.</p>
+<p><strong>“PodDisruptionBudget is the contract between the deploy pipeline and the ingestion platform.”</strong>
+Without it, a poorly configured Helm rollout strategy or a node drain during a cluster upgrade can
+evict multiple pods simultaneously. The PDB makes the guarantee enforceable by the cluster, not just
+aspirational.</p>
+<hr>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="./telemetry-ingestion-pipeline.md">Telemetry Ingestion Pipeline (full design)</a></li>
+<li><a href="../../../common/push-vs-pull-ingestion.md">Push vs Pull Ingestion</a></li>
+</ul>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in Designs</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/designs/01-observability-pipeline-and-data-infrastructure/telemetry-ingestion-pipeline/telemetry-ingestion-pipeline" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> System Design: Telemetry Ingestion Pipeline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Principal/Staff-level design of a high-throughput telemetry ingestion pipeline — requirements, architecture, deep dives, and trade-offs at 10x scale.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/designs/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> System Design </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Principal/Staff-level system design reference collection for MAANG interview preparation — observability pipelines, distributed systems, reliability engineering, and beyond.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/designs/common/push-vs-pull-ingestion" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Push-Based vs Pull-Based Ingestion </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Core mental model for telemetry and data ingestion patterns — when to push, when to pull, and how to reason about the trade-offs at principal/staff interview bar.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/designs/common/questions-to-ask" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Observability Architecture: Questions to Ask </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A chronological sequence of 216 questions an architect asks when designing a production-grade observability platform — from business context through multi-tenancy, SLOs, onboarding, and validation.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/topic/designs" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Designs notes
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#step-1-clarify-requirements" data-slug="step-1-clarify-requirements" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Step 1: Clarify Requirements</a></li><li data-astro-cid-xvrfupwn><a href="#step-2-scale-math" data-slug="step-2-scale-math" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Step 2: Scale Math</a></li><li data-astro-cid-xvrfupwn><a href="#throughput" data-slug="throughput" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Throughput</a></li><li data-astro-cid-xvrfupwn><a href="#active-series" data-slug="active-series" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Active series</a></li><li data-astro-cid-xvrfupwn><a href="#gateway-fleet-sizing" data-slug="gateway-fleet-sizing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Gateway fleet sizing</a></li><li data-astro-cid-xvrfupwn><a href="#kafka-sizing" data-slug="kafka-sizing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Kafka sizing</a></li><li data-astro-cid-xvrfupwn><a href="#step-3-architecture" data-slug="step-3-architecture" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Step 3: Architecture</a></li><li data-astro-cid-xvrfupwn><a href="#high-level-diagram" data-slug="high-level-diagram" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>High-level diagram</a></li><li data-astro-cid-xvrfupwn><a href="#durability-boundary" data-slug="durability-boundary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Durability boundary</a></li><li data-astro-cid-xvrfupwn><a href="#step-4-deep-dive--zero-drop-rolling-deployment" data-slug="step-4-deep-dive--zero-drop-rolling-deployment" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Step 4: Deep Dive — Zero-Drop Rolling Deployment</a></li><li data-astro-cid-xvrfupwn><a href="#layer-1-agent-side-wal-first-line-of-defense" data-slug="layer-1-agent-side-wal-first-line-of-defense" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 1: Agent-side WAL (first line of defense)</a></li><li data-astro-cid-xvrfupwn><a href="#layer-2-gateway-graceful-shutdown-second-line-of-defense" data-slug="layer-2-gateway-graceful-shutdown-second-line-of-defense" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 2: Gateway graceful shutdown (second line of defense)</a></li><li data-astro-cid-xvrfupwn><a href="#layer-3-load-balancer-connection-draining-third-line-of-defense" data-slug="layer-3-load-balancer-connection-draining-third-line-of-defense" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 3: Load balancer connection draining (third line of defense)</a></li><li data-astro-cid-xvrfupwn><a href="#layer-4-kafka-as-the-commit-point-final-guarantee" data-slug="layer-4-kafka-as-the-commit-point-final-guarantee" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 4: Kafka as the commit point (final guarantee)</a></li><li data-astro-cid-xvrfupwn><a href="#step-5-observability-of-the-zero-drop-guarantee" data-slug="step-5-observability-of-the-zero-drop-guarantee" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Step 5: Observability of the Zero-Drop Guarantee</a></li><li data-astro-cid-xvrfupwn><a href="#key-metrics" data-slug="key-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Key metrics</a></li><li data-astro-cid-xvrfupwn><a href="#the-zero-drop-slo" data-slug="the-zero-drop-slo" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>The zero-drop SLO</a></li><li data-astro-cid-xvrfupwn><a href="#canary-validation-during-every-deploy" data-slug="canary-validation-during-every-deploy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Canary validation during every deploy</a></li><li data-astro-cid-xvrfupwn><a href="#summary-zero-drop-contract" data-slug="summary-zero-drop-contract" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Summary: Zero-Drop Contract</a></li><li data-astro-cid-xvrfupwn><a href="#trade-offs-stated-what-to-say-out-loud" data-slug="trade-offs-stated-what-to-say-out-loud" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Trade-offs Stated (What to Say Out Loud)</a></li><li data-astro-cid-xvrfupwn><a href="#related" data-slug="related" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Related</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

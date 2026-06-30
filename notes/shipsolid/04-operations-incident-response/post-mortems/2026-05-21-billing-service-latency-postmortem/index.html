@@ -1,0 +1,341 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>2026-05-21 — billing-service elevated latency — Notes — Amit Singh</title><meta name="description" content="- **Incident Commander:** On-call Engineer (Platform SRE)"><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/04-operations-incident-response/post-mortems/2026-05-21-billing-service-latency-postmortem/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="2026-05-21 — billing-service elevated latency — Notes — Amit Singh"><meta property="og:description" content="- **Incident Commander:** On-call Engineer (Platform SRE)"><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/04-operations-incident-response/post-mortems/2026-05-21-billing-service-latency-postmortem/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="2026-05-21 — billing-service elevated latency — Notes — Amit Singh"><meta name="twitter:description" content="- **Incident Commander:** On-call Engineer (Platform SRE)"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-04-operations-incident-response" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>04 Operations Incident Response</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> 2026-05-21 — billing-service elevated latency </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>- **Incident Commander:** On-call Engineer (Platform SRE)</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 9, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/operations" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Operations</a><a href="/notes/tag/incident-response" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Incident Response</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <!-- Immutable record. Lock as read-only after 30 days. Action items tracked in SNOW. -->
+<h1 id="2026-05-21--billing-service-elevated-latency">2026-05-21 — billing-service elevated latency</h1>
+<ul>
+<li><strong>Incident Commander:</strong> On-call Engineer (Platform SRE)</li>
+<li><strong>Severity:</strong> SEV2</li>
+<li><strong>Status:</strong> published</li>
+<li><strong>Incident Start:</strong> 2026-05-21 14:02 UTC</li>
+<li><strong>Incident End:</strong> 2026-05-21 14:55 UTC</li>
+<li><strong>MTTR:</strong> 00:53</li>
+<li><strong>Impacted:</strong> billing-service (prod), api-gateway billing/checkout routes, all tenants</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<p>On 2026-05-21 at 14:02 UTC, a routine billing-service deploy lowered the database connection-pool
+maximum from 50 to 10 connections via a Helm values change. Under normal prod load the pool was
+immediately exhausted; requests queued waiting for a free connection, driving billing-service p99
+latency from ~180 ms to >8 s. The latency propagated to api-gateway, which began returning 504s on
+billing and checkout routes. The incident was detected at 14:09 UTC by the api-gateway latency
+burn-rate alert and mitigated by an Argo rollback at 14:48 UTC; full recovery was confirmed at 14:55
+UTC.</p>
+<h2 id="impact">Impact</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>Value</th></tr></thead><tbody><tr><td>User-facing impact</td><td>~9% of all prod API requests timed out or were slow (billing + checkout routes); other routes unaffected</td></tr><tr><td>Duration</td><td>00:53 (14:02–14:55 UTC)</td></tr><tr><td>Services affected</td><td>billing-service (direct), api-gateway (propagated 504s on billing/checkout)</td></tr><tr><td>Clusters affected</td><td>prod (all 3 AZs); dev/qa unaffected</td></tr><tr><td>SLO impact</td><td>billing-service latency SLO: ~38% of the 30-day error budget consumed in 53 min</td></tr><tr><td>Estimated revenue impact</td><td>Not quantified — checkout retries largely succeeded post-recovery</td></tr></tbody></table>
+<h2 id="timeline">Timeline</h2>
+<p><em>All times UTC.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Time (UTC)</th><th>Event</th><th>Who</th></tr></thead><tbody><tr><td>14:02</td><td>billing-service v2.41.0 deployed to prod via Argo Rollouts; <code>db.pool.max</code> lowered 50 → 10 in Helm values</td><td>Service Team</td></tr><tr><td>14:04</td><td>billing-service p99 latency begins climbing; DB connection-wait time rises in metrics</td><td>—</td></tr><tr><td>14:09</td><td><code>ShipSolidApiGatewayLatencyBurnRate</code> fires (api-gateway p99 on billing routes > SLO threshold, 14.4× burn)</td><td>Alerting system</td></tr><tr><td>14:10</td><td>On-call paged via Grafana IRM; incident declared SEV2 in IRM</td><td>On-call Engineer</td></tr><tr><td>14:14</td><td>OBSERVE — gateway 504s scoped to billing/checkout routes; upstream confirmed as billing-service (Tempo traces show queueing in billing, not gateway)</td><td>On-call Engineer</td></tr><tr><td>14:22</td><td>Hypothesis: billing-service latency, not gateway. billing-service dashboard shows DB connection-pool saturation at 100%, wait-time p99 > 7s</td><td>On-call Engineer</td></tr><tr><td>14:31</td><td>Recent-change check: billing-service v2.41.0 deployed at 14:02 correlates with onset; diff shows <code>db.pool.max</code> reduced 50 → 10</td><td>On-call Engineer</td></tr><tr><td>14:36</td><td>Root cause identified: pool max too low for prod concurrency → pool exhaustion → request queueing</td><td>On-call Engineer</td></tr><tr><td>14:48</td><td>Mitigation: <code>kubectl argo rollouts undo billing-service -n prod</code> (revert to v2.40.3)</td><td>On-call Engineer</td></tr><tr><td>14:52</td><td>Pool saturation drops; billing-service p99 returns toward baseline; gateway 504s clear</td><td>—</td></tr><tr><td>14:55</td><td>Recovery confirmed against SLIs for 10 min stable window; all-clear declared</td><td>On-call Engineer (IC)</td></tr></tbody></table>
+<h2 id="root-cause">Root cause</h2>
+<p><strong>Signal → Symptom → Root Cause</strong></p>
+<ul>
+<li><strong>Signal:</strong> <code>ShipSolidApiGatewayLatencyBurnRate</code> fired at 14:09 — api-gateway p99 on
+billing/checkout routes breaching the latency SLO.</li>
+<li><strong>Symptom:</strong> billing-service p99 latency spiked from ~180 ms to >8 s; the api-gateway returned
+504s on the routes that proxy to billing-service. Tempo traces showed time spent <strong>waiting for a
+DB connection</strong>, not in query execution.</li>
+<li><strong>Root cause:</strong> billing-service v2.41.0 set <code>db.pool.max: 10</code> (down from 50) in its Helm values.
+At normal prod concurrency the 10-connection pool was exhausted within seconds; subsequent
+requests blocked waiting for a free connection, queued, and eventually timed out at the gateway.
+The DB itself was healthy throughout — the bottleneck was entirely client-side pool sizing.</li>
+</ul>
+<h3 id="5-whys">5 Whys</h3>
+<ol>
+<li><strong>Why</strong> did billing-service latency spike? → Requests queued waiting for a free DB connection.</li>
+<li><strong>Why</strong> were requests waiting on connections? → The connection pool was exhausted under normal
+prod load.</li>
+<li><strong>Why</strong> was the pool exhausted? → The deploy lowered <code>db.pool.max</code> from 50 to 10, well below prod
+concurrency needs.</li>
+<li><strong>Why</strong> was an undersized pool value deployed to prod? → The change was made for a dev/qa cost
+experiment and merged without prod load validation; it passed CI because no test exercises pool
+saturation.</li>
+<li><strong>Why</strong> did nothing catch it before prod? → <strong>Connection-pool sizing is not part of the
+Production Readiness Review (PRR) checklist</strong>, so there was no gate requiring pool capacity to be
+validated against expected prod concurrency before promotion. <em>(Systemic gap.)</em></li>
+</ol>
+<h3 id="contributing-factors">Contributing factors</h3>
+<ul>
+<li>The Argo rollout used a fast promotion (no extended canary soak on billing-service), so 100% of
+prod billing traffic hit the undersized pool within ~2 minutes.</li>
+<li>The pool-saturation symptom surfaced first as a <strong>gateway</strong> 504 alert, not a billing-service alert
+— there is no direct burn-rate alert on billing-service DB connection-pool utilization, which
+added a triage hop.</li>
+</ul>
+<h2 id="resolution">Resolution</h2>
+<p>Rolled billing-service back to v2.40.3 via <code>kubectl argo rollouts undo billing-service -n prod</code>,
+restoring <code>db.pool.max: 50</code>. Connection-pool saturation cleared within ~4 minutes; billing-service
+p99 returned to baseline and api-gateway 504s on billing/checkout routes stopped. Recovery was
+confirmed against the billing-service latency SLI over a 10-minute stable window before all-clear.</p>
+<h2 id="what-went-well--what-didnt">What went well / what didn’t</h2>
+<p><strong>What went well</strong></p>
+<ul>
+<li>The api-gateway latency burn-rate alert fired within ~7 min of impact onset (14.4× burn), giving
+fast detection.</li>
+<li>Tempo traces immediately disambiguated gateway-vs-upstream — the IC correctly ruled out the
+gateway as the fault within 12 minutes.</li>
+<li>The recent-change check pointed straight at the 14:02 deploy; rollback was unambiguous and clean.</li>
+</ul>
+<p><strong>What didn’t</strong></p>
+<ul>
+<li>The undersized pool value reached prod with no load validation — CI has no test that exercises
+pool saturation.</li>
+<li>Fast (non-soaked) promotion meant 100% of billing traffic was affected almost immediately; a
+canary soak would have caught the saturation at low blast radius.</li>
+<li>Detection came via a gateway alert rather than a billing-service-native signal, adding a triage
+hop. No alert on billing-service DB connection-pool utilization.</li>
+</ul>
+<h2 id="action-items">Action items</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Item</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody><tr><td>Add a “connection-pool sizing validated against expected prod concurrency” item to the PRR checklist</td><td>Platform SRE</td><td>2026-06-20</td><td>open</td></tr><tr><td>Add a Prometheus alert on billing-service DB connection-pool utilization (> 85% for 5m → SEV3)</td><td>Service Team Lead</td><td>2026-06-20</td><td>open</td></tr><tr><td>Require a minimum canary soak window for billing-service Argo rollouts before 100% promotion</td><td>Service Team Lead</td><td>2026-06-27</td><td>open</td></tr><tr><td>Add a load test that exercises DB pool saturation to billing-service CI</td><td>On-call Engineer</td><td>2026-07-04</td><td>open</td></tr></tbody></table>
+<h2 id="detection--response-metrics">Detection &#x26; response metrics</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Value</th><th>Target</th></tr></thead><tbody><tr><td>Time to detect (TTD)</td><td>~00:07 (14:02 → 14:09)</td><td>&#x3C; 5 min</td></tr><tr><td>Time to engage (TTE)</td><td>00:01 (14:09 → 14:10)</td><td>&#x3C; 15 min</td></tr><tr><td>Time to mitigate (TTM)</td><td>00:38 (14:10 → 14:48)</td><td>&#x3C; 30 min</td></tr><tr><td>MTTR</td><td>00:53</td><td>per-tier SLA</td></tr></tbody></table>
+<h2 id="references">References</h2>
+<ul>
+<li>Alert runbook: <a href="../alert-runbooks/api-gateway-5xx-high.md">api-gateway 5xx / latency</a></li>
+<li>SLO: <a href="../../03-reliability-engineering/slo-registry.md">slo-registry.md</a> — billing-service latency
+SLO</li>
+<li>Platform context: <a href="../../01-platform-architecture/platform-overview.md">platform-overview.md</a></li>
+<li>Triggering deploy: billing-service v2.41.0 (<code>db.pool.max</code> 50 → 10)</li>
+</ul>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#summary" data-slug="summary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Summary</a></li><li data-astro-cid-xvrfupwn><a href="#impact" data-slug="impact" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Impact</a></li><li data-astro-cid-xvrfupwn><a href="#timeline" data-slug="timeline" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Timeline</a></li><li data-astro-cid-xvrfupwn><a href="#root-cause" data-slug="root-cause" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Root cause</a></li><li data-astro-cid-xvrfupwn><a href="#5-whys" data-slug="5-whys" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5 Whys</a></li><li data-astro-cid-xvrfupwn><a href="#contributing-factors" data-slug="contributing-factors" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Contributing factors</a></li><li data-astro-cid-xvrfupwn><a href="#resolution" data-slug="resolution" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Resolution</a></li><li data-astro-cid-xvrfupwn><a href="#what-went-well--what-didnt" data-slug="what-went-well--what-didnt" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What went well / what didn’t</a></li><li data-astro-cid-xvrfupwn><a href="#action-items" data-slug="action-items" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Action items</a></li><li data-astro-cid-xvrfupwn><a href="#detection--response-metrics" data-slug="detection--response-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Detection &amp; response metrics</a></li><li data-astro-cid-xvrfupwn><a href="#references" data-slug="references" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>References</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

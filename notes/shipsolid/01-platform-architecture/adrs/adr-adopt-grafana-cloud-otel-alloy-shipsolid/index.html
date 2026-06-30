@@ -1,0 +1,271 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>ADR-008: Adopt Grafana Cloud + OpenTelemetry + Alloy as the ShipSolid Observability Standard — Notes — Amit Singh</title><meta name="description" content="- **Status**: Accepted - **Date**: 2026-06-09"><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/01-platform-architecture/adrs/adr-adopt-grafana-cloud-otel-alloy-shipsolid/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="ADR-008: Adopt Grafana Cloud + OpenTelemetry + Alloy as the ShipSolid Observability Standard — Notes — Amit Singh"><meta property="og:description" content="- **Status**: Accepted - **Date**: 2026-06-09"><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/01-platform-architecture/adrs/adr-adopt-grafana-cloud-otel-alloy-shipsolid/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="ADR-008: Adopt Grafana Cloud + OpenTelemetry + Alloy as the ShipSolid Observability Standard — Notes — Amit Singh"><meta name="twitter:description" content="- **Status**: Accepted - **Date**: 2026-06-09"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-01-platform-architecture" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>01 Platform Architecture</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> ADR-008: Adopt Grafana Cloud + OpenTelemetry + Alloy as the ShipSolid Observability Standard </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>- **Status**: Accepted - **Date**: 2026-06-09</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 9, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/architecture" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Architecture</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="adr-008-adopt-grafana-cloud--opentelemetry--alloy-as-the-shipsolid-observability-standard">ADR-008: Adopt Grafana Cloud + OpenTelemetry + Alloy as the ShipSolid Observability Standard</h1>
+<!-- Proposed | Accepted | Rejected | Superseded -->
+<ul>
+<li><strong>Status</strong>: Accepted</li>
+<li><strong>Date</strong>: 2026-06-09</li>
+<li><strong>Authors</strong>: <a href="mailto:amit.singh@shipsolid.example">Amit Singh, Observability Architect</a></li>
+<li><strong>Deciders</strong>: Amit Singh (Observability Architect), Platform SRE, Service Team Lead</li>
+<li><strong>Supersedes</strong>: N/A</li>
+<li><strong>Related RFC</strong>: [stub: rfc-adopt-grafana-cloud-shipsolid]</li>
+<li><strong>Project/Context</strong>: ShipSolid platform — all services, all environments</li>
+</ul>
+<hr>
+<h2 id="1-context">1. Context</h2>
+<p>ShipSolid is a B2B SaaS platform running <strong>~40 services across 3 AKS clusters (dev / qa / prod) on
+Azure</strong>. Representative services include <code>api-gateway</code>, <code>auth-service</code>, <code>billing-service</code>,
+<code>notification-service</code>, and <code>tenant-service</code>.</p>
+<p>Today, observability is fragmented: each service team reaches for whatever it knows, there is no
+shared instrumentation contract, and there is no single place to query metrics, logs, and traces
+together. This is the <strong>Reactive</strong> stage of our maturity arc (Reactive → Resilient → Autonomous),
+and it blocks the platform-wide goals we need to hit:</p>
+<ul>
+<li>Centralized visibility across all ~40 services and all three clusters</li>
+<li>Collection and correlation of <strong>metrics, logs, and traces</strong> with shared trace/log linkage</li>
+<li>A <strong>vendor-neutral</strong> instrumentation contract every team can adopt once and reuse</li>
+<li>Enterprise-grade features — <strong>RBAC, SSO, dashboards, alerting, cost attribution</strong></li>
+<li><strong>Scalable ingestion</strong> with minimal platform-team operational overhead</li>
+<li>Integration with our <strong>incident response</strong> tooling</li>
+</ul>
+<p>Constraints and assumptions:</p>
+<ul>
+<li>The platform team is small and cannot absorb the operational burden of running a
+metrics/logs/traces backend at scale.</li>
+<li>All infrastructure change goes through <strong>Helm + Terraform</strong> — no <code>kubectl apply</code> for permanent
+resources.</li>
+<li>We want one instrumentation standard that survives a future backend swap.</li>
+</ul>
+<p>We evaluated four options: self-hosted LGTM (Loki/Grafana/Tempo/Mimir), Datadog, Azure Monitor, and
+<strong>Grafana Cloud</strong>. After analysis and a proof-of-concept, Grafana Cloud with an OpenTelemetry +
+Alloy collection layer emerged as the best fit.</p>
+<hr>
+<h2 id="2-decision">2. Decision</h2>
+<p>We will <strong>adopt Grafana Cloud + OpenTelemetry + Grafana Alloy as the ShipSolid observability
+standard</strong> for all services across all environments.</p>
+<p>The standard has three layers:</p>
+<ul>
+<li><strong>Managed data plane — Grafana Cloud.</strong> Hosted <strong>Mimir (metrics)</strong>, <strong>Loki (logs)</strong>, and <strong>Tempo
+(traces)</strong> are the system of record for telemetry. The platform team operates no storage backend.</li>
+<li><strong>Instrumentation contract — OpenTelemetry.</strong> Every service instruments with the <strong>OTel SDK +
+auto-instrumentation</strong>. OTel is the contract teams code against; the backend behind it is an
+implementation detail they never bind to.</li>
+<li><strong>Single collector — Grafana Alloy.</strong> One collector technology — Alloy — runs per AKS cluster to
+receive, process, batch, and route telemetry. No per-team collector zoo.</li>
+</ul>
+<p>Implementation aspects:</p>
+<ul>
+<li><strong>IaC-first.</strong> Grafana Cloud stacks, alert rules, dashboards, and access policies via
+<strong>Terraform</strong>; Alloy via <strong>Helm</strong> with per-cluster/per-env values. No <code>kubectl apply</code> for
+permanent resources.</li>
+<li><strong>Write auth.</strong> Data-plane writes use <strong><code>glc_</code>-prefixed access-policy tokens</strong>; <code>glsa_</code>
+service-account tokens are reserved for API/management.</li>
+<li><strong>Incident layer.</strong> Alerts route to <strong>Grafana IRM</strong> for on-call and correlation.</li>
+<li><strong>Tenancy &#x26; cost attribution.</strong> Folders, teams, and usage labels scope access and enable
+per-service / per-team chargeback.</li>
+</ul>
+<hr>
+<h2 id="3-rationale">3. Rationale</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Criteria</th><th>Evaluation</th></tr></thead><tbody><tr><td><strong>Ease of Use</strong></td><td>Fully managed; no backend to operate or scale</td></tr><tr><td><strong>Open Standards</strong></td><td>First-class Prometheus, OpenTelemetry, and Grafana plugin support</td></tr><tr><td><strong>Operational Cost</strong></td><td>Lower TCO than self-hosting four backends at our scale</td></tr><tr><td><strong>Enterprise Features</strong></td><td>RBAC, SSO, alerting, multi-tenant folders built-in</td></tr><tr><td><strong>Scalability</strong></td><td>Managed ingestion and high-cardinality handling out of the box</td></tr><tr><td><strong>Extensibility</strong></td><td>Terraform provider + API integrations fit our Helm/TF pipelines</td></tr><tr><td><strong>Vendor Neutrality</strong></td><td>OTel + Alloy keep instrumentation portable — backend is swappable</td></tr></tbody></table>
+<p>The key strategic point: by making <strong>OpenTelemetry the contract</strong> and <strong>Alloy the single
+collector</strong>, the expensive, slow-to-change layer (service instrumentation) is decoupled from the
+backend. If Grafana Cloud ever stops being the right answer, teams keep their instrumentation and
+only the data plane moves.</p>
+<hr>
+<h2 id="4-alternatives-considered">4. Alternatives Considered</h2>
+<h3 id="self-hosted-lgtm-loki--grafana--tempo--mimir">Self-Hosted LGTM (Loki / Grafana / Tempo / Mimir)</h3>
+<p>Run the full LGTM stack on ShipSolid-managed AKS.</p>
+<p><strong>Rejected because:</strong></p>
+<ul>
+<li>Significant operational overhead to provision, scale, and maintain four separate systems — storage
+provisioning, retention, compaction, HA, and DR all land on a small platform team.</li>
+<li>High-availability and disaster-recovery engineering delays time-to-value during the formative
+phase of the platform.</li>
+<li>Provides no advantage over Grafana Cloud’s managed ingestion other than control we do not
+currently have the headcount to exercise.</li>
+</ul>
+<h3 id="datadog">Datadog</h3>
+<p>Adopt Datadog as the unified observability SaaS.</p>
+<p><strong>Rejected because:</strong></p>
+<ul>
+<li><strong>Cost</strong> scales aggressively with host count, custom metrics, and ingested log volume —
+uncomfortable across ~40 services and three clusters.</li>
+<li><strong>Lock-in</strong> to proprietary agents and query semantics works against our vendor-neutrality goal;
+migrating off later is expensive.</li>
+<li>Pulls us away from the OpenTelemetry + PromQL/LogQL ecosystem we want as the long-term contract.</li>
+</ul>
+<h3 id="azure-monitor--azure-native-tooling">Azure Monitor + Azure-Native Tooling</h3>
+<p>Use Azure Monitor, Log Analytics, and Application Insights as the platform.</p>
+<p><strong>Rejected because:</strong></p>
+<ul>
+<li><strong>Weak distributed-trace and exemplar story</strong> relative to a Tempo/OTel-native backend —
+cross-service trace correlation and metric-to-trace exemplars are less seamless.</li>
+<li><strong>Vendor lock-in</strong> to Azure-native query (KQL) and SDKs; lower portability than an OTel +
+PromQL/LogQL standard.</li>
+<li>Dashboard-as-code via the Terraform provider is less mature than Grafana’s.</li>
+</ul>
+<hr>
+<h2 id="5-consequences">5. Consequences</h2>
+<h3 id="positive-outcomes">Positive Outcomes</h3>
+<ul>
+<li>A single, vendor-neutral observability standard across all ~40 services and all three AKS
+clusters.</li>
+<li>Faster time-to-value via a fully managed data plane — no backend to operate.</li>
+<li>One instrumentation contract (OTel) that survives a future backend swap.</li>
+<li>One collector technology (Alloy) to learn, template, and govern — no collector zoo.</li>
+<li>Built-in RBAC, SSO, dashboards, alerting, and per-service cost attribution.</li>
+<li>A foundation for the <strong>Resilient → Autonomous</strong> stages (SLOs, alert correlation, IRM-driven
+on-call).</li>
+</ul>
+<h3 id="accepted-costs--trade-offs">Accepted Costs / Trade-offs</h3>
+<ul>
+<li><strong>Internet dependency.</strong> Telemetry egress to Grafana Cloud means collection and query depend on
+outbound connectivity; we accept this and design Alloy buffering accordingly.</li>
+<li><strong><code>glc_</code> token discipline.</strong> Data-plane writes require <code>glc_</code> access-policy tokens; using <code>glsa_</code>
+tokens surfaces as 401s at the write endpoints. This is an operational invariant teams must
+respect.</li>
+<li><strong>OTel learning curve.</strong> Teams must adopt OTel SDK/auto-instrumentation and the shared
+resource-attribute schema; we offset this with onboarding guides and templates.</li>
+<li>Ongoing SaaS subscription cost and less control over backend upgrades than self-hosting.</li>
+</ul>
+<hr>
+<h2 id="6-reconsideration-criteria">6. Reconsideration Criteria</h2>
+<p>We will revisit this decision if:</p>
+<ul>
+<li>Grafana Cloud cost exceeds the planned observability budget by <strong>>25%</strong>.</li>
+<li>Critical enterprise features (SAML SSO, RBAC, high-cardinality handling) regress or are removed.</li>
+<li>Grafana Cloud SLAs for uptime or ingestion are repeatedly not met.</li>
+<li>OpenTelemetry support across our service languages materially regresses.</li>
+<li>Security or compliance raises a blocking concern about telemetry leaving our Azure tenancy.</li>
+</ul>
+<hr>
+<h2 id="7-references">7. References</h2>
+<ul>
+<li><a href="../platform-overview.md">Platform Overview (C4 L1-L2)</a></li>
+<li><a href="../designs/data-plane-architecture.md">Data Plane Architecture</a></li>
+<li><a href="../designs/control-plane-architecture.md">Control Plane Architecture</a></li>
+<li>ADR Index</li>
+<li><a href="https://grafana.com/products/cloud/">Grafana Cloud Overview</a></li>
+<li><a href="https://opentelemetry.io/docs/">OpenTelemetry Documentation</a></li>
+<li><a href="https://grafana.com/docs/alloy/">Grafana Alloy Documentation</a></li>
+</ul>
+<hr>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#1-context" data-slug="1-context" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Context</a></li><li data-astro-cid-xvrfupwn><a href="#2-decision" data-slug="2-decision" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Decision</a></li><li data-astro-cid-xvrfupwn><a href="#3-rationale" data-slug="3-rationale" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Rationale</a></li><li data-astro-cid-xvrfupwn><a href="#4-alternatives-considered" data-slug="4-alternatives-considered" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Alternatives Considered</a></li><li data-astro-cid-xvrfupwn><a href="#self-hosted-lgtm-loki--grafana--tempo--mimir" data-slug="self-hosted-lgtm-loki--grafana--tempo--mimir" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Self-Hosted LGTM (Loki / Grafana / Tempo / Mimir)</a></li><li data-astro-cid-xvrfupwn><a href="#datadog" data-slug="datadog" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Datadog</a></li><li data-astro-cid-xvrfupwn><a href="#azure-monitor--azure-native-tooling" data-slug="azure-monitor--azure-native-tooling" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Azure Monitor + Azure-Native Tooling</a></li><li data-astro-cid-xvrfupwn><a href="#5-consequences" data-slug="5-consequences" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Consequences</a></li><li data-astro-cid-xvrfupwn><a href="#positive-outcomes" data-slug="positive-outcomes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Positive Outcomes</a></li><li data-astro-cid-xvrfupwn><a href="#accepted-costs--trade-offs" data-slug="accepted-costs--trade-offs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Accepted Costs / Trade-offs</a></li><li data-astro-cid-xvrfupwn><a href="#6-reconsideration-criteria" data-slug="6-reconsideration-criteria" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Reconsideration Criteria</a></li><li data-astro-cid-xvrfupwn><a href="#7-references" data-slug="7-references" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. References</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

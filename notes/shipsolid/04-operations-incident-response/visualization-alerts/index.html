@@ -1,0 +1,1033 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Visualization, Alerting &amp; SLOs — Notes — Amit Singh</title><meta name="description" content="An effective observability system translates raw telemetry into actionable insights through"><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/04-operations-incident-response/visualization-alerts/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Visualization, Alerting &#38; SLOs — Notes — Amit Singh"><meta property="og:description" content="An effective observability system translates raw telemetry into actionable insights through"><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/04-operations-incident-response/visualization-alerts/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Visualization, Alerting &#38; SLOs — Notes — Amit Singh"><meta name="twitter:description" content="An effective observability system translates raw telemetry into actionable insights through"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-04-operations-incident-response" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>04 Operations Incident Response</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Visualization, Alerting &amp; SLOs </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>An effective observability system translates raw telemetry into actionable insights through</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 1, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/operations" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Operations</a><a href="/notes/tag/incident-response" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Incident Response</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="visualization-alerting--slos">Visualization, Alerting &#x26; SLOs</h1>
+<p>An effective observability system translates raw telemetry into actionable insights through
+intuitive dashboards and targeted alerting. Visualization and alerting are tailored to the needs of
+different stakeholders, aligned with SLOs, and tightly integrated into incident response workflows.</p>
+<h2 id="1-dashboard-templates-for-key-personas"><strong>1. Dashboard Templates for Key Personas</strong></h2>
+<p><strong>Scope:</strong></p>
+<ul>
+<li>Persona-based dashboards are designed to surface relevant insights to each stakeholder group,
+balancing depth, usability, and business context.</li>
+</ul>
+<p><strong>Dashboards include:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Persona</th><th>Focus Areas</th></tr></thead><tbody><tr><td><strong>SREs</strong></td><td>Infra health, service uptime, latency, error rates, golden signals</td></tr><tr><td><strong>Developers</strong></td><td>Application-level logs, traces, exception heatmaps, deploy impact analysis</td></tr><tr><td><strong>Product Teams</strong></td><td>Feature adoption, usage funnels, business SLIs</td></tr><tr><td><strong>Business Users</strong></td><td>KPIs, high-level SLAs, system availability, geographic breakdowns</td></tr></tbody></table>
+<p><strong>Design Principles:</strong></p>
+<ul>
+<li>Unified theme and consistent panel layouts</li>
+<li>Linked time ranges and template variables (e.g., <code>env</code>, <code>service</code>, <code>region</code>)</li>
+<li>Use of shared Grafana folders and access roles to control visibility</li>
+</ul>
+<h3 id="11-developers-persona">1.1 Developers Persona</h3>
+<p><strong>Main Concern</strong>: Debugging application-level issues, exception heatmaps, deployment impact.</p>
+<h4 id="slo-centric-kpis">SLO-centric KPI’s</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Section</th><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Panel Type</th></tr></thead><tbody><tr><td>KPIs</td><td>Availability (success rate)</td><td>SLO health</td><td>Prometheus</td><td><strong>Gauge / Stat</strong></td></tr><tr><td>KPIs</td><td>p95 Latency</td><td>User performance</td><td>Prometheus (histogram), Tempo exemplars</td><td><strong>Time series</strong></td></tr><tr><td>KPIs</td><td>Traffic (RPS)</td><td>Request volume</td><td>Prometheus</td><td><strong>Time series</strong></td></tr><tr><td>KPIs</td><td>5xx Error Rate</td><td>Reliability</td><td>Prometheus</td><td><strong>Time series / Stat</strong></td></tr><tr><td>KPIs</td><td>Retry Rate</td><td>Resiliency check</td><td>Prometheus</td><td><strong>Time series</strong></td></tr><tr><td>KPIs</td><td>DB CPU %</td><td>Data tier load</td><td>Azure Monitor (MI)</td><td><strong>Gauge / Time series</strong></td></tr><tr><td>KPIs</td><td>Top DB Wait Type</td><td>Bottleneck insight</td><td>SQL DMVs</td><td><strong>Table / Pie</strong></td></tr><tr><td>KPIs</td><td>Active Incidents</td><td>Current alerts</td><td>Grafana Alerting</td><td><strong>Stat / Table</strong></td></tr></tbody></table>
+<h4 id="application-aca--net">Application (ACA + .NET)</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Section</th><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Panel Type</th></tr></thead><tbody><tr><td>A1 – Requests</td><td>Success vs 4xx/5xx</td><td>Error trends</td><td>Prometheus</td><td><strong>Time series / Bar</strong></td></tr><tr><td></td><td>Latency (p50/p90/p95)</td><td>Performance baseline</td><td>Prometheus</td><td><strong>Time series</strong></td></tr><tr><td></td><td>RPS by route/method</td><td>Hot endpoints</td><td>Prometheus</td><td><strong>Time series / Table</strong></td></tr><tr><td>A2 – Errors</td><td>Top error routes</td><td>Debug failing APIs</td><td>Prometheus + Loki</td><td><strong>Table / Bar</strong></td></tr><tr><td></td><td>Top exception types</td><td>See failure patterns</td><td>Loki</td><td><strong>Table / Pie</strong></td></tr><tr><td></td><td>Failed dependency calls</td><td>Downstream reliability</td><td>Prometheus</td><td><strong>Table</strong></td></tr><tr><td>A3 – Resources</td><td>CPU% / Memory% per revision</td><td>App health</td><td>Azure Monitor / Prometheus</td><td><strong>Time series</strong></td></tr><tr><td></td><td>Container restarts</td><td>Crash loops</td><td>Azure Monitor</td><td><strong>Stat / Time series</strong></td></tr><tr><td></td><td>Replica count</td><td>Autoscaling check</td><td>Azure Monitor</td><td><strong>Time series</strong></td></tr><tr><td>A4 – Deploy Overlay</td><td>Errors/latency vs deploys</td><td>Correlate regressions</td><td>Prometheus + Annotations</td><td><strong>Time series + Annotation markers</strong></td></tr><tr><td>A5 – Traces</td><td>Service map</td><td>Topology view</td><td>Tempo</td><td><strong>Node graph</strong></td></tr><tr><td></td><td>Slowest traces</td><td>Root cause triage</td><td>Tempo</td><td><strong>Table</strong></td></tr><tr><td></td><td>N+1 calls detector</td><td>Chatty call detection</td><td>Tempo</td><td><strong>Table</strong></td></tr><tr><td>A6 – Async / Queues</td><td>Queue depth</td><td>Backlog risk</td><td>Azure Monitor / Custom</td><td><strong>Gauge / Time series</strong></td></tr><tr><td></td><td>Dequeue rate &#x26; handler latency</td><td>Throughput analysis</td><td>Prometheus</td><td><strong>Time series</strong></td></tr><tr><td></td><td>DLQ count</td><td>Poison messages</td><td>Azure Monitor</td><td><strong>Stat</strong></td></tr></tbody></table>
+<h4 id="data-tier-azure-sql-mi">Data Tier (Azure SQL MI)</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Section</th><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Panel Type</th></tr></thead><tbody><tr><td>B1 – Health</td><td>CPU %, IO %, Log Write %</td><td>DB saturation</td><td>Azure Monitor (MI)</td><td><strong>Time series / Gauge</strong></td></tr><tr><td></td><td>Storage used / free</td><td>Capacity planning</td><td>Azure Monitor</td><td><strong>Time series / Gauge</strong></td></tr><tr><td></td><td>Sessions / connections</td><td>Pool stress</td><td>Azure Monitor</td><td><strong>Time series</strong></td></tr><tr><td>B2 – Waits</td><td>Top wait types</td><td>“Why slow”</td><td>SQL DMVs / Query Store</td><td><strong>Table / Bar</strong></td></tr><tr><td></td><td>Waits trend timeline</td><td>Spike correlation</td><td>SQL</td><td><strong>Time series</strong></td></tr><tr><td>B3 – Queries</td><td>Expensive queries (duration/reads/CPU)</td><td>Tuning</td><td>SQL DMVs</td><td><strong>Table</strong></td></tr><tr><td></td><td>Query text + plan handle</td><td>Developer actionable</td><td>SQL DMVs</td><td><strong>Table</strong></td></tr><tr><td></td><td>Last 10 executions</td><td>Variability check</td><td>Query Store</td><td><strong>Table</strong></td></tr><tr><td>B4 – Contention</td><td>Blocking tree</td><td>Concurrency diagnosis</td><td>SQL DMVs</td><td><strong>Node graph / Table</strong></td></tr><tr><td></td><td>Deadlocks count</td><td>Detect correctness issues</td><td>SQL DMVs / Events</td><td><strong>Stat / Time series</strong></td></tr><tr><td>B5 – App Symptoms</td><td>SQL timeouts</td><td>App-side visibility</td><td>Loki logs</td><td><strong>Table / Stat</strong></td></tr><tr><td></td><td>Transient retries</td><td>Resiliency</td><td>Prometheus</td><td><strong>Time series</strong></td></tr></tbody></table>
+<h4 id="alerts-mapped-to-panels">Alerts (Mapped to Panels)</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Alert</th><th>Trigger Example</th><th>Purpose</th><th>Source</th><th>Panel Type</th></tr></thead><tbody><tr><td>HighErrorRate</td><td>5xx% > 2% for 5m</td><td>Catch breakages</td><td>Prometheus</td><td><strong>Alert</strong></td></tr><tr><td>LatencyP95High</td><td>p95 > 500ms for 10m</td><td>Performance guardrail</td><td>Prometheus</td><td><strong>Alert</strong></td></tr><tr><td>ContainerRestarts</td><td>>3 restarts / 15m</td><td>Detect crash loops</td><td>Azure Monitor</td><td><strong>Alert</strong></td></tr><tr><td>Ingress4xxSpike</td><td>4xx% > 8%</td><td>Detect bad config/clients</td><td>Prometheus</td><td><strong>Alert</strong></td></tr><tr><td>MI_CPUHigh</td><td>CPU > 80%</td><td>DB saturation</td><td>Azure Monitor</td><td><strong>Alert</strong></td></tr><tr><td>MI_WriteLogHigh</td><td>Log write % > 80%</td><td>Log bottleneck</td><td>Azure Monitor</td><td><strong>Alert</strong></td></tr><tr><td>DeadlocksDetected</td><td>Deadlocks > 0</td><td>Data correctness</td><td>SQL DMVs</td><td><strong>Alert</strong></td></tr><tr><td>BlockingSessions</td><td>>5 blocked sessions</td><td>Contention</td><td>SQL DMVs</td><td><strong>Alert</strong></td></tr><tr><td>ErrorBudgetBurn</td><td>Multi-window burn</td><td>Protect SLO</td><td>Prometheus</td><td><strong>Alert</strong></td></tr></tbody></table>
+<h3 id="12-sre-persona">1.2 SRE Persona</h3>
+<p><strong>Main concern:</strong> Service uptime, reliability, resource utilization, golden signals.</p>
+<h4 id="executive-overview">Executive Overview</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Type</th></tr></thead><tbody><tr><td>Fleet Health (mdixai &#x26; OT)</td><td>Red/Amber/Green view of service &#x26; plant health</td><td>Prometheus (SLO rules) + Grafana Alerting API</td><td><strong>Stat</strong></td></tr><tr><td>Error Budget Burn (1h/24h/7d)</td><td>Early warning for reliability</td><td>Prometheus burn rate rules</td><td><strong>Time series</strong></td></tr><tr><td>Incidents &#x26; MTTR (7/30d)</td><td>Track MTTA/MTTR trends</td><td>Loki (incident logs) + Alertmanager metrics</td><td><strong>Bar gauge</strong></td></tr><tr><td>Deployments Today</td><td># of prod deploys + failures</td><td>GitHub Actions exporter/API → Prom</td><td><strong>Stat</strong></td></tr><tr><td>Top 3 Risk Hotspots</td><td>Show highest-risk services/plants</td><td>Prom + Loki join</td><td><strong>Table</strong></td></tr></tbody></table>
+<hr>
+<h4 id="golden-signals-user-journey">Golden Signals (User Journey)</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Type</th></tr></thead><tbody><tr><td>Global Availability</td><td>End-user uptime</td><td>Synthetic Monitoring / Blackbox</td><td><strong>State timeline</strong></td></tr><tr><td>P95/P99 Latency (key APIs)</td><td>Performance regressions</td><td>App Insights / OTel → Prom</td><td><strong>Time series</strong></td></tr><tr><td>Error Rate by Endpoint</td><td>Reliability issues</td><td>App Insights</td><td><strong>Time series</strong></td></tr><tr><td>Failing Checks</td><td>Quick triage drill-down</td><td>Synthetic Monitoring</td><td><strong>Links</strong></td></tr></tbody></table>
+<hr>
+<h4 id="mdixai-services-azure-container-apps--web-apps">MDIxAI Services (Azure Container Apps &#x26; Web Apps)</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Type</th></tr></thead><tbody><tr><td>Replicas / Instances</td><td>Desired vs available</td><td>Azure Monitor / Prometheus</td><td><strong>State timeline</strong></td></tr><tr><td>RPS • Error% • P95</td><td>Golden signals</td><td>App Insights / OTel → Prom</td><td><strong>Time series</strong></td></tr><tr><td>CPU &#x26; Memory Utilization</td><td>Capacity monitoring</td><td>Azure Monitor / Prom</td><td><strong>Time series</strong></td></tr><tr><td>Container Restarts</td><td>Stability check</td><td>Prometheus</td><td><strong>Bar chart</strong></td></tr><tr><td>Error Logs (Top N)</td><td>Fast triage</td><td>Loki (<code>service</code>, <code>env</code>)</td><td><strong>Logs</strong></td></tr></tbody></table>
+<hr>
+<h4 id="ot-plants-fleet--host-health">OT Plants (Fleet &#x26; Host Health)</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Type</th></tr></thead><tbody><tr><td>Plant Availability Map</td><td>Which plants are up/down</td><td>Prom (Alloy agent heartbeat)</td><td><strong>State timeline</strong></td></tr><tr><td>Critical Lines at Risk</td><td>Priority ≤2</td><td>Prometheus rule</td><td><strong>Table</strong></td></tr><tr><td>CPU/Memory/Disk (Top Hosts)</td><td>Capacity hotspots</td><td>node/windows exporter → Prom</td><td><strong>Time series</strong></td></tr><tr><td>Service/Process Health</td><td>Business-critical services</td><td>windows_exporter perf counters</td><td><strong>Table</strong></td></tr><tr><td>OT Error Logs</td><td>Quick triage</td><td>Loki (Event Log/Syslog)</td><td><strong>Logs</strong></td></tr></tbody></table>
+<hr>
+<h4 id="slos--error-budgets">SLOs &#x26; Error Budgets</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Type</th></tr></thead><tbody><tr><td>SLO Status (30d)</td><td>Pass/Fail view by service/plant</td><td>Prometheus (SLO rules)</td><td><strong>Table</strong></td></tr><tr><td>Burn Rates (1h/6h/24h)</td><td>Early warning guardrails</td><td>Prometheus</td><td><strong>Time series</strong></td></tr><tr><td>Error Budget Remaining</td><td>Stakeholder-friendly</td><td>Prometheus</td><td><strong>Gauge</strong></td></tr><tr><td>Top Violations (7d)</td><td>Where to focus</td><td>Prom + LogQL metricization</td><td><strong>Bar chart</strong></td></tr></tbody></table>
+<hr>
+<h4 id="alerts--on-call">Alerts &#x26; On-Call</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Panel</th><th>Purpose</th><th>Data Source</th><th>Type</th></tr></thead><tbody><tr><td>Active Alerts by Severity</td><td>Live triage</td><td>Grafana Alerting API / Alertmanager</td><td><strong>Table</strong></td></tr><tr><td>Alert Volume Trend</td><td>Noise analysis</td><td>Alertmanager metrics</td><td><strong>Time series</strong></td></tr><tr><td>Noisiest Rules (Top N)</td><td>Tuning candidates</td><td>Alertmanager → Prom</td><td><strong>Bar chart</strong></td></tr><tr><td>Paging Effectiveness</td><td>Ack/Resolve times</td><td>PagerDuty/BigPanda webhooks</td><td><strong>Stat + Time series</strong></td></tr></tbody></table>
+<hr>
+<h2 id="2-standardized-alert-rules"><strong>2. Standardized Alert Rules</strong></h2>
+<h3 id="scope">Scope</h3>
+<p>To ensure consistency, actionability, and maintainability across environments, alerting rules are
+<strong>standardized by taxonomy and scope</strong>:</p>
+<ul>
+<li><strong>Environment-Specific Thresholds</strong>
+<ul>
+<li><strong>Dev/Staging</strong>: Relaxed thresholds to avoid noise.</li>
+<li><strong>Prod</strong>: Strict thresholds with high precision and sensitivity.</li>
+</ul>
+</li>
+<li><strong>Rule Design Patterns</strong>:
+<ul>
+<li><strong>Multi-condition Alerts</strong> Example: <code>High latency AND high error rate</code> to reduce false
+positives.</li>
+<li><strong>Threshold-Based Alerts</strong>
+<ul>
+<li>Based on fixed thresholds (e.g., CPU > 90%, error rate > 5%)</li>
+<li>Used for resource saturation or <strong>SLO violations</strong></li>
+</ul>
+</li>
+<li><strong>Anomaly Detection</strong>
+<ul>
+<li>Powered by <strong>Grafana Cloud Machine Learning</strong> or <strong>Azure Monitor Dynamic Thresholds</strong></li>
+<li>Detects unusual patterns without manually defined baselines</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="alert-types">Alert Types</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Type</th><th>Description</th><th>Examples</th></tr></thead><tbody><tr><td><strong>Infrastructure</strong></td><td>Monitors compute and platform resources</td><td>CPU, memory, disk usage, node readiness</td></tr><tr><td><strong>Application</strong></td><td>Tracks service health and performance metrics</td><td>5xx error rates, dependency latency</td></tr><tr><td><strong>Business</strong></td><td>Tied to key business outcomes and KPIs</td><td>Drop in order volume, failed checkouts</td></tr></tbody></table>
+<h3 id="key-pillars-of-standardized-alerts">Key Pillars of Standardized Alerts</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Pillar</th><th>Description</th></tr></thead><tbody><tr><td><strong>Taxonomy</strong></td><td>Use a consistent classification: <code>infra</code>, <code>app</code>, <code>business</code> alerts</td></tr><tr><td><strong>Severity Levels</strong></td><td>Standard priority levels (P1–P5) based on impact and urgency</td></tr><tr><td><strong>Structure</strong></td><td>Standard alert labels (<code>service</code>, <code>team</code>, <code>severity</code>, <code>env</code>, <code>region</code>)</td></tr><tr><td><strong>Message Format</strong></td><td>Consistent subject line, annotations, and alert body</td></tr><tr><td><strong>Environment Sensitivity</strong></td><td>Different thresholds for <code>dev</code>, <code>stage</code>, <code>prod</code> environments</td></tr><tr><td><strong>Routing Logic</strong></td><td>Unified routing based on tags (e.g., <code>team</code>, <code>env</code>, <code>severity</code>)</td></tr><tr><td><strong>Templates</strong></td><td>Reusable templates for alert rules and notification messages</td></tr><tr><td><strong>Documentation</strong></td><td>All alerts link to a runbook and contain troubleshooting steps</td></tr></tbody></table>
+<h3 id="naming-pattern">Naming Pattern</h3>
+<p>A <strong>modular naming pattern</strong> helps organize alerts by <strong>domain, resource, condition, and severity</strong>.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="md"><code><span class="line"><span style="color:#E1E4E8">&#x3C;env> &#x3C;product> &#x3C;infra_type> &#x3C;dimension> &#x3C;condition> &#x3C;priority> &#x3C;team></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[</span><span style="color:#DBEDFF;text-decoration:underline">prod</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">OT_Lelystad</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">vm</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">cpu</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">gt_90pct_5m</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">p1</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">OT_Team</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">[</span><span style="color:#DBEDFF;text-decoration:underline">prod</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">MDIxAI</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">az_container_apps</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">cpu</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">gt_90pct_5m</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">p1</span><span style="color:#E1E4E8">] [</span><span style="color:#DBEDFF;text-decoration:underline">SRE_Team</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"></span></code></pre>
+<h3 id="alert-name-fields-breakdown">Alert Name Fields (Breakdown)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Purpose</th><th>Allowed/Recommended Values</th></tr></thead><tbody><tr><td><code>env</code></td><td>Environment</td><td><code>dev</code>, <code>qa</code>, <code>prod</code>, <code>sandbox</code></td></tr><tr><td><code>product</code></td><td>Program or business domain</td><td><code>mdixai</code>, <code>ot</code>, <code>data</code></td></tr><tr><td><code>infra_type</code></td><td>Platform/infra class</td><td><code>az_container_apps</code>, <code>aks</code>, <code>app_gateway</code>, <code>key_vault</code>, <code>cosmosdb</code>, <code>sql_mi</code>, <code>linux_vm</code>, <code>win_vm</code>, <code>network</code></td></tr><tr><td><code>service</code></td><td>Logical service/app</td><td>e.g., <code>api-gateway</code>, <code>orders-api</code>, <code>billing-worker</code></td></tr><tr><td><code>component</code></td><td>Sub-part</td><td>e.g., <code>ingress</code>, <code>backend</code>, <code>db</code>, <code>queue</code>, <code>os</code></td></tr><tr><td><code>alert_type</code></td><td>Pattern category</td><td><code>slo_burn</code>, <code>threshold</code>, <code>log_spike</code>, <code>synthetic</code>, <code>security</code>, <code>quota</code>, <code>deployment</code></td></tr><tr><td><code>condition</code></td><td>Machine-friendly condition</td><td><code>error_rate_5m_and_1h</code>, <code>p95_latency_gt_500ms_5m</code>, <code>cpu_gt_90_for_10m</code>, <code>restart_rate_gt_5_5m</code></td></tr><tr><td><code>severity</code></td><td>Human severity</td><td><code>critical</code>, <code>warning</code>, <code>info</code></td></tr><tr><td><code>team</code></td><td>Owning group</td><td><code>platform</code>, <code>sre</code>, <code>infra</code>, <code>network</code>, <code>data</code>, <code>api</code>, etc.</td></tr></tbody></table>
+<p><strong>Priority defaults:</strong></p>
+<ul>
+<li>severity=critical → priority=P1 (prod) / P2 (non-prod)</li>
+<li>severity=warning → P3</li>
+<li>severity=info → P4/P5</li>
+</ul>
+<h3 id="priority-defaults">Priority Defaults</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Severity</th><th>Environment</th><th>Priority</th><th>Typical Use Case</th><th>Escalation Target</th></tr></thead><tbody><tr><td><strong>critical</strong></td><td><strong>prod</strong></td><td><strong>P1</strong></td><td>Customer-facing outage, SLO burn, synthetic down in ≥2 regions</td><td>Immediate page to BigPanda → On-call engineer; management visibility</td></tr><tr><td><strong>critical</strong></td><td><strong>non-prod (dev/qa/sandbox)</strong></td><td><strong>P2</strong></td><td>Blocking CI/CD pipelines, critical test envs down, widespread developer impact</td><td>MS Teams alert; optional on-call if blocking release</td></tr><tr><td><strong>warning</strong></td><td><strong>prod</strong></td><td><strong>P3</strong></td><td>Capacity nearing limits, error rate spikes, failed jobs without user impact, Expiring secrets, approaching quotas, config drift</td><td>MS Teams notifications; triaged during working hours</td></tr><tr><td><strong>info</strong></td><td><strong>non-prod</strong></td><td><strong>P4</strong></td><td>Expiring secrets, approaching quotas, config drift</td><td>Teams/Email DL; backlog item in Jira</td></tr><tr><td><strong>info</strong></td><td><strong>non-prod</strong></td><td><strong>P5</strong></td><td>Routine noise, deprecated resource usage, minor anomalies</td><td>Log only, optional Teams post; no escalation</td></tr></tbody></table>
+<h3 id="benefits-of-standardizing-alerts">Benefits of Standardizing Alerts</h3>
+<ul>
+<li><strong>Reduces Alert Fatigue</strong>: Less noise, more signal</li>
+<li><strong>Faster Triage</strong>: Clear severity, context, and ownership</li>
+<li><strong>Improved SLO/SLA Tracking</strong>: Alerts aligned with business impact</li>
+<li><strong>Better Routing &#x26; Escalation</strong>: Alerts reach the right people, in the right way</li>
+<li><strong>Easier Reporting</strong>: Uniform tags and labels improve dashboards and KPIs</li>
+</ul>
+<h2 id="3-alert-routing--escalation-policies"><strong>3. Alert Routing &#x26; Escalation Policies</strong></h2>
+<h3 id="escalation-targets">Escalation Targets</h3>
+<ul>
+<li>P1 → Page on-call immediately (BigPanda → MS Teams War Room).</li>
+<li>P2 → Notify team leads + MS Teams; escalate if no acknowledgement in 30 min.</li>
+<li>P3 → Team channel notification; captured in weekly ops review.</li>
+<li>P4/P5 → Logged; visible in dashboards and daily digest emails, not actionable in real time.</li>
+</ul>
+<h3 id="routing-logic-notification-policy-tree">Routing Logic (Notification Policy Tree)</h3>
+<ul>
+<li>Matchers:
+<ul>
+<li>severity=critical, env=prod → route to BigPanda contact point.</li>
+<li>severity=critical, env!=prod → route to MS Teams (with priority=P2 label).</li>
+<li>severity=warning → route to MS Teams (priority=P3).</li>
+<li>severity=info → route to MS Teams Digest DL or log_only contact point.</li>
+</ul>
+</li>
+</ul>
+<h3 id="time-to-action-expectations">Time-to-Action Expectations</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Priority</th><th>MTTA Target</th><th>MTTR Target</th></tr></thead><tbody><tr><td><strong>P1</strong></td><td>≤ 5 minutes</td><td>≤ 30 minutes</td></tr><tr><td><strong>P2</strong></td><td>≤ 15 minutes</td><td>≤ 2 hours</td></tr><tr><td><strong>P3</strong></td><td>≤ 1 hour</td><td>≤ 4 hours</td></tr><tr><td><strong>P4</strong></td><td>≤ 4 hours</td><td>≤ 24 hours</td></tr><tr><td><strong>P5</strong></td><td>Best effort</td><td>N/A (backlog only)</td></tr></tbody></table>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#1-dashboard-templates-for-key-personas" data-slug="1-dashboard-templates-for-key-personas" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Dashboard Templates for Key Personas</a></li><li data-astro-cid-xvrfupwn><a href="#11-developers-persona" data-slug="11-developers-persona" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>1.1 Developers Persona</a></li><li data-astro-cid-xvrfupwn><a href="#12-sre-persona" data-slug="12-sre-persona" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>1.2 SRE Persona</a></li><li data-astro-cid-xvrfupwn><a href="#2-standardized-alert-rules" data-slug="2-standardized-alert-rules" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Standardized Alert Rules</a></li><li data-astro-cid-xvrfupwn><a href="#scope" data-slug="scope" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Scope</a></li><li data-astro-cid-xvrfupwn><a href="#alert-types" data-slug="alert-types" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Alert Types</a></li><li data-astro-cid-xvrfupwn><a href="#key-pillars-of-standardized-alerts" data-slug="key-pillars-of-standardized-alerts" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Key Pillars of Standardized Alerts</a></li><li data-astro-cid-xvrfupwn><a href="#naming-pattern" data-slug="naming-pattern" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Naming Pattern</a></li><li data-astro-cid-xvrfupwn><a href="#alert-name-fields-breakdown" data-slug="alert-name-fields-breakdown" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Alert Name Fields (Breakdown)</a></li><li data-astro-cid-xvrfupwn><a href="#priority-defaults" data-slug="priority-defaults" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Priority Defaults</a></li><li data-astro-cid-xvrfupwn><a href="#benefits-of-standardizing-alerts" data-slug="benefits-of-standardizing-alerts" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Benefits of Standardizing Alerts</a></li><li data-astro-cid-xvrfupwn><a href="#3-alert-routing--escalation-policies" data-slug="3-alert-routing--escalation-policies" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Alert Routing &amp; Escalation Policies</a></li><li data-astro-cid-xvrfupwn><a href="#escalation-targets" data-slug="escalation-targets" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Escalation Targets</a></li><li data-astro-cid-xvrfupwn><a href="#routing-logic-notification-policy-tree" data-slug="routing-logic-notification-policy-tree" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Routing Logic (Notification Policy Tree)</a></li><li data-astro-cid-xvrfupwn><a href="#time-to-action-expectations" data-slug="time-to-action-expectations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Time-to-Action Expectations</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

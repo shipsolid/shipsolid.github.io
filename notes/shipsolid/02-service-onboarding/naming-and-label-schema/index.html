@@ -1,0 +1,332 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Naming &amp; Label Schema — Notes — Amit Singh</title><meta name="description" content="The canonical label and resource-attribute schema every signal must follow."><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/02-service-onboarding/naming-and-label-schema/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Naming &#38; Label Schema — Notes — Amit Singh"><meta property="og:description" content="The canonical label and resource-attribute schema every signal must follow."><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/02-service-onboarding/naming-and-label-schema/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Naming &#38; Label Schema — Notes — Amit Singh"><meta name="twitter:description" content="The canonical label and resource-attribute schema every signal must follow."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-02-service-onboarding" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>02 Service Onboarding</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Naming &amp; Label Schema </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>The canonical label and resource-attribute schema every signal must follow.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated June 9, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/onboarding" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Onboarding</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="naming--label-schema">Naming &#x26; Label Schema</h1>
+<p>The canonical label and resource-attribute schema every signal must follow. Cross-reference:
+<a href="resource-label-naming-convention.md">Resource Label &#x26; Tag Naming Convention</a>.</p>
+<hr>
+<h2 id="1-otel-resource-attributes-sdk--otlp-side">1. OTel Resource Attributes (SDK / OTLP side)</h2>
+<p>Set these at instrumentation time via <code>OTEL_RESOURCE_ATTRIBUTES</code> or the SDK. They flow from the
+application into Alloy over OTLP and are propagated to Mimir, Loki, and Tempo.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Attribute</th><th>Source</th><th>Example</th><th>Cardinality</th></tr></thead><tbody><tr><td><code>service.name</code></td><td>service</td><td><code>api-gateway</code></td><td>bounded (count of services)</td></tr><tr><td><code>service.namespace</code></td><td>team</td><td><code>platform</code></td><td>bounded</td></tr><tr><td><code>deployment.environment</code></td><td>env</td><td><code>prod</code></td><td>bounded (<code>dev</code> / <code>qa</code> / <code>prod</code>)</td></tr><tr><td><code>k8s.cluster.name</code></td><td>infra</td><td><code>ss-aks-prod-1</code></td><td>bounded</td></tr><tr><td><code>service.version</code></td><td>build</td><td><code>1.4.2</code></td><td>bounded-ish — watch churn on noisy release trains</td></tr></tbody></table>
+<p>Helm wiring (via Downward API):</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">env</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">OTEL_SERVICE_NAME</span></span>
+<span class="line"><span style="color:#85E89D">    value</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"{{ .Values.service.name }}"</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">OTEL_RESOURCE_ATTRIBUTES</span></span>
+<span class="line"><span style="color:#85E89D">    value</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"deployment.environment={{ .Values.environment }},service.version={{ .Chart.AppVersion }}"</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="2-prometheus--loki-metric-labels-platform-layer">2. Prometheus / Loki Metric Labels (platform layer)</h2>
+<p>These labels are <strong>not</strong> set in the application. They are stamped at the platform layer (Alloy
+pipeline config or Helm chart metadata) and apply uniformly to all series from a given workload.</p>
+<h3 id="2a-cost-attribution-labels-required-on-every-alloy-pipeline">2a. Cost-attribution labels (required on every Alloy pipeline)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Label</th><th>Approved values</th><th>Notes</th></tr></thead><tbody><tr><td><code>deployment_environment</code></td><td><code>dev</code>, <code>qa</code>, <code>prod</code></td><td>Grafana Cloud native cost attribution key</td></tr><tr><td><code>bu</code></td><td><code>platform</code>, <code>commerce</code></td><td>Lowercase, no spaces</td></tr><tr><td><code>product</code></td><td><code>gateway</code>, <code>billing</code>, <code>infra</code></td><td>Lowercase, hyphen-separated</td></tr></tbody></table>
+<p>Do not invent new environment names. Open a platform request to add approved values. These are
+<strong>constant external labels</strong> — adding them does not increase series count.</p>
+<h3 id="2b-standard-labels-required-on-every-metric">2b. Standard labels (required on every metric)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Label</th><th>Description</th><th>Example</th></tr></thead><tbody><tr><td><code>env</code></td><td>Deployment environment</td><td><code>dev</code>, <code>qa</code>, <code>prod</code></td></tr><tr><td><code>service</code></td><td>Service name</td><td><code>api-gateway</code></td></tr><tr><td><code>component</code></td><td>Sub-component or module</td><td><code>database</code>, <code>api</code></td></tr><tr><td><code>team</code></td><td>Owning team</td><td><code>platform-team</code></td></tr><tr><td><code>region</code></td><td>Azure region</td><td><code>eastus</code>, <code>westeu</code></td></tr></tbody></table>
+<p>Label values are lowercase with hyphens. Custom labels require SRE team approval and a cardinality
+estimate.</p>
+<h3 id="2c-alloy-wiring">2c. Alloy wiring</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>prometheus.remote_write "grafana_cloud" {</span></span>
+<span class="line"><span>  endpoint {</span></span>
+<span class="line"><span>    url = env("GRAFANA_CLOUD_METRICS_URL")</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    write_relabel_config {</span></span>
+<span class="line"><span>      action       = "replace"</span></span>
+<span class="line"><span>      target_label = "deployment_environment"</span></span>
+<span class="line"><span>      replacement  = env("DEPLOY_ENV")   // "dev" | "qa" | "prod"</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    write_relabel_config {</span></span>
+<span class="line"><span>      action       = "replace"</span></span>
+<span class="line"><span>      target_label = "bu"</span></span>
+<span class="line"><span>      replacement  = env("BU")           // e.g. "platform"</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    write_relabel_config {</span></span>
+<span class="line"><span>      action       = "replace"</span></span>
+<span class="line"><span>      target_label = "product"</span></span>
+<span class="line"><span>      replacement  = env("PRODUCT")      // e.g. "gateway"</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Inject <code>DEPLOY_ENV</code>, <code>BU</code>, and <code>PRODUCT</code> via Helm values — never hardcode in the Alloy config.</p>
+<hr>
+<h2 id="3-kubernetes-pod-labels">3. Kubernetes Pod Labels</h2>
+<p>Use a <code>platform.io/</code> prefix for platform-defined labels to avoid collisions with Kubernetes-native
+labels and third-party operators. These are read by Alloy from pod metadata to populate metric and
+log stream labels automatically.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">metadata</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  labels</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#6A737D">    # Platform labels — consumed by Alloy for cost attribution</span></span>
+<span class="line"><span style="color:#85E89D">    platform.io/bu</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">platform</span></span>
+<span class="line"><span style="color:#85E89D">    platform.io/product</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">gateway</span></span>
+<span class="line"><span style="color:#85E89D">    platform.io/deployment_environment</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">dev</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Kubernetes standard labels</span></span>
+<span class="line"><span style="color:#85E89D">    app.kubernetes.io/name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">api-gateway</span></span>
+<span class="line"><span style="color:#85E89D">    app.kubernetes.io/part-of</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">gateway</span></span>
+<span class="line"><span style="color:#85E89D">    app.kubernetes.io/managed-by</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">helm</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # ShipSolid custom labels</span></span>
+<span class="line"><span style="color:#85E89D">    shipsolid.com/team</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"platform-team"</span></span>
+<span class="line"><span style="color:#85E89D">    shipsolid.com/env</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"dev"</span></span>
+<span class="line"><span style="color:#85E89D">    shipsolid.com/region</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"eastus"</span></span>
+<span class="line"></span></code></pre>
+<p>A Kyverno <code>ClusterPolicy</code> validates that all <code>Deployment</code>, <code>StatefulSet</code>, and <code>DaemonSet</code> resources
+carry the three required <code>platform.io/</code> labels at admission time.</p>
+<hr>
+<h2 id="4-alert-naming-convention">4. Alert Naming Convention</h2>
+<p>Pattern: <code>{env}.{service}.{component}.{signal}.{severity}.{team}</code></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Segment</th><th>Example values</th></tr></thead><tbody><tr><td><code>env</code></td><td><code>prod</code>, <code>qa</code>, <code>dev</code></td></tr><tr><td><code>service</code></td><td><code>api-gateway</code>, <code>billing-service</code></td></tr><tr><td><code>component</code></td><td><code>database</code>, <code>api</code>, <code>aks</code></td></tr><tr><td><code>signal</code></td><td><code>latency-p99</code>, <code>connection-errors</code>, <code>node-not-ready</code></td></tr><tr><td><code>severity</code></td><td><code>p1</code>, <code>p2</code>, <code>p3</code>, <code>p4</code></td></tr><tr><td><code>team</code></td><td><code>sre-team</code>, <code>commerce-team</code>, <code>platform-team</code></td></tr></tbody></table>
+<p>Use dots as segment separators; hyphens within values.</p>
+<p>Examples:</p>
+<ul>
+<li><code>prod.billing-service.database.connection-errors.p1.commerce-team</code></li>
+<li><code>dev.api-gateway.api-gateway.latency-p99.p3.platform-team</code></li>
+</ul>
+<p>Alerts must include <code>runbook_url</code> and <code>severity</code> / <code>team</code> as rule labels (not only in the title).
+See <a href="../05-platform-configuration/ALERTS_STANDARDS.md">Alert Standards</a>.</p>
+<hr>
+<h2 id="5-forbidden-in-labels">5. Forbidden in Labels</h2>
+<p>Never put these in metric labels, Loki stream labels, or trace attributes — they belong in log
+bodies, trace spans, or exemplars:</p>
+<ul>
+<li>Request IDs, trace IDs, session IDs</li>
+<li>User IDs, account IDs</li>
+<li>Raw timestamps</li>
+<li>Full URLs containing path parameters</li>
+<li>Error message strings</li>
+</ul>
+<p>High-churn values create a new series per unique value and are the primary cost driver.</p>
+<hr>
+<h2 id="6-governance">6. Governance</h2>
+<p>Any new label or attribute requires a <strong>cardinality estimate</strong> in the same PR — not a “looks fine”.
+Reach for the <strong>Cardinality Budget Calculator</strong> skill before adding any label bound for production.</p>
+<p>To propose a new required label or approved value, open a platform RFC.</p>
+<hr>
+<h2 id="related">Related</h2>
+<ul>
+<li><a href="metrics-instrumentation-guide.md">Metrics Instrumentation Guide</a></li>
+<li><a href="../07-cost-governance/cardinality-governance.md">Cardinality Governance</a></li>
+<li><a href="resource-label-naming-convention.md">Resource Label &#x26; Tag Naming Convention</a></li>
+<li><a href="../06-build-release/naming-conventions.md">Naming Conventions</a></li>
+</ul>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#1-otel-resource-attributes-sdk--otlp-side" data-slug="1-otel-resource-attributes-sdk--otlp-side" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. OTel Resource Attributes (SDK / OTLP side)</a></li><li data-astro-cid-xvrfupwn><a href="#2-prometheus--loki-metric-labels-platform-layer" data-slug="2-prometheus--loki-metric-labels-platform-layer" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Prometheus / Loki Metric Labels (platform layer)</a></li><li data-astro-cid-xvrfupwn><a href="#2a-cost-attribution-labels-required-on-every-alloy-pipeline" data-slug="2a-cost-attribution-labels-required-on-every-alloy-pipeline" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>2a. Cost-attribution labels (required on every Alloy pipeline)</a></li><li data-astro-cid-xvrfupwn><a href="#2b-standard-labels-required-on-every-metric" data-slug="2b-standard-labels-required-on-every-metric" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>2b. Standard labels (required on every metric)</a></li><li data-astro-cid-xvrfupwn><a href="#2c-alloy-wiring" data-slug="2c-alloy-wiring" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>2c. Alloy wiring</a></li><li data-astro-cid-xvrfupwn><a href="#3-kubernetes-pod-labels" data-slug="3-kubernetes-pod-labels" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Kubernetes Pod Labels</a></li><li data-astro-cid-xvrfupwn><a href="#4-alert-naming-convention" data-slug="4-alert-naming-convention" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Alert Naming Convention</a></li><li data-astro-cid-xvrfupwn><a href="#5-forbidden-in-labels" data-slug="5-forbidden-in-labels" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Forbidden in Labels</a></li><li data-astro-cid-xvrfupwn><a href="#6-governance" data-slug="6-governance" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Governance</a></li><li data-astro-cid-xvrfupwn><a href="#related" data-slug="related" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Related</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

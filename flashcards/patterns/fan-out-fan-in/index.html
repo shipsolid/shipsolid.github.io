@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Fan-Out / Fan-In — Flashcards</title><meta name="description" content="Parallel scatter-gather, deadline propagation, hedged requests, and partial-failure policies."><link rel="canonical" href="https://shipsolid.github.io/flashcards/patterns/fan-out-fan-in/"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:title" content="Fan-Out / Fan-In — Flashcards"><meta property="og:description" content="Parallel scatter-gather, deadline propagation, hedged requests, and partial-failure policies."><meta property="og:url" content="https://shipsolid.github.io/flashcards/patterns/fan-out-fan-in/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Fan-Out / Fan-In — Flashcards"><meta name="twitter:description" content="Parallel scatter-gather, deadline propagation, hedged requests, and partial-failure policies."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.perspective[data-astro-cid-m6cfxoad]{perspective:1200px}.card-inner[data-astro-cid-m6cfxoad]{transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1)}.card-inner[data-astro-cid-m6cfxoad].flipped{transform:rotateY(180deg)}.card-face[data-astro-cid-m6cfxoad]{backface-visibility:hidden;-webkit-backface-visibility:hidden}.card-back[data-astro-cid-m6cfxoad]{transform:rotateY(180deg)}
+</style><script type="module" src="/_astro/hoisted.YYNSZ6sO.js"></script></head> <body>  <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20 min-h-screen" data-astro-cid-m6cfxoad> <div class="max-w-2xl mx-auto px-6" data-astro-cid-m6cfxoad> <!-- Breadcrumb --> <nav class="mb-8 text-sm font-mono text-slate-600 flex items-center flex-wrap gap-1" data-astro-cid-m6cfxoad> <a href="/flashcards" class="hover:text-slate-400 transition-colors" data-astro-cid-m6cfxoad>flashcards</a>  <span class="mx-1" data-astro-cid-m6cfxoad>/</span> <a href="/flashcards" class="hover:text-slate-400 transition-colors" data-astro-cid-m6cfxoad>patterns</a> <span class="mx-1" data-astro-cid-m6cfxoad>/</span> <span class="text-slate-400" data-astro-cid-m6cfxoad>fan-out-fan-in</span> </nav> <!-- Study view --> <div id="study-view" data-astro-cid-m6cfxoad> <!-- Deck header --> <div class="mb-6" data-astro-cid-m6cfxoad> <h1 class="text-2xl font-bold text-slate-100 mb-1" data-astro-cid-m6cfxoad>Fan-Out / Fan-In</h1> <p class="text-sm text-slate-500" data-astro-cid-m6cfxoad>Parallel scatter-gather, deadline propagation, hedged requests, and partial-failure policies.</p> </div> <!-- Progress bar --> <div class="mb-8" data-astro-cid-m6cfxoad> <div class="flex items-center justify-between mb-2" data-astro-cid-m6cfxoad> <span id="progress-label" class="text-xs font-mono text-slate-500" data-astro-cid-m6cfxoad>
+0 / 15 known
+</span> <span id="card-counter" class="text-xs font-mono text-slate-600" data-astro-cid-m6cfxoad> 15 remaining
+</span> </div> <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden" data-astro-cid-m6cfxoad> <div id="progress-bar" class="h-full bg-accent rounded-full transition-all duration-500" style="width: 0%" data-astro-cid-m6cfxoad></div> </div> </div> <!-- Card --> <div class="perspective mb-6" data-astro-cid-m6cfxoad> <div id="card-inner" class="card-inner relative cursor-pointer select-none" style="min-height: 300px;" role="button" aria-label="Flip card" tabindex="0" data-astro-cid-m6cfxoad> <!-- Front --> <div class="card-face absolute inset-0 bg-slate-900 border border-slate-800 rounded-2xl p-8 flex flex-col items-center justify-center" data-astro-cid-m6cfxoad> <p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6" data-astro-cid-m6cfxoad>Question</p> <p id="question-text" class="text-xl text-slate-100 text-center leading-relaxed" data-astro-cid-m6cfxoad></p> <p id="flip-hint" class="absolute bottom-5 text-xs font-mono text-slate-700 transition-opacity duration-300" data-astro-cid-m6cfxoad>
+tap to reveal &nbsp;·&nbsp; <kbd class="font-mono" data-astro-cid-m6cfxoad>space</kbd> </p> </div> <!-- Back --> <div class="card-face card-back absolute inset-0 bg-slate-900 border border-accent/40 rounded-2xl p-8 flex flex-col items-center justify-center" data-astro-cid-m6cfxoad> <p class="text-xs font-mono text-accent uppercase tracking-widest mb-6" data-astro-cid-m6cfxoad>Answer</p> <p id="answer-text" class="text-lg text-slate-200 text-center leading-relaxed" data-astro-cid-m6cfxoad></p> </div> </div> </div> <!-- Action buttons (hidden until card is flipped) --> <div id="action-buttons" class="flex items-center justify-center gap-4 transition-opacity duration-200" style="visibility: hidden;" data-astro-cid-m6cfxoad> <button id="btn-again" class="flex-1 max-w-[160px] px-6 py-3 border border-slate-700 text-slate-400 hover:text-slate-100 hover:border-slate-500 rounded-xl font-medium text-sm transition-all duration-200 group" data-astro-cid-m6cfxoad> <span class="mr-1" data-astro-cid-m6cfxoad>↩</span> Again
+<span class="block text-[10px] font-mono text-slate-700 group-hover:text-slate-600 mt-0.5" data-astro-cid-m6cfxoad>← or A</span> </button> <button id="btn-known" class="flex-1 max-w-[160px] px-6 py-3 bg-accent/10 border border-accent/30 text-accent hover:bg-accent hover:text-slate-950 rounded-xl font-semibold text-sm transition-all duration-200 group" data-astro-cid-m6cfxoad> <span class="mr-1" data-astro-cid-m6cfxoad>✓</span> Known
+<span class="block text-[10px] font-mono text-accent/50 group-hover:text-slate-800 mt-0.5" data-astro-cid-m6cfxoad>→ or K</span> </button> </div> <!-- Reset --> <div class="mt-8 text-center" data-astro-cid-m6cfxoad> <button id="btn-restart" class="text-xs font-mono text-slate-700 hover:text-slate-500 transition-colors" data-astro-cid-m6cfxoad>
+reset session
+</button> </div> <!-- Tags --> <div class="mt-8 flex flex-wrap gap-2 justify-center" data-astro-cid-m6cfxoad> <span class="tag text-[11px]" data-astro-cid-m6cfxoad>patterns</span><span class="tag text-[11px]" data-astro-cid-m6cfxoad>distributed-systems</span><span class="tag text-[11px]" data-astro-cid-m6cfxoad>maang-prep</span> </div> </div> <!-- Completion view (shown when all cards known) --> <div id="done-view" class="hidden text-center py-20" data-astro-cid-m6cfxoad> <div class="text-5xl mb-6" data-astro-cid-m6cfxoad>✓</div> <h2 class="text-2xl font-bold text-slate-100 mb-2" data-astro-cid-m6cfxoad>All 15 cards known</h2> <p class="text-slate-500 mb-8 text-sm" data-astro-cid-m6cfxoad>Deck complete. Nice work.</p> <div class="flex items-center justify-center gap-4" data-astro-cid-m6cfxoad> <button id="btn-restart-done" class="btn-primary" data-astro-cid-m6cfxoad>Study again</button> <a href="/flashcards" class="btn-outline" data-astro-cid-m6cfxoad>All decks</a> </div> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>  <script>(function(){const cards = [{"q":"What is the fan-out / fan-in pattern?","a":"Decompose one request into N parallel sub-tasks (fan-out), execute them concurrently, then merge results (fan-in). Turns serial sum-of-latencies into max-of-N latency."},{"q":"What determines the overall response latency in a fan-out?","a":"The slowest worker. You wait for the last sub-task before the merge can return, so P99 of the fan-out ≈ P99 of the worst shard."},{"q":"What is deadline propagation and why does it matter?","a":"Every worker goroutine/thread must inherit the parent request's deadline (e.g., via Go context). Without it, a worker that exceeds the deadline keeps consuming CPU, memory, and connections for a request no one is waiting for."},{"q":"Name the three failure policies for fan-out calls.","a":"1. Fail-fast — abort if any required dependency fails. 2. Best-effort — return what succeeded, surface what's missing. 3. Minimum quorum — succeed once K-of-N replicas respond."},{"q":"When should you default to fail-fast over partial results?","a":"When missing data makes the answer incorrect — bank balances, checkout totals, payments. Allow partial results only when the product spec explicitly says incomplete data is still useful (search, dashboards, recommendations)."},{"q":"What is a hedged request?","a":"Sending the same idempotent request to two replicas simultaneously, using whichever responds first and cancelling the other. Trades ~2× upstream load for dramatic P99/P999 latency reduction."},{"q":"What is delayed hedging and why is it preferred over immediate hedging?","a":"Send to replica A; only send to replica B if A hasn't responded within a threshold (e.g., 20ms). Most requests complete via A, so average overhead is far less than 2×."},{"q":"When should you NOT use hedged requests?","a":"When the operation has side effects (charging a card, creating an order) unless protected by idempotency keys. Also avoid when replicas share the same bottleneck or backends are already overloaded."},{"q":"What Prometheus metric reveals a slow shard in a fan-out system?","a":"fan_out_shard_latency_seconds{shard_id=X} P99. Correlate with fan_out_cancelled_worker_total rising to identify the culprit shard."},{"q":"Describe the OTel trace shape for a fan-out request.","a":"Parent span covers the full fan-out duration. Each worker creates a child span tagged with shard_id. The aggregation is a sibling span of the last worker to finish. In a waterfall, the longest child immediately reveals the tail shard."},{"q":"What is load amplification in fan-out?","a":"1 client request generates N backend calls. At 10K RPS with fan-out width 100, you produce 1M backend calls/sec. Size backends with this multiplier in mind."},{"q":"What is the difference between a shard and a worker?","a":"A shard is a persistent data partition (where data lives). A worker is a temporary execution unit — thread, goroutine, pod — that performs computation. Workers fan out to query shards."},{"q":"What is deadline amplification in a fan-out dispatcher?","a":"The dispatcher itself consumes time (e.g., 10ms) to shard the request. If the parent deadline is 200ms, workers effectively have 190ms. Always propagate the remaining deadline, not the original."},{"q":"How do Grafana Mimir and Loki use fan-out internally?","a":"Mimir: query frontend fans PromQL queries to queriers, which fetch from distributed store-gateways. Loki: query frontend distributes log queries across ingesters and store-gateways. Both use scatter-gather for horizontal scale."},{"q":"How should partial results be surfaced to clients?","a":"Return data with explicit degradation metadata: {\"results\":[...],\"partial\":true,\"missing_shards\":[\"shard3\"]}. Never silently return incomplete results — silent data loss is hard to debug and misleads users."}];
+const deckSlug = "patterns/fan-out-fan-in";
+
+  const STORAGE_KEY = `fc:${deckSlug}`;
+
+  // --- Persistence ---
+  function loadKnown() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]'));
+    } catch {
+      return new Set();
+    }
+  }
+  function saveKnown(knownSet) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...knownSet]));
+  }
+
+  // --- Shuffle (Fisher-Yates) ---
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function buildQueue(knownSet) {
+    return shuffle(cards.map((_, i) => i).filter((i) => !knownSet.has(i)));
+  }
+
+  // --- State ---
+  let knownSet = loadKnown();
+  let queue = buildQueue(knownSet);
+  let isFlipped = false;
+
+  // --- DOM refs ---
+  const cardInner     = document.getElementById('card-inner');
+  const questionText  = document.getElementById('question-text');
+  const answerText    = document.getElementById('answer-text');
+  const cardCounter   = document.getElementById('card-counter');
+  const progressBar   = document.getElementById('progress-bar');
+  const progressLabel = document.getElementById('progress-label');
+  const actionBtns    = document.getElementById('action-buttons');
+  const flipHint      = document.getElementById('flip-hint');
+  const studyView     = document.getElementById('study-view');
+  const doneView      = document.getElementById('done-view');
+
+  // --- Render ---
+  function render() {
+    if (queue.length === 0) {
+      studyView.classList.add('hidden');
+      doneView.classList.remove('hidden');
+      return;
+    }
+
+    const card = cards[queue[0]];
+    questionText.textContent = card.q;
+    answerText.textContent = card.a;
+
+    const total = cards.length;
+    const known = knownSet.size;
+    progressBar.style.width = `${(known / total) * 100}%`;
+    progressLabel.textContent = `${known} / ${total} known`;
+    cardCounter.textContent = `${queue.length} remaining`;
+
+    isFlipped = false;
+    cardInner.classList.remove('flipped');
+    actionBtns.style.visibility = 'hidden';
+    flipHint.style.opacity = '1';
+  }
+
+  function flip() {
+    if (isFlipped) return;
+    isFlipped = true;
+    cardInner.classList.add('flipped');
+    actionBtns.style.visibility = 'visible';
+    flipHint.style.opacity = '0';
+  }
+
+  function markKnown() {
+    knownSet.add(queue.shift());
+    saveKnown(knownSet);
+    render();
+  }
+
+  function markAgain() {
+    queue.push(queue.shift());
+    render();
+  }
+
+  function reset() {
+    knownSet = new Set();
+    saveKnown(knownSet);
+    queue = buildQueue(knownSet);
+    studyView.classList.remove('hidden');
+    doneView.classList.add('hidden');
+    render();
+  }
+
+  // --- Events ---
+  cardInner.addEventListener('click', flip);
+  cardInner.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+  });
+  document.getElementById('btn-known').addEventListener('click', markKnown);
+  document.getElementById('btn-again').addEventListener('click', markAgain);
+  document.getElementById('btn-restart').addEventListener('click', reset);
+  document.getElementById('btn-restart-done').addEventListener('click', reset);
+
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement?.tagName === 'INPUT') return;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+    if ((e.key === 'ArrowRight' || e.key === 'k') && isFlipped) markKnown();
+    if ((e.key === 'ArrowLeft'  || e.key === 'a') && isFlipped) markAgain();
+  });
+
+  // --- Init ---
+  render();
+})();</script>

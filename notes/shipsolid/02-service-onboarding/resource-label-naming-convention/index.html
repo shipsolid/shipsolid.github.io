@@ -1,0 +1,393 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Resource Label &amp; Tag Naming Convention — Notes — Amit Singh</title><meta name="description" content="**Status:** Active **Last Updated:** 2026-03-24 **Applies To:** Grafana Cloud (cost attribution),"><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/02-service-onboarding/resource-label-naming-convention/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Resource Label &#38; Tag Naming Convention — Notes — Amit Singh"><meta property="og:description" content="**Status:** Active **Last Updated:** 2026-03-24 **Applies To:** Grafana Cloud (cost attribution),"><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/02-service-onboarding/resource-label-naming-convention/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Resource Label &#38; Tag Naming Convention — Notes — Amit Singh"><meta name="twitter:description" content="**Status:** Active **Last Updated:** 2026-03-24 **Applies To:** Grafana Cloud (cost attribution),"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-02-service-onboarding" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>02 Service Onboarding</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> Resource Label &amp; Tag Naming Convention </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>**Status:** Active **Last Updated:** 2026-03-24 **Applies To:** Grafana Cloud (cost attribution),</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 1, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/onboarding" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Onboarding</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="resource-label--tag-naming-convention">Resource Label &#x26; Tag Naming Convention</h1>
+<p><strong>Status:</strong> Active <strong>Last Updated:</strong> 2026-03-24 <strong>Applies To:</strong> Grafana Cloud (cost attribution),
+Kubernetes Objects (labels), Azure Resources (tags)</p>
+<hr>
+<h2 id="problem-statement">Problem Statement</h2>
+<p>As the platform scales to serve multiple business units, a single <code>deployment_environment</code> label can
+only attribute Grafana Cloud costs to one dimension (environment). With no <code>bu</code> or <code>product</code> labels,
+it is impossible to answer:</p>
+<ul>
+<li>Which BU is driving the most observability spend?</li>
+<li>Which product’s metrics volume is growing fastest?</li>
+<li>What does prod cost across all teams vs dev?</li>
+</ul>
+<p>A compound string like <code>dgag-passport-dev</code> stuffed into <code>deployment_environment</code> appears to solve
+this but breaks native cost grouping — Grafana Cloud’s attribution UI filters on exact label values,
+not substrings.</p>
+<hr>
+<h2 id="convention-discrete-labels-shared-schema">Convention: Discrete Labels, Shared Schema</h2>
+<p>Each cost dimension is a <strong>separate label key</strong>. This enables native grouping in Grafana Cloud cost
+attribution, clean PromQL selectors, and consistent RBAC scoping — without any regex parsing.</p>
+<h3 id="required-labels">Required Labels</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>Label Key</th><th>Example Values</th><th>Notes</th></tr></thead><tbody><tr><td>Environment</td><td><code>deployment_environment</code></td><td><code>dev</code>, <code>qa</code>, <code>prod</code></td><td>Grafana Cloud native cost attribution key</td></tr><tr><td>Business Unit</td><td><code>bu</code></td><td><code>dgag</code>, <code>daia</code></td><td>Lowercase, no spaces</td></tr><tr><td>Product / Workload</td><td><code>product</code></td><td><code>passport</code>, <code>mdixai</code>, <code>infra</code></td><td>Lowercase, hyphen-separated</td></tr></tbody></table>
+<h3 id="approved-deployment_environment-values">Approved <code>deployment_environment</code> Values</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Value</th><th>Description</th></tr></thead><tbody><tr><td><code>dev</code></td><td>Development</td></tr><tr><td><code>qa</code></td><td>Quality assurance / staging</td></tr><tr><td><code>prod</code></td><td>Production</td></tr></tbody></table>
+<p>Do not invent environment names (e.g. no <code>uat</code>, <code>sandbox</code>, <code>test</code>). Open a platform request to add
+new values.</p>
+<hr>
+<h2 id="grafana-cloud-cost-attribution">Grafana Cloud Cost Attribution</h2>
+<p>Grafana Cloud’s native cost attribution groups usage by label value. With three discrete labels,
+every cost view becomes composable:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Question</th><th>How to query</th></tr></thead><tbody><tr><td>Cost by environment</td><td>Group by <code>deployment_environment</code></td></tr><tr><td>Cost by BU</td><td>Group by <code>bu</code></td></tr><tr><td>Cost by product</td><td>Group by <code>product</code></td></tr><tr><td>Cost for dgag in prod</td><td>Filter <code>bu=dgag</code> + <code>deployment_environment=prod</code></td></tr><tr><td>Which product costs most in dev</td><td>Filter <code>deployment_environment=dev</code>, group by <code>product</code></td></tr></tbody></table>
+<h3 id="what-a-single-label-cannot-do">What a single label cannot do</h3>
+<p>If only <code>deployment_environment</code> is present, the only available grouping is env tier. Adding <code>bu</code>
+and <code>product</code> unlocks all the above without changing <code>deployment_environment</code> or its values.</p>
+<h3 id="do-attribution-labels-increase-cost">Do attribution labels increase cost?</h3>
+<p>No. <code>deployment_environment</code>, <code>bu</code>, and <code>product</code> are <strong>constant external labels</strong> — set once in the
+Alloy config and stamped uniformly onto every series from that agent. They do not multiply series
+count.</p>
+<p>1,000 existing series with <code>bu=dgag</code> added = still 1,000 series.</p>
+<p>This is distinct from <strong>high-cardinality per-series labels</strong> (e.g. <code>user_id</code>, <code>request_id</code>) which
+create a new series per unique value and are the actual cost driver. Dropping attribution labels
+saves effectively nothing.</p>
+<p><strong>If cost reduction is a goal, these levers have real impact:</strong></p>
+<ol>
+<li><strong>Drop unused metrics</strong> at the Alloy layer using <code>metric_relabel_config</code> drop rules before remote
+write</li>
+<li><strong>Increase scrape interval</strong> for non-critical metrics (60s instead of 15s reduces volume 4×)</li>
+<li><strong>Use recording rules</strong> to pre-aggregate high-cardinality metrics; store the rollup, not the raw
+series</li>
+<li><strong>Set retention policies</strong> — avoid retaining high-resolution raw data longer than operationally
+needed</li>
+</ol>
+<hr>
+<h2 id="grafana-alloy-configuration">Grafana Alloy Configuration</h2>
+<p>Set the three labels in your Alloy pipeline so they are applied uniformly to all telemetry from a
+given workload. Do not rely on application code to set these.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>// metrics pipeline example</span></span>
+<span class="line"><span>prometheus.remote_write "grafana_cloud" {</span></span>
+<span class="line"><span>  endpoint {</span></span>
+<span class="line"><span>    url = env("GRAFANA_CLOUD_METRICS_URL")</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    write_relabel_config {</span></span>
+<span class="line"><span>      action       = "replace"</span></span>
+<span class="line"><span>      target_label = "deployment_environment"</span></span>
+<span class="line"><span>      replacement  = env("DEPLOY_ENV")           // "dev" | "qa" | "prod"</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    write_relabel_config {</span></span>
+<span class="line"><span>      action       = "replace"</span></span>
+<span class="line"><span>      target_label = "bu"</span></span>
+<span class="line"><span>      replacement  = env("BU")                   // e.g. "dgag"</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    write_relabel_config {</span></span>
+<span class="line"><span>      action       = "replace"</span></span>
+<span class="line"><span>      target_label = "product"</span></span>
+<span class="line"><span>      replacement  = env("PRODUCT")              // e.g. "passport"</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Environment variables <code>DEPLOY_ENV</code>, <code>BU</code>, and <code>PRODUCT</code> should be injected via Helm chart values or
+the AKS/ACA deployment manifest — not hardcoded in the Alloy config.</p>
+<hr>
+<h2 id="kubernetes-labels">Kubernetes Labels</h2>
+<p>Pod labels are the source of truth for <code>bu</code> and <code>product</code> values. Alloy should read these from the
+pod’s metadata rather than requiring separate env vars where possible.</p>
+<p>Use a namespaced prefix (<code>platform.io/</code>) for platform-defined labels to avoid collisions with
+Kubernetes-native labels and third-party operators.</p>
+<h3 id="example">Example</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">metadata</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  labels</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#6A737D">    # Platform labels — consumed by Alloy for cost attribution</span></span>
+<span class="line"><span style="color:#85E89D">    platform.io/bu</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">dgag</span></span>
+<span class="line"><span style="color:#85E89D">    platform.io/product</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">passport</span></span>
+<span class="line"><span style="color:#85E89D">    platform.io/deployment_environment</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">dev</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Kubernetes standard labels</span></span>
+<span class="line"><span style="color:#85E89D">    app.kubernetes.io/name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">passport-api</span></span>
+<span class="line"><span style="color:#85E89D">    app.kubernetes.io/part-of</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">passport</span></span>
+<span class="line"><span style="color:#85E89D">    app.kubernetes.io/managed-by</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">helm</span></span>
+<span class="line"></span></code></pre>
+<h3 id="alloy-reading-labels-from-pod-metadata">Alloy reading labels from pod metadata</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>discovery.kubernetes "pods" {</span></span>
+<span class="line"><span>  role = "pod"</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>discovery.relabel "platform_labels" {</span></span>
+<span class="line"><span>  targets = discovery.kubernetes.pods.targets</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>  // Promote pod labels into metric labels</span></span>
+<span class="line"><span>  rule {</span></span>
+<span class="line"><span>    source_labels = ["__meta_kubernetes_pod_label_platform_io_bu"]</span></span>
+<span class="line"><span>    target_label  = "bu"</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>  rule {</span></span>
+<span class="line"><span>    source_labels = ["__meta_kubernetes_pod_label_platform_io_product"]</span></span>
+<span class="line"><span>    target_label  = "product"</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>  rule {</span></span>
+<span class="line"><span>    source_labels = ["__meta_kubernetes_pod_label_platform_io_deployment_environment"]</span></span>
+<span class="line"><span>    target_label  = "deployment_environment"</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="promql-selectors">PromQL selectors</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span># All prod metrics across all BUs</span></span>
+<span class="line"><span>{deployment_environment="prod"}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># Passport workload cost in dev</span></span>
+<span class="line"><span>{bu="dgag", product="passport", deployment_environment="dev"}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># All dgag workloads in prod</span></span>
+<span class="line"><span>{bu="dgag", deployment_environment="prod"}</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="kyverno--opa-enforcement">Kyverno / OPA Enforcement</h3>
+<p>A <code>ClusterPolicy</code> should validate that all <code>Deployment</code>, <code>StatefulSet</code>, and <code>DaemonSet</code> resources
+carry the three required <code>platform.io/</code> labels at admission time.</p>
+<hr>
+<h2 id="azure-tags">Azure Tags</h2>
+<p>Apply tags to <strong>resource groups</strong> as the primary unit. Mirror the same dimensions used in Grafana
+Cloud for consistent cross-tool cost attribution.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#E1E4E8">tags</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  deployment_environment </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "dev"</span></span>
+<span class="line"><span style="color:#E1E4E8">  bu                     </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "dgag"</span></span>
+<span class="line"><span style="color:#E1E4E8">  product                </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "passport"</span></span>
+<span class="line"><span style="color:#E1E4E8">  infra-type             </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "aks"</span><span style="color:#6A737D">      // Azure-specific, not in Grafana Cloud</span></span>
+<span class="line"><span style="color:#E1E4E8">  platform               </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "true"</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>An <code>audit</code> or <code>deny</code> Azure Policy should be applied at the subscription level to reject resource
+groups missing required tags.</p>
+<hr>
+<h2 id="what-not-to-do">What Not to Do</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Anti-pattern</th><th>Why</th></tr></thead><tbody><tr><td><code>deployment_environment = dgag-passport-dev</code></td><td>Single compound string — Grafana Cloud can’t group on substrings</td></tr><tr><td><code>deployment_environment = DEV</code></td><td>Uppercase breaks label selectors and native attribution filters</td></tr><tr><td>Encoding BU or product into <code>deployment_environment</code></td><td>Loses the ability to pivot cost independently on each dimension</td></tr><tr><td>Setting labels in app code</td><td>Creates inconsistency; set at the platform layer (Alloy/Helm)</td></tr><tr><td>Creating new env values ad hoc</td><td>Fragments cost reports and alert routing rules</td></tr><tr><td>Dropping <code>bu</code> or <code>product</code> to reduce cost</td><td>Constant external labels; no series count increase</td></tr></tbody></table>
+<hr>
+<h2 id="migration-path">Migration Path</h2>
+<ol>
+<li><strong>Audit</strong> — identify all Alloy/Agent configs and Helm charts currently setting
+<code>deployment_environment</code></li>
+<li><strong>Add labels</strong> — add <code>bu</code> and <code>product</code> to those same configs; do not change existing
+<code>deployment_environment</code> values</li>
+<li><strong>Validate</strong> — confirm the three labels appear in Grafana Cloud Explore before enabling cost
+attribution dashboards</li>
+<li><strong>Backfill Azure</strong> — update Terraform modules to include matching tags on resource groups</li>
+<li><strong>Enforce</strong> — enable Kyverno admission policy for K8s and Azure Policy deny-mode for Azure once
+coverage reaches >95%</li>
+</ol>
+<hr>
+<h2 id="governance">Governance</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Role</th><th>Responsibility</th></tr></thead><tbody><tr><td>Platform Engineering</td><td>Maintains this standard, owns Alloy config templates</td></tr><tr><td>Application Teams</td><td>Set correct <code>bu</code> and <code>product</code> values in Helm chart values</td></tr><tr><td>FinOps</td><td>Validates cost attribution completeness quarterly</td></tr><tr><td>Security</td><td>Validates RBAC policy alignment with label schema</td></tr></tbody></table>
+<p>To propose a new required label or approved value, open a platform RFC.</p>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#problem-statement" data-slug="problem-statement" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Problem Statement</a></li><li data-astro-cid-xvrfupwn><a href="#convention-discrete-labels-shared-schema" data-slug="convention-discrete-labels-shared-schema" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Convention: Discrete Labels, Shared Schema</a></li><li data-astro-cid-xvrfupwn><a href="#required-labels" data-slug="required-labels" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Required Labels</a></li><li data-astro-cid-xvrfupwn><a href="#approved-deployment_environment-values" data-slug="approved-deployment_environment-values" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Approved deployment_environment Values</a></li><li data-astro-cid-xvrfupwn><a href="#grafana-cloud-cost-attribution" data-slug="grafana-cloud-cost-attribution" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Grafana Cloud Cost Attribution</a></li><li data-astro-cid-xvrfupwn><a href="#what-a-single-label-cannot-do" data-slug="what-a-single-label-cannot-do" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>What a single label cannot do</a></li><li data-astro-cid-xvrfupwn><a href="#do-attribution-labels-increase-cost" data-slug="do-attribution-labels-increase-cost" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Do attribution labels increase cost?</a></li><li data-astro-cid-xvrfupwn><a href="#grafana-alloy-configuration" data-slug="grafana-alloy-configuration" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Grafana Alloy Configuration</a></li><li data-astro-cid-xvrfupwn><a href="#kubernetes-labels" data-slug="kubernetes-labels" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Kubernetes Labels</a></li><li data-astro-cid-xvrfupwn><a href="#example" data-slug="example" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Example</a></li><li data-astro-cid-xvrfupwn><a href="#alloy-reading-labels-from-pod-metadata" data-slug="alloy-reading-labels-from-pod-metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Alloy reading labels from pod metadata</a></li><li data-astro-cid-xvrfupwn><a href="#promql-selectors" data-slug="promql-selectors" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>PromQL selectors</a></li><li data-astro-cid-xvrfupwn><a href="#kyverno--opa-enforcement" data-slug="kyverno--opa-enforcement" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Kyverno / OPA Enforcement</a></li><li data-astro-cid-xvrfupwn><a href="#azure-tags" data-slug="azure-tags" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Azure Tags</a></li><li data-astro-cid-xvrfupwn><a href="#what-not-to-do" data-slug="what-not-to-do" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What Not to Do</a></li><li data-astro-cid-xvrfupwn><a href="#migration-path" data-slug="migration-path" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Migration Path</a></li><li data-astro-cid-xvrfupwn><a href="#governance" data-slug="governance" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Governance</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

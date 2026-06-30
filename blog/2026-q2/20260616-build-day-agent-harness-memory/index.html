@@ -1,0 +1,467 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Build Day: Agent Harness &amp; Memory — Key Learnings on Agent Harnesses, Context Engineering, and Memory Systems — Amit Singh</title><meta name="description" content="Reflections from Build Club &#38; Mem0, Pune (June 2026)"><link rel="canonical" href="https://shipsolid.github.io/blog/2026-q2/20260616-build-day-agent-harness-memory/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Build Day: Agent Harness &#38; Memory — Key Learnings on Agent Harnesses, Context Engineering, and Memory Systems — Amit Singh"><meta property="og:description" content="Reflections from Build Club &#38; Mem0, Pune (June 2026)"><meta property="og:url" content="https://shipsolid.github.io/blog/2026-q2/20260616-build-day-agent-harness-memory/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Build Day: Agent Harness &#38; Memory — Key Learnings on Agent Harnesses, Context Engineering, and Memory Systems — Amit Singh"><meta name="twitter:description" content="Reflections from Build Club &#38; Mem0, Pune (June 2026)"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-bvzihdzo]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-bvzihdzo] svg[data-astro-cid-bvzihdzo]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-bvzihdzo]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-bvzihdzo]:hover .copy-btn[data-astro-cid-bvzihdzo],.copy-btn[data-astro-cid-bvzihdzo]:focus-visible{opacity:1}.copy-btn[data-astro-cid-bvzihdzo]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CIHCLQex.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-bvzihdzo></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-bvzihdzo> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-bvzihdzo> <div class="flex flex-wrap gap-2 mb-4" data-astro-cid-bvzihdzo> <a href="/blog/tag/ai" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> AI </a><a href="/blog/tag/agenticai" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> AgenticAI </a><a href="/blog/tag/llm" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> LLM </a><a href="/blog/tag/memorysystems" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> MemorySystems </a><a href="/blog/tag/contextengineering" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> ContextEngineering </a><a href="/blog/tag/multiagentsystems" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> MultiAgentSystems </a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-bvzihdzo> Build Day: Agent Harness &amp; Memory — Key Learnings on Agent Harnesses, Context Engineering, and Memory Systems </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-bvzihdzo>Reflections from Build Club &amp; Mem0, Pune (June 2026)</p> <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-bvzihdzo> <time datetime="2026-06-16T00:00:00.000Z" data-astro-cid-bvzihdzo>June 16, 2026</time> <span data-astro-cid-bvzihdzo>·</span> <span data-astro-cid-bvzihdzo>9 min read</span>  <div class="ml-auto flex items-center gap-4" data-astro-cid-bvzihdzo> <img src="https://hits.sh/shipsolid.github.io/blog/2026-q2/20260616-build-day-agent-harness-memory.svg?style=flat-square&color=00d9a6&labelColor=1e293b&label=views" alt="view count" class="h-5 rounded" loading="eager" data-astro-cid-bvzihdzo> <a href="/rss.xml" class="flex items-center gap-1.5 text-slate-600 hover:text-accent transition-colors" title="RSS feed" data-astro-cid-bvzihdzo> <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20 4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" data-astro-cid-bvzihdzo></path> </svg>
+RSS
+</a> </div> </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-bvzihdzo> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-bvzihdzo> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Post" data-astro-cid-bvzihdzo> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-bvzihdzo>  <p><img  src="/_astro/2026.06.16-Build-Day-Agent-Harness-Memory.ByOiz0wn_PgBpb.webp" alt="Build Day: Agent Harness &#38;#x26; Memory — Key Learnings on Agent Harnesses, Context Engineering, and Memory Systems" width="3030" height="4024" loading="lazy" decoding="async"></p>
+<p>Last week, I had the opportunity to present my project, <strong>“One Model, Many Minds: A Personal Agent Harness with Context Injection”</strong>, at Build Day: Agent Harness &#x26; Memory organized by Build Club and Mem0.</p>
+<p>While my session focused on how a single LLM can behave like multiple specialists through context injection, persona-specific prompts, memory isolation, and lightweight orchestration, the event itself highlighted a broader trend:</p>
+<blockquote>
+<p>The future of Agentic AI will not be determined solely by model intelligence. It will be determined by how effectively we manage context, memory, reliability, and control.</p>
+</blockquote>
+<p>This article summarizes some of the most valuable technical insights from the event.</p>
+<hr>
+<h1 id="my-presentation-one-model-many-minds">My Presentation: One Model, Many Minds</h1>
+<p>The core question I explored was: <strong>Can a single LLM instance behave as multiple specialized agents — without model switching, separate deployments, or inter-agent plumbing?</strong></p>
+<p>The answer is yes, if you treat the context window as the deployment surface.</p>
+<h2 id="architecture">Architecture</h2>
+<p>The harness is built around Claude Code as the orchestration layer. A root <code>CLAUDE.md</code> file auto-loads structured context at session start, before any user message is processed:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>┌──────────────────────────────────────────────┐</span></span>
+<span class="line"><span>│               Claude Code Harness            │</span></span>
+<span class="line"><span>├──────────────────────────────────────────────┤</span></span>
+<span class="line"><span>│  Context.md    — role, stack, working prefs  │</span></span>
+<span class="line"><span>│  Memory.md     — project state, open threads │</span></span>
+<span class="line"><span>│  8 Persona files — specialist role prompts   │</span></span>
+<span class="line"><span>│  Auto-memory   — persisted facts per session │</span></span>
+<span class="line"><span>│  ~20 Skills    — reusable task workflows     │</span></span>
+<span class="line"><span>└─────────────────────────┬────────────────────┘</span></span>
+<span class="line"><span>                          │</span></span>
+<span class="line"><span>               ┌──────────┴──────────┐</span></span>
+<span class="line"><span>               │    One LLM Model    │</span></span>
+<span class="line"><span>               └──────────┬──────────┘</span></span>
+<span class="line"><span>                          │</span></span>
+<span class="line"><span>          ┌───────────────┼───────────────┐</span></span>
+<span class="line"><span>          ↓               ↓               ↓</span></span>
+<span class="line"><span>  Observability       MAANG           LinkedIn</span></span>
+<span class="line"><span>   Architect          Coach          Strategist</span></span>
+<span class="line"><span></span></span></code></pre>
+<h2 id="the-key-insight">The Key Insight</h2>
+<p>The model does not change. The context does.</p>
+<p>Rather than running separate agents for each domain, the harness loads the correct persona, memory, and constraints at the start of each session. An observability question activates the SRE persona and stack-specific constraints. An interview prep question activates the MAANG coaching voice and target company calibration.</p>
+<p>Context injection replaces agent proliferation.</p>
+<h2 id="what-this-avoids">What This Avoids</h2>
+<ul>
+<li>No separate model deployments per specialist</li>
+<li>No inter-agent communication overhead</li>
+<li>No context drift when agents need to share state</li>
+<li>No cost multiplication from running parallel model instances</li>
+</ul>
+<p>The tradeoff: context window size becomes a hard constraint. As personas, memory entries, and skill definitions grow, curation is mandatory — which is exactly why context engineering is the topic this event was built around.</p>
+<hr>
+<h1 id="the-rise-of-the-agent-harness">The Rise of the Agent Harness</h1>
+<p>Most AI discussions focus on models.</p>
+<p>Most production failures happen everywhere else.</p>
+<p>As organizations move from chatbots to autonomous agents, the need for a control layer becomes obvious.</p>
+<p>This is where the <strong>Agent Harness</strong> comes in.</p>
+<h2 id="what-is-an-agent-harness">What is an Agent Harness?</h2>
+<p>An Agent Harness is the orchestration and governance layer surrounding one or more AI agents.</p>
+<p>Instead of allowing an agent to operate directly against tools and data sources, the harness manages:</p>
+<ul>
+<li>Execution flow</li>
+<li>State persistence</li>
+<li>Permissions</li>
+<li>Human approvals</li>
+<li>Budget controls</li>
+<li>Reliability mechanisms</li>
+<li>Sub-agent coordination</li>
+</ul>
+<p>Conceptually:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>                ┌─────────────────────┐</span></span>
+<span class="line"><span>                │   Agent Harness     │</span></span>
+<span class="line"><span>                ├─────────────────────┤</span></span>
+<span class="line"><span>                │ State Persistence   │</span></span>
+<span class="line"><span>                │ Memory Management   │</span></span>
+<span class="line"><span>                │ Permissions         │</span></span>
+<span class="line"><span>                │ Budget Controls     │</span></span>
+<span class="line"><span>                │ Human Oversight     │</span></span>
+<span class="line"><span>                │ Reliability Rules   │</span></span>
+<span class="line"><span>                └──────────┬──────────┘</span></span>
+<span class="line"><span>                           │</span></span>
+<span class="line"><span>                 ┌─────────┴─────────┐</span></span>
+<span class="line"><span>                 │      Agent        │</span></span>
+<span class="line"><span>                 └─────────┬─────────┘</span></span>
+<span class="line"><span>                           │</span></span>
+<span class="line"><span>               ┌───────────┴───────────┐</span></span>
+<span class="line"><span>               │ Tools / MCP / APIs    │</span></span>
+<span class="line"><span>               └───────────────────────┘</span></span>
+<span class="line"><span></span></span></code></pre>
+<h2 id="agent-loop--state-persistence">Agent Loop + State Persistence</h2>
+<p>One recurring theme was the relationship between:</p>
+<ul>
+<li>Agent loops</li>
+<li>State persistence</li>
+</ul>
+<p>Without persistent state, every interaction becomes stateless reasoning.</p>
+<p>Without controlled agent loops, autonomous execution can become unpredictable.</p>
+<p>The harness acts as the bridge between these two concerns.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Agent</span></span>
+<span class="line"><span>   ↓</span></span>
+<span class="line"><span>Reason</span></span>
+<span class="line"><span>   ↓</span></span>
+<span class="line"><span>Take Action</span></span>
+<span class="line"><span>   ↓</span></span>
+<span class="line"><span>Persist State</span></span>
+<span class="line"><span>   ↓</span></span>
+<span class="line"><span>Evaluate Result</span></span>
+<span class="line"><span>   ↓</span></span>
+<span class="line"><span>Continue / Stop</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This pattern increasingly resembles workflow engines combined with traditional distributed systems.</p>
+<hr>
+<h1 id="context-engineering-the-new-prompt-engineering">Context Engineering: The New Prompt Engineering</h1>
+<p>For the last few years, prompt engineering has been a dominant topic.</p>
+<p>The industry is now shifting toward something more important:</p>
+<blockquote>
+<p>Context Engineering</p>
+</blockquote>
+<p>The challenge is no longer creating a perfect prompt.</p>
+<p>The challenge is ensuring the right information enters the model at the right time.</p>
+<hr>
+<h1 id="the-problem-context-window-degradation">The Problem: Context Window Degradation</h1>
+<p>As context grows, model performance does not scale linearly.</p>
+<p>Several concepts were discussed:</p>
+<h2 id="attention-dilution">Attention Dilution</h2>
+<p>As more tokens enter the context window:</p>
+<ul>
+<li>Important information competes for attention</li>
+<li>Relevant signals become harder to identify</li>
+<li>Reasoning quality degrades</li>
+</ul>
+<p>This phenomenon is sometimes described as <strong>attention dilution</strong>.</p>
+<hr>
+<h2 id="lost-in-the-middle">Lost in the Middle</h2>
+<p>Research has shown that LLMs tend to remember:</p>
+<ul>
+<li>Information near the beginning</li>
+<li>Information near the end</li>
+</ul>
+<p>But often struggle with information in the middle.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Beginning   Middle    End</span></span>
+<span class="line"><span>   ↑          ↓        ↑</span></span>
+<span class="line"><span> Strong     Weak    Strong</span></span>
+<span class="line"><span> Recall    Recall   Recall</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This creates challenges for long-running agents.</p>
+<hr>
+<h2 id="the-context-u-curve">The Context U-Curve</h2>
+<p>One speaker described a useful mental model:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Performance</span></span>
+<span class="line"><span>    ^</span></span>
+<span class="line"><span>    |</span></span>
+<span class="line"><span>    |        *</span></span>
+<span class="line"><span>    |      *   *</span></span>
+<span class="line"><span>    |     *      *</span></span>
+<span class="line"><span>    |    *          *</span></span>
+<span class="line"><span>    |   *               *</span></span>
+<span class="line"><span>    |  *</span></span>
+<span class="line"><span>    +-----------------------></span></span>
+<span class="line"><span>        Context Size</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Initially:</p>
+<ul>
+<li>More context improves performance</li>
+</ul>
+<p>Eventually:</p>
+<ul>
+<li>Additional context introduces noise</li>
+</ul>
+<p>At some point:</p>
+<ul>
+<li>Performance decreases</li>
+</ul>
+<p>This is the Context U-Curve.</p>
+<p>The implication is clear:</p>
+<p><strong>More context is not always better context.</strong></p>
+<hr>
+<h1 id="mcp-and-context-management">MCP and Context Management</h1>
+<p>The Model Context Protocol (MCP) appeared repeatedly throughout discussions.</p>
+<p>One challenge with MCP is that tool schemas themselves consume context.</p>
+<p>Consider an agent with:</p>
+<ul>
+<li>30 tools</li>
+<li>Large schemas</li>
+<li>Extensive descriptions</li>
+</ul>
+<p>A significant portion of the context window may be consumed before any actual task data arrives.</p>
+<p>Strategies discussed included:</p>
+<ul>
+<li>Dynamic tool loading</li>
+<li>Schema minimization</li>
+<li>Shared-context approaches</li>
+<li>MCP Toolboxes</li>
+</ul>
+<p>The goal is reducing context overhead while maintaining tool accessibility.</p>
+<hr>
+<h1 id="memory-systems-beyond-simple-retrieval">Memory Systems: Beyond Simple Retrieval</h1>
+<p>One of the most interesting sessions focused on memory architectures.</p>
+<p>Historically, memory systems have followed a simple pattern:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Store</span></span>
+<span class="line"><span> ↓</span></span>
+<span class="line"><span>Retrieve</span></span>
+<span class="line"><span> ↓</span></span>
+<span class="line"><span>Inject into Prompt</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Modern approaches are becoming significantly more sophisticated.</p>
+<hr>
+<h1 id="fademem-and-adaptive-memory">FadeMem and Adaptive Memory</h1>
+<p>A memorable discussion revolved around concepts from the FadeMem paper — a research approach proposing time-aware, importance-weighted memory decay for LLM agents, analogous to how human memory prioritizes recent and significant experiences over stale ones.</p>
+<p>The central idea is simple:</p>
+<p>Not all memories should be treated equally.</p>
+<hr>
+<h2 id="memory-as-structured-tuples">Memory as Structured Tuples</h2>
+<p>Instead of storing raw conversations:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>User likes Grafana</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Memories can be represented as structured tuples:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>(User, prefers, Grafana)</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This improves retrieval and reasoning.</p>
+<hr>
+<h2 id="similarity-based-consolidation">Similarity-Based Consolidation</h2>
+<p>When new memories arrive:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>User likes Grafana</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>User prefers Grafana Cloud</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>User uses Grafana daily</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The system evaluates:</p>
+<ul>
+<li>Similarity</li>
+<li>Redundancy</li>
+<li>Importance</li>
+</ul>
+<p>Rather than storing everything.</p>
+<hr>
+<h2 id="recency-weighting">Recency Weighting</h2>
+<p>Humans naturally prioritize recent experiences.</p>
+<p>Modern memory systems are beginning to do the same.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Memory Score =</span></span>
+<span class="line"><span>Similarity × Importance × Recency</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Newer memories receive additional weighting.</p>
+<hr>
+<h2 id="adaptive-memory-fusion">Adaptive Memory Fusion</h2>
+<p>Instead of storing thousands of isolated records:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Memory A</span></span>
+<span class="line"><span>Memory B</span></span>
+<span class="line"><span>Memory C</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The system may generate:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Consolidated Memory D</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This reduces noise while preserving knowledge.</p>
+<hr>
+<h1 id="building-agentic-applications-with-google-adk">Building Agentic Applications with Google ADK</h1>
+<p>One practical session demonstrated a modern agent architecture built using:</p>
+<ul>
+<li>Google ADK</li>
+<li>Vertex AI</li>
+<li>MCP Toolbox</li>
+<li>Cloud SQL (PostgreSQL)</li>
+<li>Embedding Models</li>
+<li>Cloud Build</li>
+</ul>
+<p>The architecture followed a clean separation of responsibilities:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>User</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>ADK Agent</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>MCP Toolbox</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>Cloud SQL</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The MCP Toolbox served as middleware between reasoning and execution.</p>
+<p>This pattern provides:</p>
+<ul>
+<li>Better security</li>
+<li>Better observability</li>
+<li>Easier scaling</li>
+<li>Tool abstraction</li>
+</ul>
+<hr>
+<h1 id="embeddings-vectors-and-semantics">Embeddings, Vectors, and Semantics</h1>
+<p>Another recurring theme was semantic retrieval.</p>
+<p>Traditional databases answer:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Exact match queries</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Vector databases answer:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Meaning-based queries</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Example:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>How can I monitor latency issues?</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>May retrieve:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Performance bottlenecks</span></span>
+<span class="line"><span>Response time degradation</span></span>
+<span class="line"><span>Application latency analysis</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Even without exact keyword matches.</p>
+<p>This capability is foundational for long-term memory systems.</p>
+<hr>
+<h1 id="from-genai-to-agentic-ai-to-multi-agent-systems">From GenAI to Agentic AI to Multi-Agent Systems</h1>
+<p>The industry appears to be following a predictable evolution.</p>
+<h2 id="phase-1-generative-ai">Phase 1: Generative AI</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Prompt</span></span>
+<span class="line"><span> ↓</span></span>
+<span class="line"><span>Response</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Single interaction.</p>
+<p>No memory.</p>
+<p>No autonomy.</p>
+<hr>
+<h2 id="phase-2-agentic-ai">Phase 2: Agentic AI</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Goal</span></span>
+<span class="line"><span> ↓</span></span>
+<span class="line"><span>Reason</span></span>
+<span class="line"><span> ↓</span></span>
+<span class="line"><span>Take Action</span></span>
+<span class="line"><span> ↓</span></span>
+<span class="line"><span>Observe</span></span>
+<span class="line"><span> ↓</span></span>
+<span class="line"><span>Repeat</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Agents can perform tasks.</p>
+<hr>
+<h2 id="phase-3-multi-agent-systems">Phase 3: Multi-Agent Systems</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Planner Agent</span></span>
+<span class="line"><span>      ↓</span></span>
+<span class="line"><span> ┌────┼────┐</span></span>
+<span class="line"><span> ↓    ↓    ↓</span></span>
+<span class="line"><span>Research Coding Validation</span></span>
+<span class="line"><span> Agent  Agent   Agent</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Specialized agents collaborate toward a shared objective.</p>
+<p>This is where orchestration and memory become critical.</p>
+<hr>
+<h1 id="the-emergence-of-agent-sre">The Emergence of Agent SRE</h1>
+<p>As someone working in observability and reliability engineering, this was perhaps the most interesting concept discussed.</p>
+<p>Traditional systems have SRE.</p>
+<p>Agentic systems will likely require Agent SRE.</p>
+<p>One architecture proposed:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>┌─────────────────────────┐</span></span>
+<span class="line"><span>│ Memory Layer            │</span></span>
+<span class="line"><span>│ Mem0                    │</span></span>
+<span class="line"><span>└───────────┬─────────────┘</span></span>
+<span class="line"><span>            ↓</span></span>
+<span class="line"><span>┌─────────────────────────┐</span></span>
+<span class="line"><span>│ Investigation Layer     │</span></span>
+<span class="line"><span>│ Playwright / OpenClaw   │</span></span>
+<span class="line"><span>└───────────┬─────────────┘</span></span>
+<span class="line"><span>            ↓</span></span>
+<span class="line"><span>┌─────────────────────────┐</span></span>
+<span class="line"><span>│ Reasoning Layer         │</span></span>
+<span class="line"><span>│ Gemini                  │</span></span>
+<span class="line"><span>└───────────┬─────────────┘</span></span>
+<span class="line"><span>            ↓</span></span>
+<span class="line"><span>┌─────────────────────────┐</span></span>
+<span class="line"><span>│ Remediation Layer       │</span></span>
+<span class="line"><span>└─────────────────────────┘</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This mirrors many established SRE principles:</p>
+<ul>
+<li>Detection</li>
+<li>Investigation</li>
+<li>Root cause analysis</li>
+<li>Remediation</li>
+<li>Reporting</li>
+</ul>
+<p>The difference is that AI agents participate in the workflow.</p>
+<p>This is not purely theoretical. At McCain Foods, we have an SRE agent running in the IEO AKS development environment, operating against our existing observability stack — Grafana Cloud, Loki, Tempo, Alloy. The agent follows the same layered architecture described above: Loki and Tempo queries as the investigation layer, an LLM as the reasoning layer, and runbook automation as the remediation layer. Human approval gates sit at any action with high blast radius.</p>
+<p>The distinction between a traditional SRE runbook and an Agent SRE runbook is meaningful: a traditional runbook is a procedure a human follows step by step; an agentic runbook is a workflow the agent executes, surfacing only the decision points that require human judgment. The toil disappears. The judgment stays human.</p>
+<hr>
+<h1 id="my-key-takeaway">My Key Takeaway</h1>
+<p>The biggest lesson from the event was that we are moving beyond model-centric thinking.</p>
+<p>The next generation of AI systems will be defined by:</p>
+<ol>
+<li><strong>Agent Harnesses</strong> that provide control and reliability.</li>
+<li><strong>Context Engineering</strong> that manages information flow.</li>
+<li><strong>Memory Systems</strong> that evolve and adapt over time.</li>
+<li><strong>Agent SRE practices</strong> that make autonomous systems trustworthy.</li>
+</ol>
+<p>Model capabilities will continue to improve.</p>
+<p>But the competitive advantage will increasingly come from how we orchestrate, govern, observe, and remember.</p>
+<p>For anyone building production AI systems today, those are the areas worth investing in.</p>
+<hr>
+<p><em>What aspect do you believe will become the biggest engineering challenge over the next few years: context management, memory systems, agent reliability, or governance?</em></p>  </div> <!-- Related posts --> <div class="mt-16 pt-8 border-t border-slate-800"><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Related posts</p><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><a href="/blog/2026-q2/20260609-agent-memory-as-infrastructure-context-injection-over-fine-tuning" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">LLM</span><span class="tag text-xs">Platform Engineering</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">Agent Memory as Infrastructure: The Context Injection Pattern That Replaces Fine-Tuning</h3><p class="text-xs font-mono text-slate-600">Jun 9, 2026</p></a><a href="/blog/2026-q2/20260501-sre-agent-autonomous-incident-response" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">AIOps</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">Building an SRE Agent: From Playbook to Autonomous Incident Response</h3><p class="text-xs font-mono text-slate-600">May 1, 2026</p></a></div></div> <!-- Prev / Next navigation --> <div class="mt-16 pt-8 border-t border-slate-800 grid grid-cols-2 gap-4" data-astro-cid-bvzihdzo> <a href="/blog/2026-q2/20260610-grafana-azure-monitor-plugin-limitations-push-exporter" class="card group block hover:-translate-y-0.5 no-underline" data-astro-cid-bvzihdzo> <p class="text-xs font-mono text-slate-600 mb-1.5 flex items-center gap-1" data-astro-cid-bvzihdzo> <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" data-astro-cid-bvzihdzo></path> </svg>
+Older
+</p> <p class="text-sm text-slate-300 group-hover:text-accent transition-colors leading-snug" data-astro-cid-bvzihdzo> Unbounded Cardinality, Zero Alerts, and 14-Second Dashboard Loads: The Structural Limits of the Grafana Azure Monitor Plugin </p> </a> <div data-astro-cid-bvzihdzo></div> </div> <!-- Back / Home links --> <div class="mt-8 flex items-center justify-between" data-astro-cid-bvzihdzo> <a href="/blog" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-bvzihdzo>
+← All posts
+</a> <a href="/" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-bvzihdzo>Home</a> </div> <!-- Comments --> <div class="mt-16 pt-8 border-t border-slate-800"> <p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Discussion</p> <script src="https://giscus.app/client.js" data-repo="shipsolid/shipsolid.github.io" data-repo-id="R_kgDOOr14lw" data-category="General" data-category-id="DIC_kwDOOr14l84C9sb9" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async></script> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-bvzihdzo> <div class="sticky top-24" data-astro-cid-bvzihdzo> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#architecture" data-slug="architecture" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Architecture</a></li><li data-astro-cid-xvrfupwn><a href="#the-key-insight" data-slug="the-key-insight" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The Key Insight</a></li><li data-astro-cid-xvrfupwn><a href="#what-this-avoids" data-slug="what-this-avoids" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What This Avoids</a></li><li data-astro-cid-xvrfupwn><a href="#what-is-an-agent-harness" data-slug="what-is-an-agent-harness" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What is an Agent Harness?</a></li><li data-astro-cid-xvrfupwn><a href="#agent-loop--state-persistence" data-slug="agent-loop--state-persistence" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Agent Loop + State Persistence</a></li><li data-astro-cid-xvrfupwn><a href="#attention-dilution" data-slug="attention-dilution" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Attention Dilution</a></li><li data-astro-cid-xvrfupwn><a href="#lost-in-the-middle" data-slug="lost-in-the-middle" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Lost in the Middle</a></li><li data-astro-cid-xvrfupwn><a href="#the-context-u-curve" data-slug="the-context-u-curve" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The Context U-Curve</a></li><li data-astro-cid-xvrfupwn><a href="#memory-as-structured-tuples" data-slug="memory-as-structured-tuples" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Memory as Structured Tuples</a></li><li data-astro-cid-xvrfupwn><a href="#similarity-based-consolidation" data-slug="similarity-based-consolidation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Similarity-Based Consolidation</a></li><li data-astro-cid-xvrfupwn><a href="#recency-weighting" data-slug="recency-weighting" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Recency Weighting</a></li><li data-astro-cid-xvrfupwn><a href="#adaptive-memory-fusion" data-slug="adaptive-memory-fusion" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Adaptive Memory Fusion</a></li><li data-astro-cid-xvrfupwn><a href="#phase-1-generative-ai" data-slug="phase-1-generative-ai" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 1: Generative AI</a></li><li data-astro-cid-xvrfupwn><a href="#phase-2-agentic-ai" data-slug="phase-2-agentic-ai" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 2: Agentic AI</a></li><li data-astro-cid-xvrfupwn><a href="#phase-3-multi-agent-systems" data-slug="phase-3-multi-agent-systems" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 3: Multi-Agent Systems</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>

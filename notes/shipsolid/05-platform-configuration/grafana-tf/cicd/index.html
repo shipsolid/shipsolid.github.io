@@ -1,0 +1,533 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>grafana_tf — CI/CD Workflows — Notes — Amit Singh</title><meta name="description" content="The platform runs on **HCP Terraform (TFC) with VCS-driven workspaces**."><link rel="canonical" href="https://shipsolid.github.io/notes/shipsolid/05-platform-configuration/grafana-tf/cicd/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="grafana_tf — CI/CD Workflows — Notes — Amit Singh"><meta property="og:description" content="The platform runs on **HCP Terraform (TFC) with VCS-driven workspaces**."><meta property="og:url" content="https://shipsolid.github.io/notes/shipsolid/05-platform-configuration/grafana-tf/cicd/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="grafana_tf — CI/CD Workflows — Notes — Amit Singh"><meta name="twitter:description" content="The platform runs on **HCP Terraform (TFC) with VCS-driven workspaces**."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.C7NAO-cN.css">
+<link rel="stylesheet" href="/_astro/_slug_.stVb7nTs.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid[data-astro-cid-v5yihett]{display:flex;justify-content:center;padding:1.5rem 0}.mermaid[data-astro-cid-v5yihett] svg[data-astro-cid-v5yihett]{max-width:100%;height:auto;border-radius:.75rem}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a><a href="/notes" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Notes </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a><a href="/notes" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Notes </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span>  <a href="/notes/shipsolid" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>ShipSolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/shipsolid#section-05-platform-configuration" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>05 Platform Configuration</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-v5yihett> grafana_tf — CI/CD Workflows </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>The platform runs on **HCP Terraform (TFC) with VCS-driven workspaces**.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 1, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/configuration" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Configuration</a> </div>  </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="cicd-workflows">CI/CD Workflows</h1>
+<p>The platform runs on <strong>HCP Terraform (TFC) with VCS-driven workspaces</strong>. TFC clones the repo, runs
+<code>terraform plan</code> / <code>apply</code> on its own runners, and posts results as GitHub status checks. GitHub
+Actions handles the things TFC does not — generator-in-sync guard, <code>terraform fmt</code>, module unit
+tests, lint, security scan.</p>
+<h2 id="promotion-flow">Promotion Flow</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>feature branch</span></span>
+<span class="line"><span>    │</span></span>
+<span class="line"><span>    ├─ PR opened against main</span></span>
+<span class="line"><span>    │    ├─ GH Actions: pre-flight checks (generator + fmt + module tests)</span></span>
+<span class="line"><span>    │    └─ TFC speculative plans (shipsoliddev + shipsolid) → posted as status checks</span></span>
+<span class="line"><span>    │</span></span>
+<span class="line"><span>    ▼</span></span>
+<span class="line"><span>merge to main</span></span>
+<span class="line"><span>    │</span></span>
+<span class="line"><span>    ├─ TFC plan (non-speculative) on grafana-tf-shipsoliddev → manual confirm in TFC UI → apply</span></span>
+<span class="line"><span>    │</span></span>
+<span class="line"><span>    ▼</span></span>
+<span class="line"><span>validate in shipsoliddev UI</span></span>
+<span class="line"><span>(dashboards render, alerts fire, SLOs appear, OnCall routing works)</span></span>
+<span class="line"><span>    │</span></span>
+<span class="line"><span>    ▼</span></span>
+<span class="line"><span>TFC plan on grafana-tf-shipsolid → manual confirm in TFC UI → apply</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><code>shipsoliddev</code> → <code>shipsolid</code> promotion is enforced by humans confirming in the TFC UI in that order.</p>
+<h2 id="tfc-workspaces">TFC workspaces</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Workspace</th><th>Stack</th><th>Working Directory</th><th>Execution</th><th>Apply mode</th></tr></thead><tbody><tr><td><code>grafana-tf-shipsoliddev</code></td><td><code>shipsoliddev</code></td><td><code>environments/shipsoliddev</code></td><td>Remote (TFC)</td><td>Manual confirm</td></tr><tr><td><code>grafana-tf-shipsolid</code></td><td><code>shipsolid</code> (production)</td><td><code>environments/shipsolid</code></td><td>Remote (TFC)</td><td>Manual confirm</td></tr></tbody></table>
+<p>Both are <strong>VCS-connected</strong> to <code>ShipSolidFoods/sre-grafana-cloud-tf</code> on the <code>main</code> branch. Speculative
+plans on PRs are enabled. Trigger paths (TFC UI → Workspace → Settings → Version Control) should
+include:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>environments/&#x3C;stack>/**</span></span>
+<span class="line"><span>modules/**</span></span>
+<span class="line"><span>dashboards/generated/&#x3C;stack>/**</span></span>
+<span class="line"><span>alert_rules/generated/&#x3C;stack>/**</span></span>
+<span class="line"><span>products.yml</span></span>
+<span class="line"><span>tools/stacks.yml</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The two stacks have disjoint trigger paths so a <code>shipsoliddev</code>-only change doesn’t auto-plan <code>shipsolid</code>.</p>
+<h2 id="variables-in-tfc">Variables in TFC</h2>
+<p>TFC’s runner runs Terraform — GitHub Actions secrets do not reach it. <code>terraform.tfvars</code> is
+gitignored, so it isn’t cloned by TFC either. <strong>Every variable consumed by <code>terraform plan</code> /
+<code>apply</code> must be set in TFC.</strong> If you skip this, plan runs fail with
+<code>Error: No value for required variable</code> for each unbound input.</p>
+<h3 id="two-distinctions-that-matter">Two distinctions that matter</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th>What it means</th><th>Where Terraform looks</th></tr></thead><tbody><tr><td><strong>Variable category</strong></td><td>Each TFC variable is either <strong>Terraform</strong> or <strong>Environment</strong>.</td><td>Terraform-category vars bind to <code>variable "X" {}</code> blocks. Environment-category vars become shell <code>$X</code> on the runner — these are for provider auth (e.g. <code>ARM_*</code> for <code>azurerm</code>), not Terraform inputs.</td></tr><tr><td><strong>Scope</strong></td><td>A variable lives at <strong>workspace</strong> scope or in a <strong>Variable Set</strong> attached to one or more workspaces. Variable Sets save you from typing the same secret into every workspace.</td><td>Workspace-scoped values override Variable Set values for that key. Use workspace scope for values that differ per stack (<code>stack_slug</code>, <code>grafana_url</code>); use a Variable Set for values shared across both stacks (everything else).</td></tr></tbody></table>
+<p>A Variable Set is <strong>inert until attached</strong> — creating it isn’t enough. Open the Variable Set →
+<strong>Workspaces</strong> tab → confirm both <code>grafana-tf-shipsoliddev</code> and <code>grafana-tf-shipsolid</code> are listed.</p>
+<h3 id="setup-checklist-one-time-per-org">Setup checklist (one-time, per org)</h3>
+<ol>
+<li><strong>Create the shared Variable Set.</strong> Org → Settings → Variable Sets → <strong>Create variable set</strong>.
+Name it something like <code>grafana-tf-shared</code>. Apply policy: <strong>Apply to specific workspaces</strong> → tick
+<code>grafana-tf-shipsoliddev</code> and <code>grafana-tf-shipsolid</code>. Don’t pick “Apply globally” — limits blast radius
+if other workspaces show up later.</li>
+<li><strong>Add the shared variables</strong> to that Variable Set using the table below. Watch the <strong>Category</strong>
+column carefully — Environment vs Terraform is the most common mis-set.</li>
+<li><strong>Add workspace-specific variables</strong> on each workspace’s own Variables tab (the second table
+below). These are values that differ per stack.</li>
+<li><strong>Smoke-test before relying on the daily flow.</strong> On each workspace: <strong>Actions → Start new run →
+Plan only</strong>. Variable issues fail at plan-init, so any missing or mis-categorised variable shows
+up in the first 30 seconds. Iterate until the plan starts cleanly.</li>
+</ol>
+<h3 id="reference-shared-variables-variable-set-both-workspaces">Reference: shared variables (Variable Set, both workspaces)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Category</th><th>Sensitive</th><th>Value</th></tr></thead><tbody><tr><td><code>cloud_access_policy_token</code></td><td>Terraform</td><td>Yes</td><td>Grafana Cloud access policy token (provider bootstrap)</td></tr><tr><td><code>grafana_sa_token</code></td><td>Terraform</td><td>Yes</td><td>Grafana service account token (instance provider)</td></tr><tr><td><code>sm_access_token</code></td><td>Terraform</td><td>Yes</td><td>Grafana Synthetic Monitoring access token</td></tr><tr><td><code>azure_ad_client_secret</code></td><td>Terraform</td><td>Yes</td><td>Azure AD app registration client secret</td></tr><tr><td><code>oncall_url</code></td><td>Terraform</td><td>No</td><td><code>https://oncall-prod-us-central-0.grafana.net/oncall</code></td></tr><tr><td><code>azure_ad_client_id</code></td><td>Terraform</td><td>No</td><td>Azure AD app client ID</td></tr><tr><td><code>azure_ad_tenant_id</code></td><td>Terraform</td><td>No</td><td>Azure AD tenant ID</td></tr><tr><td><code>sm_url</code></td><td>Terraform</td><td>No</td><td><code>https://synthetic-monitoring-api.grafana.net</code></td></tr><tr><td><code>key_vault_resource_group</code></td><td>Terraform</td><td>No</td><td><code>mf-cc-dt-azrsrp-foundation-prd-rg</code></td></tr><tr><td><code>azure_ad_admin_group_id</code></td><td>Terraform</td><td>No</td><td><code>c07d35a1-a969-424f-b81d-6ec7895eb158</code></td></tr><tr><td><code>azure_ad_editor_group_id</code></td><td>Terraform</td><td>No</td><td><code>cc539ebe-bd25-4d58-afc4-ebfdc46347ad</code></td></tr><tr><td><code>azure_ad_viewer_group_id</code></td><td>Terraform</td><td>No</td><td><code>b25327e5-4f9e-4bca-b75f-873b52f60497</code></td></tr><tr><td><code>ARM_CLIENT_ID</code></td><td><strong>Environment</strong></td><td>No</td><td>Azure SP client ID — for the <code>azurerm</code> provider that writes to Key Vault</td></tr><tr><td><code>ARM_CLIENT_SECRET</code></td><td><strong>Environment</strong></td><td>Yes</td><td>Azure SP client secret</td></tr><tr><td><code>ARM_TENANT_ID</code></td><td><strong>Environment</strong></td><td>No</td><td>Azure SP tenant ID</td></tr><tr><td><code>ARM_SUBSCRIPTION_ID</code></td><td><strong>Environment</strong></td><td>No</td><td>Azure subscription ID</td></tr></tbody></table>
+<p>The four <code>ARM_*</code> rows are the only Environment-category entries — they’re consumed directly by the
+<code>azurerm</code> provider, not by HCL <code>variable</code> blocks, and have no <code>TF_VAR_</code> prefix.</p>
+<h3 id="reference-workspace-scoped-variables-per-workspace">Reference: workspace-scoped variables (per workspace)</h3>
+<p><code>grafana-tf-shipsoliddev</code> → Variables tab:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Category</th><th>Value</th></tr></thead><tbody><tr><td><code>stack_slug</code></td><td>Terraform</td><td><code>shipsoliddev</code></td></tr><tr><td><code>grafana_url</code></td><td>Terraform</td><td><code>https://shipsoliddev.grafana.net</code></td></tr></tbody></table>
+<p><code>grafana-tf-shipsolid</code> → Variables tab:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Category</th><th>Value</th></tr></thead><tbody><tr><td><code>stack_slug</code></td><td>Terraform</td><td><code>shipsolid</code></td></tr><tr><td><code>grafana_url</code></td><td>Terraform</td><td><code>https://shipsolid.grafana.net</code></td></tr></tbody></table>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<p><strong><code>Error: No value for required variable</code> on <code>&#x3C;name></code></strong> — the variable isn’t bound. Walk this in
+order:</p>
+<ol>
+<li>The variable doesn’t exist in TFC at all → add it per the tables above.</li>
+<li>It exists in a Variable Set, but the Variable Set isn’t attached to the workspace → Variable Set
+→ Workspaces tab.</li>
+<li>It exists but is <strong>Environment</strong> category when it should be <strong>Terraform</strong> (or vice versa) → edit
+the variable, change the category. The most common case is <code>oncall_url</code> / <code>azure_ad_*_id</code> added
+as Env vars — those are HCL inputs, must be Terraform-category.</li>
+<li>The name is wrong (typo, or accidentally has <code>TF_VAR_</code> prefix on a Terraform-category variable) →
+fix the key.</li>
+</ol>
+<p><strong>A change to a <code>Sensitive</code> variable doesn’t seem to take effect</strong> — TFC won’t display the value
+back to you after marking sensitive, and there’s no way to read it. Re-enter the value to be sure;
+if a run still misbehaves, check workspace-level overrides aren’t shadowing the Variable Set entry.</p>
+<p><strong>Both workspaces share the same value but you’re tempted to add it to both</strong> — don’t. Put it in the
+Variable Set. Two copies drift; one canonical source doesn’t.</p>
+<h2 id="github-actions-workflows">GitHub Actions workflows</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Workflow</th><th>Trigger</th><th>Purpose</th></tr></thead><tbody><tr><td><code>test.yml</code></td><td>PR / push to <code>main</code> (modules + tools + products.yml)</td><td>Module-level <code>terraform validate</code> / <code>terraform test</code>, tflint, checkov, pytest for <code>tools/generate.py</code></td></tr><tr><td><code>plan.yml</code></td><td>PR to <code>main</code> (shipsoliddev paths) + manual</td><td><strong>Pre-flight only:</strong> generator-in-sync guard + <code>terraform fmt -check</code>. The actual plan runs in TFC.</td></tr><tr><td><code>plan-shipsolid.yml</code></td><td>PR to <code>main</code> (shipsolid paths) + manual</td><td>Same pre-flight, scoped to <code>environments/shipsolid/**</code> paths.</td></tr><tr><td><code>drift.yml</code></td><td>Daily 06:00 UTC</td><td>Triggers a plan-only run on <code>grafana-tf-shipsoliddev</code> via the TFC API; opens / comments on a GitHub Issue if the plan reports <code>has-changes: true</code>.</td></tr><tr><td><code>drift-shipsolid.yml</code></td><td>Daily 07:00 UTC</td><td>Same for <code>grafana-tf-shipsolid</code>.</td></tr><tr><td><code>token-expiry.yml</code></td><td>Scheduled</td><td>Audits token expiries; unrelated to TFC.</td></tr></tbody></table>
+<h3 id="why-ci-no-longer-runs-terraform-plan">Why CI no longer runs <code>terraform plan</code></h3>
+<p>When a CLI-driven <code>terraform init</code> runs from <code>environments/&#x3C;stack>/</code>, it packages <strong>only that
+directory’s contents</strong> for upload to TFC. The repo’s relative module paths
+(<code>source = "../../modules/&#x3C;name>"</code>) point to a sibling directory that’s outside the upload root, so
+TFC’s runner can’t resolve them. VCS-driven workspaces sidestep this — TFC clones the whole repo on
+each run.</p>
+<p>Local <code>terraform plan</code> from <code>environments/&#x3C;stack>/</code> hits the same wall against a VCS-driven
+workspace. See “Local development” below.</p>
+<h2 id="drift-detection">Drift detection</h2>
+<p><code>drift.yml</code> and <code>drift-shipsolid.yml</code> run on a daily cron and use the <strong>TFC API</strong> to queue a plan-only
+run on the corresponding workspace. The workflow:</p>
+<ol>
+<li>Resolves the workspace name → ID via <code>GET /api/v2/organizations/{org}/workspaces/{name}</code>.</li>
+<li>Creates a run with <code>attributes: { plan-only: true, message: "Daily drift check" }</code>. TFC clones
+the workspace’s VCS-tracked branch and plans against it.</li>
+<li>Polls <code>GET /api/v2/runs/{run_id}</code> every 30s (up to 30 min) until the run reaches a terminal
+status (<code>planned_and_finished</code>, <code>errored</code>, etc.).</li>
+<li>Reads <code>data.attributes.has-changes</code> — if <code>true</code>, opens or comments on a GitHub Issue labelled
+<code>terraform-drift,&#x3C;stack>,infrastructure</code> with a link to the TFC run.</li>
+</ol>
+<p>The only secret required is <code>TF_API_TOKEN</code>. All Grafana / Azure variables consumed by the plan live
+in the workspace’s TFC Variable Set.</p>
+<p>If your TFC plan tier supports it, <strong>TFC Health Assessments</strong> (workspace → Settings → Health → Drift
+Detection) is a native alternative — TFC runs the check, surfaces drift in its own UI, and can
+email/Slack on detection. The current GitHub Actions implementation works on any tier and preserves
+the existing GitHub Issue notification flow.</p>
+<h2 id="apply-workflow">Apply workflow</h2>
+<p>Apply happens in TFC, not in CI. The previous <code>apply.yml</code> / <code>apply-shipsolid.yml</code> workflows have been
+deleted.</p>
+<ol>
+<li>Merge to <code>main</code>.</li>
+<li>TFC sees the push, queues a plan on each workspace whose trigger paths matched.</li>
+<li>A reviewer opens the workspace in TFC UI, inspects the plan, clicks <strong>Confirm &#x26; Apply</strong>.</li>
+</ol>
+<p>For <code>shipsolid</code> (prod), keep this manual. For <code>shipsoliddev</code>, optionally enable workspace <strong>Auto-apply</strong>
+so dev applies happen without manual confirm — accelerates iteration but loses the gate.</p>
+<p>To trigger an apply outside the merge-to-main path (e.g. emergency hotfix), open the workspace in
+TFC UI and use <strong>Actions → Start new run</strong> with the desired ref.</p>
+<h2 id="local-development">Local development</h2>
+<p><code>./tf.sh plan</code> / <code>apply</code> / <code>drift</code> are not supported under VCS-driven TFC and refuse with a clear
+message. The CLI bundles only the env subdirectory; TFC’s runner can’t see <code>../../modules</code> and fails
+with <code>Unable to evaluate directory symlink: lstat ../../modules</code>.</p>
+<p>The intended iteration loop:</p>
+<ol>
+<li><strong><code>./tf.sh validate &#x3C;stack></code></strong> — primary feedback for HCL syntax, types, module wiring, and
+provider schema mismatches. Runs locally with no TFC round-trip.</li>
+<li><strong><code>./tf.sh fmt</code></strong> — formatting check.</li>
+<li><strong><code>./tf.sh test</code></strong> + <strong><code>terraform -chdir=modules/&#x3C;name> test</code></strong> — pytest for the generator,
+<code>tftest.hcl</code> for individual modules. Both run locally.</li>
+<li><strong>Push your branch</strong> — TFC posts a speculative plan as a status check on the PR. This is the only
+way to see real plan output.</li>
+</ol>
+<h3 id="decision-no-local-backend-mode">Decision: no local-backend mode</h3>
+<p>A local-backend mode (swap <code>cloud {}</code> for a local backend, run plan with on-disk state) was
+considered and skipped. Reasoning:</p>
+<ul>
+<li><code>terraform validate</code> already catches the bulk of what local plan iteration would catch — syntax,
+type mismatches, undefined references, module input/output shape, provider schema typos.</li>
+<li>A local plan against an empty local state would just propose to create everything, which isn’t
+useful drift or change-set feedback.</li>
+<li>The push-branch → speculative-plan loop runs in 1-3 minutes for these workspaces — fast enough for
+normal iteration.</li>
+<li>Maintenance cost of swapping backend.tf in/out, risk of devs accidentally state-changing against
+local state, lock-file invalidation across swaps — not worth paying for the marginal value.</li>
+</ul>
+<p>If iteration speed ever becomes a real bottleneck, a more useful direction would be richer
+module-level <code>tftest.hcl</code> coverage (mock providers, no backend needed) than a local-backend swap.</p>
+<h3 id="tfsh-destroy"><code>./tf.sh destroy</code></h3>
+<p><code>destroy</code> keeps its Grafana-API pre-cleanup steps (notification policy reset, alert-rule clearing,
+<code>terraform state rm</code> of the policy resource — state operations work without uploading config) but
+stops short of running <code>terraform apply -destroy</code>. After the script finishes, queue the destroy run
+in TFC UI: workspace → <strong>Settings → Destruction and deletion → Queue destroy plan</strong>.</p>
+<h2 id="required-github-labels">Required GitHub Labels</h2>
+<p>Drift detection workflows (when migrated) create GitHub Issues with these labels:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">gh</span><span style="color:#9ECBFF"> label</span><span style="color:#9ECBFF"> create</span><span style="color:#9ECBFF"> "terraform-drift"</span><span style="color:#79B8FF"> --color</span><span style="color:#9ECBFF"> "D93F0B"</span><span style="color:#79B8FF"> --description</span><span style="color:#9ECBFF"> "Terraform state drift detected"</span></span>
+<span class="line"><span style="color:#B392F0">gh</span><span style="color:#9ECBFF"> label</span><span style="color:#9ECBFF"> create</span><span style="color:#9ECBFF"> "shipsoliddev"</span><span style="color:#79B8FF">       --color</span><span style="color:#9ECBFF"> "0075CA"</span><span style="color:#79B8FF"> --description</span><span style="color:#9ECBFF"> "shipsoliddev Grafana stack"</span></span>
+<span class="line"><span style="color:#B392F0">gh</span><span style="color:#9ECBFF"> label</span><span style="color:#9ECBFF"> create</span><span style="color:#9ECBFF"> "shipsolid"</span><span style="color:#79B8FF">          --color</span><span style="color:#9ECBFF"> "E4E669"</span><span style="color:#79B8FF"> --description</span><span style="color:#9ECBFF"> "shipsolid production Grafana stack"</span></span>
+<span class="line"><span style="color:#B392F0">gh</span><span style="color:#9ECBFF"> label</span><span style="color:#9ECBFF"> create</span><span style="color:#9ECBFF"> "infrastructure"</span><span style="color:#79B8FF">  --color</span><span style="color:#9ECBFF"> "BFD4F2"</span><span style="color:#79B8FF"> --description</span><span style="color:#9ECBFF"> "Infrastructure change"</span></span>
+<span class="line"></span></code></pre>
+<h2 id="migration-status">Migration status</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Item</th><th>Status</th></tr></thead><tbody><tr><td>TFC workspaces switched to VCS-driven</td><td>Done</td></tr><tr><td><code>plan.yml</code> / <code>plan-shipsolid.yml</code> slimmed to pre-flight</td><td>Done</td></tr><tr><td>Generator-in-sync guard preserved in CI</td><td>Done</td></tr><tr><td>TFC Variable Set populated with secrets and shared vars</td><td>Done</td></tr><tr><td><code>apply.yml</code> / <code>apply-shipsolid.yml</code> deleted</td><td>Done</td></tr><tr><td>Drift detection rewritten to use the TFC API on a daily cron</td><td>Done</td></tr><tr><td>Local-backend mode in <code>tf.sh</code> for fast iteration</td><td>Skipped — <code>validate</code> covers most needs; push-and-watch covers the rest</td></tr><tr><td><code>tf.sh</code> plan/apply/destroy/drift updated to refuse with guidance</td><td>Done</td></tr><tr><td><code>Makefile</code> plan/apply/destroy/drift updated to refuse with guidance</td><td>Done</td></tr></tbody></table>  </div> <!-- Other notes in this topic --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>More in ShipSolid</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/shipsolid/00-start-here/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/engagement-model" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Engagement Model </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How teams engage the platform team — intake, support tiers, and SLAs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/glossary" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Shared vocabulary for the platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Get a service emitting metrics, logs, and traces to Grafana Cloud in **30 minutes**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <a href="/notes/shipsolid" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+ShipSolid docs
+</a> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#promotion-flow" data-slug="promotion-flow" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Promotion Flow</a></li><li data-astro-cid-xvrfupwn><a href="#tfc-workspaces" data-slug="tfc-workspaces" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>TFC workspaces</a></li><li data-astro-cid-xvrfupwn><a href="#variables-in-tfc" data-slug="variables-in-tfc" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Variables in TFC</a></li><li data-astro-cid-xvrfupwn><a href="#two-distinctions-that-matter" data-slug="two-distinctions-that-matter" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Two distinctions that matter</a></li><li data-astro-cid-xvrfupwn><a href="#setup-checklist-one-time-per-org" data-slug="setup-checklist-one-time-per-org" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Setup checklist (one-time, per org)</a></li><li data-astro-cid-xvrfupwn><a href="#reference-shared-variables-variable-set-both-workspaces" data-slug="reference-shared-variables-variable-set-both-workspaces" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Reference: shared variables (Variable Set, both workspaces)</a></li><li data-astro-cid-xvrfupwn><a href="#reference-workspace-scoped-variables-per-workspace" data-slug="reference-workspace-scoped-variables-per-workspace" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Reference: workspace-scoped variables (per workspace)</a></li><li data-astro-cid-xvrfupwn><a href="#troubleshooting" data-slug="troubleshooting" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Troubleshooting</a></li><li data-astro-cid-xvrfupwn><a href="#github-actions-workflows" data-slug="github-actions-workflows" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>GitHub Actions workflows</a></li><li data-astro-cid-xvrfupwn><a href="#why-ci-no-longer-runs-terraform-plan" data-slug="why-ci-no-longer-runs-terraform-plan" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Why CI no longer runs terraform plan</a></li><li data-astro-cid-xvrfupwn><a href="#drift-detection" data-slug="drift-detection" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Drift detection</a></li><li data-astro-cid-xvrfupwn><a href="#apply-workflow" data-slug="apply-workflow" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Apply workflow</a></li><li data-astro-cid-xvrfupwn><a href="#local-development" data-slug="local-development" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Local development</a></li><li data-astro-cid-xvrfupwn><a href="#decision-no-local-backend-mode" data-slug="decision-no-local-backend-mode" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Decision: no local-backend mode</a></li><li data-astro-cid-xvrfupwn><a href="#tfsh-destroy" data-slug="tfsh-destroy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>./tf.sh destroy</a></li><li data-astro-cid-xvrfupwn><a href="#required-github-labels" data-slug="required-github-labels" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Required GitHub Labels</a></li><li data-astro-cid-xvrfupwn><a href="#migration-status" data-slug="migration-status" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Migration status</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>   <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+});
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  div.textContent = pre.querySelector('code')?.textContent ?? '';
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+</script>
