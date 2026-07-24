@@ -1,0 +1,618 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Head vs. Tail Sampling for Distributed Traces — Flashcards</title><meta name="description" content="The sampling decision point determines whether a trace pipeline needs to buffer spans in memory — head-based decides at trace start, tail-based decides after the trace completes."><link rel="canonical" href="https://shipsolid.github.io/flashcards/system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling/"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:title" content="Head vs. Tail Sampling for Distributed Traces — Flashcards"><meta property="og:description" content="The sampling decision point determines whether a trace pipeline needs to buffer spans in memory — head-based decides at trace start, tail-based decides after the trace completes."><meta property="og:url" content="https://shipsolid.github.io/flashcards/system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Head vs. Tail Sampling for Distributed Traces — Flashcards"><meta name="twitter:description" content="The sampling decision point determines whether a trace pipeline needs to buffer spans in memory — head-based decides at trace start, tail-based decides after the trace completes."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+</style>
+<link rel="stylesheet" href="/_astro/_deck_.CsFOdOVh.css"><script type="module" src="/_astro/hoisted.YYNSZ6sO.js"></script></head> <body>  <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a>  <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20 min-h-screen"> <div class="max-w-7xl mx-auto px-6"> <!-- Breadcrumb --> <nav class="mb-8 text-sm font-mono text-slate-600 flex items-center flex-wrap gap-1"> <a href="/flashcards" class="hover:text-slate-400 transition-colors">flashcards</a>  <span class="mx-1">/</span> <a href="/flashcards" class="hover:text-slate-400 transition-colors">system-design</a> <span class="mx-1">/</span> <a href="/flashcards" class="hover:text-slate-400 transition-colors">telemetry-ingestion-pipeline</a> <span class="mx-1">/</span> <span class="text-slate-400">head-vs-tail-sampling</span> </nav> <!-- Deck header --> <div class="mb-6 flex items-start justify-between gap-4"> <div> <h1 class="text-2xl font-bold text-slate-100 mb-1">Head vs. Tail Sampling for Distributed Traces</h1> <p class="text-sm text-slate-500">The sampling decision point determines whether a trace pipeline needs to buffer spans in memory — head-based decides at trace start, tail-based decides after the trace completes.</p> </div> <a id="mode-toggle" href="/flashcards/system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling?mode=cram" class="text-xs font-mono text-slate-600 hover:text-slate-400 transition-colors shrink-0 mt-1 whitespace-nowrap">
+study all (cram) &rarr;
+</a> </div> <div id="study-view" data-astro-cid-qroyxu4q> <!-- Gamification strip: streak · level/XP · daily goal. A persistent, session-independent
+       HUD placed above the session-scoped progress bar below it. --> <div id="gamify-strip" class="mb-4 flex items-center flex-wrap gap-x-4 gap-y-2 text-xs font-mono" data-astro-cid-qroyxu4q> <div class="flex items-center gap-1 text-slate-400 shrink-0" data-astro-cid-qroyxu4q> <span data-astro-cid-qroyxu4q>🔥</span><span id="gamify-streak-value" data-astro-cid-qroyxu4q>0</span> </div> <div class="flex-1 min-w-[120px]" data-astro-cid-qroyxu4q> <div class="flex items-center justify-between mb-1" data-astro-cid-qroyxu4q> <span id="gamify-level-label" class="text-slate-500" data-astro-cid-qroyxu4q>Lv 1</span> <span id="gamify-xp-label" class="text-slate-600" data-astro-cid-qroyxu4q></span> </div> <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden" data-astro-cid-qroyxu4q> <div id="gamify-xp-bar" class="h-full bg-accent rounded-full transition-all duration-500" style="width: 0%" data-astro-cid-qroyxu4q></div> </div> </div> <div id="gamify-goal" class="text-slate-500 shrink-0 whitespace-nowrap" data-astro-cid-qroyxu4q>0/20 today</div> </div> <!-- Progress bar --> <div class="mb-8" data-astro-cid-qroyxu4q> <div class="flex items-center justify-between mb-2" data-astro-cid-qroyxu4q> <span id="progress-label" class="text-xs font-mono text-slate-500" data-astro-cid-qroyxu4q></span> <span id="card-counter" class="text-xs font-mono text-slate-600" data-astro-cid-qroyxu4q></span> </div> <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden" data-astro-cid-qroyxu4q> <div id="progress-bar" class="h-full bg-accent rounded-full transition-all duration-500" style="width: 0%" data-astro-cid-qroyxu4q></div> </div> </div> <!-- Card --> <div class="perspective mb-6" data-astro-cid-qroyxu4q> <div id="card-inner" class="card-inner relative cursor-pointer select-none" style="min-height: 360px;" role="button" aria-label="Flip card" aria-pressed="false" tabindex="0" data-astro-cid-qroyxu4q> <!-- Front --> <div class="card-face absolute inset-0 bg-slate-900 border border-slate-800 rounded-2xl p-8 flex flex-col items-center overflow-y-auto" data-astro-cid-qroyxu4q> <p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6 shrink-0" data-astro-cid-qroyxu4q>Question</p> <div id="question-text" class="prose prose-invert prose-sm max-w-none card-content w-full text-center" aria-live="polite" aria-atomic="true" data-astro-cid-qroyxu4q></div> <p id="flip-hint" class="mt-6 text-xs font-mono text-slate-700 transition-opacity duration-300 shrink-0" data-astro-cid-qroyxu4q>
+tap to reveal &nbsp;·&nbsp; <kbd class="font-mono" data-astro-cid-qroyxu4q>space</kbd> </p> </div> <!-- Back: aria-hidden while not flipped so screen readers don't get the answer read
+           together with the question (defeats the point of a self-quiz); toggled in flip()/render(). --> <div id="card-back" class="card-face card-back absolute inset-0 bg-slate-900 border border-accent/40 rounded-2xl p-8 flex flex-col items-center overflow-y-auto" aria-hidden="true" data-astro-cid-qroyxu4q> <p class="text-xs font-mono text-accent uppercase tracking-widest mb-6 shrink-0" data-astro-cid-qroyxu4q>Answer</p> <div id="answer-text" class="prose prose-invert prose-sm max-w-none card-content w-full text-center" data-astro-cid-qroyxu4q></div> </div> </div> </div> <!-- Self-check (MCQ / true-false / fill-blank / typing) — optional, non-gating --> <div id="self-check-area" class="mb-6 hidden" data-astro-cid-qroyxu4q></div> <!-- Grade buttons (hidden until card is flipped) --> <div id="action-buttons" class="flex items-center justify-center gap-2 flex-wrap transition-opacity duration-200" style="visibility: hidden;" data-astro-cid-qroyxu4q> <button id="btn-again" class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 border border-slate-700 text-slate-400 hover:text-slate-100 hover:border-slate-500 rounded-xl font-medium text-sm transition-all duration-200 group" data-astro-cid-qroyxu4q>
+Again
+<span class="block text-[10px] font-mono text-slate-700 group-hover:text-slate-600 mt-0.5" data-astro-cid-qroyxu4q>1</span> </button> <button id="btn-hard" class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 border border-slate-700 text-slate-400 hover:text-slate-100 hover:border-slate-500 rounded-xl font-medium text-sm transition-all duration-200 group" data-astro-cid-qroyxu4q>
+Hard
+<span class="block text-[10px] font-mono text-slate-700 group-hover:text-slate-600 mt-0.5" data-astro-cid-qroyxu4q>2</span> </button> <button id="btn-good" class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 bg-accent/10 border border-accent/30 text-accent hover:bg-accent hover:text-slate-950 rounded-xl font-semibold text-sm transition-all duration-200 group" data-astro-cid-qroyxu4q>
+Good
+<span class="block text-[10px] font-mono text-accent/50 group-hover:text-slate-800 mt-0.5" data-astro-cid-qroyxu4q>3</span> </button> <button id="btn-easy" class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 bg-accent/20 border border-accent/40 text-accent hover:bg-accent hover:text-slate-950 rounded-xl font-semibold text-sm transition-all duration-200 group" data-astro-cid-qroyxu4q>
+Easy
+<span class="block text-[10px] font-mono text-accent/60 group-hover:text-slate-800 mt-0.5" data-astro-cid-qroyxu4q>4</span> </button> </div> <!-- Restart --> <div class="mt-8 text-center" data-astro-cid-qroyxu4q> <button id="btn-restart" class="text-xs font-mono text-slate-700 hover:text-slate-500 transition-colors" data-astro-cid-qroyxu4q>
+restart session
+</button> </div> </div> <!-- Completion view (shown when the session queue is empty) --> <div id="done-view" class="hidden text-center py-20" data-astro-cid-qroyxu4q> <div class="text-5xl mb-6" data-astro-cid-qroyxu4q>✓</div> <h2 id="done-title" class="text-2xl font-bold text-slate-100 mb-2" data-astro-cid-qroyxu4q></h2> <p id="done-subtitle" class="text-slate-500 mb-8 text-sm" data-astro-cid-qroyxu4q></p> <div class="flex items-center justify-center gap-4" data-astro-cid-qroyxu4q> <button id="btn-restart-done" class="btn-primary" data-astro-cid-qroyxu4q>Study again</button> <a href="/flashcards" class="btn-outline" data-astro-cid-qroyxu4q>All decks</a> </div> </div> <!-- Level-up flourish: a plain in-memory before/after level comparison per graded review, no
+     persisted "seen" flag (structurally different from badge-unlock, which is never notified on,
+     matching pomo.astro's own precedent). --> <div id="level-up-flourish" class="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-300 px-5 py-3 bg-slate-900 border border-accent/40 rounded-xl shadow-lg shadow-accent/10 text-center" data-astro-cid-qroyxu4q> <div class="text-2xl" data-astro-cid-qroyxu4q>🎉</div> <div id="level-up-text" class="text-accent font-semibold text-sm mt-1" data-astro-cid-qroyxu4q></div> </div> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  <script>(function(){const resolvedUnits = [{"reviewId":"head-vs-tail-core-distinction","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>What is the core distinction between head-based and tail-based trace sampling?</p>","backHtml":"<p>Head-based decides at trace start, before any span outcome is known — stateless, no memory needed, can’t bias toward errors. Tail-based decides after the trace completes (root span arrived) — a central span assembler holds the whole trace, so it CAN bias toward errors/slow traces, at the cost of buffering memory and assembly complexity.</p>","interactive":null},{"reviewId":"head-based-consistent-sampling","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>How does head-based sampling stay consistent across services in a call chain?</p>","backHtml":"<p>The decision is made once at the root span and propagated via the trace context (the ‘sampled’ flag in the W3C traceparent header). Every downstream service honors the parent’s decision rather than sampling independently — without this propagation you’d get fragments instead of complete traces.</p>","interactive":null},{"reviewId":"head-based-blind-weakness","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>Why is head-based sampling described as ‘blind’?</p>","backHtml":"<p>A flat 1% head-sample rate keeps 1% of everything uniformly — including the boring healthy 99% — at the same rate as the interesting slow/errored traces you actually want, because the outcome isn’t known yet when the decision is made.</p>","interactive":null},{"reviewId":"tail-sampling-composite-policy","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>What does a real tail-sampling policy typically combine, with OR semantics?</p>","backHtml":"<p>Keep the trace if ANY policy says keep: errors (status_code == ERROR), slow (latency > threshold_ms), or baseline (a flat probabilistic sample, e.g. 1%, of everything else). This gives full anomaly visibility plus a cost-bounded representative baseline.</p>","interactive":null},{"reviewId":"decision-wait-num-traces-tradeoff","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>What do decision_wait and num_traces control in a tail-sampling processor, and what do they trade off?</p>","backHtml":"<p>decision_wait: how long to wait for the root span before giving up. num_traces: the bound on concurrently-open traces (memory cap). Both directly trade memory for completeness — waiting longer catches more slow traces but holds more open traces in memory at once.</p>","interactive":null},{"reviewId":"orphan-handling-definition","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>What is ‘orphan handling’ in tail-based sampling, and why is it necessary?</p>","backHtml":"<p>Not every trace’s root span arrives before a TTL cutoff (a service crash, a dropped span, a misconfigured SDK). The assembler must decide what to do with an orphan: sample at a low rate anyway (some visibility) or drop it. Without a TTL cutoff, holding orphans forever is an unbounded memory leak disguised as a sampling policy.</p>","interactive":null},{"reviewId":"tail-sampling-memory-eviction-bias","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>Why does a memory-pressured LRU in a tail-sampling assembler create a selection bias against exactly the traces you want to keep?</p>","backHtml":"<p>A slow trace stays ‘open’ the longest waiting for its root span. Under memory pressure, an LRU evicts the oldest open traces first — which disproportionately are the slow ones the sampling policy exists to keep. The eviction policy is anti-correlated with the sampling policy’s goal.</p>","interactive":null},{"reviewId":"sampling-recommendation-by-service-class","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>Which service classes get tail-based vs. head-based sampling, and why never both at once?</p>","backHtml":"<p>Tail-based for business-critical services (checkout, auth, payments) — you need the errored/slow traces specifically. Head-based at a higher flat rate (e.g. 10%) for internal infrastructure services where aggregate rates are what’s actually queried. Never both at the same layer — it multiplies complexity for no benefit.</p>","interactive":null},{"reviewId":"sampling-decision-point-memory-requirement","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>Which sampling approach requires zero memory overhead, and which requires buffering every span until resolution?</p>","backHtml":"<p>Head-based: none — stateless, decide and forward immediately. Tail-based: must buffer every span of a trace in memory (or Redis) until the trace resolves (root span arrives), which is the entire operational cost of the approach.</p>","interactive":null},{"reviewId":"what-1-percent-of-everything-means","deckSlug":"system-design/telemetry-ingestion-pipeline/head-vs-tail-sampling","frontHtml":"<p>In a tail-sampling policy, what does ‘keep 1% of everything’ actually mean in practice?</p>","backHtml":"<p>It applies only to the leftover bucket of healthy, non-anomalous traces after errors and slow traces are already kept at 100%. It’s a flat probabilistic coin-flip (sampling_percentage: 1) on the boring 99% — full anomaly visibility plus a cost-bounded baseline, which is the entire point of tail sampling over a single flat head-based rate.</p>","interactive":null}];
+const autoStart = true;
+const newCardsPerSession = 20;
+
+  const LOG_KEY = 'fc:log';
+  const LOG_CAP = 20000;
+  const REQUEUE_OFFSET = 4;
+
+  // --- Storage shell (kept in sync with src/lib/storage.ts — define:vars scripts can't import) ---
+  function loadJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  function saveJSON(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch {
+      /* private browsing / quota exceeded — degrade to in-memory only */
+      return false;
+    }
+  }
+
+  function todayKey(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  // --- SM-2 (kept in sync with src/lib/srs/sm2.ts) ---
+  const MIN_EASE = 1.3;
+  const DEFAULT_EASE = 2.5;
+  const GRADE_TO_QUALITY = { again: 0, hard: 3, good: 4, easy: 5 };
+
+  function createCardState(reviewId, today) {
+    return { reviewId, ease: DEFAULT_EASE, interval: 0, repetitions: 0, dueDate: today, lapses: 0 };
+  }
+  function addDays(dateStr, days) {
+    const d = new Date(`${dateStr}T00:00:00`);
+    d.setDate(d.getDate() + Math.round(days));
+    return todayKey(d);
+  }
+  function scheduleCard(state, grade, today) {
+    const quality = GRADE_TO_QUALITY[grade];
+    const nextEase = Math.max(MIN_EASE, state.ease + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+    if (quality < 3) {
+      return { ...state, ease: nextEase, repetitions: 0, interval: 1, dueDate: addDays(today, 1), lapses: state.lapses + 1 };
+    }
+    const repetitions = state.repetitions + 1;
+    const interval = repetitions === 1 ? 1 : repetitions === 2 ? 6 : Math.round(state.interval * nextEase);
+    return { ...state, ease: nextEase, repetitions, interval, dueDate: addDays(today, interval) };
+  }
+  function isDue(state, today) {
+    if (!state) return true; // never graded == "new", always eligible
+    return state.dueDate <= today;
+  }
+
+  // --- Gamification (kept in sync with src/lib/gamification/rules.ts + state.ts — define:vars
+  // scripts can't import). This is the fourth parallel hand-transcribed logic surface in this
+  // codebase (after SM-2, storage, and now streak/XP/level math) — compounding technical debt
+  // inherent to the define:vars constraint, not something this phase can fix. ---
+  const GAMIFY_KEY = 'fc:gamify';
+  const DEFAULT_GAMIFY = { v: 1, bankedXp: 0, bankedReviewCount: 0, bestStreak: 0 };
+  function loadGamifyState() { return { ...DEFAULT_GAMIFY, ...loadJSON(GAMIFY_KEY, {}) }; }
+  function saveGamifyState(state) { saveJSON(GAMIFY_KEY, state); }
+
+  const GOALS_KEY = 'fc:goals';
+  const DEFAULT_GOALS = { v: 1, dailyReviewTarget: 20, weeklyDaysTarget: 5 };
+  function loadGoals() { return { ...DEFAULT_GOALS, ...loadJSON(GOALS_KEY, {}) }; }
+
+  const XP_BASE = 10;
+  const GRADE_XP_MULTIPLIER = { again: 0.2, hard: 0.6, good: 1.0, easy: 1.3 };
+  const STREAK_BONUS_PER_DAY = 0.02;
+  const STREAK_BONUS_CAP = 0.5;
+  const HARD_CARD_EASE_THRESHOLD = 2.0;
+  const HARD_CARD_BONUS = 0.15;
+  const CRAM_XP_MULTIPLIER = 0.25;
+
+  function computeReviewXp({ grade, streakDays, priorEase, mode }) {
+    const streakBonus = Math.min(streakDays * STREAK_BONUS_PER_DAY, STREAK_BONUS_CAP);
+    const difficultyBonus = priorEase !== undefined && priorEase < HARD_CARD_EASE_THRESHOLD && grade !== 'again' ? HARD_CARD_BONUS : 0;
+    const modeMultiplier = mode === 'cram' ? CRAM_XP_MULTIPLIER : 1;
+    return Math.round(XP_BASE * GRADE_XP_MULTIPLIER[grade] * (1 + streakBonus + difficultyBonus) * modeMultiplier);
+  }
+
+  const LEVEL_XP_COEFF = 50;
+  function xpForLevel(n) { return LEVEL_XP_COEFF * n * n; }
+  function levelInfo(totalXp) {
+    let level = 1;
+    let remaining = totalXp;
+    while (remaining >= xpForLevel(level)) {
+      remaining -= xpForLevel(level);
+      level++;
+    }
+    const xpForNextLevel = xpForLevel(level);
+    return { level, xpIntoLevel: remaining, xpForNextLevel, progressFraction: xpForNextLevel === 0 ? 0 : remaining / xpForNextLevel };
+  }
+
+  function computeDailyCountsFromEvents(events) {
+    const counts = {};
+    for (const e of events) {
+      const day = todayKey(new Date(e.timestamp));
+      counts[day] = (counts[day] ?? 0) + 1;
+    }
+    return counts;
+  }
+  function computeStreakFromCounts(dailyCounts, todayStr) {
+    let streak = 0;
+    let cursor = dailyCounts[todayStr] ? todayStr : addDays(todayStr, -1);
+    while ((dailyCounts[cursor] ?? 0) > 0) {
+      streak++;
+      cursor = addDays(cursor, -1);
+    }
+    return streak;
+  }
+
+  function appendLogEvent(event) {
+    const log = loadJSON(LOG_KEY, { v: 1, events: [] });
+    log.events.push(event);
+    const overflow = log.events.length - LOG_CAP;
+    // Bank the evicted events' XP/count before they're gone — otherwise a long-term user's total
+    // XP (and review-count badges) would silently shrink as history ages out of this capped log.
+    // bankedXp/bankedReviewCount are append-only corrections, never current-state derived data.
+    const evicted = overflow > 0 ? log.events.splice(0, overflow) : [];
+    // Persist the trimmed log FIRST, and only bank if that write actually succeeded. fc:log at
+    // its cap is a multi-MB blob while fc:gamify is ~100 bytes, so under localStorage quota
+    // pressure the log write is far more likely to fail than the bank write — banking first (the
+    // old order) risked double-counting evicted events that, in storage, were never actually
+    // removed because the log write silently failed.
+    const logSaved = saveJSON(LOG_KEY, log);
+    if (logSaved && evicted.length > 0) {
+      const gamify = loadGamifyState();
+      gamify.bankedXp += evicted.reduce((sum, e) => sum + (e.xpAwarded ?? 0), 0);
+      gamify.bankedReviewCount += evicted.length;
+      saveGamifyState(gamify);
+    }
+  }
+
+  // --- Multi-deck storage (a single-deck page is just a one-entry map) ---
+  function unitKey(u) { return `${u.deckSlug}::${u.reviewId}`; }
+
+  const deckSlugs = [...new Set(resolvedUnits.map((u) => u.deckSlug))];
+  // No principled way to remap the old positional known-set onto stable ids — discard it.
+  for (const slug of deckSlugs) {
+    try { localStorage.removeItem(`fc:${slug}`); } catch {}
+  }
+  const srsStores = new Map(deckSlugs.map((slug) => [slug, loadJSON(`fc:srs:${slug}`, { v: 1, cards: {} })]));
+  function getSrsState(deckSlug, reviewId) {
+    return srsStores.get(deckSlug)?.cards?.[reviewId];
+  }
+
+  const resolvedById = new Map(resolvedUnits.map((u) => [unitKey(u), u]));
+
+  // --- Shuffle (Fisher-Yates) ---
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // --- Session state ---
+  const today = todayKey();
+  let currentArgs = null;       // last startSession() args — restart() replays these
+  let queue = [];
+  let initialQueueSize = 0;
+  let reviewedAtEnd = 0;        // captured snapshot when endSession() forces the queue empty
+  let endedEarlyReason = null;
+  let isFlipped = false;
+  let flipStartedAt = 0;
+  let currentInteractive = null;
+  let selfCheckAnswered = false;
+
+  // --- DOM refs ---
+  const cardInner     = document.getElementById('card-inner');
+  const cardBack       = document.getElementById('card-back');
+  const questionText   = document.getElementById('question-text');
+  const answerText     = document.getElementById('answer-text');
+  const cardCounter    = document.getElementById('card-counter');
+  const progressBar    = document.getElementById('progress-bar');
+  const progressLabel  = document.getElementById('progress-label');
+  const actionBtns     = document.getElementById('action-buttons');
+  const flipHint       = document.getElementById('flip-hint');
+  const studyView      = document.getElementById('study-view');
+  const doneView       = document.getElementById('done-view');
+  const doneTitle      = document.getElementById('done-title');
+  const doneSubtitle   = document.getElementById('done-subtitle');
+  const selfCheckArea  = document.getElementById('self-check-area');
+  // Host-page-authored, optional — single-deck pages have a `?mode=cram` toggle link; the
+  // review hub doesn't, so this is a no-op there.
+  const modeToggle     = document.getElementById('mode-toggle');
+  const gamifyStreakValue = document.getElementById('gamify-streak-value');
+  const gamifyLevelLabel  = document.getElementById('gamify-level-label');
+  const gamifyXpLabel     = document.getElementById('gamify-xp-label');
+  const gamifyXpBar       = document.getElementById('gamify-xp-bar');
+  const gamifyGoal        = document.getElementById('gamify-goal');
+  const levelUpFlourish   = document.getElementById('level-up-flourish');
+  const levelUpText       = document.getElementById('level-up-text');
+
+  function updateModeToggle() {
+    if (!modeToggle) return;
+    const cram = currentArgs?.mode === 'auto' && !!currentArgs.cram;
+    modeToggle.href = cram ? location.pathname : `${location.pathname}?mode=cram`;
+    modeToggle.textContent = cram ? '← due queue' : 'study all (cram) →';
+  }
+
+  function renderGamifyStrip() {
+    const log = loadJSON(LOG_KEY, { v: 1, events: [] });
+    const dailyCounts = computeDailyCountsFromEvents(log.events);
+    const streakDays = computeStreakFromCounts(dailyCounts, today);
+    const gamify = loadGamifyState();
+    const totalXp = gamify.bankedXp + log.events.reduce((sum, e) => sum + (e.xpAwarded ?? 0), 0);
+    const { level, xpIntoLevel, xpForNextLevel } = levelInfo(totalXp);
+    const goals = loadGoals();
+    const dailyCount = dailyCounts[today] ?? 0;
+
+    gamifyStreakValue.textContent = String(streakDays);
+    gamifyLevelLabel.textContent = `Lv ${level}`;
+    gamifyXpLabel.textContent = `${xpIntoLevel}/${xpForNextLevel} xp`;
+    gamifyXpBar.style.width = xpForNextLevel === 0 ? '0%' : `${Math.round((xpIntoLevel / xpForNextLevel) * 100)}%`;
+    gamifyGoal.textContent = `${dailyCount}/${goals.dailyReviewTarget} today`;
+  }
+
+  let levelUpTimeout = null;
+  function showLevelUp(level) {
+    levelUpText.textContent = `Level ${level}!`;
+    levelUpFlourish.classList.remove('opacity-0');
+    clearTimeout(levelUpTimeout);
+    levelUpTimeout = setTimeout(() => levelUpFlourish.classList.add('opacity-0'), 2200);
+  }
+
+  // --- Self-check templates ---
+  function optionButtonHtml(index, html) {
+    const letter = String.fromCharCode(65 + index);
+    return `<button type="button" class="mcq-option w-full text-left px-4 py-3 border border-slate-700 text-slate-300 hover:border-slate-500 rounded-xl text-sm transition-all duration-200" data-index="${index}">` +
+      `<span class="font-mono text-slate-600 mr-2">${letter}.</span><span class="option-label">${html}</span></button>`;
+  }
+
+  function renderSelfCheckTemplate(interactive) {
+    if (interactive.kind === 'mcq') {
+      return `<div class="grid gap-2" role="group" aria-label="Answer options">` +
+        interactive.optionsHtml.map((html, i) => optionButtonHtml(i, html)).join('') +
+        `</div>`;
+    }
+    if (interactive.kind === 'true-false') {
+      return `<div class="flex items-center justify-center gap-3">` +
+        `<button type="button" class="tf-option flex-1 max-w-[140px] px-4 py-3 border border-slate-700 text-slate-400 hover:text-slate-100 hover:border-slate-500 rounded-xl font-medium text-sm transition-all duration-200" data-value="true">True</button>` +
+        `<button type="button" class="tf-option flex-1 max-w-[140px] px-4 py-3 border border-slate-700 text-slate-400 hover:text-slate-100 hover:border-slate-500 rounded-xl font-medium text-sm transition-all duration-200" data-value="false">False</button>` +
+        `</div>`;
+    }
+    // text (fill-blank / typing)
+    return `<form id="text-check-form" class="flex items-center gap-2" autocomplete="off">` +
+      `<input type="text" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-accent/50 transition-colors" placeholder="Type your answer…" />` +
+      `<button type="submit" class="px-4 py-2.5 border border-slate-700 text-slate-400 hover:text-slate-100 hover:border-slate-500 rounded-xl text-sm font-medium transition-all duration-200">Check</button>` +
+      `</form><p class="mt-2 text-xs font-mono hidden" id="text-check-feedback"></p>`;
+  }
+
+  function renderSelfCheck(interactive) {
+    currentInteractive = interactive;
+    selfCheckAnswered = false;
+    if (!interactive) {
+      selfCheckArea.classList.add('hidden');
+      selfCheckArea.innerHTML = '';
+      return;
+    }
+    selfCheckArea.classList.remove('hidden');
+    selfCheckArea.innerHTML = renderSelfCheckTemplate(interactive);
+  }
+
+  function markOption(btn, isCorrect, isUserPick) {
+    btn.disabled = true;
+    if (isCorrect) {
+      btn.classList.add('bg-accent/10', 'border-accent/30', 'text-accent');
+    } else if (isUserPick) {
+      btn.classList.add('opacity-60');
+      const marker = document.createElement('span');
+      marker.className = 'ml-2 text-[10px] font-mono text-slate-600';
+      marker.textContent = '✕ your answer';
+      btn.appendChild(marker);
+    }
+  }
+
+  function handleMcqPick(btn) {
+    if (selfCheckAnswered) return;
+    selfCheckAnswered = true;
+    const idx = Number(btn.dataset.index);
+    [...selfCheckArea.querySelectorAll('.mcq-option')].forEach((b, i) =>
+      markOption(b, i === currentInteractive.correctIndex, i === idx)
+    );
+  }
+
+  function handleTfPick(btn) {
+    if (selfCheckAnswered) return;
+    selfCheckAnswered = true;
+    [...selfCheckArea.querySelectorAll('.tf-option')].forEach((b) => {
+      const val = b.dataset.value === 'true';
+      markOption(b, val === currentInteractive.correct, b === btn);
+    });
+  }
+
+  function handleTextCheck(form) {
+    const input = form.querySelector('input');
+    const feedback = selfCheckArea.querySelector('#text-check-feedback');
+    const isCorrect = input.value.trim().toLowerCase() === currentInteractive.correctAnswer.toLowerCase();
+    feedback.textContent = isCorrect ? '✓ correct' : `Not quite — correct answer: ${currentInteractive.correctAnswer}`;
+    feedback.classList.remove('hidden');
+    feedback.classList.toggle('text-accent', isCorrect);
+    feedback.classList.toggle('text-slate-500', !isCorrect);
+    // Otherwise focus stays trapped in the input, and the global keydown guard below
+    // (`activeElement.tagName === 'INPUT' → return`) would silently eat the next Space-to-flip.
+    input.blur();
+  }
+
+  selfCheckArea.addEventListener('click', (e) => {
+    const mcqBtn = e.target.closest('.mcq-option');
+    if (mcqBtn) return handleMcqPick(mcqBtn);
+    const tfBtn = e.target.closest('.tf-option');
+    if (tfBtn) return handleTfPick(tfBtn);
+  });
+  selfCheckArea.addEventListener('submit', (e) => {
+    const form = e.target.closest('#text-check-form');
+    if (form) { e.preventDefault(); handleTextCheck(form); }
+  });
+
+  // --- Queue building ---
+  function buildQueue() {
+    if (currentArgs.mode === 'fixed') {
+      return shuffle([...currentArgs.unitKeys]);
+    }
+    // auto
+    if (currentArgs.cram) return shuffle(resolvedUnits.map(unitKey));
+    const due = [];
+    const fresh = [];
+    for (const unit of resolvedUnits) {
+      const state = getSrsState(unit.deckSlug, unit.reviewId);
+      if (!state) fresh.push(unitKey(unit));
+      else if (isDue(state, today)) due.push(unitKey(unit));
+    }
+    return shuffle([...due, ...shuffle(fresh).slice(0, newCardsPerSession)]);
+  }
+
+  // --- Render ---
+  function render() {
+    renderGamifyStrip();
+
+    // Always resolve the progress bar/counters to their final values first — the done
+    // branch below returns early and must not leave them showing the second-to-last card's
+    // stale numbers. When a session was force-ended (endSession), `reviewedAtEnd` is the
+    // snapshot taken before the queue was wiped — `initialQueueSize - queue.length` would
+    // otherwise read as 100% regardless of how much was actually reviewed.
+    const reviewed = endedEarlyReason ? reviewedAtEnd : initialQueueSize - queue.length;
+    progressBar.style.width = initialQueueSize === 0 ? '0%' : `${(reviewed / initialQueueSize) * 100}%`;
+    progressLabel.textContent = `${reviewed} / ${initialQueueSize} reviewed`;
+    cardCounter.textContent = `${queue.length} remaining`;
+
+    if (queue.length === 0) {
+      studyView.classList.add('hidden');
+      doneView.classList.remove('hidden');
+      if (endedEarlyReason) {
+        doneTitle.textContent = `Session ended — ${reviewedAtEnd} of ${initialQueueSize} reviewed`;
+        doneSubtitle.textContent = endedEarlyReason === 'timeout' ? 'Time was up.' : 'Session ended early.';
+      } else if (initialQueueSize === 0) {
+        doneTitle.textContent = 'Nothing due today';
+        doneSubtitle.textContent = currentArgs?.mode === 'auto' && currentArgs.cram
+          ? 'This deck has no cards at all.'
+          : 'Everything is scheduled for later.';
+      } else {
+        doneTitle.textContent = `Session complete — ${initialQueueSize} reviewed`;
+        doneSubtitle.textContent = 'Nice work. Come back when more cards are due.';
+      }
+      window.dispatchEvent(new CustomEvent('fc:session-done', { detail: { reason: endedEarlyReason || 'complete' } }));
+      return;
+    }
+
+    const unit = resolvedById.get(queue[0]);
+    questionText.innerHTML = unit.frontHtml;
+    answerText.innerHTML = unit.backHtml;
+    renderSelfCheck(unit.interactive);
+    window.__renderMermaid?.(cardInner);
+
+    isFlipped = false;
+    cardInner.classList.remove('flipped');
+    cardInner.setAttribute('aria-pressed', 'false');
+    cardBack.setAttribute('aria-hidden', 'true');
+    actionBtns.style.visibility = 'hidden';
+    flipHint.style.opacity = '1';
+  }
+
+  function flip() {
+    if (isFlipped || queue.length === 0) return;
+    isFlipped = true;
+    flipStartedAt = Date.now();
+    cardInner.classList.add('flipped');
+    cardInner.setAttribute('aria-pressed', 'true');
+    cardBack.setAttribute('aria-hidden', 'false');
+    actionBtns.style.visibility = 'visible';
+    flipHint.style.opacity = '0';
+  }
+
+  // A "fixed" (hub-curated) session always updates the real SM-2 schedule — "cram" isn't a
+  // meaningful concept for an already-curated drill list. An "auto" session in cram mode never
+  // does, so cramming can't be used to accidentally push a card's due date around, while still
+  // logging the review so streaks/stats stay honest.
+  function gradeCurrent(grade) {
+    if (!isFlipped || queue.length === 0) return;
+    const key = queue[0];
+    const unit = resolvedById.get(key);
+    const elapsedMs = Date.now() - flipStartedAt;
+    const isAutoCram = currentArgs.mode === 'auto' && currentArgs.cram;
+    const mode = currentArgs.mode === 'fixed' ? 'custom' : (currentArgs.cram ? 'cram' : 'due');
+
+    // Read pre-grade ease before scheduleCard() mutates this same store object in place below —
+    // otherwise the hard-card XP bonus would be evaluated against the post-grade ease instead.
+    const priorEase = getSrsState(unit.deckSlug, unit.reviewId)?.ease;
+
+    if (!isAutoCram) {
+      const store = srsStores.get(unit.deckSlug);
+      const prev = store.cards[unit.reviewId] ?? createCardState(unit.reviewId, today);
+      store.cards[unit.reviewId] = scheduleCard(prev, grade, today);
+      saveJSON(`fc:srs:${unit.deckSlug}`, store);
+    }
+
+    // --- Gamification: XP stamped now (the only moment streak/ease inputs are knowable) and
+    // a before/after level comparison for the level-up flourish, both computed from a single
+    // fc:log snapshot taken before this event is appended. ---
+    const logSnapshot = loadJSON(LOG_KEY, { v: 1, events: [] });
+    const dailyCountsBefore = computeDailyCountsFromEvents(logSnapshot.events);
+    const streakDays = computeStreakFromCounts(dailyCountsBefore, today);
+    const xpAwarded = computeReviewXp({ grade, streakDays, priorEase, mode });
+    const gamifyBefore = loadGamifyState();
+    const totalXpBefore = gamifyBefore.bankedXp + logSnapshot.events.reduce((sum, e) => sum + (e.xpAwarded ?? 0), 0);
+    const levelBefore = levelInfo(totalXpBefore).level;
+
+    appendLogEvent({ reviewId: unit.reviewId, deckSlug: unit.deckSlug, grade, timestamp: Date.now(), elapsedMs, mode, xpAwarded });
+
+    // Streak "as of today" (post-append) for the permanent best-streak high-water-mark — derived
+    // locally (today's count + 1) rather than a third fc:log read.
+    const dailyCountsAfter = { ...dailyCountsBefore, [today]: (dailyCountsBefore[today] ?? 0) + 1 };
+    const streakAfter = computeStreakFromCounts(dailyCountsAfter, today);
+    const gamifyAfter = loadGamifyState(); // re-read: appendLogEvent may have updated banked totals
+    if (streakAfter > gamifyAfter.bestStreak) {
+      gamifyAfter.bestStreak = streakAfter;
+      saveGamifyState(gamifyAfter);
+    }
+
+    const totalXpAfter = totalXpBefore + xpAwarded;
+    const levelAfter = levelInfo(totalXpAfter).level;
+    if (levelAfter > levelBefore) showLevelUp(levelAfter);
+
+    if (grade === 'again') {
+      queue.shift();
+      queue.splice(Math.min(queue.length, REQUEUE_OFFSET), 0, key);
+    } else {
+      queue.shift();
+    }
+    render();
+  }
+
+  function startSession(args) {
+    currentArgs = args;
+    endedEarlyReason = null;
+    reviewedAtEnd = 0;
+    queue = buildQueue();
+    initialQueueSize = queue.length;
+    updateModeToggle();
+    studyView.classList.remove('hidden');
+    doneView.classList.add('hidden');
+    render();
+  }
+
+  function endSession(reason) {
+    if (queue.length === 0) return; // already done
+    reviewedAtEnd = initialQueueSize - queue.length;
+    endedEarlyReason = reason || 'ended';
+    queue = [];
+    render();
+  }
+
+  function restart() {
+    if (currentArgs) startSession(currentArgs);
+  }
+
+  window.__fcStudySession = { startSession, endSession, getSrsState };
+
+  // --- Events ---
+  cardInner.addEventListener('click', flip);
+  cardInner.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+  });
+  document.getElementById('btn-again').addEventListener('click', () => gradeCurrent('again'));
+  document.getElementById('btn-hard').addEventListener('click', () => gradeCurrent('hard'));
+  document.getElementById('btn-good').addEventListener('click', () => gradeCurrent('good'));
+  document.getElementById('btn-easy').addEventListener('click', () => gradeCurrent('easy'));
+  document.getElementById('btn-restart').addEventListener('click', restart);
+  document.getElementById('btn-restart-done').addEventListener('click', restart);
+
+  document.addEventListener('keydown', (e) => {
+    const activeTag = document.activeElement?.tagName;
+    if (activeTag === 'INPUT') return;
+    // Space/Enter natively activates a focused button/link — don't hijack it into a flip when a
+    // self-check option, grade button, or restart control has focus, or keyboard users can never
+    // actually activate those controls (this used to preventDefault() unconditionally).
+    const isNativelyActivatable = activeTag === 'BUTTON' || activeTag === 'A';
+    if ((e.key === ' ' || e.key === 'Enter') && !isNativelyActivatable) { e.preventDefault(); flip(); }
+    if (!isFlipped) return;
+    if (e.key === '1' || e.key === 'ArrowLeft') gradeCurrent('again');
+    if (e.key === '2') gradeCurrent('hard');
+    if (e.key === '3' || e.key === 'ArrowRight') gradeCurrent('good');
+    if (e.key === '4') gradeCurrent('easy');
+  });
+
+  // --- Init ---
+  if (autoStart) {
+    const cramFromUrl = new URLSearchParams(window.location.search).get('mode') === 'cram';
+    startSession({ mode: 'auto', cram: cramFromUrl });
+  }
+})();</script> <!-- Tags --> <div class="mt-8 flex flex-wrap gap-2 justify-center"> <span class="tag text-[11px]">system-design</span><span class="tag text-[11px]">observability</span><span class="tag text-[11px]">telemetry</span><span class="tag text-[11px]">maang-prep</span><span class="tag text-[11px]">sampling</span> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>

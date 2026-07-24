@@ -1,0 +1,743 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Runbooks — Notes — Amit Singh</title><meta name="description" content="Troubleshooting playbooks for every known Signal Forge failure mode, from missing traces to Grafana Cloud export errors."><link rel="canonical" href="https://shipsolid.github.io/notes/projects/app-signal-forge/operations/runbooks/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Runbooks — Notes — Amit Singh"><meta property="og:description" content="Troubleshooting playbooks for every known Signal Forge failure mode, from missing traces to Grafana Cloud export errors."><meta property="og:url" content="https://shipsolid.github.io/notes/projects/app-signal-forge/operations/runbooks/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Runbooks — Notes — Amit Singh"><meta name="twitter:description" content="Troubleshooting playbooks for every known Signal Forge failure mode, from missing traces to Grafana Cloud export errors."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-app-signal-forge" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>App Signal Forge</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-app-signal-forge-operations" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Operations</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> Runbooks  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Troubleshooting playbooks for every known Signal Forge failure mode, from missing traces to Grafana Cloud export errors.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated July 10, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202607091847-32</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/signal-forge" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Signal Forge</a><a href="/notes/tag/operations" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Operations</a><a href="/notes/tag/incident-response" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Incident Response</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:Runbooks" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/app-signal-forge/operations/runbooks" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-07-10T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Signal Forge" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Operations" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Incident Response" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="runbooks">Runbooks</h2>
+<p>Troubleshooting playbooks for every known failure mode.</p>
+<hr>
+<h2 id="no-traces-in-jaeger">No traces in Jaeger</h2>
+<h3 id="symptoms">Symptoms</h3>
+<ul>
+<li>Jaeger UI shows no services</li>
+<li><code>make validate</code> passes but traces don’t appear</li>
+</ul>
+<h3 id="diagnosis">Diagnosis</h3>
+<p><strong>Step 1: Is alloy-receiver running?</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> get</span><span style="color:#9ECBFF"> pods</span><span style="color:#79B8FF"> -l</span><span style="color:#9ECBFF"> app.kubernetes.io/component=alloy-receiver</span></span>
+<span class="line"><span style="color:#6A737D"># Expected: Running</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 2: Is the app sending to the right endpoint?</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> exec</span><span style="color:#9ECBFF"> deploy/gateway-api</span><span style="color:#79B8FF"> --</span><span style="color:#9ECBFF"> env</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#9ECBFF"> OTEL</span></span>
+<span class="line"><span style="color:#6A737D"># OTEL_EXPORTER_OTLP_ENDPOINT should be:</span></span>
+<span class="line"><span style="color:#6A737D"># http://grafana-k8s-alloy-receiver.monitoring.svc.cluster.local:4317</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 3: Can the app reach Alloy?</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> exec</span><span style="color:#9ECBFF"> deploy/gateway-api</span><span style="color:#79B8FF"> --</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#9ECBFF">  wget</span><span style="color:#79B8FF"> -qO-</span><span style="color:#9ECBFF"> http://grafana-k8s-alloy-receiver.monitoring.svc.cluster.local:4317</span></span>
+<span class="line"><span style="color:#6A737D"># gRPC will return an HTTP 400 (expected — it's not HTTP/1.1) — this confirms connectivity</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 4: Check Alloy receiver logs</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> daemonset/grafana-k8s-alloy-receiver</span><span style="color:#79B8FF"> --tail=100</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#F97583">  |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -E</span><span style="color:#9ECBFF"> "error|warn|export"</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 5: Check Alloy pipeline UI</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> port-forward</span><span style="color:#9ECBFF"> svc/grafana-k8s-alloy-receiver</span><span style="color:#79B8FF"> 12345</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span></span>
+<span class="line"><span style="color:#B392F0">open</span><span style="color:#9ECBFF"> http://localhost:12345</span></span>
+<span class="line"><span style="color:#6A737D"># Navigate to Components → otelcol.receiver.otlp.default → check "Data received" counter</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 6: Is Jaeger accessible?</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> http://localhost:16686/api/services</span></span>
+<span class="line"><span style="color:#6A737D"># Should return {"data":["gateway-api","order-api",...]}</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="metrics-missing-from-prometheus">Metrics missing from Prometheus</h2>
+<h3 id="symptoms-1">Symptoms</h3>
+<ul>
+<li>Prometheus has no metrics from app services</li>
+<li><code>traces_spanmetrics_calls_total</code> query returns nothing</li>
+</ul>
+<h3 id="diagnosis-1">Diagnosis</h3>
+<p><strong>Step 1: Check Prometheus is up</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> http://localhost:9090/-/ready</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 2: Prometheus has remote-write receiver enabled?</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> describe</span><span style="color:#9ECBFF"> deploy/prometheus</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -A5</span><span style="color:#9ECBFF"> "Command"</span></span>
+<span class="line"><span style="color:#6A737D"># Should include: --web.enable-remote-write-receiver</span></span>
+<span class="line"><span style="color:#6A737D"># and: --enable-feature=exemplar-storage</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 3: Check Alloy is writing to Prometheus</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> port-forward</span><span style="color:#9ECBFF"> svc/grafana-k8s-alloy-receiver</span><span style="color:#79B8FF"> 12345</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span></span>
+<span class="line"><span style="color:#6A737D"># Navigate to Components → prometheus.remote_write.local → check "Samples sent" counter</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 4: Query Prometheus directly</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">curl</span><span style="color:#9ECBFF"> "http://localhost:9090/api/v1/query?query=up"</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> jq</span><span style="color:#9ECBFF"> '.data.result'</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="async-propagation-not-working">Async propagation not working</h2>
+<h3 id="symptoms-2">Symptoms</h3>
+<ul>
+<li><code>notification.process</code> span in Jaeger has a different <code>traceId</code> than <code>order.publish</code></li>
+<li>SpanLink is missing (no dashed arrow in Jaeger)</li>
+</ul>
+<h3 id="diagnosis-2">Diagnosis</h3>
+<p><strong>Step 1: Verify traceparent is in the RabbitMQ message</strong></p>
+<p>In RabbitMQ Management (<code>http://localhost:15672</code>):</p>
+<ol>
+<li>Go to Queues → <code>notifications</code></li>
+<li>Click “Get Message(s)”</li>
+<li>Inspect the Properties → Headers</li>
+<li>Should contain key <code>traceparent</code> with value <code>00-&#x3C;32 hex chars>-&#x3C;16 hex chars>-01</code></li>
+</ol>
+<p>If missing: the order-api publisher is not injecting the header. Check <code>OrderPublisher.cs</code> —
+<code>Propagators.DefaultTextMapPropagator.Inject()</code> must run while <code>Activity.Current</code> is non-null
+(inside an active span).</p>
+<p><strong>Step 2: Verify the consumer extracts it correctly</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> deploy/notification-svc</span><span style="color:#79B8FF"> --tail=50</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> trace</span></span>
+<span class="line"></span></code></pre>
+<p>Add temporary debug logging to <code>consumer.py</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">logger.debug(</span><span style="color:#9ECBFF">"headers: </span><span style="color:#79B8FF">%s</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">, properties.headers)</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 3: Check for pika instrumentation conflict</strong></p>
+<p>If <code>opentelemetry-instrumentation-pika</code> is also running, it may overwrite the extracted context.
+Verify <code>requirements.txt</code> — <code>opentelemetry-instrumentation-pika</code> should not be present (we use
+manual extraction).</p>
+<hr>
+<h2 id="logs-not-appearing-in-loki-with-trace-correlation">Logs not appearing in Loki with trace correlation</h2>
+<h3 id="symptoms-3">Symptoms</h3>
+<ul>
+<li>“Logs for this span” in Grafana returns no results</li>
+<li>Loki has logs but they lack <code>trace_id</code> structured metadata</li>
+</ul>
+<h3 id="diagnosis-3">Diagnosis</h3>
+<p><strong>Step 1: Confirm apps write JSON</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> deploy/gateway-api</span><span style="color:#79B8FF"> --tail=3</span></span>
+<span class="line"><span style="color:#6A737D"># Should be JSON: {"Timestamp":"...","Level":"Information","TraceId":"4bf..."}</span></span>
+<span class="line"><span style="color:#6A737D"># NOT plain text: info: Processing request</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 2: Check alloy-logs is running</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> get</span><span style="color:#9ECBFF"> pods</span><span style="color:#79B8FF"> -l</span><span style="color:#9ECBFF"> app.kubernetes.io/component=alloy-logs</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> daemonset/grafana-k8s-alloy-logs</span><span style="color:#79B8FF"> --tail=50</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 3: Query Loki directly</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> port-forward</span><span style="color:#9ECBFF"> svc/loki</span><span style="color:#79B8FF"> 3100</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span></span>
+<span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -G</span><span style="color:#9ECBFF"> "http://localhost:3100/loki/api/v1/query_range"</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --data-urlencode</span><span style="color:#9ECBFF"> 'query={namespace="otel-lab"}'</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --data-urlencode</span><span style="color:#9ECBFF"> 'limit=5'</span></span>
+<span class="line"><span style="color:#6A737D"># If logs arrive but lack trace_id, the stage.json field names don't match</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 4: Check field name mismatch</strong></p>
+<p>Alloy’s <code>stage.json</code> extracts:</p>
+<ul>
+<li><code>.TraceId</code> for .NET</li>
+<li><code>.otelTraceID</code> for Python</li>
+</ul>
+<p>If a service uses different field names, <code>trace_id</code> will be empty. Check the raw log JSON.</p>
+<p><strong>Step 5: Verify structured metadata is enabled in Loki</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> exec</span><span style="color:#9ECBFF"> statefulset/loki</span><span style="color:#79B8FF"> --</span><span style="color:#9ECBFF"> cat</span><span style="color:#9ECBFF"> /etc/loki/config.yaml</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#9ECBFF"> allow_structured</span></span>
+<span class="line"><span style="color:#6A737D"># Should show: allow_structured_metadata: true</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="exemplar-dots-not-showing-in-grafana">Exemplar dots not showing in Grafana</h2>
+<h3 id="symptoms-4">Symptoms</h3>
+<ul>
+<li>Histogram panels show time series but no scatter dots</li>
+</ul>
+<h3 id="diagnosis-checklist-must-all-be-true">Diagnosis checklist (must ALL be true)</h3>
+<ul class="contains-task-list">
+<li class="task-list-item">
+<p><input type="checkbox" disabled> Panel → Edit → Query → “Exemplars” toggle is ON</p>
+</li>
+<li class="task-list-item">
+<p><input type="checkbox" disabled> Panel → Options → Data links has an entry pointing to Jaeger datasource, URL field =
+<code>${__value.raw}</code></p>
+</li>
+<li class="task-list-item">
+<p><input type="checkbox" disabled> Prometheus has <code>--enable-feature=exemplar-storage</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> describe</span><span style="color:#9ECBFF"> deploy/prometheus</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#9ECBFF"> exemplar-storage</span></span>
+<span class="line"></span></code></pre>
+</li>
+<li class="task-list-item">
+<p><input type="checkbox" disabled> App has <code>OTEL_METRICS_EXEMPLAR_FILTER=trace_based</code> in Deployment env:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> exec</span><span style="color:#9ECBFF"> deploy/gateway-api</span><span style="color:#79B8FF"> --</span><span style="color:#9ECBFF"> env</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#9ECBFF"> EXEMPLAR</span></span>
+<span class="line"></span></code></pre>
+</li>
+<li class="task-list-item">
+<p><input type="checkbox" disabled> The histogram observation happens inside a sampled span. Use <code>/api/slow</code> (always sampled) to
+test.</p>
+</li>
+</ul>
+<p><strong>Force an exemplar-generating request:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">curl</span><span style="color:#9ECBFF"> http://localhost:8080/api/slow</span></span>
+<span class="line"><span style="color:#6A737D"># Wait ~5s, then check Grafana panel for new exemplar dot</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="k8s-attributes-missing-from-spans">K8s attributes missing from spans</h2>
+<h3 id="symptoms-5">Symptoms</h3>
+<ul>
+<li>Spans in Jaeger lack <code>k8s.pod.name</code>, <code>k8s.namespace.name</code> etc.</li>
+</ul>
+<h3 id="diagnosis-4">Diagnosis</h3>
+<p><strong>Step 1: Check RBAC</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> get</span><span style="color:#9ECBFF"> clusterrolebinding</span><span style="color:#9ECBFF"> alloy</span><span style="color:#79B8FF"> -o</span><span style="color:#9ECBFF"> yaml</span></span>
+<span class="line"><span style="color:#6A737D"># Should reference ServiceAccount alloy in otel-lab namespace</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> auth</span><span style="color:#9ECBFF"> can-i</span><span style="color:#9ECBFF"> list</span><span style="color:#9ECBFF"> pods</span><span style="color:#79B8FF"> --as=system:serviceaccount:otel-lab:alloy</span></span>
+<span class="line"><span style="color:#6A737D"># Should return: yes</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 2: Check k8sattributes processor logs</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> daemonset/grafana-k8s-alloy-receiver</span><span style="color:#79B8FF"> --tail=100</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#F97583">  |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> "k8sattr\|k8s.pod"</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 3: Verify pod association mode</strong></p>
+<p>The configmap uses <code>source { from = "connection" }</code> — it resolves the pod from the OTLP connection
+source IP. This works when pods have their own network namespace (standard in k3d). If pods share
+the node network namespace, use <code>source { from = "resource_attribute" }</code> instead and set
+<code>k8s.pod.name</code> in the app’s <code>OTEL_RESOURCE_ATTRIBUTES</code>.</p>
+<hr>
+<h2 id="grafana-cloud-export-not-working">Grafana Cloud export not working</h2>
+<h3 id="symptoms-6">Symptoms</h3>
+<ul>
+<li>Alloy logs show export errors</li>
+<li>Traces/metrics/logs missing in Grafana Cloud</li>
+</ul>
+<h3 id="diagnosis-5">Diagnosis</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Mode-aware triage: conf.yml values, pod state, Alloy exporter counters,</span></span>
+<span class="line"><span style="color:#6A737D"># remote-write reachability probe, alloy-receiver endpoint check — start here.</span></span>
+<span class="line"><span style="color:#B392F0">./scripts/debug.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Check the secret exists and is populated</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> get</span><span style="color:#9ECBFF"> secret</span><span style="color:#9ECBFF"> grafana-cloud-secrets</span><span style="color:#79B8FF"> -o</span><span style="color:#9ECBFF"> json</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#F97583">  |</span><span style="color:#B392F0"> python3</span><span style="color:#79B8FF"> -c</span><span style="color:#9ECBFF"> 'import json,sys,base64; d=json.load(sys.stdin)["data"]; [print(f"{k}: {base64.b64decode(v).decode()[:4]}****") for k,v in d.items()]'</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Check Alloy is reading the env vars</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> exec</span><span style="color:#9ECBFF"> daemonset/grafana-k8s-alloy-receiver</span><span style="color:#79B8FF"> --</span><span style="color:#9ECBFF"> env</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#9ECBFF"> GRAFANA</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Check Alloy logs for export errors</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> daemonset/grafana-k8s-alloy-receiver</span><span style="color:#79B8FF"> --tail=100</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#F97583">  |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -E</span><span style="color:#9ECBFF"> "grafana_cloud|export.*fail|endpoint.*empty|401|403"</span></span>
+<span class="line"></span></code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Error</th><th>Cause</th><th>Fix</th></tr></thead><tbody><tr><td><code>endpoint is empty</code></td><td><code>conf.yml</code>’s <code>monitoring.grafana_cloud.*</code> is unset, or Alloy wasn’t redeployed after it changed</td><td>Populate via <code>./scripts/fetch-grafana-cloud-conf-from-akv.sh</code>, then <code>./deploy-local.sh --skip-cluster --skip-build</code></td></tr><tr><td><code>401 Unauthorized</code></td><td>Wrong API key or wrong instance ID</td><td>Re-check with <code>./scripts/fetch-grafana-cloud-conf-from-akv.sh --dry-run</code>; verify Grafana Cloud Access Policies</td></tr><tr><td><code>connection refused</code></td><td>Wrong endpoint format</td><td>Tempo must be <code>host:443</code> (no <code>https://</code>) in <code>conf.yml</code>; the fetch script applies this adjustment automatically</td></tr><tr><td><code>403 Forbidden</code></td><td>API key lacks scope</td><td>Ensure scopes: <code>metrics:write logs:write traces:write</code></td></tr></tbody></table>
+<blockquote>
+<p><strong>Prefer <code>./scripts/fetch-grafana-cloud-conf-from-akv.sh</code> + <code>./deploy-local.sh</code> over
+<code>make secrets-fetch-akv</code> / <code>make secrets-apply</code> for this.</strong> The Makefile targets are legacy — they
+write the K8s Secret directly and drive their own <code>helm upgrade</code>, bypassing <code>deploy-local.sh</code>
+entirely, and <code>secrets-apply</code> in particular is only as correct as whatever you put in <code>.env</code>
+manually. <code>secrets-fetch-akv</code> writes the correct Mimir endpoint format (<code>.../api/prom/push</code>,
+matching
+<a href="https://github.com/shipsolid/app-signal-forge/blob/main/k8s/monitoring/grafana-helm/values-cloud.yaml.tmpl">values-cloud.yaml.tmpl</a>’s
+Prometheus remote_write destination) as of this fix, but the script-based flow remains the
+canonical path — see <a href="/notes/projects/app-signal-forge/deployment/grafana-cloud/">docs/deployment/grafana-cloud.md</a> for the
+full credential model.</p>
+</blockquote>
+<hr>
+<h2 id="consumer-not-processing-messages">Consumer not processing messages</h2>
+<h3 id="symptoms-7">Symptoms</h3>
+<ul>
+<li>Messages accumulate in RabbitMQ <code>notifications</code> queue</li>
+<li>Notification-svc pods appear Running but notifications don’t appear</li>
+</ul>
+<h3 id="diagnosis-6">Diagnosis</h3>
+<p><strong>Step 1: Check consumer thread is alive</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> deploy/notification-svc</span><span style="color:#79B8FF"> --tail=50</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -i</span><span style="color:#9ECBFF"> "consumer\|rabbit"</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 2: Check for backoff</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> logs</span><span style="color:#9ECBFF"> deploy/notification-svc</span><span style="color:#79B8FF"> --tail=100</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#9ECBFF"> "Consumer crashed"</span></span>
+<span class="line"><span style="color:#6A737D"># If present, the consumer is in exponential backoff — check the delay and underlying error</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 3: Check RabbitMQ connectivity</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> exec</span><span style="color:#9ECBFF"> deploy/notification-svc</span><span style="color:#79B8FF"> --</span><span style="color:#9ECBFF"> python3</span><span style="color:#79B8FF"> -c</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#9ECBFF">  "import pika; pika.BlockingConnection(pika.ConnectionParameters('rabbitmq.otel-lab'))"</span></span>
+<span class="line"><span style="color:#6A737D"># Should succeed with no output</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Step 4: Check DLQ</strong></p>
+<p>In RabbitMQ Management → Queues → <code>notifications.dlq</code>:</p>
+<ul>
+<li>If messages are here, they were NACKed with <code>requeue=False</code> (unrecoverable errors)</li>
+<li>Inspect the message body and headers to understand the failure</li>
+</ul>
+<hr>
+<h2 id="redis-connection-errors">Redis connection errors</h2>
+<h3 id="symptoms-8">Symptoms</h3>
+<ul>
+<li>Notification-svc logs: <code>Redis connection lost, reconnecting</code></li>
+<li>Notifications API returns 500</li>
+</ul>
+<h3 id="diagnosis-7">Diagnosis</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> get</span><span style="color:#9ECBFF"> pod</span><span style="color:#79B8FF"> -l</span><span style="color:#9ECBFF"> app=redis</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> exec</span><span style="color:#9ECBFF"> deploy/notification-svc</span><span style="color:#79B8FF"> --</span><span style="color:#9ECBFF"> python3</span><span style="color:#79B8FF"> -c</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#9ECBFF">  "import redis; r=redis.Redis(host='redis.otel-lab'); print(r.ping())"</span></span>
+<span class="line"></span></code></pre>
+<p>If Redis has restarted, all notification state is lost (ephemeral Deployment, no PVC). Consumer will
+re-process messages from RabbitMQ on the next delivery, and new notifications will be stored
+correctly.</p>
+<hr>
+<h2 id="app-pods-in-crashloopbackoff">App pods in CrashLoopBackOff</h2>
+<p>Most common causes and fixes:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>App</th><th>Likely cause</th><th>Fix</th></tr></thead><tbody><tr><td>gateway-api</td><td>Missing <code>GATEWAY_DB_CONNECTION</code> secret</td><td><code>kubectl -n otel-lab get secret db-secrets</code> + verify key exists</td></tr><tr><td>order-api</td><td>Missing <code>ORDER_DB_CONNECTION</code> secret or PostgreSQL not ready</td><td>Check datastore pod status</td></tr><tr><td>notification-svc</td><td>RabbitMQ not ready</td><td>Consumer has backoff — pod stays Running, consumer retries internally</td></tr><tr><td>Any</td><td>Image not imported into k3d</td><td><code>make import</code></td></tr></tbody></table>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Get detailed startup error</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> describe</span><span style="color:#9ECBFF"> pod</span><span style="color:#F97583"> &#x3C;</span><span style="color:#9ECBFF">pod-nam</span><span style="color:#E1E4E8">e</span><span style="color:#F97583">></span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#79B8FF"> -n</span><span style="color:#9ECBFF"> otel-lab</span><span style="color:#9ECBFF"> logs</span><span style="color:#F97583"> &#x3C;</span><span style="color:#9ECBFF">pod-nam</span><span style="color:#E1E4E8">e</span><span style="color:#F97583">></span><span style="color:#79B8FF"> --previous</span></span>
+<span class="line"></span></code></pre>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"projects/app-signal-forge/readme","title":"SignalForge Documentation","topic":"projects","noteType":"moc"},{"slug":"projects/app-signal-forge/deployment/grafana-cloud","title":"Grafana Cloud Deployment","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/observability/slos","title":"SLOs & burn-rate alerts","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/operations/known-issues","title":"Known issues","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/operations/resilience-patterns","title":"Resilience patterns","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/operations/runbooks","title":"Runbooks","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/otel-patterns","title":"SignalForge Instrumentation Reference","topic":"projects","noteType":"note"}];
+const edges = [{"source":"projects/app-signal-forge/observability/slos","target":"projects/app-signal-forge/operations/runbooks","kind":"depends_on"},{"source":"projects/app-signal-forge/operations/known-issues","target":"projects/app-signal-forge/operations/resilience-patterns","kind":"depends_on"},{"source":"projects/app-signal-forge/deployment/grafana-cloud","target":"projects/app-signal-forge/operations/runbooks","kind":"depends_on"},{"source":"projects/app-signal-forge/operations/resilience-patterns","target":"projects/app-signal-forge/operations/runbooks","kind":"related"},{"source":"projects/app-signal-forge/operations/known-issues","target":"projects/app-signal-forge/operations/runbooks","kind":"related"},{"source":"projects/app-signal-forge/deployment/grafana-cloud","target":"projects/app-signal-forge/otel-patterns","kind":"depends_on"},{"source":"projects/app-signal-forge/operations/runbooks","target":"projects/app-signal-forge/otel-patterns","kind":"depends_on"},{"source":"projects/app-signal-forge/observability/slos","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/deployment/grafana-cloud","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/operations/runbooks","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/operations/resilience-patterns","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/operations/known-issues","target":"projects/app-signal-forge/readme","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/app-signal-forge/operations/runbooks";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 5 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/observability/slos" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> SLOs &amp; burn-rate alerts </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>SignalForge&#39;s published SLOs, how their SLIs are computed from span metrics, and how multi-window burn-rate alerts are structured.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/otel-patterns" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> SignalForge Instrumentation Reference </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Reference explaining every OpenTelemetry instrumentation decision in the signal-forge lab — what&#39;s configured, why, and what correct behavior looks like.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> SignalForge Documentation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Documentation hub for the SignalForge OTel Microservices Validation Lab — architecture, services, API, deployment, observability, and operations.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/observability/slos" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> SLOs &amp; burn-rate alerts </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>SignalForge&#39;s published SLOs, how their SLIs are computed from span metrics, and how multi-window burn-rate alerts are structured.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/otel-patterns" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> SignalForge Instrumentation Reference </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Reference explaining every OpenTelemetry instrumentation decision in the signal-forge lab — what&#39;s configured, why, and what correct behavior looks like.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/operations/known-issues" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Known issues </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Recurring limitations and accepted trade-offs across Signal Forge, consolidated in one place to check before assuming a gap is new.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/operations/networking" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Networking &amp; TLS </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Network-plane security for Signal Forge: NetworkPolicy default-deny model, Ingress TLS via cert-manager, and the k3d flannel enforcement caveat.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/operations/reliability" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Reliability controls </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Workload-level Kubernetes controls protecting Signal Forge availability during disruption: PodDisruptionBudgets, anti-affinity, and graceful shutdown.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/operations/resilience-patterns" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Resilience patterns </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Application-level failure handling in Signal Forge: retries, circuit breakers, backoff, and delivery-safety patterns for downstream dependency failures.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/app-signal-forge/operations/runbooks.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/operations/resilience-patterns" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Resilience patterns </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/operations/security" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Security </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#runbooks" data-slug="runbooks" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Runbooks</a></li><li data-astro-cid-xvrfupwn><a href="#no-traces-in-jaeger" data-slug="no-traces-in-jaeger" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>No traces in Jaeger</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms" data-slug="symptoms" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis" data-slug="diagnosis" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#metrics-missing-from-prometheus" data-slug="metrics-missing-from-prometheus" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Metrics missing from Prometheus</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-1" data-slug="symptoms-1" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-1" data-slug="diagnosis-1" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#async-propagation-not-working" data-slug="async-propagation-not-working" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Async propagation not working</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-2" data-slug="symptoms-2" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-2" data-slug="diagnosis-2" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#logs-not-appearing-in-loki-with-trace-correlation" data-slug="logs-not-appearing-in-loki-with-trace-correlation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Logs not appearing in Loki with trace correlation</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-3" data-slug="symptoms-3" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-3" data-slug="diagnosis-3" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#exemplar-dots-not-showing-in-grafana" data-slug="exemplar-dots-not-showing-in-grafana" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Exemplar dots not showing in Grafana</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-4" data-slug="symptoms-4" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-checklist-must-all-be-true" data-slug="diagnosis-checklist-must-all-be-true" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis checklist (must ALL be true)</a></li><li data-astro-cid-xvrfupwn><a href="#k8s-attributes-missing-from-spans" data-slug="k8s-attributes-missing-from-spans" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>K8s attributes missing from spans</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-5" data-slug="symptoms-5" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-4" data-slug="diagnosis-4" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#grafana-cloud-export-not-working" data-slug="grafana-cloud-export-not-working" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Grafana Cloud export not working</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-6" data-slug="symptoms-6" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-5" data-slug="diagnosis-5" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#consumer-not-processing-messages" data-slug="consumer-not-processing-messages" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Consumer not processing messages</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-7" data-slug="symptoms-7" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-6" data-slug="diagnosis-6" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#redis-connection-errors" data-slug="redis-connection-errors" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Redis connection errors</a></li><li data-astro-cid-xvrfupwn><a href="#symptoms-8" data-slug="symptoms-8" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Symptoms</a></li><li data-astro-cid-xvrfupwn><a href="#diagnosis-7" data-slug="diagnosis-7" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Diagnosis</a></li><li data-astro-cid-xvrfupwn><a href="#app-pods-in-crashloopbackoff" data-slug="app-pods-in-crashloopbackoff" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>App pods in CrashLoopBackOff</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Depends On</p><a href="/notes/projects/app-signal-forge/deployment/grafana-cloud" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Grafana Cloud Deployment</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/projects/app-signal-forge/operations/resilience-patterns" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Resilience patterns</span></a><a href="/notes/projects/app-signal-forge/operations/known-issues" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Known issues</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/app-signal-forge/observability/slos" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">SLOs &amp; burn-rate alerts</span></a><a href="/notes/projects/app-signal-forge/otel-patterns" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">SignalForge Instrumentation Reference</span></a><a href="/notes/projects/app-signal-forge/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">SignalForge Documentation</span></a><a href="/notes/projects/app-signal-forge/observability/slos" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">SLOs &amp; burn-rate alerts</span></a><a href="/notes/projects/app-signal-forge/otel-patterns" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">SignalForge Instrumentation Reference</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

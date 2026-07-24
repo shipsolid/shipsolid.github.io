@@ -1,0 +1,442 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>3 — Platform Design Case Studies — Notes — Amit Singh</title><meta name="description" content="Worked platform design case studies in the style MAANG system-design interviews expect."><link rel="canonical" href="https://shipsolid.github.io/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/3-platform-design-case-studies/platform-design-case-studies/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="3 — Platform Design Case Studies — Notes — Amit Singh"><meta property="og:description" content="Worked platform design case studies in the style MAANG system-design interviews expect."><meta property="og:url" content="https://shipsolid.github.io/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/3-platform-design-case-studies/platform-design-case-studies/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="3 — Platform Design Case Studies — Notes — Amit Singh"><meta name="twitter:description" content="Worked platform design case studies in the style MAANG system-design interviews expect."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/platform-engineering-fundamentals" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Platform Engineering Fundamentals</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>09 Platform Engineering Interview Preparation</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation-3-platform-design-case-studies" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>3 Platform Design Case Studies</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> 3 — Platform Design Case Studies  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Worked platform design case studies in the style MAANG system-design interviews expect.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202607241311-49</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/platform-engineering-fundamentals" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>platform-engineering-fundamentals</a><a href="/notes/tag/interview-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>interview-prep</a><a href="/notes/tag/book" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>book</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Platform Engineering Fundamentals</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-00-evolution-of-platform-engineering" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">00 Evolution Of Platform Engineering</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">5</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-00-evolution-of-platform-engineering-1-evolution-of-infrastructure-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Evolution Of Infrastructure Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-00-evolution-of-platform-engineering-2-system-administration-to-platform-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 System Administration To Platform Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-00-evolution-of-platform-engineering-3-devops-sre-platform-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Devops Sre Platform Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-00-evolution-of-platform-engineering-4-why-platform-engineering-exists" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Why Platform Engineering Exists</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-00-evolution-of-platform-engineering-5-evolution-of-developer-experience" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Evolution Of Developer Experience</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-01-organizational-foundations" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">01 Organizational Foundations</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-01-organizational-foundations-1-conways-law" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Conways Law</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-01-organizational-foundations-2-team-topologies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Team Topologies</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-01-organizational-foundations-3-cognitive-load" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Cognitive Load</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-01-organizational-foundations-4-platform-teams" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Platform Teams</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-02-platform-as-a-product" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">02 Platform As A Product</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-02-platform-as-a-product-1-platform-as-a-product" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Platform As A Product</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-02-platform-as-a-product-2-product-management-for-platforms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Product Management For Platforms</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-02-platform-as-a-product-3-developer-experience" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Developer Experience</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-02-platform-as-a-product-4-platform-adoption" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Platform Adoption</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">03 Core Platform Principles</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">7</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles-1-self-service-platforms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Self Service Platforms</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles-2-golden-paths" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Golden Paths</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles-3-internal-developer-platforms-introduction" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Internal Developer Platforms Introduction</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles-4-apis-everywhere" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Apis Everywhere</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles-5-automation-first" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Automation First</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles-6-standardization" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>6 Standardization</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-03-core-platform-principles-7-opinionated-platforms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>7 Opinionated Platforms</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-04-platform-design-principles" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">04 Platform Design Principles</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">5</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-04-platform-design-principles-1-abstraction" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Abstraction</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-04-platform-design-principles-2-composability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Composability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-04-platform-design-principles-3-scalability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Scalability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-04-platform-design-principles-4-reliability-by-design" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Reliability By Design</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-04-platform-design-principles-5-security-by-default" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Security By Default</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-05-platform-engineering-lifecycle" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">05 Platform Engineering Lifecycle</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">6</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-05-platform-engineering-lifecycle-1-discover" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Discover</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-05-platform-engineering-lifecycle-2-design" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Design</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-05-platform-engineering-lifecycle-3-build" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Build</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-05-platform-engineering-lifecycle-4-operate" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Operate</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-05-platform-engineering-lifecycle-5-measure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Measure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-05-platform-engineering-lifecycle-6-improve" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>6 Improve</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-06-measuring-platform-success" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">06 Measuring Platform Success</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-06-measuring-platform-success-1-developer-productivity" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Developer Productivity</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-06-measuring-platform-success-2-dora-metrics" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Dora Metrics</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-06-measuring-platform-success-3-space-framework" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Space Framework</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-06-measuring-platform-success-4-platform-kpis" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Platform Kpis</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">07 Platform Anti Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">7</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns-1-ticket-driven-platforms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Ticket Driven Platforms</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns-2-platform-as-an-operations-team" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Platform As An Operations Team</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns-3-building-technology-instead-of-products" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Building Technology Instead Of Products</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns-4-excessive-standardization" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Excessive Standardization</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns-5-platform-monoliths" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Platform Monoliths</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns-6-ignoring-developer-experience" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>6 Ignoring Developer Experience</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-07-platform-anti-patterns-7-low-platform-adoption" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>7 Low Platform Adoption</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-08-enterprise-platform-engineering" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">08 Enterprise Platform Engineering</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-08-enterprise-platform-engineering-1-scaling-platform-teams" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Scaling Platform Teams</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-08-enterprise-platform-engineering-2-platform-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Platform Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-08-enterprise-platform-engineering-3-platform-maturity-models" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Platform Maturity Models</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-08-enterprise-platform-engineering-4-building-a-platform-engineering-culture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Building A Platform Engineering Culture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">09 Platform Engineering Interview Preparation</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">6</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation-1-fundamentals-interview-questions" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Fundamentals Interview Questions</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation-2-architecture-trade-off-discussions" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Architecture Trade Off Discussions</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation-3-platform-design-case-studies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Platform Design Case Studies</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation-4-staff-principal-interview-questions" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Staff Principal Interview Questions</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation-5-whiteboard-exercises" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Whiteboard Exercises</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-09-platform-engineering-interview-preparation-6-interview-cheat-sheet" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>6 Interview Cheat Sheet</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-10-appendices" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">10 Appendices</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">6</span></a><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-10-appendices-1-platform-engineering-glossary" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Platform Engineering Glossary</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-10-appendices-2-team-topologies-reference" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Team Topologies Reference</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-10-appendices-3-platform-principles-cheat-sheet" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Platform Principles Cheat Sheet</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-10-appendices-4-dora-space-metrics-quick-reference" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Dora Space Metrics Quick Reference</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-10-appendices-5-platform-maturity-assessment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Platform Maturity Assessment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/platform-engineering-fundamentals#subtopic-10-appendices-6-recommended-reading-and-research-papers" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>6 Recommended Reading And Research Papers</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div> <div data-astro-cid-v5yihett> <a href="/notes/topic/platform-engineering-fundamentals#subtopic-other" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline" data-astro-cid-v5yihett> <span class="group-hover:text-accent transition-colors" data-astro-cid-v5yihett>Other</span> <span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors" data-astro-cid-v5yihett>1</span> </a> </div> </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:3 — Platform Design Case Studies" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:platform-engineering-fundamentals/09-platform-engineering-interview-preparation/3-platform-design-case-studies/platform-design-case-studies" data-astro-cid-v5yihett></span>  <span hidden data-pagefind-filter="domain:Platform Engineering Fundamentals" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:platform-engineering-fundamentals" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:interview-prep" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:book" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="3--platform-design-case-studies">3 — Platform Design Case Studies</h1>
+<h2 id="purpose">Purpose</h2>
+<blockquote>
+<p>[stub: platform-design-case-studies]</p>
+</blockquote>
+<h2 id="metadata">Metadata</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Author</td><td>Amit Singh</td></tr><tr><td>Scope</td><td>platform-engineering-fundamentals</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"platform-engineering-fundamentals/09-platform-engineering-interview-preparation/3-platform-design-case-studies/platform-design-case-studies","title":"3 — Platform Design Case Studies","topic":"platform-engineering-fundamentals","noteType":"note"},{"slug":"platform-engineering-fundamentals/readme","title":"Platform Engineering Fundamentals","topic":"platform-engineering-fundamentals","noteType":"moc"}];
+const edges = [{"source":"platform-engineering-fundamentals/09-platform-engineering-interview-preparation/3-platform-design-case-studies/platform-design-case-studies","target":"platform-engineering-fundamentals/readme","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "platform-engineering-fundamentals/09-platform-engineering-interview-preparation/3-platform-design-case-studies/platform-design-case-studies";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 1 note </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/platform-engineering-fundamentals/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Platform Engineering Fundamentals </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for platform engineering fundamentals: evolution and organizational foundations, platform-as-a-product thinking, core principles (self-service, golden paths, automation, APIs), design principles, the platform lifecycle, DORA/SPACE metrics, anti-patterns, enterprise governance, and MAANG interview prep — cross-linking existing sre/patterns/observability/projects notes instead of duplicating them.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/1-fundamentals-interview-questions/fundamentals-interview-questions" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — Platform Engineering Fundamentals Interview Questions </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A working set of fundamentals-level platform engineering interview questions and how to structure the answers.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/2-architecture-trade-off-discussions/architecture-trade-off-discussions" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2 — Architecture Trade-Off Discussions </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Framing for architecture trade-off discussions specific to platform engineering interviews.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/4-staff-principal-interview-questions/staff-principal-interview-questions" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4 — Common Staff/Principal Platform Engineering Questions </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Common Staff/Principal-level platform engineering interview questions and what differentiates a strong answer at that level.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/5-whiteboard-exercises/whiteboard-exercises" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 5 — Whiteboard Exercises </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Whiteboard exercises for practicing platform design live, under interview conditions.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/platform-engineering-fundamentals" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Platform Engineering Fundamentals notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/3-platform-design-case-studies/platform-design-case-studies.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/2-architecture-trade-off-discussions/architecture-trade-off-discussions" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2 — Architecture Trade-Off Discussions </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/platform-engineering-fundamentals/09-platform-engineering-interview-preparation/4-staff-principal-interview-questions/staff-principal-interview-questions" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4 — Common Staff/Principal Platform Engineering Questions </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#purpose" data-slug="purpose" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Purpose</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/platform-engineering-fundamentals/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Platform Engineering Fundamentals</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

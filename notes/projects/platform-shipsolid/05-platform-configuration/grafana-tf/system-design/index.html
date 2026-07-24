@@ -1,0 +1,1532 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Technical Design — grafana_tf Platform — Notes — Amit Singh</title><meta name="description" content="`grafana_tf/` is the Terraform-based control plane for ShipSolid Foods' Grafana Cloud observability"><link rel="canonical" href="https://shipsolid.github.io/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Technical Design — grafana_tf Platform — Notes — Amit Singh"><meta property="og:description" content="`grafana_tf/` is the Terraform-based control plane for ShipSolid Foods' Grafana Cloud observability"><meta property="og:url" content="https://shipsolid.github.io/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Technical Design — grafana_tf Platform — Notes — Amit Singh"><meta name="twitter:description" content="`grafana_tf/` is the Terraform-based control plane for ShipSolid Foods' Grafana Cloud observability"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Platform Shipsolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>05 Platform Configuration</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Grafana Tf</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> Technical Design — grafana_tf Platform  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>`grafana_tf/` is the Terraform-based control plane for ShipSolid Foods&#39; Grafana Cloud observability</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 1, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202604280014-7</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/configuration" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Configuration</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:Technical Design — grafana_tf Platform" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-05-01T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Configuration" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="technical-design--grafana_tf-platform">Technical Design — <code>grafana_tf</code> Platform</h2>
+<blockquote>
+<p><strong>Status:</strong> Documenting existing system as of 2026-04-27. <strong>Audience:</strong> ShipSolid SRE engineers,
+observability platform contributors. <strong>Scope:</strong> The <code>grafana_tf/</code> Terraform platform that manages
+ShipSolid Foods’ Grafana Cloud observability stacks. <strong>Owner:</strong> SRE / Observability.</p>
+</blockquote>
+<hr>
+<h2 id="1-context">1. Context</h2>
+<h3 id="11-what-this-is">1.1 What this is</h3>
+<p><code>grafana_tf/</code> is the Terraform-based control plane for ShipSolid Foods’ Grafana Cloud observability
+footprint. It manages two Grafana Cloud tenants — <code>shipsoliddev</code> and <code>shipsolid</code> — and provisions,
+configures, and reconciles every resource that lives inside them: stacks, access policies, service
+accounts, data sources, dashboards, alert rules, contact points, notification routing, RBAC, LBAC,
+SLOs, OnCall schedules, and synthetic checks.</p>
+<p>It is the <strong>deployment layer</strong>. The agent layer (Alloy on AKS via <code>grafana_k8s/</code>) and the
+application instrumentation layer (OTel SDKs in product code) are separate and out of scope here,
+except where this platform produces credentials or endpoints they consume.</p>
+<h3 id="12-why-this-design-exists">1.2 Why this design exists</h3>
+<p>ShipSolid’s observability footprint expanded from a single demo tenant to:</p>
+<ul>
+<li>Two production-grade Grafana Cloud stacks segregated by environment risk (dev vs prod).</li>
+<li>7+ onboarded products (DAIA, IEO, MDIxAI, HWA, Passport, Signal Forge, OT plants).</li>
+<li>Three application environments per product (<code>dev</code>, <code>qa</code>/<code>staging</code>, <code>prod</code>).</li>
+<li>Hybrid telemetry sources — AKS clusters, Azure Container Apps, on-prem OT plants, SAP HWA.</li>
+<li>Enterprise concerns: per-team data isolation, drift detection, audited promotion, secret hygiene.</li>
+</ul>
+<p>Click-ops in the Grafana UI does not survive that scale. The platform exists to make every change
+reviewable, reproducible, and reversible.</p>
+<h3 id="13-where-it-sits">1.3 Where it sits</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                ┌────────────────────────────────────────────────┐</span></span>
+<span class="line"><span>                │              products.yml (SoT)                 │</span></span>
+<span class="line"><span>                │   meta + products + per-stack LBAC + Faro       │</span></span>
+<span class="line"><span>                └─────────────────────┬───────────────────────────┘</span></span>
+<span class="line"><span>                                      │</span></span>
+<span class="line"><span>                ┌─────────────────────┴───────────────────────────┐</span></span>
+<span class="line"><span>                │     tools/generate.py  (Jinja2 generator)        │</span></span>
+<span class="line"><span>                │   templates → alert_rules/generated/&#x3C;stack>/     │</span></span>
+<span class="line"><span>                │              dashboards/generated/&#x3C;stack>/       │</span></span>
+<span class="line"><span>                └─────────────────────┬───────────────────────────┘</span></span>
+<span class="line"><span>                                      │</span></span>
+<span class="line"><span>        ┌─────────────────────────────┴────────────────────────────┐</span></span>
+<span class="line"><span>        │              environments/{shipsoliddev,shipsolid}/             │</span></span>
+<span class="line"><span>        │      Terraform root modules — wiring + KV writes          │</span></span>
+<span class="line"><span>        └──────┬─────────────────────┬─────────────────────┬───────┘</span></span>
+<span class="line"><span>               │                     │                     │</span></span>
+<span class="line"><span>        ┌──────▼──────┐       ┌──────▼──────┐       ┌─────▼─────┐</span></span>
+<span class="line"><span>        │  Grafana    │       │  Grafana    │       │   Azure    │</span></span>
+<span class="line"><span>        │  Cloud API  │       │  Instance   │       │  Key Vault │</span></span>
+<span class="line"><span>        │ (stacks,APs)│       │ (DS, dash., │       │ (tokens,   │</span></span>
+<span class="line"><span>        │             │       │ alerts,RBAC)│       │ endpoints) │</span></span>
+<span class="line"><span>        └─────────────┘       └─────────────┘       └────────────┘</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The platform consumes one source of truth (<code>products.yml</code>), produces deterministic artifacts
+(generated JSON), and applies them through Terraform to two destinations (Grafana Cloud and Azure
+Key Vault).</p>
+<hr>
+<h2 id="2-goals">2. Goals</h2>
+<h3 id="21-functional">2.1 Functional</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Goal</th></tr></thead><tbody><tr><td>F1</td><td>Manage two Grafana Cloud stacks (<code>shipsoliddev</code>, <code>shipsolid</code>) from one codebase with structurally identical wiring.</td></tr><tr><td>F2</td><td>Onboard a new product by editing <code>products.yml</code> only — no <code>.tf</code> changes for routine onboarding.</td></tr><tr><td>F3</td><td>Generate dashboards and alert rules from per-platform Jinja2 templates (AKS, ACA, on-prem OT, SAP HWA).</td></tr><tr><td>F4</td><td>Enforce per-team Label-Based Access Control on Mimir and Loki, scoped by <code>deployment_environment</code>.</td></tr><tr><td>F5</td><td>Provision Azure AD SSO with JMESPath role mapping (Admin / Editor / Viewer).</td></tr><tr><td>F6</td><td>Provision contact points (Teams, email, BigPanda webhook), notification routing, mute timings, and OnCall escalation.</td></tr><tr><td>F7</td><td>Write all Terraform-generated tokens and stack endpoints to Azure Key Vault for downstream Alloy and CI/CD consumers.</td></tr><tr><td>F8</td><td>Detect drift on a daily cadence per stack and fail loudly.</td></tr><tr><td>F9</td><td>Gate <code>shipsolid</code> (production) applies behind reviewer approval; allow <code>shipsoliddev</code> to flow with lighter checks.</td></tr></tbody></table>
+<h3 id="22-non-functional">2.2 Non-functional</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Goal</th><th>How it’s measured / met</th></tr></thead><tbody><tr><td>N1</td><td><strong>Idempotency</strong> — re-running apply on unchanged inputs produces zero changes.</td><td><code>tf.sh drift</code> daily across both stacks.</td></tr><tr><td>N2</td><td><strong>Reproducibility</strong> — checking out any commit and applying to a fresh stack reproduces the same config.</td><td>Pre-generated artifacts committed; CI re-runs generator and <code>git diff --exit-code</code>.</td></tr><tr><td>N3</td><td><strong>Reviewability</strong> — every change shows up as a <code>terraform plan</code> diff readable by an SRE peer.</td><td>PR template requires plan output.</td></tr><tr><td>N4</td><td><strong>Blast radius containment</strong> — bad change in <code>shipsoliddev</code> cannot affect <code>shipsolid</code>.</td><td>Separate state files, separate provider tokens, separate apply workflows.</td></tr><tr><td>N5</td><td><strong>Secret hygiene</strong> — no secret committed to git; runtime credentials live in Key Vault or <code>.env</code> (gitignored).</td><td>Pre-commit <code>checkov</code>; <code>.gitignore</code> covers <code>.env</code> and <code>terraform.tfvars</code>.</td></tr><tr><td>N6</td><td><strong>Plan-time independence</strong> — Terraform plan must not require KV reads (KV is write-only from TF’s view).</td><td>Reviewed in §4.9.</td></tr><tr><td>N7</td><td><strong>Module reusability</strong> — every reusable concern is a module under <code>modules/</code> with <code>variables.tf</code>, <code>outputs.tf</code>, tests.</td><td>14 modules, all with <code>tests/*.tftest.hcl</code>.</td></tr></tbody></table>
+<hr>
+<h2 id="3-non-goals">3. Non-Goals</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Non-goal</th><th>Why</th></tr></thead><tbody><tr><td>NG1</td><td>Manage Alloy agent deployment from this codebase.</td><td>Alloy lives in <code>grafana_k8s/</code> (AKS Helm) and is owned by the agent layer. <code>grafana_tf/k8s/</code> is a discoverability mirror only.</td></tr><tr><td>NG2</td><td>Provision the Mimir or Loki LBAC data sources via Terraform.</td><td>Grafana Cloud silently ignores <code>grafana_data_source_permission</code> and <code>grafana_data_source_config_lbac_rules</code> on TF-provisioned sources (Gaps 1 &#x26; 3, confirmed by Grafana support 2026-04). Created manually in the UI; UID captured in <code>products.yml</code>. See <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac/">docs/lbac.md</a>.</td></tr><tr><td>NG3</td><td>Manage application-level OTel instrumentation, OTel Collector configs, or per-app sampling.</td><td>Owned by product teams.</td></tr><tr><td>NG4</td><td>Provision Azure Key Vault itself or its access policies.</td><td>Pre-existing infra (<code>mf-cc-dt-azrsrp-prd-kv</code>). TF only writes secrets.</td></tr><tr><td>NG5</td><td>Bidirectional sync with the Grafana UI.</td><td>One-way: code is the source of truth. UI changes are drift and must be re-imported or reverted.</td></tr><tr><td>NG6</td><td>Manage frontend Faro app <code>app_id</code> / <code>collection_url</code>.</td><td>Configured per app in Grafana Cloud UI → Frontend Observability. Terraform only manages the stack-level Faro API endpoint and the sourcemap upload token.</td></tr><tr><td>NG7</td><td>Multi-region.</td><td>Both stacks are <code>prod-us-central-0</code>. Multi-region failover is not a current requirement.</td></tr></tbody></table>
+<hr>
+<h2 id="4-design">4. Design</h2>
+<h3 id="41-repository-topology">4.1 Repository topology</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>grafana_tf/</span></span>
+<span class="line"><span>├── products.yml                  # Single source of truth</span></span>
+<span class="line"><span>├── tools/                        # Jinja2 generator + stack registry</span></span>
+<span class="line"><span>├── alert_rules/</span></span>
+<span class="line"><span>│   ├── templates/                # Jinja2 sources ([[ ]] delimiters)</span></span>
+<span class="line"><span>│   ├── generated/&#x3C;stack>/        # Committed output of generate.py</span></span>
+<span class="line"><span>│   └── products/&#x3C;prod>/          # Hand-crafted JSON (not generated)</span></span>
+<span class="line"><span>├── dashboards/</span></span>
+<span class="line"><span>│   ├── templates/                # Jinja2 sources</span></span>
+<span class="line"><span>│   └── generated/&#x3C;stack>/        # Committed output</span></span>
+<span class="line"><span>├── alloy-configs/templates/      # Alloy pipelines (consumed by Fleet Management — planned)</span></span>
+<span class="line"><span>├── synthetics/                   # k6 browser scripts (consumed by SM module — planned)</span></span>
+<span class="line"><span>├── environments/</span></span>
+<span class="line"><span>│   ├── shipsoliddev/                # Root module — dev stack</span></span>
+<span class="line"><span>│   └── shipsolid/                   # Root module — prod stack</span></span>
+<span class="line"><span>├── modules/                      # 14 reusable modules</span></span>
+<span class="line"><span>├── k8s/                          # Mirror of grafana_k8s/ (discoverability only)</span></span>
+<span class="line"><span>├── scripts/                      # bootstrap, import, export, get-lbac-uids</span></span>
+<span class="line"><span>├── docs/                         # 8 specialised reference docs (this is the 9th)</span></span>
+<span class="line"><span>├── tf.sh                         # Primary CLI wrapper</span></span>
+<span class="line"><span>└── Makefile                      # tf.sh equivalent for make muscle-memory</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The shape is deliberate: <strong>one source of truth, one generator, two roots, many modules,
+deterministic artifacts</strong>.</p>
+<h3 id="42-two-stack-codebase">4.2 Two-stack codebase</h3>
+<p><code>environments/shipsoliddev/</code> and <code>environments/shipsolid/</code> are two root modules that are
+<strong>structurally identical</strong> — same modules called in the same order with the same wiring. They differ
+only in:</p>
+<ul>
+<li><code>terraform.tfvars</code> — credentials, tenant IDs, stack slug.</li>
+<li><code>backend.tf</code> — Azure blob state key (<code>shipsoliddev/terraform.tfstate</code> vs
+<code>shipsolid/terraform.tfstate</code>).</li>
+<li>Display names in <code>module.stack</code> (e.g. <code>"ShipSolid Foods Observability (Dev)"</code> vs
+<code>"ShipSolid Foods Observability"</code>).</li>
+</ul>
+<p><strong>Rationale.</strong> Terraform workspaces were rejected because:</p>
+<ol>
+<li>Workspaces share a backend file path prefix — a misconfigured CLI could cross-apply.</li>
+<li>Provider aliases need different tokens per stack; passing them through workspace conditionals is
+brittle.</li>
+<li>State locking and concurrency are clearer with fully separated state files.</li>
+<li>CI workflow gating (different approvers for dev vs prod) maps to separate working directories
+naturally.</li>
+</ol>
+<p><strong>Promotion rule.</strong> Every change lands in <code>shipsoliddev</code> first, gets validated, then is applied to
+<code>shipsolid</code>. With VCS-driven TFC workspaces, the rule is enforced by humans confirming applies in
+order in the TFC UI — <code>grafana-tf-shipsoliddev</code> first, validate behaviour, then
+<code>grafana-tf-shipsolid</code>. Peer review enforces the same rule at the PR level.</p>
+<p><strong>Drift between stacks</strong> is acceptable when intentional — e.g. <code>signal_forge</code> is
+<code>shipsoliddev</code>-only, gated via <code>terraform_envs: [shipsoliddev]</code> in <code>products.yml</code>. The
+<code>module.computed.products</code> filter handles this transparently.</p>
+<h3 id="43-provider-aliases">4.3 Provider aliases</h3>
+<p>Each root configures four (currently three active) Grafana provider aliases. Each module declares
+which alias it needs in its <code>providers = {}</code> block:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Alias</th><th>Auth</th><th>Resources</th></tr></thead><tbody><tr><td><code>grafana.cloud</code></td><td><code>cloud_access_policy_token</code></td><td><code>grafana_cloud_stack</code>, <code>grafana_cloud_access_policy</code>, <code>grafana_cloud_access_policy_token</code>, plugin installations.</td></tr><tr><td><code>grafana.instance</code></td><td><code>grafana_sa_token</code> (Admin SA)</td><td>Dashboards, data sources, alerting, RBAC, LBAC, SLOs, SSO.</td></tr><tr><td><code>grafana.oncall</code></td><td>SA token + <code>oncall_url</code></td><td>OnCall schedules, escalation chains, integrations.</td></tr><tr><td><code>grafana.sm</code> <em>(unused)</em> / <code>grafana.sm_with_cloud</code> <em>(commented)</em></td><td>SA + SM token + cloud token</td><td>Synthetic Monitoring — blocked on a valid <code>sm_access_token</code> from the Cloud UI.</td></tr></tbody></table>
+<p><strong>Why split.</strong> The Grafana provider’s API surface is heterogeneous: Cloud-level resources need a
+Cloud Access Policy token; instance-level resources need a stack-scoped Service Account token;
+OnCall needs a separate base URL; Synthetic Monitoring needs a third token type plus the cloud token
+for the installation resource. Collapsing them into one provider config means smuggling unused
+credentials into modules that don’t need them — a needless secret-handling surface.</p>
+<p>Bootstrap variables (<code>cloud_access_policy_token</code>, <code>grafana_sa_token</code>, <code>sm_access_token</code>) live in
+<code>terraform.tfvars</code> rather than Key Vault because Terraform resolves provider configurations
+<strong>before</strong> any data sources can be read. They cannot be deferred. This is documented and accepted
+(see §4.9).</p>
+<h3 id="44-productsyml--the-single-source-of-truth">4.4 <code>products.yml</code> — the single source of truth</h3>
+<p><code>products.yml</code> has two top-level keys:</p>
+<ul>
+<li><strong><code>meta:</code></strong> — shared/admin entries (<code>sre</code>, <code>visitors</code>). Not “products” but participate in teams
+and contact points. <code>meta.sre.&#x3C;stack>.lbac_datasources</code> carries the per-stack LBAC DS metadata;
+<code>meta.sre.&#x3C;stack>.faro_api_endpoint</code> carries the Faro REST URL.</li>
+<li><strong><code>products:</code></strong> — every onboarded product. Each entry drives:</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Drives</th></tr></thead><tbody><tr><td><code>terraform_envs</code></td><td>Which stacks render this product. Filtering happens in <code>module.computed</code>.</td></tr><tr><td><code>platform</code></td><td><code>aks</code> / <code>aca</code> / <code>onprem</code> / <code>sap</code> — picks the default <code>alert_flavours</code> and influences template selection.</td></tr><tr><td><code>environments.&#x3C;env></code></td><td>One environment per active deployment. <code>status: active</code> gates inclusion.</td></tr><tr><td><code>environments.&#x3C;env>.deployment_environment</code></td><td>The label value emitted on every signal — drives LBAC scoping and dashboard filters.</td></tr><tr><td><code>environments.&#x3C;env>.alert_flavours</code></td><td>Override for default platform alerts; values like <code>aks/standard</code>, <code>products/ot</code>, <code>sap/hwa</code>.</td></tr><tr><td><code>dashboard_flavours</code></td><td>Which template directories to render against this product.</td></tr><tr><td><code>contact_points</code></td><td>Definitions per type (<code>teams</code>, <code>webhook</code>, <code>email</code>, <code>bigpanda</code>). Webhook URLs are inline (no KV).</td></tr><tr><td><code>use_contact_points</code></td><td>Per-environment routing list — index 0 wins as primary, rest get extra notification routes.</td></tr><tr><td><code>team</code></td><td>Grafana team membership and dashboard role.</td></tr><tr><td><code>oncall</code></td><td>Schedule, escalation timing, members.</td></tr><tr><td><code>synthetics</code></td><td>Per-environment SM checks.</td></tr></tbody></table>
+<p><strong>Constraint: snake_case keys.</strong> Contact point map keys must use underscores (<code>teams_sre_critical</code>,
+not <code>teams-sre-critical</code>). Terraform’s <code>for_each</code> map iteration handles hyphens poorly when the key
+is referenced downstream. This is enforced by convention — there is no validator yet.</p>
+<p><strong>Why YAML.</strong> Equivalent to JSON for the data model, but supports comments, anchors, and is far more
+forgiving to hand-edit. Product onboarders rarely need to look at <code>.tf</code> — they edit YAML.</p>
+<h3 id="45-observability-stack--the-data-hub">4.5 <code>observability-stack</code> — the data hub</h3>
+<p>modules/observability-stack/main.tf is a <strong>pure data module</strong>: no resources, no providers, just
+locals. Both root modules call it as <code>module.computed</code>, passing only <code>terraform_env</code> and
+<code>stack_slug</code>.</p>
+<p>It reads <code>products.yml</code> once via <code>yamldecode(file(...))</code> and exposes:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Output</th><th>Purpose</th></tr></thead><tbody><tr><td><code>products</code></td><td><code>products:</code> filtered to current <code>terraform_env</code>.</td></tr><tr><td><code>teams</code></td><td>All teams from <code>meta:</code> ∪ <code>products:</code> (unfiltered — <code>sre</code> and <code>visitors</code> always present).</td></tr><tr><td><code>product_folders</code></td><td>Map for <code>module.dashboards</code>.</td></tr><tr><td><code>product_dashboards</code></td><td>Auto-scanned from <code>dashboards/generated/&#x3C;terraform_env>/</code>.</td></tr><tr><td><code>standard_alert_groups_flat</code></td><td>Auto-scanned from <code>alert_rules/generated/&#x3C;terraform_env>/</code>.</td></tr><tr><td><code>product_explicit_alert_groups</code></td><td>Auto-scanned from <code>alert_rules/products/&#x3C;name>/</code>.</td></tr><tr><td><code>contact_points</code></td><td>Merged from all entries (so SRE shared contacts are available product-side).</td></tr><tr><td><code>extra_notification_routes</code></td><td>Per-product extra routes for <code>use_contact_points[1+]</code>.</td></tr><tr><td><code>product_oncall_configs</code></td><td>OnCall configs filtered to <code>oncall.enabled = true</code>.</td></tr><tr><td><code>lbac_datasources</code></td><td>Per-stack LBAC DS metadata (Mimir + Loki).</td></tr><tr><td><code>faro_api_endpoint</code></td><td>Stack-level Faro REST URL.</td></tr></tbody></table>
+<p><strong>Why a pure-data module.</strong> Three benefits:</p>
+<ol>
+<li><strong>DRY across roots</strong> — both <code>shipsoliddev</code> and <code>shipsolid</code> call the same module; the wiring
+becomes “wire <code>module.computed.X</code> into <code>module.Y</code>”.</li>
+<li><strong>No provider lock-in</strong> — because it has no resources, it doesn’t need a provider; root modules
+don’t have to thread provider aliases through it.</li>
+<li><strong>Easy to test in isolation</strong> — the locals can be inspected via <code>terraform console</code> without
+applying anything.</li>
+</ol>
+<p>The module deliberately does not own any side effects. Adding resources to it is a code smell — they
+belong in a domain module.</p>
+<h3 id="46-jinja2-generation-pipeline">4.6 Jinja2 generation pipeline</h3>
+<p>tools/generate.py renders <code>*.json.j2</code> templates from <code>alert_rules/templates/</code> and
+<code>dashboards/templates/</code> into JSON files under <code>alert_rules/generated/&#x3C;stack>/</code> and
+<code>dashboards/generated/&#x3C;stack>/</code>. Output is <strong>committed</strong>, not gitignored.</p>
+<h4 id="why-pre-generate-not-render-at-apply-time">Why pre-generate (not render at apply time)</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Option</th><th>Why rejected / accepted</th></tr></thead><tbody><tr><td><strong>Render in Terraform via <code>templatefile()</code></strong></td><td>Jinja2 has loops, conditionals, filters that HCL’s <code>templatefile()</code> doesn’t. Equivalent rewrites would be ugly and error-prone.</td></tr><tr><td><strong>Render at apply time via local-exec</strong></td><td>Plan would be misleading — JSON wouldn’t exist until apply. CI plan-on-PR would lie.</td></tr><tr><td><strong>Pre-generate in CI, don’t commit</strong></td><td>First-time contributors couldn’t see what TF actually applies. Diff review would be impossible.</td></tr><tr><td><strong>Pre-generate and commit</strong> ✅</td><td>Plan reflects exactly what apply will do. PR review shows JSON diff alongside template diff. CI sync check (<code>git diff --exit-code</code>) catches stale generated/.</td></tr></tbody></table>
+<h4 id="delimiter-choice">Delimiter choice</h4>
+<p>Templates use <code>[[ ]]</code> instead of Jinja2’s default <code>{{ }}</code>. This avoids collisions with Grafana
+annotation syntax (<code>{{ $labels.foo }}</code>) inside the rendered JSON.</p>
+<h4 id="variables">Variables</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Variable</th><th>Source</th></tr></thead><tbody><tr><td><code>[[ uid_prefix ]]</code></td><td><code>tools/stacks.yml</code> (per-stack registry: <code>shipsoliddev</code>, <code>shipsolid</code>).</td></tr><tr><td><code>[[ deployment_environment ]]</code></td><td><code>products.yml</code> <code>environments.&#x3C;env>.deployment_environment</code>.</td></tr><tr><td><code>[[ deployment_env_regex ]]</code></td><td><code>products.yml</code> <code>grafana.dashboard_env_regex</code>.</td></tr><tr><td><code>[[ contact_point ]]</code></td><td>First entry in <code>environments.&#x3C;env>.use_contact_points</code>.</td></tr><tr><td><code>[[ datasource_uid ]]</code></td><td>Default <code>mimir-&#x3C;uid_prefix></code>; overridden by <code>meta.sre.&#x3C;stack>.lbac_datasources.mimir.uid</code> if set. Same for Loki.</td></tr><tr><td><code>[[ env_short ]]</code>, <code>[[ prod_key ]]</code>, <code>[[ plant_name ]]</code>, <code>[[ plant_label ]]</code></td><td>Derived from <code>products.yml</code> keys.</td></tr></tbody></table>
+<h4 id="ci-sync-enforcement">CI sync enforcement</h4>
+<p>The pre-flight workflows (<code>plan.yml</code> / <code>plan-shipsolid.yml</code>) run the generator and fail the PR with
+<code>git diff --exit-code generated/</code> if <code>generated/</code> is stale relative to templates + <code>products.yml</code>.
+This makes “forgot to run generate” a fail-fast condition before TFC ever sees the change.</p>
+<h3 id="47-lbac-architecture">4.7 LBAC architecture</h3>
+<p>LBAC enforces per-team label-based read access on Mimir and Loki. The full architecture is in
+<a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac/">docs/lbac.md</a>; summarised here.</p>
+<h4 id="two-enforcement-boundaries">Two enforcement boundaries</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Boundary</th><th>Mechanism</th><th>Managed where</th></tr></thead><tbody><tr><td><strong>Write path</strong></td><td>Cloud Access Policies with label policies pinning each Alloy writer to its <code>deployment_environment</code>.</td><td><code>module.stack</code> → <code>grafana_cloud_access_policy</code> per env.</td></tr><tr><td><strong>Read path</strong></td><td><code>grafana_data_source_config_lbac_rules</code> per (team, datasource) pair.</td><td><code>module.lbac</code> → bound to <code>module.computed.lbac_datasources.{mimir,loki}.uid</code>.</td></tr></tbody></table>
+<h4 id="gap-1--gap-3-manual-data-source-workaround">Gap 1 / Gap 3 (manual data source workaround)</h4>
+<p>Confirmed by Grafana support, 2026-04: Grafana Cloud silently ignores both
+<code>grafana_data_source_permission</code> and <code>grafana_data_source_config_lbac_rules</code> on
+Terraform-provisioned data sources. The TF apply succeeds; the rules are never written.</p>
+<p><strong>Resolution.</strong> The Mimir and Loki data sources used for LBAC are created <strong>manually</strong> in the
+Grafana UI with basic auth. The platform handles this with:</p>
+<ol>
+<li>A read-only <code>module.datasources</code> that provisions Tempo + Azure Monitor only, exposing
+<code>local.uid_mimir</code> / <code>local.uid_loki</code> as string outputs derived from
+<code>meta.sre.&#x3C;stack>.lbac_datasources.{mimir,loki}.uid</code> (or empty until set).</li>
+<li>A <code>lbac_datasources_setup</code> output that returns a JSON checklist after first apply (<code>name</code>, <code>uid</code>,
+<code>type</code>, <code>default</code>, <code>url</code>, <code>basic_user</code>, <code>password_kv</code>).</li>
+<li>A bootstrap sequence per stack:
+<ul>
+<li>Apply once → tokens written to KV, LBAC bindings no-op (gated by <code>count = uid != "" ? 1 : 0</code>).</li>
+<li>Operator creates Mimir + Loki DS in UI using the checklist + KV password.</li>
+<li>Operator captures the auto-assigned UIDs back into <code>products.yml</code>.</li>
+<li>Run <code>./tf.sh generate</code> so dashboards/alerts pick up the new UIDs.</li>
+<li>Apply again → LBAC rules bind to the manual sources; everything resolves.</li>
+</ul>
+</li>
+</ol>
+<h4 id="token-rotation-impact">Token rotation impact</h4>
+<p><code>ap_mimir_lbac_reader_token</code> and <code>ap_loki_lbac_reader_token</code> are TF-managed. Any apply that
+recreates them (e.g. destroy-apply cycle) requires the operator to re-paste the new token into the
+manual DS basic-auth password field in the UI. UIDs survive. This is documented in operations.md and
+is the main reason <code>prevent_destroy</code> is currently <code>true</code> on the relevant <code>module.stack</code> resources.</p>
+<h4 id="auto-provisioned-cloud-data-sources">Auto-provisioned Cloud data sources</h4>
+<p>Every stack ships with ten <code>grafanacloud-&#x3C;stack>-*</code> data sources that Grafana Cloud Integrations
+reconciles. The platform exposes them as deterministic UIDs via <code>local.cloud_ds_uids</code> in
+<code>modules/datasources/main.tf</code> — <strong>never</strong> managed as resources (writes get silently reverted) and
+<strong>never</strong> read via <code>data "grafana_data_source"</code> (an earlier attempt failed when the API returned 404
+for 9/10 UIDs at plan time). They are outside LBAC enforcement, so dashboards prefer
+<code>module.datasources.mimir_uid</code> / <code>.loki_uid</code> over <code>cloud_datasource_uids.*</code> unless unscoped Admin
+access is intended.</p>
+<h3 id="48-azure-key-vault-integration">4.8 Azure Key Vault integration</h3>
+<p>Terraform’s view of KV is <strong>write-only</strong>: it writes ~14 secrets per stack after apply and reads zero
+at plan time.</p>
+<h4 id="what-gets-written">What gets written</h4>
+<p>Categorised in <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets/">docs/key-vault-secrets.md</a>. High-level:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Category</th><th>Secrets</th></tr></thead><tbody><tr><td>Service-account / API keys</td><td><code>grafana-&#x3C;stack>-sa-terraform-token</code>, <code>grafana-&#x3C;stack>-sa-cloud-api-key</code>.</td></tr><tr><td>Per-environment Alloy writers</td><td><code>grafana-&#x3C;stack>-alloy-writer-&#x3C;env>-token</code> (one per <code>stack_environments</code>).</td></tr><tr><td>Stack endpoints + numeric usernames</td><td>Mimir, Loki, Tempo, OTLP — endpoint + username pair each. The Mimir endpoint is suffixed with <code>/api/prom</code> so consumers use it directly.</td></tr><tr><td>LBAC reader tokens</td><td><code>grafana-&#x3C;stack>-mimir-lbac-reader-token</code>, <code>grafana-&#x3C;stack>-loki-lbac-reader-token</code> — the basic-auth passwords for the manually-created LBAC DS.</td></tr><tr><td>Faro</td><td><code>grafana-&#x3C;stack>-faro-api-endpoint</code>, <code>grafana-&#x3C;stack>-faro-sourcemap-token</code>.</td></tr></tbody></table>
+<h4 id="why-write-only">Why write-only</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Option</th><th>Why rejected / accepted</th></tr></thead><tbody><tr><td><strong>Read all secrets from KV at plan time</strong></td><td>Breaks plan-time independence. A KV outage would block every plan. KV soft-delete + RBAC adds latency to every plan.</td></tr><tr><td><strong>Read provider-bootstrap secrets from KV</strong></td><td>Impossible — Terraform resolves provider configurations before data sources can be read.</td></tr><tr><td><strong>Read contact-point webhook URLs from KV</strong></td><td>Adds an indirection that gives no value: the URLs are not rotated frequently and changing them is a <code>products.yml</code> PR anyway.</td></tr><tr><td><strong>Write-only + tfvars for bootstrap</strong> ✅</td><td>Plan is fast and deterministic; rotation is explicit and visible in PR diffs.</td></tr></tbody></table>
+<h4 id="provider-bootstrap-exception">Provider-bootstrap exception</h4>
+<p><code>cloud_access_policy_token</code>, <code>grafana_sa_token</code>, and <code>sm_access_token</code> live in <code>terraform.tfvars</code>
+(gitignored). In CI they come from GitHub Actions secrets. They cannot be deferred to KV. This is a
+known surface; the mitigation is short-lived rotation via the Cloud UI and TF reapply.</p>
+<h3 id="49-rbac-and-sso">4.9 RBAC and SSO</h3>
+<p><strong>SSO</strong> (modules/sso/) — Azure AD OAuth2 with JMESPath role mapping. Three Azure AD groups map to
+Admin / Editor / Viewer at login. <code>azure_ad_client_secret</code> flows in via
+<code>TF_VAR_azure_ad_client_secret</code> (from <code>.env</code> locally, GitHub secret in CI).</p>
+<p><strong>RBAC</strong> (modules/rbac/) —</p>
+<ul>
+<li>One Grafana team per product (sourced from <code>products.yml</code>).</li>
+<li>The <code>sre</code> team is treated as the admin team — receives a wildcard LBAC rule
+(<code>{deployment_environment=~".+"}</code>) for explicit, documented unrestricted access.</li>
+<li>The <code>visitors</code> team is created via an explicit merge (it lives in <code>meta:</code> and is not in
+<code>module.computed.products</code>); receives an empty LBAC scope by default — no data access until
+granted.</li>
+<li>Per-product folder permissions wire <code>module.dashboards.folder_uids</code> to <code>module.rbac</code> through
+<code>product_folder_mapping</code> for each product that declares <code>grafana.folder_key</code>.</li>
+</ul>
+<p><strong>Why explicit rules everywhere.</strong> Grafana’s default behaviour (“no rules = query all data”) is a
+fail-open posture. Every team that touches a data source gets an explicit rule — including SRE
+(wildcard) and visitors (empty list). This is verified in <code>module.lbac</code> by the structure of
+<code>lbac_teams</code>.</p>
+<h3 id="410-alerting-and-oncall">4.10 Alerting and OnCall</h3>
+<p><strong>Contact points</strong> are merged from <code>meta:</code> (shared SRE channels) and <code>products:</code> (per-product
+channels) by <code>module.computed.contact_points</code>. Webhook URLs are inline in <code>products.yml</code> — no KV
+indirection.</p>
+<p><strong>Notification policy</strong> is single-rooted, with a primary route per product environment derived from
+<code>use_contact_points[0]</code> (rendered into the alert rule JSON by <code>tools/generate.py</code> as
+<code>[[ contact_point ]]</code>). Indices 1+ produce extra notification routes via
+<code>module.computed.extra_notification_routes</code> matched on <code>deployment_environment</code>.</p>
+<p><strong>Mute timings</strong>, <strong>inhibition</strong>, and <strong>per-tier escalation</strong> are owned by <code>module.alerting</code>.</p>
+<p><strong>OnCall</strong> is provider-aliased separately. <code>module.irm_oncall</code> reads
+<code>module.computed.product_oncall_configs</code> (filtered to <code>oncall.enabled = true</code>) and creates
+schedule + escalation chain + integration. The integration URL is fed back into
+<code>module.alerting.oncall_contact_points</code>, completing the loop alert-rule → contact-point → OnCall
+integration → schedule → escalation.</p>
+<p><strong>Destroy hazard.</strong> The Grafana provider cannot truly delete <code>grafana_notification_policy</code>; its
+destroy action PUTs TF-state values back, which re-pins the root receiver and causes 409s on
+contact-point deletion. <code>tf.sh destroy</code> works around this with five pre-destroy steps (reset policy
+via API, delete pinned alert rules, remove policy from state, reset again before apply-destroy). See
+tf.sh and CLAUDE.md §destroy workflow.</p>
+<h3 id="411-slos-and-synthetic-monitoring">4.11 SLOs and Synthetic Monitoring</h3>
+<p><strong>SLOs</strong> (modules/slo/) — bound to the built-in <code>grafanacloud-prom</code> data source (the SLO plugin
+doesn’t accept custom DS UIDs). Three baseline SLOs: API availability 99.9%, p99 latency &#x3C; 500ms,
+error rate &#x3C; 0.1%, with fast/slow burn alerting.</p>
+<p><strong>Synthetic Monitoring</strong> (modules/synthetic-monitoring/) — currently <strong>commented out</strong> in both root
+modules. Blocked on <code>sm_access_token</code> retrieval from the Cloud UI. The module code is complete and
+ready; product checks (<code>module.computed.product_synthetic_checks</code>) are wired and waiting. k6 browser
+scripts under <code>synthetics/&#x3C;product>/&#x3C;env>.js</code> are committed.</p>
+<h3 id="412-fleet-management-planned">4.12 Fleet Management (planned)</h3>
+<p>modules/fleet-management/ is scaffolded but inactive. The intended architecture is <strong>one Alloy
+pipeline per (stack_environment × signal_type)</strong> — six pipelines total per stack (dev/staging/prod ×
+metrics/logs/traces). Templates live in alloy-configs/templates/ and consume KV-stored writer tokens
+at agent startup. Activation is gated on Fleet Management API stability and the
+<code>connections_api_access_token</code> flow.</p>
+<h3 id="413-cicd-shape">4.13 CI/CD shape</h3>
+<p>Plan and apply now run in <strong>HCP Terraform</strong> via VCS-driven workspaces — see <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd/">docs/cicd.md</a>
+for the full flow. GitHub Actions handles only what TFC does not (pre-flight checks, module-level
+testing, lint, security scan). Workflows under <code>.github/workflows/</code>:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Workflow</th><th>Trigger</th><th>Purpose</th></tr></thead><tbody><tr><td><code>plan.yml</code></td><td>PR on <code>environments/shipsoliddev/**</code> etc</td><td>Pre-flight only: generator-in-sync + <code>terraform fmt</code>. Plan runs in TFC.</td></tr><tr><td><code>plan-shipsolid.yml</code></td><td>PR on <code>environments/shipsolid/**</code> etc</td><td>Same pre-flight, scoped to prod paths.</td></tr><tr><td><code>drift.yml</code></td><td>Daily cron</td><td>Drift detect on <code>shipsoliddev</code>. Pending migration to TFC Health Assessments.</td></tr><tr><td><code>drift-shipsolid.yml</code></td><td>Daily cron</td><td>Drift detect on <code>shipsolid</code>. Pending migration.</td></tr><tr><td><code>test.yml</code></td><td>PR</td><td><code>terraform test</code> per module + tflint + checkov.</td></tr><tr><td><code>token-expiry.yml</code></td><td>Weekly cron</td><td>Inspects CAP token expiries; warns &#x3C; 30 days.</td></tr><tr><td><code>deploy-grafana-alerts-v1.yml</code></td><td>Manual</td><td>Legacy alert push (being deprecated by <code>module.product_alerts</code>).</td></tr><tr><td><code>deploy-grafana-k8s.yml</code></td><td>Manual / push to <code>grafana_k8s/**</code></td><td>Helm deploy of Alloy to AKS clusters.</td></tr><tr><td><code>deploy-grafana-synthetics.yml</code></td><td>Manual</td><td>Synthetic check deploy (paired with SM activation).</td></tr><tr><td><code>deploy-sm-probe.yml</code></td><td>Manual</td><td>Private probe deploy.</td></tr></tbody></table>
+<p><strong>Gating model.</strong> Apply approval lives in TFC: each workspace has its own approver list and
+Auto-apply is off for <code>grafana-tf-shipsolid</code>. Branch protection on <code>main</code> requires <code>test.yml</code> +
+<code>plan.yml</code> (pre-flight) to pass before merge.</p>
+<h3 id="414-companion-tooling--k8s-mirror">4.14 Companion tooling — <code>k8s/</code> mirror</h3>
+<p><code>grafana_tf/k8s/</code> is an exact mirror of the repo-root <code>grafana_k8s/</code>. The deploy workflow uses
+<code>grafana_k8s/</code> directly — <code>grafana_tf/k8s/</code> exists for discoverability. <strong>Both directories must be
+edited together.</strong> This is fragile; see §6 risks.</p>
+<hr>
+<h2 id="5-alternatives-considered">5. Alternatives Considered</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Alternative</th><th>Why rejected</th></tr></thead><tbody><tr><td><strong>Single root module with Terraform workspaces</strong></td><td>Shared backend prefix increases risk of cross-apply; provider tokens differ per stack and don’t map cleanly to workspaces; CI gating maps better to separate working dirs.</td></tr><tr><td><strong>Generate JSON at apply time via <code>local-exec</code></strong></td><td><code>terraform plan</code> becomes misleading — diff doesn’t reflect what apply will do. PR review value drops to zero.</td></tr><tr><td><strong>Don’t commit <code>generated/</code></strong></td><td>First-time contributors can’t see what TF actually applies; diff review of dashboard/alert changes becomes impossible.</td></tr><tr><td><strong>Manage Mimir + Loki LBAC DS via Terraform</strong></td><td>Attempted; Grafana Cloud silently no-ops on <code>grafana_data_source_permission</code> and <code>grafana_data_source_config_lbac_rules</code> for TF-provisioned sources (Gap 1/3). Manual UI creation is the only working path.</td></tr><tr><td><strong>Read all secrets from KV at plan time</strong></td><td>Breaks plan-time independence; KV outage = global plan outage. Provider-bootstrap secrets cannot be deferred to KV anyway.</td></tr><tr><td><strong>Use <code>data "grafana_data_source"</code> for auto-provisioned Cloud DS UIDs</strong></td><td>Grafana Cloud API returns 404 for 9/10 of these UIDs at plan time. Static map (<code>local.cloud_ds_uids</code>) is the working approach.</td></tr><tr><td><strong>Manage the auto-provisioned <code>grafanacloud-&#x3C;stack>-*</code> DS as TF resources</strong></td><td>Grafana Cloud Integrations reconciles them and silently reverts writes. Pure-output static map is the only stable representation.</td></tr><tr><td><strong>One JSON file per alert rule (not per group)</strong></td><td>Grafana provisioning API v1 is group-scoped; one-rule-per-file would mean fragmenting groups. Current <code>&#x3C;prod_key>-&#x3C;env_key>.json</code> per group matches the API’s natural unit.</td></tr><tr><td><strong><code>prevent_destroy = true</code> on all stacks/data sources today</strong></td><td>Currently <code>false</code> until GitHub Actions CI/CD is fully wired. With manual destroy-and-rebuild still in the workflow, <code>prevent_destroy = true</code> would block legitimate operator actions. Will flip to <code>true</code> once CI is the only apply path.</td></tr></tbody></table>
+<hr>
+<h2 id="6-risks-and-mitigations">6. Risks and Mitigations</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead><tbody><tr><td>R1</td><td>Manual LBAC DS in Grafana UI drifts (someone edits basic-auth, URL, or default flag).</td><td>Medium</td><td>LBAC silently fails open or DS auth breaks.</td><td>Read-only <code>scripts/get-lbac-uids.sh</code> for verification; runbook for re-paste after token rotation; future: nightly verification job.</td></tr><tr><td>R2</td><td>LBAC reader token rotated by TF (destroy-apply cycle), not re-pasted into UI.</td><td>Medium</td><td>”Authentication to data source failed” on Mimir/Loki dashboards.</td><td><code>prevent_destroy = true</code> on token resources today; <code>lbac_datasources_setup</code> output advertises <code>password_kv</code>; operations.md has the runbook.</td></tr><tr><td>R3</td><td>Generator drift — <code>products.yml</code> changed but <code>generated/</code> not regenerated and committed.</td><td>Medium</td><td>Stale dashboards/alerts; CI catches but only after PR.</td><td>CI <code>git diff --exit-code</code> after <code>generate.py</code>; pre-commit hook (planned) would catch locally.</td></tr><tr><td>R4</td><td><code>prevent_destroy = false</code> on <code>grafana_cloud_stack</code> allows accidental stack destroy.</td><td>Low</td><td>Catastrophic — full stack rebuild + LBAC re-bootstrap.</td><td><code>tf.sh destroy</code> requires typing the stack name as confirmation; will flip to <code>prevent_destroy = true</code> once CI is the only apply path.</td></tr><tr><td>R5</td><td>Provider-bootstrap secrets in <code>terraform.tfvars</code>.</td><td>Low</td><td>Token leakage if <code>.tfvars</code> accidentally committed.</td><td><code>.gitignore</code> covers <code>*.tfvars</code>; pre-commit <code>checkov</code>; short rotation cadence; CI uses GitHub secrets, not files.</td></tr><tr><td>R6</td><td><code>k8s/</code> and <code>grafana_k8s/</code> drift apart.</td><td>Medium</td><td>Silent — workflows use <code>grafana_k8s/</code>, edits to <code>grafana_tf/k8s/</code> have no runtime effect; reverse is missed in PR review.</td><td>Convention only today. Future: pre-commit hook to enforce identity, or symlink.</td></tr><tr><td>R7</td><td>Snake_case-only contact-point keys silently violated.</td><td>Low</td><td><code>for_each</code> map references resolve incorrectly; runtime breakage.</td><td>Convention; future: schema validator on <code>products.yml</code> in CI.</td></tr><tr><td>R8</td><td>Notification-policy destroy cannot fully delete (Grafana provider limitation).</td><td>High during destroy</td><td>409s on contact-point deletion mid-apply.</td><td><code>tf.sh destroy</code> runs five-step pre-destroy reset; documented in CLAUDE.md and operations.md.</td></tr><tr><td>R9</td><td>Auto-provisioned <code>grafanacloud-&#x3C;stack>-*</code> DS UIDs change between Grafana Cloud releases.</td><td>Very low</td><td>Static map in <code>modules/datasources/main.tf</code> becomes wrong; dashboards using <code>cloud_datasource_uids.*</code> break.</td><td>Annual review during provider bumps. Most dashboards use <code>module.datasources.mimir_uid</code> / <code>.loki_uid</code> instead.</td></tr><tr><td>R10</td><td>Two stacks share one Key Vault — wrong stack slug overwrites another stack’s secrets.</td><td>Very low</td><td>Cross-stack credential corruption.</td><td>Naming convention <code>grafana-&#x3C;stack_slug>-*</code> enforced in resource definitions; stack slug comes from <code>var.stack_slug</code> (per-root); no manual concatenation in module code.</td></tr><tr><td>R11</td><td><code>shipsoliddev</code>-only products (<code>signal_forge</code>) accidentally get <code>terraform_envs: [shipsoliddev, shipsolid]</code>.</td><td>Low</td><td>Premature prod onboarding without validation.</td><td>PR review; <code>plan-shipsolid.yml</code> would surface in plan.</td></tr></tbody></table>
+<hr>
+<h2 id="7-rollout--operational-model">7. Rollout / Operational Model</h2>
+<h3 id="71-stack-bootstrap-greenfield">7.1 Stack bootstrap (greenfield)</h3>
+<p>Per stack, one-time:</p>
+<ol>
+<li>Create the Grafana Cloud stack manually (Cloud UI → Stacks → New). Capture <code>stack_slug</code> and
+obtain a Cloud Access Policy admin token.</li>
+<li>Populate <code>environments/&#x3C;stack>/terraform.tfvars</code> from <code>.example</code> and <code>.env</code> from <code>.env.example</code>.</li>
+<li><code>./tf.sh init &#x3C;stack></code>.</li>
+<li><code>./tf.sh apply &#x3C;stack></code> — first apply: stack resources, SSO, RBAC, dashboards, alerts, KV writes.
+LBAC bindings no-op.</li>
+<li>Pull the LBAC checklist: <code>./tf.sh output lbac_datasources_setup &#x3C;stack></code>.</li>
+<li>In Grafana UI, create Mimir + Loki data sources using the checklist values + KV-fetched
+basic-auth passwords. Capture the auto-assigned UIDs.</li>
+<li>Update <code>products.yml</code> <code>meta.sre.&#x3C;stack>.lbac_datasources.{mimir,loki}.uid</code> with the captured
+UIDs.</li>
+<li><code>./tf.sh generate</code> → commit regenerated <code>dashboards/generated/&#x3C;stack>/</code> and
+<code>alert_rules/generated/&#x3C;stack>/</code>.</li>
+<li><code>./tf.sh apply &#x3C;stack></code> — second apply: LBAC bindings activate; dashboards and alerts resolve.</li>
+</ol>
+<h3 id="72-product-onboarding">7.2 Product onboarding</h3>
+<p>Per <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to/">docs/how-to.md</a>:</p>
+<ol>
+<li>Add the product entry to <code>products.yml</code>: <code>terraform_envs</code>, <code>platform</code>, <code>environments</code>, <code>team</code>,
+<code>contact_points</code>, <code>dashboard_flavours</code>, <code>alert_flavours</code>, optional <code>oncall</code>.</li>
+<li>If a dashboard or alert template is needed, add or modify under <code>dashboards/templates/</code> or
+<code>alert_rules/templates/</code>.</li>
+<li><code>./tf.sh generate</code> → commit updated <code>generated/</code> files.</li>
+<li>Open PR → TFC posts a speculative plan as a status check on the PR; review it there.</li>
+<li>Merge → TFC creates a non-speculative plan on <code>grafana-tf-shipsoliddev</code>; confirm in TFC UI to
+apply.</li>
+<li>After validation in <code>shipsoliddev</code>, open the <code>grafana-tf-shipsolid</code> workspace in TFC and confirm
+the prod apply.</li>
+</ol>
+<p><strong>No <code>.tf</code> changes</strong> are needed for routine onboarding. New custom modules need the full
+module-onboarding sequence in CLAUDE.md.</p>
+<h3 id="73-promotion-shipsoliddev--shipsolid">7.3 Promotion (<code>shipsoliddev</code> → <code>shipsolid</code>)</h3>
+<ul>
+<li>Same commit applies to both stacks; the codebase is identical.</li>
+<li>After merge to <code>main</code>, TFC queues a plan on each workspace whose trigger paths matched. A reviewer
+confirms <code>grafana-tf-shipsoliddev</code> first.</li>
+<li><code>grafana-tf-shipsolid</code> apply requires a separate explicit confirm in the TFC UI by an authorised
+approver. Workspace <strong>Auto-apply</strong> must remain off for prod.</li>
+<li>Drift detection runs daily on both stacks independently.</li>
+</ul>
+<h3 id="74-token-rotation">7.4 Token rotation</h3>
+<ul>
+<li><strong>Cloud Access Policy tokens (TF-managed):</strong> rotation = <code>terraform apply</code> after editing the
+resource (or recreating). Triggers re-write to KV; consumers pick up new tokens at next pod
+restart.</li>
+<li><strong><code>grafana_sa_token</code> (provider bootstrap):</strong> rotated in Cloud UI → update <code>terraform.tfvars</code> (or
+GitHub secret) → next apply.</li>
+<li><strong>LBAC reader tokens:</strong> rotated by destroy-apply only; re-paste into the UI is required
+afterwards. Avoid unless intentional.</li>
+<li><strong>Faro sourcemap token:</strong> 1-year <code>expires_at</code>, <code>lifecycle.ignore_changes = [expires_at]</code> so it
+doesn’t churn the plan; explicit rotation = taint and reapply.</li>
+</ul>
+<h3 id="75-drift-detection">7.5 Drift detection</h3>
+<ul>
+<li>Daily workflows run <code>terraform plan -detailed-exitcode</code> per stack.</li>
+<li>Non-zero exit code = drift. Job fails, posts to Teams via the SRE notification channel.</li>
+<li>Common drift sources: someone edited a dashboard in the UI, contact point modified, plugin
+auto-updated. Resolution: import or revert.</li>
+</ul>
+<hr>
+<h2 id="8-open-questions--future-work">8. Open Questions / Future Work</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Item</th><th>Notes</th></tr></thead><tbody><tr><td>OQ1</td><td>Activate Synthetic Monitoring.</td><td>Blocked on <code>sm_access_token</code> retrieval from Cloud UI. Module code complete.</td></tr><tr><td>OQ2</td><td>Activate Fleet Management.</td><td>Blocked on Fleet Management API stability + <code>connections_api_access_token</code> flow. Templates ready in <code>alloy-configs/</code>.</td></tr><tr><td>OQ3</td><td>Flip <code>prevent_destroy = true</code> on <code>grafana_cloud_stack</code> and data sources.</td><td>Once GitHub Actions is the only apply path.</td></tr><tr><td>OQ4</td><td>Replace <code>terraform.tfvars</code> provider-bootstrap secrets with GitHub Actions secrets fully.</td><td>Local development still needs <code>.env</code>; CI already uses secrets. Cleanup = removing <code>terraform.tfvars</code> from <code>environments/</code> and documenting the local <code>.env</code> flow as the only path.</td></tr><tr><td>OQ5</td><td>Schema-validate <code>products.yml</code>.</td><td>Catches snake_case violations, missing required fields, invalid <code>alert_flavours</code>. JSON Schema + pre-commit hook.</td></tr><tr><td>OQ6</td><td>De-duplicate <code>k8s/</code> and <code>grafana_k8s/</code>.</td><td>Either symlink or pre-commit hook to enforce identity. Symlink breaks Windows checkouts; pre-commit is safer.</td></tr><tr><td>OQ7</td><td>Nightly LBAC verification job.</td><td>Query Mimir + Loki DS via API, compare basic-auth user / URL / default flag against <code>lbac_datasources_setup</code> checklist; alert on drift.</td></tr><tr><td>OQ8</td><td>Per-team folder permissions are coarse (Editor / Viewer at folder root).</td><td>Sub-folder ACLs are not modelled. Add when a product needs to gate “ops” vs “developer” sub-views.</td></tr><tr><td>OQ9</td><td>Multi-region failover.</td><td>Not in scope; would require duplicating stacks per region and routing telemetry.</td></tr></tbody></table>
+<hr>
+<h2 id="9-glossary">9. Glossary</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Stack</strong> (Grafana Cloud)</td><td>A tenant — <code>shipsoliddev</code> or <code>shipsolid</code>. Each is a separate Grafana Cloud stack with its own URL, API, data sources, and state file.</td></tr><tr><td><strong>Environment</strong> (application)</td><td>A <code>deployment_environment</code> label value — <code>dev</code>, <code>staging</code>, <code>qa</code>, <code>prod</code>. Both stacks receive telemetry from all environments; LBAC enforces isolation.</td></tr><tr><td><strong>Product</strong></td><td>A <code>products.yml</code> entry. Owns a folder, team, environments, dashboards, alerts, contact points, optional OnCall and synthetics.</td></tr><tr><td><strong>Flavour</strong></td><td>A template directory key — <code>aks/standard</code>, <code>aca/standard</code>, <code>onprem/ot</code>, <code>sap/hwa</code>, <code>products/&#x3C;name></code>. Determines which JSON files are rendered.</td></tr><tr><td><strong><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac/">LBAC</a></strong></td><td>Label-Based Access Control. Per-team rules on Mimir/Loki data sources scoped by <code>deployment_environment</code>.</td></tr><tr><td><strong>CAP</strong></td><td>Cloud Access Policy. Grafana Cloud’s IAM primitive; scopes (<code>metrics:write</code>, <code>logs:read</code>, etc.) + label policies + realm.</td></tr><tr><td><strong>SoT</strong></td><td>Source of truth — <code>products.yml</code> for product config; <code>tools/stacks.yml</code> for stack registry.</td></tr></tbody></table>
+<hr>
+<h2 id="10-references">10. References</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Document</th><th>Topic</th></tr></thead><tbody><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules/">docs/modules.md</a></td><td>Module reference, naming, inputs/outputs.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to/">docs/how-to.md</a></td><td>Product, dashboard, alert onboarding.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/products/">docs/products.md</a></td><td><code>products.yml</code> schema and flavour system.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac/">docs/lbac.md</a></td><td>LBAC architecture, gaps, troubleshooting.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf-operations/">docs/operations.md</a></td><td>Token rotation, runbooks, cadences.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd/">docs/cicd.md</a></td><td>CI workflows, secrets, environments, drift.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets/">docs/key-vault-secrets.md</a></td><td>Full KV catalogue.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities/">docs/terraform-capabilities.md</a></td><td>Provider capabilities and known limitations.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/platform-configuration/">alloy-configs/README.md</a></td><td>Fleet Management Alloy templates.</td></tr><tr><td><a href="/notes/projects/platform-shipsolid/05-platform-configuration/platform-configuration/">README.md</a></td><td>Quickstart, prereqs, repo layout.</td></tr><tr><td>CLAUDE.md</td><td>Conventions and contributor guide.</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to","title":"grafana_tf — How-To Guides","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-operations","title":"grafana_tf — Operations","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","title":"grafana_tf — CI/CD Workflows","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","title":"Azure Key Vault Secrets — Reference","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac","title":"Label-Based Access Control (LBAC)","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules","title":"grafana_tf — Module Reference","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/products","title":"grafana_tf — Products Registry","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","title":"Technical Design — grafana_tf Platform","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities","title":"Grafana Terraform Provider — Capability Audit","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/platform-configuration","title":"05 — Platform Configuration","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/06-build-release/central-pipeline","title":"Adopting the ShipSolid Central Terraform CI/CD Pipeline","topic":"projects","noteType":"note"}];
+const edges = [{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-operations","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-operations","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-operations","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/products","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-operations","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules","target":"projects/platform-shipsolid/05-platform-configuration/platform-configuration","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/products","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/products","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/products","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/products","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","target":"projects/platform-shipsolid/06-build-release/central-pipeline","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","target":"projects/platform-shipsolid/06-build-release/central-pipeline","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/products","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-operations","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","target":"projects/platform-shipsolid/05-platform-configuration/platform-configuration","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 8 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> grafana_tf — CI/CD Workflows </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The platform runs on **HCP Terraform (TFC) with VCS-driven workspaces**.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Azure Key Vault Secrets — Reference </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>All secrets live in `mf-cc-dt-azrsrp-prd-kv`.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Label-Based Access Control (LBAC) </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>LBAC restricts what time-series data each Grafana team can query from Mimir and Loki.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> grafana_tf — Module Reference </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>All shared logic lives in `modules/`.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Grafana Terraform Provider — Capability Audit </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Audit of [grafana/grafana](https://registry.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/06-build-release/central-pipeline" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Adopting the ShipSolid Central Terraform CI/CD Pipeline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>- Org consistency across all ShipSolid Terraform repos (Grafana Cloud IaC, SDLC Portal infra,</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> grafana_tf — Module Reference </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>All shared logic lives in `modules/`.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/06-build-release/central-pipeline" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Adopting the ShipSolid Central Terraform CI/CD Pipeline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>- Org consistency across all ShipSolid Terraform repos (Grafana Cloud IaC, SDLC Portal infra,</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/alert-rules-catalog" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Alert Rules Catalog </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Catalog of alert rules managed by the platform (Terraform/config-driven).</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/collector-config-templates/collector-config-templates" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Collector Config Templates </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Reusable Alloy / OTel collector configuration templates by workload class.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/dashboard-catalog" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Dashboard Catalog </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Catalog of shared dashboards and the golden-signal starter pack.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/feature-flags-and-config-management" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Feature Flags &amp; Config Management </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How platform feature flags and configuration are managed and rolled out.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/products" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> grafana_tf — Products Registry </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Grafana Terraform Provider — Capability Audit </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#technical-design--grafana_tf-platform" data-slug="technical-design--grafana_tf-platform" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Technical Design — grafana_tf Platform</a></li><li data-astro-cid-xvrfupwn><a href="#1-context" data-slug="1-context" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Context</a></li><li data-astro-cid-xvrfupwn><a href="#11-what-this-is" data-slug="11-what-this-is" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>1.1 What this is</a></li><li data-astro-cid-xvrfupwn><a href="#12-why-this-design-exists" data-slug="12-why-this-design-exists" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>1.2 Why this design exists</a></li><li data-astro-cid-xvrfupwn><a href="#13-where-it-sits" data-slug="13-where-it-sits" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>1.3 Where it sits</a></li><li data-astro-cid-xvrfupwn><a href="#2-goals" data-slug="2-goals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Goals</a></li><li data-astro-cid-xvrfupwn><a href="#21-functional" data-slug="21-functional" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>2.1 Functional</a></li><li data-astro-cid-xvrfupwn><a href="#22-non-functional" data-slug="22-non-functional" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>2.2 Non-functional</a></li><li data-astro-cid-xvrfupwn><a href="#3-non-goals" data-slug="3-non-goals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Non-Goals</a></li><li data-astro-cid-xvrfupwn><a href="#4-design" data-slug="4-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Design</a></li><li data-astro-cid-xvrfupwn><a href="#41-repository-topology" data-slug="41-repository-topology" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.1 Repository topology</a></li><li data-astro-cid-xvrfupwn><a href="#42-two-stack-codebase" data-slug="42-two-stack-codebase" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.2 Two-stack codebase</a></li><li data-astro-cid-xvrfupwn><a href="#43-provider-aliases" data-slug="43-provider-aliases" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.3 Provider aliases</a></li><li data-astro-cid-xvrfupwn><a href="#44-productsyml--the-single-source-of-truth" data-slug="44-productsyml--the-single-source-of-truth" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.4 products.yml — the single source of truth</a></li><li data-astro-cid-xvrfupwn><a href="#45-observability-stack--the-data-hub" data-slug="45-observability-stack--the-data-hub" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.5 observability-stack — the data hub</a></li><li data-astro-cid-xvrfupwn><a href="#46-jinja2-generation-pipeline" data-slug="46-jinja2-generation-pipeline" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.6 Jinja2 generation pipeline</a></li><li data-astro-cid-xvrfupwn><a href="#47-lbac-architecture" data-slug="47-lbac-architecture" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.7 LBAC architecture</a></li><li data-astro-cid-xvrfupwn><a href="#48-azure-key-vault-integration" data-slug="48-azure-key-vault-integration" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.8 Azure Key Vault integration</a></li><li data-astro-cid-xvrfupwn><a href="#49-rbac-and-sso" data-slug="49-rbac-and-sso" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.9 RBAC and SSO</a></li><li data-astro-cid-xvrfupwn><a href="#410-alerting-and-oncall" data-slug="410-alerting-and-oncall" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.10 Alerting and OnCall</a></li><li data-astro-cid-xvrfupwn><a href="#411-slos-and-synthetic-monitoring" data-slug="411-slos-and-synthetic-monitoring" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.11 SLOs and Synthetic Monitoring</a></li><li data-astro-cid-xvrfupwn><a href="#412-fleet-management-planned" data-slug="412-fleet-management-planned" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.12 Fleet Management (planned)</a></li><li data-astro-cid-xvrfupwn><a href="#413-cicd-shape" data-slug="413-cicd-shape" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.13 CI/CD shape</a></li><li data-astro-cid-xvrfupwn><a href="#414-companion-tooling--k8s-mirror" data-slug="414-companion-tooling--k8s-mirror" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.14 Companion tooling — k8s/ mirror</a></li><li data-astro-cid-xvrfupwn><a href="#5-alternatives-considered" data-slug="5-alternatives-considered" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Alternatives Considered</a></li><li data-astro-cid-xvrfupwn><a href="#6-risks-and-mitigations" data-slug="6-risks-and-mitigations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Risks and Mitigations</a></li><li data-astro-cid-xvrfupwn><a href="#7-rollout--operational-model" data-slug="7-rollout--operational-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. Rollout / Operational Model</a></li><li data-astro-cid-xvrfupwn><a href="#71-stack-bootstrap-greenfield" data-slug="71-stack-bootstrap-greenfield" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.1 Stack bootstrap (greenfield)</a></li><li data-astro-cid-xvrfupwn><a href="#72-product-onboarding" data-slug="72-product-onboarding" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.2 Product onboarding</a></li><li data-astro-cid-xvrfupwn><a href="#73-promotion-shipsoliddev--shipsolid" data-slug="73-promotion-shipsoliddev--shipsolid" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.3 Promotion (shipsoliddev → shipsolid)</a></li><li data-astro-cid-xvrfupwn><a href="#74-token-rotation" data-slug="74-token-rotation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.4 Token rotation</a></li><li data-astro-cid-xvrfupwn><a href="#75-drift-detection" data-slug="75-drift-detection" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.5 Drift detection</a></li><li data-astro-cid-xvrfupwn><a href="#8-open-questions--future-work" data-slug="8-open-questions--future-work" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>8. Open Questions / Future Work</a></li><li data-astro-cid-xvrfupwn><a href="#9-glossary" data-slug="9-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>9. Glossary</a></li><li data-astro-cid-xvrfupwn><a href="#10-references" data-slug="10-references" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>10. References</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Label-Based Access Control (LBAC)</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Azure Key Vault Secrets — Reference</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — CI/CD Workflows</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — How-To Guides</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — CI/CD Workflows</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/key-vault-secrets" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Azure Key Vault Secrets — Reference</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/lbac" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Label-Based Access Control (LBAC)</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — Module Reference</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/terraform-capabilities" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Grafana Terraform Provider — Capability Audit</span></a><a href="/notes/projects/platform-shipsolid/06-build-release/central-pipeline" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Adopting the ShipSolid Central Terraform CI/CD Pipeline</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/modules" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — Module Reference</span></a><a href="/notes/projects/platform-shipsolid/06-build-release/central-pipeline" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Adopting the ShipSolid Central Terraform CI/CD Pipeline</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

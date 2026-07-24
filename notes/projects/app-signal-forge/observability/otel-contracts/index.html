@@ -1,0 +1,1553 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>OTel Signal Contracts — Notes — Amit Singh</title><meta name="description" content="The OpenTelemetry signal contracts—spans, metrics, and log fields—for every SignalForge service and the frontend RUM app."><link rel="canonical" href="https://shipsolid.github.io/notes/projects/app-signal-forge/observability/otel-contracts/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="OTel Signal Contracts — Notes — Amit Singh"><meta property="og:description" content="The OpenTelemetry signal contracts—spans, metrics, and log fields—for every SignalForge service and the frontend RUM app."><meta property="og:url" content="https://shipsolid.github.io/notes/projects/app-signal-forge/observability/otel-contracts/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="OTel Signal Contracts — Notes — Amit Singh"><meta name="twitter:description" content="The OpenTelemetry signal contracts—spans, metrics, and log fields—for every SignalForge service and the frontend RUM app."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-app-signal-forge" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>App Signal Forge</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-app-signal-forge-observability" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Observability</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> OTel Signal Contracts  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>The OpenTelemetry signal contracts—spans, metrics, and log fields—for every SignalForge service and the frontend RUM app.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated July 10, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202607091847-24</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/signal-forge" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Signal Forge</a><a href="/notes/tag/observability" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Observability</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:OTel Signal Contracts" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/app-signal-forge/observability/otel-contracts" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-07-10T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Signal Forge" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Observability" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="otel-signal-contracts">OTel Signal Contracts</h2>
+<p>Production-grade OpenTelemetry contracts for all four services in SignalForge. These contracts
+define the exact signals each service emits — span names, metric instrument names, log field
+schemas, and propagation mechanisms — so that dashboards, alerts, and the Alloy pipeline can be
+built and maintained against a stable interface.</p>
+<p><strong>OTel semantic convention version:</strong> 1.24 (stable attributes only unless noted) <strong>SDK versions:</strong>
+.NET OTel SDK 1.7+, Python <code>opentelemetry-sdk</code> 1.23+, Grafana Faro Web SDK 1.x</p>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#conventions">Conventions</a></li>
+<li><a href="#resource-attributes">Resource Attributes</a></li>
+<li><a href="#propagation">Propagation</a></li>
+<li><a href="#collector-enrichment">Collector Enrichment</a></li>
+<li><a href="#gateway-api">gateway-api</a></li>
+<li><a href="#order-api">order-api</a></li>
+<li><a href="#notification-svc">notification-svc</a></li>
+<li><a href="#frontend-faro-rum">frontend (Faro RUM)</a></li>
+<li><a href="#cross-service-trace-topology">Cross-Service Trace Topology</a></li>
+<li><a href="#validation-queries">Validation Queries</a></li>
+</ol>
+<hr>
+<h2 id="conventions">Conventions</h2>
+<h3 id="attribute-naming">Attribute naming</h3>
+<ul>
+<li>Custom attributes follow <code>domain.noun</code> dot-notation (e.g., <code>order.project_id</code>, <code>email.delay_ms</code>).</li>
+<li>OTel semantic convention attributes follow the published semconv spec and are not redefined here —
+only their presence on specific spans is called out.</li>
+<li>All attribute names are lowercase with underscores as word separators within each segment.</li>
+</ul>
+<h3 id="metric-naming">Metric naming</h3>
+<ul>
+<li>Instrument names follow <code>service_noun.measurement</code> with a <code>{unit}</code> suffix in the description.</li>
+<li>Prometheus exposition names are generated by the OTel → OTLP → Alloy → Prometheus pipeline: dots
+become underscores, <code>{unit}</code> suffix is dropped, <code>_total</code> is appended to Counter types.</li>
+<li>Exemplars are emitted on Histograms when <code>OTEL_METRICS_EXEMPLAR_FILTER=TRACE_BASED</code> is set (all
+.NET services) or when <code>TraceBased</code> exemplar filtering is enabled (Python).</li>
+</ul>
+<h3 id="unit-conventions">Unit conventions</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>OTel unit string</th><th>Description</th></tr></thead><tbody><tr><td><code>ms</code></td><td>Milliseconds (wall-clock duration)</td></tr><tr><td><code>{request}</code></td><td>Dimensionless count of HTTP requests</td></tr><tr><td><code>{order}</code></td><td>Dimensionless count of orders</td></tr><tr><td><code>{notification}</code></td><td>Dimensionless count of notifications</td></tr><tr><td><code>USD</code></td><td>US Dollars (monetary amount)</td></tr></tbody></table>
+<hr>
+<h2 id="resource-attributes">Resource Attributes</h2>
+<p>Resource attributes describe the entity producing telemetry. They are attached to every span, metric
+data point, and log record. Alloy’s <code>otelcol.processor.k8sattributes</code> enriches all signals with k8s
+attributes at the collector level, so services do not need to set them.</p>
+<h3 id="common-attributes-all-net-services">Common attributes (all .NET services)</h3>
+<p>Set by
+<code>ResourceBuilder.CreateDefault().AddService(name).AddTelemetrySdk().AddEnvironmentVariableDetector()</code>:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Attribute</th><th>Source</th><th>Example</th></tr></thead><tbody><tr><td><code>service.name</code></td><td><code>AddService()</code></td><td><code>"gateway-api"</code></td></tr><tr><td><code>service.version</code></td><td><code>AddService()</code> or env</td><td><code>"1.0.0"</code></td></tr><tr><td><code>telemetry.sdk.name</code></td><td><code>AddTelemetrySdk()</code></td><td><code>"opentelemetry"</code></td></tr><tr><td><code>telemetry.sdk.language</code></td><td><code>AddTelemetrySdk()</code></td><td><code>"dotnet"</code></td></tr><tr><td><code>telemetry.sdk.version</code></td><td><code>AddTelemetrySdk()</code></td><td><code>"1.7.0"</code></td></tr><tr><td><code>OTEL_RESOURCE_ATTRIBUTES.*</code></td><td><code>AddEnvironmentVariableDetector()</code></td><td>any k/v pairs</td></tr></tbody></table>
+<h3 id="common-attributes-notification-svc-python">Common attributes (notification-svc Python)</h3>
+<p>Set manually in <code>telemetry.py</code> via <code>Resource.create()</code>:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Attribute</th><th>Value</th></tr></thead><tbody><tr><td><code>service.name</code></td><td><code>"notification-svc"</code></td></tr><tr><td><code>service.namespace</code></td><td><code>"otel-lab"</code></td></tr><tr><td><code>service.version</code></td><td><code>"1.0.0"</code></td></tr><tr><td><code>deployment.environment</code></td><td><code>DEPLOYMENT_ENVIRONMENT</code> env var (default <code>"local"</code>)</td></tr></tbody></table>
+<h3 id="alloy-injected-k8s-attributes-all-services-collector-side">Alloy-injected k8s attributes (all services, collector-side)</h3>
+<p>Added by <code>otelcol.processor.k8sattributes</code> in the <code>alloy-receiver</code> pipeline:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Attribute</th><th>Example</th></tr></thead><tbody><tr><td><code>k8s.pod.name</code></td><td><code>"gateway-api-6f4b9d-xkpq2"</code></td></tr><tr><td><code>k8s.namespace.name</code></td><td><code>"otel-lab"</code></td></tr><tr><td><code>k8s.deployment.name</code></td><td><code>"gateway-api"</code></td></tr><tr><td><code>k8s.node.name</code></td><td><code>"k3d-otel-lab-server-0"</code></td></tr><tr><td><code>k8s.container.name</code></td><td><code>"gateway-api"</code></td></tr></tbody></table>
+<h3 id="frontend-faro-rum">Frontend (Faro RUM)</h3>
+<p>Set by <code>initializeFaro({ app: { ... } })</code>:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Attribute</th><th>Value</th></tr></thead><tbody><tr><td><code>app.name</code></td><td><code>"signal-forge"</code></td></tr><tr><td><code>app.version</code></td><td><code>"1.0.0"</code></td></tr><tr><td><code>app.environment</code></td><td><code>"production"</code> or <code>"local"</code></td></tr></tbody></table>
+<hr>
+<h2 id="propagation">Propagation</h2>
+<h3 id="http-gateway-api--order-api-via-grpc-gateway-api--notification-svc-rest">HTTP (gateway-api ↔ order-api via gRPC, gateway-api → notification-svc REST)</h3>
+<p><strong>Format:</strong> W3C TraceContext (<code>traceparent</code>, <code>tracestate</code>) + W3C Baggage <strong>Mechanism:</strong> .NET OTel
+SDK injects/extracts headers automatically via <code>AddGrpcClientInstrumentation</code> and
+<code>AddHttpClientInstrumentation</code>. No manual code required for HTTP/gRPC propagation.</p>
+<h3 id="rabbitmq-order-api-producer--notification-svc-consumer">RabbitMQ (order-api PRODUCER → notification-svc CONSUMER)</h3>
+<p><strong>Format:</strong> W3C TraceContext only (<code>traceparent</code> header) <strong>Inject side</strong> (<code>OrderPublisher.cs</code>):</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>RabbitMQ message header "traceparent" = UTF-8 bytes of W3C traceparent value</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><code>Propagators.DefaultTextMapPropagator.Inject()</code> writes each header as <code>byte[]</code> because RabbitMQ
+header values are typed as <code>object</code>.</p>
+<p><strong>Extract side</strong> (<code>consumer.py</code>):</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">ctx </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> extract(headers, </span><span style="color:#FFAB70">getter</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">HeadersGetter())  </span><span style="color:#6A737D"># decodes bytes → str</span></span>
+<span class="line"><span style="color:#E1E4E8">token </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> attach(ctx)</span></span>
+<span class="line"><span style="color:#6A737D"># ... create CONSUMER span with links=[Link(parent_span_ctx)] ...</span></span>
+<span class="line"><span style="color:#E1E4E8">detach(token)  </span><span style="color:#6A737D"># always in finally block</span></span>
+<span class="line"></span></code></pre>
+<p>The CONSUMER span uses a <strong>SpanLink</strong> (not parent-child) to the PRODUCER span context, per OTel
+messaging semconv for async operations.</p>
+<h3 id="browser--backend-faro--gateway-api">Browser → Backend (Faro → gateway-api)</h3>
+<p><strong>Format:</strong> W3C TraceContext (<code>traceparent</code>) injected into XHR/fetch request headers <strong>Scope:</strong>
+Applied to all requests matching <code>environment.apiBaseUrl</code> regex and <code>/http:\/\/localhost/</code>
+<strong>Mechanism:</strong> Faro <code>TracingInstrumentation</code> with <code>propagateTraceHeaderCorsUrls</code> configuration</p>
+<hr>
+<h2 id="collector-enrichment">Collector Enrichment</h2>
+<p>All OTLP signals flow through <code>alloy-receiver</code> (Helm-managed DaemonSet, <code>monitoring</code> namespace). The
+receiver pipeline applies:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Stage</th><th>Effect</th></tr></thead><tbody><tr><td><code>k8sattributes</code> processor</td><td>Adds <code>k8s.pod.name</code>, <code>k8s.namespace.name</code>, <code>k8s.deployment.name</code>, <code>k8s.node.name</code> to all signals</td></tr><tr><td>Span filter</td><td>Drops spans where <code>http.target == "/healthz"</code></td></tr><tr><td>Tail sampling</td><td>errors=100%, slow (>2s)=100%, remaining=25%</td></tr><tr><td>Spanmetrics connector</td><td>Generates RED metrics (<code>calls_total</code>, <code>duration_milliseconds_bucket</code>) per service/operation/status</td></tr><tr><td>OTLP export</td><td>Traces → Jaeger/Tempo, Metrics → Prometheus/Mimir, Logs → Loki</td></tr></tbody></table>
+<hr>
+<h2 id="gateway-api">gateway-api</h2>
+<p><strong>Service name:</strong> <code>gateway-api</code> <strong>Stack:</strong> .NET 8 Minimal API, MySQL 8 (EF Core + Pomelo), gRPC
+client (to order-api), HTTP client (to notification-svc)</p>
+<h3 id="traces">Traces</h3>
+<h4 id="auto-instrumented-spans">Auto-instrumented spans</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span name pattern</th><th>Kind</th><th>Key attributes</th><th>Notes</th></tr></thead><tbody><tr><td><code>HTTP {METHOD} {route}</code></td><td>SERVER</td><td><code>http.method</code>, <code>http.route</code>, <code>http.status_code</code>, <code>http.target</code>, <code>net.peer.ip</code>, <code>http.user_agent</code>, <code>plant.id</code></td><td>ASP.NET Core; <code>/healthz</code> excluded by filter</td></tr><tr><td><code>orders.OrderService/CreateOrder</code></td><td>CLIENT</td><td><code>rpc.system=grpc</code>, <code>rpc.service</code>, <code>rpc.method</code>, <code>rpc.grpc.status_code</code></td><td>gRPC client to order-api</td></tr><tr><td><code>orders.OrderService/GetOrdersByProject</code></td><td>CLIENT</td><td>same as above</td><td>gRPC client to order-api</td></tr><tr><td><code>orders.OrderService/GetOrder</code></td><td>CLIENT</td><td>same as above</td><td>gRPC client to order-api</td></tr><tr><td><code>HTTP GET</code> / <code>HTTP POST</code></td><td>CLIENT</td><td><code>http.url</code>, <code>http.method</code>, <code>http.status_code</code></td><td>HTTP client to notification-svc</td></tr><tr><td><code>{db operation} {table}</code></td><td>CLIENT</td><td><code>db.system=mysql</code>, <code>db.name</code>, <code>db.statement</code> (SQL), <code>db.operation</code></td><td>EF Core + Pomelo; <code>SetDbStatementForText=true</code></td></tr></tbody></table>
+<p><code>EnrichWithHttpRequest</code> adds to every SERVER span:</p>
+<ul>
+<li><code>net.peer.ip</code> — caller’s remote IP address</li>
+<li><code>http.user_agent</code> — caller’s User-Agent header</li>
+<li><code>plant.id</code> — forwarded <code>X-Plant-Id</code> header value (if present)</li>
+</ul>
+<p><code>RecordException=true</code> attaches exception events on all unhandled exceptions with:</p>
+<ul>
+<li><code>exception.type</code></li>
+<li><code>exception.message</code></li>
+<li><code>exception.stacktrace</code></li>
+</ul>
+<h4 id="custom-spans">Custom spans</h4>
+<p>All custom spans use <code>ActivityKind.Internal</code> unless otherwise noted.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span name</th><th>Parent</th><th>Attributes</th><th>Status</th></tr></thead><tbody><tr><td><code>gateway.get_projects</code></td><td>HTTP SERVER span</td><td><em>(none)</em></td><td>OK or ERROR on exception</td></tr><tr><td><code>gateway.get_project</code></td><td>HTTP SERVER span</td><td><code>project.id</code></td><td>ERROR + description on 404</td></tr><tr><td><code>gateway.create_project</code></td><td>HTTP SERVER span</td><td><code>project.id</code> (set after DB write)</td><td>OK or ERROR on exception</td></tr><tr><td><code>gateway.delete_project</code></td><td>HTTP SERVER span</td><td><code>project.id</code></td><td>ERROR + description on 404</td></tr><tr><td><code>gateway.fanout</code> (orders)</td><td>HTTP SERVER span</td><td><code>order.project_id</code>, <code>order.id</code></td><td>ERROR + RecordException on failure</td></tr><tr><td><code>gateway.fanout</code> (project orders)</td><td>HTTP SERVER span</td><td><code>project.id</code></td><td>OK; <code>gateway.downstream.duration</code> recorded with <code>downstream=order-api</code>, <code>operation=GetOrdersByProject</code></td></tr><tr><td><code>gateway.slow</code></td><td>HTTP SERVER span</td><td><code>delay.ms</code> (2000–5000ms random)</td><td>OK</td></tr><tr><td><code>gateway.error</code></td><td>HTTP SERVER span</td><td><em>(none)</em></td><td>ERROR; RecordException on thrown <code>InvalidOperationException</code></td></tr></tbody></table>
+<h3 id="metrics">Metrics</h3>
+<h4 id="custom-instruments">Custom instruments</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Instrument name</th><th>Type</th><th>Unit</th><th>Dimensions</th><th>Description</th></tr></thead><tbody><tr><td><code>gateway.requests.inflight</code></td><td>UpDownCounter&#x3C;long></td><td><code>{request}</code></td><td><em>(none)</em></td><td>Active in-flight HTTP requests, excluding <code>/healthz</code></td></tr><tr><td><code>gateway.downstream.duration</code></td><td>Histogram&#x3C;double></td><td><code>ms</code></td><td><code>downstream</code>, <code>operation</code></td><td>Latency of downstream service calls (gRPC or HTTP)</td></tr></tbody></table>
+<p>Prometheus exposition names:</p>
+<ul>
+<li><code>gateway_requests_inflight</code></li>
+<li><code>gateway_downstream_duration_milliseconds_{bucket,count,sum}</code></li>
+</ul>
+<h4 id="standard-instruments">Standard instruments</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Source</th><th>Instrument prefix</th><th>Notes</th></tr></thead><tbody><tr><td><code>AddAspNetCoreInstrumentation()</code></td><td><code>http.server.*</code></td><td>Request count, duration, active requests</td></tr><tr><td><code>AddRuntimeInstrumentation()</code></td><td><code>dotnet.*</code></td><td>GC collections, heap size, thread pool</td></tr><tr><td><code>AddProcessInstrumentation()</code></td><td><code>process.*</code></td><td>CPU time, working set, virtual memory, file descriptors</td></tr></tbody></table>
+<h4 id="exemplars">Exemplars</h4>
+<p><code>OTEL_METRICS_EXEMPLAR_FILTER=TRACE_BASED</code> is set in the K8s Deployment. Histograms emit
+<a href="/notes/projects/app-signal-forge/observability/exemplars/">exemplars</a> carrying <code>trace_id</code> and <code>span_id</code>
+when the recording happens inside a sampled trace. This links Prometheus metric data points to their
+source trace in Jaeger/Tempo.</p>
+<h3 id="logs">Logs</h3>
+<p><strong>Format:</strong> JSON via <code>AddJsonConsole()</code> on stdout <strong>OTel export:</strong> <code>AddOpenTelemetry()</code> on
+<code>ILoggingBuilder</code> with <code>IncludeFormattedMessage=true</code>, <code>IncludeScopes=true</code>, <code>ParseStateValues=true</code></p>
+<p>Log records emitted in request handlers include a manually injected <code>TraceId</code> structured parameter
+alongside the message template parameters. This is in addition to the OTel SDK’s automatic
+<code>TraceId</code>/<code>SpanId</code> injection on exported log records.</p>
+<p><strong>Structured log fields (JSON keys on stdout):</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Example</th><th>Source</th></tr></thead><tbody><tr><td><code>Timestamp</code></td><td>ISO-8601 string</td><td><code>"2024-11-15T10:23:45.123Z"</code></td><td>.NET logging</td></tr><tr><td><code>Level</code></td><td>string</td><td><code>"Information"</code></td><td>.NET logging</td></tr><tr><td><code>Message</code></td><td>string</td><td><code>"Created project 42"</code></td><td>formatted message</td></tr><tr><td><code>SourceContext</code></td><td>string</td><td><code>"GatewayApi.Endpoints.ProjectEndpoints"</code></td><td>logger category</td></tr><tr><td><code>TraceId</code></td><td>string (32-hex)</td><td><code>"4bf92f3577b34da6..."</code></td><td>manual injection</td></tr><tr><td><code>SpanId</code></td><td>string (16-hex)</td><td><code>"00f067aa0ba902b7"</code></td><td>OTel SDK (via OTLP export)</td></tr><tr><td><code>{ParameterName}</code></td><td>varies</td><td><code>ProjectId: 42</code></td><td><code>ParseStateValues=true</code></td></tr></tbody></table>
+<p><strong><a href="/notes/projects/app-signal-forge/observability/correlation/">Log-to-trace correlation</a>:</strong> Alloy’s
+<code>loki.process</code> pipeline extracts <code>TraceId</code> and <code>SpanId</code> from the JSON log line and promotes them as
+Loki structured metadata (<code>traceID</code>, <code>spanID</code>). Grafana uses these to surface “Logs for this span”
+in the Tempo trace view.</p>
+<hr>
+<h2 id="order-api">order-api</h2>
+<p><strong>Service name:</strong> <code>order-api</code> <strong>Stack:</strong> .NET 8 gRPC server, PostgreSQL 16 (EF Core + Npgsql 8),
+RabbitMQ publisher</p>
+<h3 id="traces-1">Traces</h3>
+<h4 id="auto-instrumented-spans-1">Auto-instrumented spans</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span name pattern</th><th>Kind</th><th>Key attributes</th><th>Notes</th></tr></thead><tbody><tr><td><code>orders.OrderService/CreateOrder</code></td><td>SERVER</td><td><code>rpc.system=grpc</code>, <code>rpc.service=orders.OrderService</code>, <code>rpc.method=CreateOrder</code>, <code>net.peer.ip</code>, <code>http.user_agent</code>, <code>plant.id</code></td><td>ASP.NET Core gRPC middleware</td></tr><tr><td><code>orders.OrderService/GetOrdersByProject</code></td><td>SERVER</td><td>same; streaming RPC; span covers full stream duration</td><td></td></tr><tr><td><code>orders.OrderService/GetOrder</code></td><td>SERVER</td><td>same</td><td></td></tr><tr><td><code>{db operation} {table}</code></td><td>CLIENT</td><td><code>db.system=postgresql</code>, <code>db.name</code>, <code>db.statement</code> (SQL), <code>db.operation</code></td><td>EF Core + Npgsql; <code>SetDbStatementForText=true</code></td></tr><tr><td>Npgsql driver spans</td><td>CLIENT</td><td><code>db.system=postgresql</code>, connection attributes</td><td>Source: <code>"Npgsql"</code> ActivitySource; registered via <code>AddSource("Npgsql")</code></td></tr></tbody></table>
+<p><code>EnrichWithHttpRequest</code> adds <code>net.peer.ip</code>, <code>http.user_agent</code>, and <code>plant.id</code> (from <code>X-Plant-Id</code>
+header) to every gRPC SERVER span.</p>
+<h4 id="custom-spans-1">Custom spans</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span name</th><th>Kind</th><th>Parent</th><th>Attributes</th><th>Status / Events</th></tr></thead><tbody><tr><td><code>order.create</code></td><td>INTERNAL</td><td>gRPC SERVER span</td><td><code>order.project_id</code> (set on entry), <code>order.amount</code>, <code>order.id</code> (set after <code>SaveChangesAsync</code>)</td><td>ERROR + RecordException on unhandled exception</td></tr><tr><td><code>order.get_by_project</code></td><td>INTERNAL</td><td>gRPC SERVER span</td><td><code>order.project_id</code></td><td>OK</td></tr><tr><td><code>order.get</code></td><td>INTERNAL</td><td>gRPC SERVER span</td><td><code>order.id</code></td><td>ERROR with description <code>"Order not found"</code> on 404</td></tr><tr><td><code>order.publish</code></td><td>PRODUCER</td><td><code>order.create</code> span</td><td><code>messaging.system=rabbitmq</code>, <code>messaging.destination=orders</code>, <code>messaging.destination_kind=exchange</code>, <code>messaging.rabbitmq.routing_key=order.created</code>, <code>order.id</code></td><td>OK</td></tr></tbody></table>
+<p><strong><code>order.publish</code> propagation detail:</strong> <code>Propagators.DefaultTextMapPropagator.Inject()</code> writes the
+W3C <code>traceparent</code> (and <code>tracestate</code> if present) into <code>IBasicProperties.Headers</code> as <code>byte[]</code> (UTF-8
+encoded strings). The Python consumer’s <code>HeadersGetter</code> decodes these back to strings.</p>
+<h3 id="metrics-1">Metrics</h3>
+<h4 id="custom-instruments-1">Custom instruments</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Instrument name</th><th>Type</th><th>Unit</th><th>Dimensions</th><th>Prometheus name</th></tr></thead><tbody><tr><td><code>orders.created.total</code></td><td>Counter&#x3C;long></td><td><code>{order}</code></td><td>none</td><td><code>orders_created_total</code></td></tr><tr><td><code>orders.amount.total</code></td><td>Counter&#x3C;double></td><td><code>USD</code></td><td>none</td><td><code>orders_amount_total</code></td></tr><tr><td><code>orders.processing.duration</code></td><td>Histogram&#x3C;double></td><td><code>ms</code></td><td>none</td><td><code>orders_processing_duration_milliseconds_{bucket,count,sum}</code></td></tr></tbody></table>
+<p>None of these carry a <code>project_id</code> dimension — it’s unbounded (grows with every project ever
+created), and this project’s own engineering principles flag unbounded/high-churn labels as an
+automatic stop for metrics. Per-project drill-down uses the <code>order.project_id</code> span attribute (set
+on <code>order.create</code>) and this histogram’s trace-based exemplar instead — both can safely carry
+high-cardinality IDs.</p>
+<p><strong><code>orders.processing.duration</code></strong> measures wall-clock time from the start of <code>order.create</code> to the DB
+write committing — not to completion of <code>OrderPublisher.Publish()</code>, which no longer happens inline
+(see the outbox pattern: <code>OutboxRelayWorker</code> publishes later, out-of-band, in its own poll loop).
+Because this recording happens inside a sampled trace, it carries a trace exemplar.</p>
+<h4 id="standard-instruments-1">Standard instruments</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Source</th><th>Instrument prefix</th></tr></thead><tbody><tr><td><code>AddAspNetCoreInstrumentation()</code></td><td><code>http.server.*</code> (gRPC calls appear as HTTP/2)</td></tr><tr><td><code>AddRuntimeInstrumentation()</code></td><td><code>dotnet.*</code></td></tr><tr><td><code>AddProcessInstrumentation()</code></td><td><code>process.*</code></td></tr></tbody></table>
+<h3 id="logs-1">Logs</h3>
+<p>Same format and OTel configuration as gateway-api (JSON console, <code>ParseStateValues=true</code>).
+Structured parameters per log site:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Log site</th><th>Parameters</th><th>Level</th></tr></thead><tbody><tr><td><code>CreateOrder</code> completion</td><td><code>OrderId</code>, <code>ProjectId</code>, <code>Amount</code>, <code>TraceId</code></td><td>Information</td></tr><tr><td><code>GetOrdersByProject</code> completion</td><td><code>Count</code>, <code>ProjectId</code>, <code>TraceId</code></td><td>Information</td></tr><tr><td><code>OrderPublisher.Publish</code> completion</td><td><code>OrderId</code>, <code>TraceId</code></td><td>Information</td></tr></tbody></table>
+<hr>
+<h2 id="notification-svc">notification-svc</h2>
+<p><strong>Service name:</strong> <code>notification-svc</code> <strong>Stack:</strong> Python 3.11, FastAPI, pika (RabbitMQ consumer),
+redis-py, pythonjsonlogger</p>
+<h3 id="traces-2">Traces</h3>
+<h4 id="auto-instrumented-spans-2">Auto-instrumented spans</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span name pattern</th><th>Kind</th><th>Key attributes</th><th>Notes</th></tr></thead><tbody><tr><td><code>{METHOD} {route}</code></td><td>SERVER</td><td><code>http.method</code>, <code>http.route</code>, <code>http.status_code</code>, <code>http.url</code></td><td>FastAPI via <code>FastAPIInstrumentor</code>; <code>/healthz</code> excluded</td></tr><tr><td><code>redis {command}</code></td><td>CLIENT</td><td><code>db.system=redis</code>, <code>db.statement={COMMAND args}</code>, <code>net.peer.name</code>, <code>net.peer.port</code></td><td><code>RedisInstrumentor().instrument()</code> — all commands: <code>EXISTS</code>, <code>HSET</code>, <code>EXPIRE</code>, <code>SET</code>, <code>LPUSH</code>, <code>LTRIM</code>, <code>LRANGE</code>, <code>HGETALL</code></td></tr></tbody></table>
+<h4 id="custom-spans-2">Custom spans</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span name</th><th>Kind</th><th>Relationship</th><th>Attributes</th><th>Events / Status</th></tr></thead><tbody><tr><td><code>notification.process</code></td><td>CONSUMER</td><td>SpanLink to PRODUCER span context</td><td><code>messaging.system=rabbitmq</code>, <code>messaging.operation=receive</code>, <code>messaging.source.name=orders</code>, <code>messaging.rabbitmq.routing_key=order.created</code>, <code>order.id</code>, <code>order.project_id</code></td><td>Exception recorded on unhandled error; span ends after <code>basic_ack</code> or <code>basic_nack</code></td></tr><tr><td><code>notification.send_email</code></td><td>INTERNAL</td><td>Child of <code>notification.process</code></td><td><code>email.order_id</code>, <code>email.delay_ms</code></td><td>OK always (mock)</td></tr></tbody></table>
+<p><strong>Link relationship on <code>notification.process</code>:</strong> The span link (<code>links=[Link(parent_span_ctx)]</code>)
+preserves the async trace relationship without forcing a parent-child timing dependency. In Jaeger,
+linked spans render as dashed arrows from the PRODUCER, making the queue-crossing visible without
+falsely representing the CONSUMER as temporally subordinate to the PRODUCER.</p>
+<p><strong>Context lifecycle:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>token = attach(ctx)       # install extracted context on this thread</span></span>
+<span class="line"><span># ... span and all children automatically inherit context ...</span></span>
+<span class="line"><span>finally: detach(token)    # always; prevents context leak across message deliveries</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="metrics-2">Metrics</h3>
+<h4 id="custom-instruments-2">Custom instruments</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Instrument name</th><th>Type</th><th>Unit</th><th>Dimensions</th><th>Prometheus name</th></tr></thead><tbody><tr><td><code>notifications.processed.total</code></td><td>Counter</td><td><code>{notification}</code></td><td><code>status</code> (<code>success</code> | <code>duplicate</code> | <code>failed</code>)</td><td><code>notifications_processed_total</code></td></tr><tr><td><code>notifications.processing.duration</code></td><td>Histogram</td><td><code>ms</code></td><td><em>(none)</em></td><td><code>notifications_processing_duration_milliseconds_{bucket,count,sum}</code></td></tr><tr><td><code>notifications.email.send.duration</code></td><td>Histogram</td><td><code>ms</code></td><td><em>(none)</em></td><td><code>notifications_email_send_duration_milliseconds_{bucket,count,sum}</code></td></tr></tbody></table>
+<p><strong><code>notifications.processing.duration</code></strong> covers the full <code>handle_order_created</code> lifecycle: dedup
+Redis check + Redis write + mock email send. Recorded unconditionally (including for duplicates,
+where it measures only the dedup check).</p>
+<p><strong>Export configuration:</strong> <code>PeriodicExportingMetricReader</code> with <code>export_interval_millis=15_000</code> —
+aligns with Prometheus default scrape interval to avoid gaps in dashboards.</p>
+<h3 id="logs-2">Logs</h3>
+<p><strong>Format:</strong> pythonjsonlogger <code>JsonFormatter</code> on <code>logging.StreamHandler(sys.stdout)</code> <strong>Format
+string:</strong> <code>"%(asctime)s %(name)s %(levelname)s %(message)s %(otelTraceID)s %(otelSpanID)s"</code></p>
+<p>After <code>LoggingInstrumentor().instrument()</code> is applied, every log record produced while a span is
+active gains:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Type</th><th>Example</th><th>Source</th></tr></thead><tbody><tr><td><code>asctime</code></td><td>string</td><td><code>"2024-11-15 10:23:45,123"</code></td><td>LogRecord</td></tr><tr><td><code>name</code></td><td>string</td><td><code>"app.consumer"</code></td><td>logger name</td></tr><tr><td><code>levelname</code></td><td>string</td><td><code>"INFO"</code></td><td>LogRecord</td></tr><tr><td><code>message</code></td><td>string</td><td><code>"Processed notification for order 42"</code></td><td>formatted message</td></tr><tr><td><code>otelTraceID</code></td><td>string (32-hex)</td><td><code>"4bf92f3577b34da6..."</code></td><td><code>LoggingInstrumentor</code></td></tr><tr><td><code>otelSpanID</code></td><td>string (16-hex)</td><td><code>"00f067aa0ba902b7"</code></td><td><code>LoggingInstrumentor</code></td></tr><tr><td><code>otelServiceName</code></td><td>string</td><td><code>"notification-svc"</code></td><td><code>LoggingInstrumentor</code></td></tr></tbody></table>
+<p><strong>OTLP log export:</strong> Disabled (<code>OTEL_LOGS_EXPORTER=none</code>). Logs reach Loki exclusively through
+Alloy’s <code>loki.source.kubernetes</code> pod log tailing pipeline. The <code>loki.process</code> stage extracts
+<code>otelTraceID</code> and <code>otelSpanID</code> from JSON lines and promotes them as Loki structured metadata for
+trace correlation.</p>
+<p><strong>Exception logging:</strong> <code>logger.exception("Failed to process order.created event")</code> — used instead of
+<code>logger.error(..., exc)</code> to include the full traceback without interpolating potentially sensitive
+exception message text into the log message string.</p>
+<hr>
+<h2 id="frontend-faro-rum-1">frontend (Faro RUM)</h2>
+<p><strong>App name:</strong> <code>signal-forge</code> <strong>Stack:</strong> Angular 17, Grafana Faro Web SDK, Faro Web Tracing
+(OTel-based), nginx</p>
+<h3 id="rum-signal-types">RUM Signal Types</h3>
+<p>Faro collects four signal types and ships them to the Grafana Faro collector endpoint (<code>FARO_URL</code>):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Signal type</th><th>Trigger</th><th>Example</th></tr></thead><tbody><tr><td><code>log</code></td><td><code>console.log/warn/error</code> calls captured by Faro console instrumentation</td><td><code>{level: "error", message: "..."}</code></td></tr><tr><td><code>exception</code></td><td>Unhandled JS exceptions, Angular <code>ErrorHandler</code></td><td><code>{type: "TypeError", value: "...", stacktrace: [...]}</code></td></tr><tr><td><code>event</code></td><td>Page load, navigation, custom events</td><td><code>{name: "page_view", domain: "browser"}</code></td></tr><tr><td><code>trace</code></td><td>XHR/fetch spans created by <code>TracingInstrumentation</code></td><td>OTel-format spans</td></tr></tbody></table>
+<h3 id="session-tracking">Session Tracking</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr><td><code>samplingRate</code></td><td><code>1</code> (100%)</td><td>Reduce to <code>0.1</code> in high-traffic production</td></tr><tr><td><code>persistent</code></td><td><code>true</code></td><td>Session ID survives page reloads via sessionStorage</td></tr></tbody></table>
+<h3 id="tracing-xhrfetch-spans">Tracing (XHR/fetch spans)</h3>
+<p><code>TracingInstrumentation</code> creates OTel-format CLIENT spans for every <code>XMLHttpRequest</code> and <code>fetch</code>
+call made by the Angular app and injects W3C <code>traceparent</code> into request headers.</p>
+<p><strong>Propagation scope</strong> — <code>traceparent</code> is injected only for URLs matching:</p>
+<ul>
+<li><code>environment.apiBaseUrl</code> (regex-escaped, e.g., <code>http://localhost:8080/api</code>)</li>
+<li><code>/http:\/\/localhost/</code> (any localhost URL)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Span attribute</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr><td><code>http.method</code></td><td><code>"GET"</code> / <code>"POST"</code> / <code>"DELETE"</code></td><td>HTTP verb</td></tr><tr><td><code>http.url</code></td><td>full request URL</td><td>e.g., <code>"http://localhost:8080/api/projects"</code></td></tr><tr><td><code>http.status_code</code></td><td>integer</td><td>set on response</td></tr><tr><td><code>component</code></td><td><code>"xml-http-request"</code> or <code>"fetch"</code></td><td>Faro tracing convention</td></tr></tbody></table>
+<h3 id="api-calls-and-their-trace-linkage">API calls and their trace linkage</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Angular method</th><th>HTTP call</th><th>Linked backend span</th></tr></thead><tbody><tr><td><code>getProjects()</code></td><td><code>GET /api/projects</code></td><td><code>gateway.get_projects</code></td></tr><tr><td><code>getProject(id)</code></td><td><code>GET /api/projects/{id}</code></td><td><code>gateway.get_project</code></td></tr><tr><td><code>createProject(...)</code></td><td><code>POST /api/projects</code></td><td><code>gateway.create_project</code></td></tr><tr><td><code>deleteProject(id)</code></td><td><code>DELETE /api/projects/{id}</code></td><td><code>gateway.delete_project</code></td></tr><tr><td><code>getOrdersByProject(id)</code></td><td><code>GET /api/projects/{id}/orders</code></td><td><code>gateway.fanout</code> → order-api</td></tr><tr><td><code>createOrder(...)</code></td><td><code>POST /api/orders</code></td><td><code>gateway.fanout</code> → <code>order.create</code> → <code>order.publish</code></td></tr><tr><td><code>getNotifications()</code></td><td><code>GET /api/notifications</code></td><td>notification-svc FastAPI span</td></tr><tr><td><code>triggerError()</code></td><td><code>GET /api/error</code></td><td><code>gateway.error</code></td></tr></tbody></table>
+<h3 id="beforesend-filter">beforeSend filter</h3>
+<p>Events whose JSON serialisation contains <code>"/healthz"</code> are dropped before transmission. This prevents
+nginx health-check poll noise from polluting the Faro event stream.</p>
+<hr>
+<h2 id="cross-service-trace-topology">Cross-Service Trace Topology</h2>
+<p>The complete 5-hop trace for a <code>POST /api/orders</code> request:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Browser["Browser (Faro)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A["[CLIENT] XHR fetch span&#x3C;br/>TracingInstrumentation, W3C traceparent → HTTP header"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph GW["gateway-api"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        B["[SERVER] HTTP POST /api/orders"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        C["[INTERNAL] gateway.fanout&#x3C;br/>tags: order.project_id, order.id"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        D["[CLIENT] orders.OrderService/CreateOrder (gRPC)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph OA["order-api"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        E["[SERVER] orders.OrderService/CreateOrder"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        F["[INTERNAL] order.create&#x3C;br/>tags: project_id, amount, id"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        G["[CLIENT] EF Core INSERT Orders&#x3C;br/>db.system=postgresql"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        H["[PRODUCER] order.publish&#x3C;br/>W3C traceparent → RabbitMQ header"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph NS["notification-svc"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        I["[CONSUMER] notification.process"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        J["[CLIENT] redis EXISTS (dedup)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        K["[CLIENT] redis HSET (store)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        L["[CLIENT] redis EXPIRE"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        M["[CLIENT] redis SET (dedup key)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        N["[CLIENT] redis LPUSH + LTRIM"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        O["[INTERNAL] notification.send_email"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    A --> B --> C --> D --> E --> F</span></span>
+<span class="line"><span style="color:#E1E4E8">    F --> G</span></span>
+<span class="line"><span style="color:#E1E4E8">    F --> H</span></span>
+<span class="line"><span style="color:#E1E4E8">    H -.->|SpanLink, async queue crossing| I</span></span>
+<span class="line"><span style="color:#E1E4E8">    I --> J --> K --> L --> M --> N</span></span>
+<span class="line"><span style="color:#E1E4E8">    I --> O</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Trace continuity rules:</strong></p>
+<ul>
+<li>Hops 1–4 (Browser → gateway-api → order-api) share the same <code>traceId</code> via HTTP/gRPC W3C header
+propagation — they form a connected parent-child tree.</li>
+<li>Hop 5 (RabbitMQ → notification-svc) shares the same <code>traceId</code> but is attached via a <code>SpanLink</code>
+rather than a parent reference, reflecting the asynchronous delivery model.</li>
+<li><code>notification.process</code> has <code>parentSpanId = nil</code> (it is a root span) but carries
+<code>links[0] = order.publish.spanContext</code>.</li>
+</ul>
+<hr>
+<h2 id="validation-queries">Validation Queries</h2>
+<h3 id="traces--jaeger">Traces — Jaeger</h3>
+<p>Verify the 5-hop async trace exists:</p>
+<ol>
+<li>In Jaeger UI, search service=<code>gateway-api</code>, operation=<code>HTTP POST /api/orders</code></li>
+<li>Open a trace — confirm it contains spans from all four services</li>
+<li>Confirm <code>order.publish</code> has a dashed link arrow to <code>notification.process</code></li>
+<li>Confirm <code>order.publish</code> and <code>notification.process</code> share the same <code>traceId</code></li>
+</ol>
+<h3 id="metrics--prometheus--promql">Metrics — Prometheus / PromQL</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span># Orders per second by project</span></span>
+<span class="line"><span>rate(orders_created_total[5m])</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># p99 order processing latency</span></span>
+<span class="line"><span>histogram_quantile(0.99, rate(orders_processing_duration_milliseconds_bucket[5m]))</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># Gateway downstream latency p95 per downstream service</span></span>
+<span class="line"><span>histogram_quantile(0.95,</span></span>
+<span class="line"><span>  rate(gateway_downstream_duration_milliseconds_bucket[5m]))</span></span>
+<span class="line"><span>by (downstream, operation, le)</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># Notification failure rate</span></span>
+<span class="line"><span>rate(notifications_processed_total{status="failed"}[5m])</span></span>
+<span class="line"><span>  /</span></span>
+<span class="line"><span>rate(notifications_processed_total[5m])</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># Inflight requests (gauge)</span></span>
+<span class="line"><span>gateway_requests_inflight</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="logs--loki--logql">Logs — Loki / LogQL</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span># Correlate logs for a specific trace ID</span></span>
+<span class="line"><span>{app="gateway-api"} | json | TraceId="&#x3C;traceId>"</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># notification-svc errors with trace context</span></span>
+<span class="line"><span>{app="notification-svc"} | json | levelname="ERROR"</span></span>
+<span class="line"><span>  | line_format "{{.message}} trace={{.otelTraceID}}"</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span># All services — log volume by level</span></span>
+<span class="line"><span>sum by (app, levelname) (</span></span>
+<span class="line"><span>  count_over_time({namespace="otel-lab"} | json [5m])</span></span>
+<span class="line"><span>)</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="exemplar-verification--grafana">Exemplar verification — Grafana</h3>
+<ol>
+<li>Open Grafana → Explore → Prometheus datasource</li>
+<li>Query <code>orders_processing_duration_milliseconds_bucket</code></li>
+<li>Enable “Exemplars” toggle</li>
+<li>Click an exemplar point — it should navigate to the corresponding Tempo trace</li>
+</ol>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"observability/06-opentelemetry/1-opentelemetry-architecture/opentelemetry-sdks-and-semantic-conventions","title":"1 — OpenTelemetry SDKs & Semantic Conventions","topic":"observability","noteType":"note"},{"slug":"projects/app-signal-forge/readme","title":"SignalForge Documentation","topic":"projects","noteType":"moc"},{"slug":"projects/app-signal-forge/observability/correlation","title":"Log-to-Trace Correlation","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/observability/exemplars","title":"Exemplars","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/observability/otel-contracts","title":"OTel Signal Contracts","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/observability/pipeline","title":"Observability Pipeline","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/observability/sampling","title":"Tail-Based Sampling","topic":"projects","noteType":"note"}];
+const edges = [{"source":"projects/app-signal-forge/observability/correlation","target":"projects/app-signal-forge/observability/pipeline","kind":"depends_on"},{"source":"projects/app-signal-forge/observability/correlation","target":"projects/app-signal-forge/observability/otel-contracts","kind":"related"},{"source":"projects/app-signal-forge/observability/exemplars","target":"projects/app-signal-forge/observability/pipeline","kind":"related"},{"source":"projects/app-signal-forge/observability/exemplars","target":"projects/app-signal-forge/observability/otel-contracts","kind":"related"},{"source":"projects/app-signal-forge/observability/correlation","target":"projects/app-signal-forge/observability/exemplars","kind":"compared_to"},{"source":"projects/app-signal-forge/observability/otel-contracts","target":"projects/app-signal-forge/observability/pipeline","kind":"related"},{"source":"projects/app-signal-forge/observability/otel-contracts","target":"projects/app-signal-forge/observability/sampling","kind":"related"},{"source":"projects/app-signal-forge/observability/pipeline","target":"projects/app-signal-forge/observability/sampling","kind":"depends_on"},{"source":"observability/06-opentelemetry/1-opentelemetry-architecture/opentelemetry-sdks-and-semantic-conventions","target":"projects/app-signal-forge/observability/otel-contracts","kind":"related"},{"source":"projects/app-signal-forge/observability/pipeline","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/observability/otel-contracts","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/observability/sampling","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/observability/correlation","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/observability/exemplars","target":"projects/app-signal-forge/readme","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/app-signal-forge/observability/otel-contracts";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 5 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/observability/correlation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Log-to-Trace Correlation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How SignalForge correlates logs to traces via node-level tailing and Loki structured metadata, across both local and cloud monitoring modes.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/observability/exemplars" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Exemplars </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How exemplars link histogram metric observations to sampled traces end-to-end, from SDK emission through Prometheus/Mimir to Grafana.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/observability/pipeline" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Observability Pipeline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How the Grafana Alloy collector pipeline differs between SignalForge&#39;s local (hand-authored River) and cloud (Helm chart) monitoring modes.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/observability/06-opentelemetry/1-opentelemetry-architecture/opentelemetry-sdks-and-semantic-conventions" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — OpenTelemetry SDKs &amp; Semantic Conventions </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>OpenTelemetry is a specification and an API/SDK, not a backend — the pieces that make it up, and the semantic-convention vocabulary that lets two unrelated teams&#39; telemetry be queried the same way.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> SignalForge Documentation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Documentation hub for the SignalForge OTel Microservices Validation Lab — architecture, services, API, deployment, observability, and operations.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/observability/correlation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Log-to-Trace Correlation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How SignalForge correlates logs to traces via node-level tailing and Loki structured metadata, across both local and cloud monitoring modes.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/observability/exemplars" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Exemplars </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How exemplars link histogram metric observations to sampled traces end-to-end, from SDK emission through Prometheus/Mimir to Grafana.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/observability/pipeline" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Observability Pipeline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How the Grafana Alloy collector pipeline differs between SignalForge&#39;s local (hand-authored River) and cloud (Helm chart) monitoring modes.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/observability/sampling" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Tail-Based Sampling </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How SignalForge&#39;s tail-based sampling policies decide which traces to keep, and why span metrics are generated before sampling runs.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/app-signal-forge/observability/otel-contracts.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/observability/exemplars" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Exemplars </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/observability/pipeline" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Observability Pipeline </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#otel-signal-contracts" data-slug="otel-signal-contracts" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>OTel Signal Contracts</a></li><li data-astro-cid-xvrfupwn><a href="#table-of-contents" data-slug="table-of-contents" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Table of Contents</a></li><li data-astro-cid-xvrfupwn><a href="#conventions" data-slug="conventions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Conventions</a></li><li data-astro-cid-xvrfupwn><a href="#attribute-naming" data-slug="attribute-naming" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Attribute naming</a></li><li data-astro-cid-xvrfupwn><a href="#metric-naming" data-slug="metric-naming" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metric naming</a></li><li data-astro-cid-xvrfupwn><a href="#unit-conventions" data-slug="unit-conventions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Unit conventions</a></li><li data-astro-cid-xvrfupwn><a href="#resource-attributes" data-slug="resource-attributes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Resource Attributes</a></li><li data-astro-cid-xvrfupwn><a href="#common-attributes-all-net-services" data-slug="common-attributes-all-net-services" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Common attributes (all .NET services)</a></li><li data-astro-cid-xvrfupwn><a href="#common-attributes-notification-svc-python" data-slug="common-attributes-notification-svc-python" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Common attributes (notification-svc Python)</a></li><li data-astro-cid-xvrfupwn><a href="#alloy-injected-k8s-attributes-all-services-collector-side" data-slug="alloy-injected-k8s-attributes-all-services-collector-side" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Alloy-injected k8s attributes (all services, collector-side)</a></li><li data-astro-cid-xvrfupwn><a href="#frontend-faro-rum" data-slug="frontend-faro-rum" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Frontend (Faro RUM)</a></li><li data-astro-cid-xvrfupwn><a href="#propagation" data-slug="propagation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Propagation</a></li><li data-astro-cid-xvrfupwn><a href="#http-gateway-api--order-api-via-grpc-gateway-api--notification-svc-rest" data-slug="http-gateway-api--order-api-via-grpc-gateway-api--notification-svc-rest" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>HTTP (gateway-api ↔ order-api via gRPC, gateway-api → notification-svc REST)</a></li><li data-astro-cid-xvrfupwn><a href="#rabbitmq-order-api-producer--notification-svc-consumer" data-slug="rabbitmq-order-api-producer--notification-svc-consumer" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>RabbitMQ (order-api PRODUCER → notification-svc CONSUMER)</a></li><li data-astro-cid-xvrfupwn><a href="#browser--backend-faro--gateway-api" data-slug="browser--backend-faro--gateway-api" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Browser → Backend (Faro → gateway-api)</a></li><li data-astro-cid-xvrfupwn><a href="#collector-enrichment" data-slug="collector-enrichment" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Collector Enrichment</a></li><li data-astro-cid-xvrfupwn><a href="#gateway-api" data-slug="gateway-api" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>gateway-api</a></li><li data-astro-cid-xvrfupwn><a href="#traces" data-slug="traces" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Traces</a></li><li data-astro-cid-xvrfupwn><a href="#metrics" data-slug="metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metrics</a></li><li data-astro-cid-xvrfupwn><a href="#logs" data-slug="logs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Logs</a></li><li data-astro-cid-xvrfupwn><a href="#order-api" data-slug="order-api" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>order-api</a></li><li data-astro-cid-xvrfupwn><a href="#traces-1" data-slug="traces-1" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Traces</a></li><li data-astro-cid-xvrfupwn><a href="#metrics-1" data-slug="metrics-1" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metrics</a></li><li data-astro-cid-xvrfupwn><a href="#logs-1" data-slug="logs-1" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Logs</a></li><li data-astro-cid-xvrfupwn><a href="#notification-svc" data-slug="notification-svc" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>notification-svc</a></li><li data-astro-cid-xvrfupwn><a href="#traces-2" data-slug="traces-2" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Traces</a></li><li data-astro-cid-xvrfupwn><a href="#metrics-2" data-slug="metrics-2" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metrics</a></li><li data-astro-cid-xvrfupwn><a href="#logs-2" data-slug="logs-2" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Logs</a></li><li data-astro-cid-xvrfupwn><a href="#frontend-faro-rum-1" data-slug="frontend-faro-rum-1" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>frontend (Faro RUM)</a></li><li data-astro-cid-xvrfupwn><a href="#rum-signal-types" data-slug="rum-signal-types" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>RUM Signal Types</a></li><li data-astro-cid-xvrfupwn><a href="#session-tracking" data-slug="session-tracking" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Session Tracking</a></li><li data-astro-cid-xvrfupwn><a href="#tracing-xhrfetch-spans" data-slug="tracing-xhrfetch-spans" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Tracing (XHR/fetch spans)</a></li><li data-astro-cid-xvrfupwn><a href="#api-calls-and-their-trace-linkage" data-slug="api-calls-and-their-trace-linkage" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>API calls and their trace linkage</a></li><li data-astro-cid-xvrfupwn><a href="#beforesend-filter" data-slug="beforesend-filter" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>beforeSend filter</a></li><li data-astro-cid-xvrfupwn><a href="#cross-service-trace-topology" data-slug="cross-service-trace-topology" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Cross-Service Trace Topology</a></li><li data-astro-cid-xvrfupwn><a href="#validation-queries" data-slug="validation-queries" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Validation Queries</a></li><li data-astro-cid-xvrfupwn><a href="#traces--jaeger" data-slug="traces--jaeger" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Traces — Jaeger</a></li><li data-astro-cid-xvrfupwn><a href="#metrics--prometheus--promql" data-slug="metrics--prometheus--promql" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metrics — Prometheus / PromQL</a></li><li data-astro-cid-xvrfupwn><a href="#logs--loki--logql" data-slug="logs--loki--logql" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Logs — Loki / LogQL</a></li><li data-astro-cid-xvrfupwn><a href="#exemplar-verification--grafana" data-slug="exemplar-verification--grafana" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Exemplar verification — Grafana</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/projects/app-signal-forge/observability/correlation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Log-to-Trace Correlation</span></a><a href="/notes/projects/app-signal-forge/observability/exemplars" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Exemplars</span></a><a href="/notes/projects/app-signal-forge/observability/pipeline" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Observability Pipeline</span></a><a href="/notes/projects/app-signal-forge/observability/sampling" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Tail-Based Sampling</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/app-signal-forge/observability/correlation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Log-to-Trace Correlation</span></a><a href="/notes/projects/app-signal-forge/observability/exemplars" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Exemplars</span></a><a href="/notes/projects/app-signal-forge/observability/pipeline" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Observability Pipeline</span></a><a href="/notes/observability/06-opentelemetry/1-opentelemetry-architecture/opentelemetry-sdks-and-semantic-conventions" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">1 — OpenTelemetry SDKs &amp; Semantic Conventions</span></a><a href="/notes/projects/app-signal-forge/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">SignalForge Documentation</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

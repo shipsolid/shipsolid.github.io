@@ -1,0 +1,664 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>How Alloy&#39;s Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout — Amit Singh</title><meta name="description" content="When Grafana Mimir slowed down, Alloy's default retry configuration — 200 parallel shard workers — consumed the majority of CPU on a shared VM, starving the co-located business process and forcing an engineer to kill the observability agent during an active incident. Here's the exact three-layer fix and why shared-VM deployments require explicit resource budgets at every level."><link rel="canonical" href="https://shipsolid.github.io/blog/2026-q2/20260526-alloy-max-shards-monitoring-blackout/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="How Alloy's Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout — Amit Singh"><meta property="og:description" content="When Grafana Mimir slowed down, Alloy's default retry configuration — 200 parallel shard workers — consumed the majority of CPU on a shared VM, starving the co-located business process and forcing an engineer to kill the observability agent during an active incident. Here's the exact three-layer fix and why shared-VM deployments require explicit resource budgets at every level."><meta property="og:url" content="https://shipsolid.github.io/blog/2026-q2/20260526-alloy-max-shards-monitoring-blackout/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="How Alloy's Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout — Amit Singh"><meta name="twitter:description" content="When Grafana Mimir slowed down, Alloy's default retry configuration — 200 parallel shard workers — consumed the majority of CPU on a shared VM, starving the co-located business process and forcing an engineer to kill the observability agent during an active incident. Here's the exact three-layer fix and why shared-VM deployments require explicit resource budgets at every level."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.copy-btn[data-astro-cid-bvzihdzo]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-bvzihdzo]:hover .copy-btn[data-astro-cid-bvzihdzo],.copy-btn[data-astro-cid-bvzihdzo]:focus-visible{opacity:1}.copy-btn[data-astro-cid-bvzihdzo]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CIHCLQex.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-bvzihdzo></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a>  <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-bvzihdzo> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-bvzihdzo> <div class="flex flex-wrap gap-2 mb-4" data-astro-cid-bvzihdzo> <a href="/blog/tag/sre" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> SRE </a><a href="/blog/tag/observability" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Observability </a><a href="/blog/tag/grafana" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Grafana </a><a href="/blog/tag/alloy" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Alloy </a><a href="/blog/tag/incident-response" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Incident Response </a><a href="/blog/tag/platform-engineering" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Platform Engineering </a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-bvzihdzo> How Alloy&#39;s Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-bvzihdzo>When Grafana Mimir slowed down, Alloy&#39;s default retry configuration — 200 parallel shard workers — consumed the majority of CPU on a shared VM, starving the co-located business process and forcing an engineer to kill the observability agent during an active incident. Here&#39;s the exact three-layer fix and why shared-VM deployments require explicit resource budgets at every level.</p> <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-bvzihdzo> <time datetime="2026-05-26T00:00:00.000Z" data-astro-cid-bvzihdzo>May 26, 2026</time> <span data-astro-cid-bvzihdzo>·</span> <span data-astro-cid-bvzihdzo>14 min read</span>  <div class="ml-auto flex items-center gap-4" data-astro-cid-bvzihdzo> <img src="https://hits.sh/shipsolid.github.io/blog/2026-q2/20260526-alloy-max-shards-monitoring-blackout.svg?style=flat-square&color=00d9a6&labelColor=1e293b&label=views" alt="view count" class="h-5 rounded" loading="eager" data-astro-cid-bvzihdzo> <a href="/rss.xml" class="flex items-center gap-1.5 text-slate-600 hover:text-accent transition-colors" title="RSS feed" data-astro-cid-bvzihdzo> <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20 4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" data-astro-cid-bvzihdzo></path> </svg>
+RSS
+</a> </div> </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-bvzihdzo> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-bvzihdzo> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Post" data-astro-cid-bvzihdzo> <span hidden data-pagefind-meta="title:How Alloy's Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout" data-astro-cid-bvzihdzo></span> <span hidden data-pagefind-meta="date:2026-05-26T00:00:00.000Z" data-astro-cid-bvzihdzo></span> <span hidden data-pagefind-filter="tag:SRE" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Observability" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Grafana" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Alloy" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Incident Response" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Platform Engineering" data-astro-cid-bvzihdzo></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-bvzihdzo>  <p>The production VM was running fine. Then Mimir had a hiccup. What happened next is the kind of
+failure that earns its own standing rule in the team runbook: Grafana Alloy — the observability
+agent deployed specifically to provide visibility — consumed so much CPU that the critical business
+process sharing the same VM was starved of resources. An engineer killed Alloy to rescue the
+business process. Monitoring went dark. The team operated blind during an active incident. MTTR
+grew.</p>
+<p>The root cause was not a bug. It was a default: <code>max_shards = 200</code>.</p>
+<hr>
+<h2 id="tldr">TL;DR</h2>
+<p>Grafana Alloy’s <code>prometheus.remote_write</code> component defaults to 200 parallel shard workers when
+retrying against a degraded backend. On a shared VM, this CPU flood stalls co-located workloads.</p>
+<p>The fix is three layers deep: OS-level CPU quota (<code>CPUQuota=30%</code> in systemd, Windows Job Object
+equivalent via Ansible), explicit <code>max_shards = 10</code> in the Alloy River config, and an independent
+self-monitoring path so Alloy’s health metrics don’t travel through the same congested pipeline
+they’re reporting on.</p>
+<p>Without all three layers, any backend degradation event can cascade into a monitoring blackout at
+the worst possible time.</p>
+<hr>
+<h2 id="the-problem">The Problem</h2>
+<p>The VM in question ran two workloads: Grafana Alloy forwarding metrics to a shared Mimir cluster,
+and a business-critical application. Neither workload had explicit CPU limits. This is typical in
+the early phases of an observability rollout — agents get installed and “it just works,” so resource
+governance doesn’t come up until something breaks.</p>
+<p>When the Mimir backend became temporarily slow, Alloy did not idle and wait. Its default behavior is
+to treat backend pressure as a signal to retry <em>harder</em>. The <code>remote_write</code> subsystem responds by
+spawning more parallel shard workers — up to the configured ceiling — all simultaneously attempting
+to flush the internal WAL-backed queue to the backend.</p>
+<p>With <code>max_shards</code> at the default of 200, Alloy can spawn two hundred goroutines in parallel, each
+churning through serialize → compress → HTTP POST → retry cycles. On a dual-core VM this ceiling is
+effectively unbounded relative to available compute. The business process — which has no special
+priority claim and no resource guarantee — was starved. CPU utilization hit the ceiling. The
+application became unresponsive.</p>
+<p>The engineer on call had one option: kill Alloy. This is the correct call — it protected the
+business process — but it introduced a monitoring blackout at exactly the moment when the team
+needed to understand the state of that same application.</p>
+<p>The business impact: extended MTTR, no diagnostic signal during incident response, and an engineer
+now operating on memory and intuition rather than dashboards and traces.</p>
+<hr>
+<h2 id="failure-chain">Failure Chain</h2>
+<h3 id="phase-1-backend-degradation">Phase 1: Backend Degradation</h3>
+<p>Mimir becomes slow or returns 5xx. This can be a transient overload, a network blip, or a downstream
+dependency failure. Alloy’s internal queue starts filling as samples accumulate faster than they
+drain.</p>
+<h3 id="phase-2-shard-escalation">Phase 2: Shard Escalation</h3>
+<p>Alloy’s <code>remote_write</code> queue manager interprets the growing queue depth as a throughput deficit. Its
+response is to spawn additional shard workers — parallel goroutines that each independently attempt
+to flush a batch to the backend. The default ceiling is <code>max_shards = 200</code>. Each worker is in a
+tight retry loop: serialize, compress, HTTP POST, receive 5xx or timeout, wait <code>min_backoff</code>, retry.</p>
+<h3 id="phase-3-cpu-saturation">Phase 3: CPU Saturation</h3>
+<p>Two hundred goroutines on a shared VM is not a load spike — it is sustained saturation. The Go
+runtime schedules across available CPUs, but the net effect is that a large fraction of the host’s
+compute is occupied by serialization, compression, and TCP retransmissions. The business process,
+running at normal priority with no CPU reservation, cannot get scheduled.</p>
+<h3 id="phase-4-manual-intervention">Phase 4: Manual Intervention</h3>
+<p>Application latency climbs. An engineer notices. The diagnostic path — checking metrics — is
+compromised because the metrics pipeline is the thing under stress. Alloy health metrics are routed
+through the same congested <code>remote_write</code> pipeline, so they are dark. The engineer kills Alloy. CPU
+drops. The application recovers.</p>
+<h3 id="phase-5-monitoring-blackout">Phase 5: Monitoring Blackout</h3>
+<p>With Alloy dead, no metrics flow to Mimir. Dashboards go stale. Alert rules fire on missing data.
+The team is now triaging a combined event: the original Mimir degradation, the starved business
+process, and the absence of all observability signal. A problem that started as a backend blip has
+become a full diagnostic blackout.</p>
+<hr>
+<h2 id="why-it-persists">Why It Persists</h2>
+<p>The <code>max_shards = 200</code> default is not wrong in isolation. It exists because in the canonical
+deployment model — a dedicated VM or Kubernetes pod running only the collector — you <em>want</em> Alloy to
+aggressively drain its queue when the backend recovers. Falling behind on metrics is bad. Losing
+data is bad. The default is optimized for throughput over politeness.</p>
+<p>What the default does not account for is co-location. The Prometheus ecosystem largely assumes
+collectors run in isolation: Node exporters on dedicated pods, Alloy DaemonSets with proper
+Kubernetes resource limits, centralized collector pools with their own CPU budgets. When Alloy is
+installed on a shared host — which happens constantly during observability rollouts, migrations, and
+hybrid environments — the default config becomes a loaded weapon with no safety.</p>
+<p>There is also a subtler organizational dynamic: observability agents are infrastructure, not
+application code. They don’t go through the same production-readiness checklist. Resource limits,
+alert coverage, and graceful degradation behavior are afterthoughts. By the time anyone asks “what
+does Alloy do when Mimir is down?”, they’re usually asking from an incident timeline.</p>
+<hr>
+<h2 id="anti-pattern-the-default-config-on-a-shared-host">Anti-Pattern: The Default Config on a Shared Host</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#6A737D"># Context: default Alloy remote_write config — dangerous on shared VMs</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># [WRONG] No queue_config means max_shards defaults to 200</span></span>
+<span class="line"><span style="color:#6A737D"># [WRONG] 200 parallel workers on a dual-core VM is uncontrolled CPU saturation</span></span>
+<span class="line"><span style="color:#6A737D"># [WRONG] min_backoff/max_backoff not set — workers retry as fast as Go allows</span></span>
+<span class="line"><span style="color:#E1E4E8">prometheus</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">remote_write </span><span style="color:#9ECBFF">"mimir"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  endpoint {</span></span>
+<span class="line"><span style="color:#E1E4E8">    url </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "http://mimir:9009/api/v1/push"</span></span>
+<span class="line"><span style="color:#6A737D">    // no queue_config block</span></span>
+<span class="line"><span style="color:#6A737D">    // result: 200 goroutines, unbounded retry rate, no memory ceiling on the queue</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#6A737D"># Context: default systemd unit — no resource constraints</span></span>
+<span class="line"><span style="color:#6A737D"># [WRONG] Alloy competes for all available CPU on the host</span></span>
+<span class="line"><span style="color:#6A737D"># [WRONG] No OOM priority — OS may kill the business process before Alloy</span></span>
+<span class="line"><span style="color:#6A737D"># [WRONG] No memory ceiling — queue grows until the host OOMs</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">[Unit]</span></span>
+<span class="line"><span style="color:#F97583">Description</span><span style="color:#E1E4E8">=Grafana Alloy</span></span>
+<span class="line"><span style="color:#F97583">After</span><span style="color:#E1E4E8">=network.target</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">[Service]</span></span>
+<span class="line"><span style="color:#F97583">ExecStart</span><span style="color:#E1E4E8">=/usr/bin/alloy run /etc/alloy/config.alloy</span></span>
+<span class="line"><span style="color:#6A737D"># CPUQuota:        not set</span></span>
+<span class="line"><span style="color:#6A737D"># MemoryMax:       not set</span></span>
+<span class="line"><span style="color:#6A737D"># OOMScoreAdjust:  not set — defaults to 0, same priority as everything else</span></span>
+<span class="line"></span></code></pre>
+<p>The danger is invisible under normal conditions. This config works perfectly until Mimir has a bad
+day — exactly the moment when the monitoring system is most needed.</p>
+<hr>
+<h2 id="correct-design">Correct Design</h2>
+<p>The fix operates at three independent layers. Each layer addresses a distinct failure mode, and each
+is independently valuable. Together they make Alloy safe to co-locate.</p>
+<p><strong>Principle:</strong> an observability agent on a shared host must have an explicit resource budget, a
+bounded retry strategy, and a self-monitoring path that does not depend on the pipeline it is
+monitoring.</p>
+<h3 id="options-table">Options Table</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Approach</th><th>CPU Protection</th><th>Queue Bounding</th><th>Health Visibility</th><th>Gaps</th></tr></thead><tbody><tr><td>systemd CPUQuota only</td><td>Yes — hard cap</td><td>No — workers still max out</td><td>No — dark during congestion</td><td>Two of three failure modes unaddressed</td></tr><tr><td>max_shards only</td><td>No — workers can still saturate</td><td>Yes — bounded</td><td>No — dark during congestion</td><td>CPU and health gaps remain</td></tr><tr><td>Independent self-monitoring only</td><td>No</td><td>No</td><td>Yes — always visible</td><td>No resource protection</td></tr><tr><td><strong>All three layers</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>None</strong></td></tr></tbody></table>
+<p>Each layer without the others leaves a gap. The three-layer approach closes all of them.</p>
+<h3 id="layer-1-os-level-cpu-quota">Layer 1: OS-Level CPU Quota</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="ini"><code><span class="line"><span style="color:#6A737D"># Context: /etc/systemd/system/alloy.service [Service] section — Linux</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># [CORRECT] Hard CPU ceiling enforced by the kernel scheduler</span></span>
+<span class="line"><span style="color:#6A737D"># Even with 200 goroutines active, total wall-clock CPU share is capped</span></span>
+<span class="line"><span style="color:#F97583">CPUQuota</span><span style="color:#E1E4E8">=30%          </span><span style="color:#6A737D"># 30% of total CPU — conservative starting point on a dual-core VM</span></span>
+<span class="line"><span style="color:#F97583">MemoryMax</span><span style="color:#E1E4E8">=512M        </span><span style="color:#6A737D"># prevents WAL queue-driven memory bloat from OOM-ing the host</span></span>
+<span class="line"><span style="color:#F97583">OOMScoreAdjust</span><span style="color:#E1E4E8">=500    </span><span style="color:#6A737D"># OS terminates Alloy before the business process under memory pressure</span></span>
+<span class="line"><span style="color:#6A737D"># Tune CPUQuota based on VM size and co-tenant resource requirements</span></span>
+<span class="line"><span style="color:#6A737D"># On a 4-core VM with a CPU-intensive co-tenant, 20% may be more appropriate</span></span>
+<span class="line"></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Apply and verify</span></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> daemon-reload</span></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> restart</span><span style="color:#9ECBFF"> alloy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Confirm limits are active (not just configured)</span></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> show</span><span style="color:#9ECBFF"> alloy</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -E</span><span style="color:#9ECBFF"> 'CPUQuota|MemoryMax|OOMScoreAdjust'</span></span>
+<span class="line"><span style="color:#6A737D"># Expected:</span></span>
+<span class="line"><span style="color:#6A737D"># CPUQuotaPerSecUSec=300000   (30% of 1s = 300ms per second)</span></span>
+<span class="line"><span style="color:#6A737D"># MemoryMax=536870912         (512 MiB in bytes)</span></span>
+<span class="line"><span style="color:#6A737D"># OOMScoreAdjust=500</span></span>
+<span class="line"></span></code></pre>
+<p>For Windows hosts managed via Ansible, the equivalent is a Windows Job Object with a hard CPU rate
+cap. The <code>grafana-cloud-deployments</code> playbook handles this automatically — a PowerShell script runs
+as a persistent Scheduled Task under SYSTEM, attaches to the Alloy process on startup, and enforces
+kernel-level limits:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>systemd directive</th><th>Windows equivalent</th><th>Mechanism</th></tr></thead><tbody><tr><td><code>CPUQuota=30%</code></td><td><code>JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP</code></td><td>Kernel-enforced; available Win8+</td></tr><tr><td><code>MemoryMax=512M</code></td><td><code>JOB_OBJECT_LIMIT_JOB_MEMORY</code></td><td>Commit-limit; OOMs the job on breach</td></tr><tr><td><code>OOMScoreAdjust=500</code></td><td>Process priority class <code>BelowNormal</code></td><td>OS trims/kills lower-priority first</td></tr></tbody></table>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># Context: inventories/group_vars/all.yml — Ansible-managed Windows hosts</span></span>
+<span class="line"><span style="color:#85E89D">alloy_cpu_quota_pct</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">30</span><span style="color:#6A737D">   # maps to JOB_OBJECT_CPU_RATE_CONTROL_HARD_CAP</span></span>
+<span class="line"><span style="color:#85E89D">alloy_memory_max_mb</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">512</span><span style="color:#6A737D">  # maps to JOB_OBJECT_LIMIT_JOB_MEMORY</span></span>
+<span class="line"></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="powershell"><code><span class="line"><span style="color:#6A737D"># Context: verify Windows Job Object enforcement after Ansible deploy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># [CORRECT] Confirm Alloy process is inside the Job Object — must return True</span></span>
+<span class="line"><span style="color:#79B8FF">Add-Type</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">TypeDefinition </span><span style="color:#9ECBFF">@'</span></span>
+<span class="line"><span style="color:#9ECBFF">using System; using System.Runtime.InteropServices;</span></span>
+<span class="line"><span style="color:#9ECBFF">public class ProcJob {</span></span>
+<span class="line"><span style="color:#9ECBFF">    [DllImport("kernel32.dll")] public static extern bool IsProcessInJob(IntPtr proc, IntPtr job, out bool result);</span></span>
+<span class="line"><span style="color:#9ECBFF">}</span></span>
+<span class="line"><span style="color:#9ECBFF">'@</span></span>
+<span class="line"><span style="color:#E1E4E8">$inJob </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> $false</span></span>
+<span class="line"><span style="color:#E1E4E8">[</span><span style="color:#F97583">ProcJob</span><span style="color:#E1E4E8">]::IsProcessInJob((</span><span style="color:#79B8FF">Get-Process</span><span style="color:#E1E4E8"> alloy).Handle</span><span style="color:#F97583">,</span><span style="color:#E1E4E8"> [</span><span style="color:#F97583">IntPtr</span><span style="color:#E1E4E8">]::Zero</span><span style="color:#F97583">,</span><span style="color:#E1E4E8"> [</span><span style="color:#F97583">ref</span><span style="color:#E1E4E8">]$inJob)</span></span>
+<span class="line"><span style="color:#E1E4E8">$inJob                             </span><span style="color:#6A737D"># expected: True</span></span>
+<span class="line"><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">Get-Process</span><span style="color:#E1E4E8"> alloy).PriorityClass  </span><span style="color:#6A737D"># expected: BelowNormal</span></span>
+<span class="line"></span></code></pre>
+<h3 id="layer-2-bounded-remote-write-queue">Layer 2: Bounded Remote Write Queue</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#6A737D"># Context: /etc/alloy/config.alloy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># [CORRECT] Explicit queue_config with bounded shard count</span></span>
+<span class="line"><span style="color:#6A737D"># 10 workers is sufficient for single-VM throughput requirements</span></span>
+<span class="line"><span style="color:#6A737D"># With 10 shards instead of 200, retry-storm CPU impact is bounded and predictable</span></span>
+<span class="line"><span style="color:#E1E4E8">prometheus</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">remote_write </span><span style="color:#9ECBFF">"mimir"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  endpoint {</span></span>
+<span class="line"><span style="color:#E1E4E8">    url </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "http://mimir:9009/api/v1/push"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    queue_config {</span></span>
+<span class="line"><span style="color:#E1E4E8">      capacity             </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 5000</span><span style="color:#6A737D">   // max samples held in memory — size to available RAM</span></span>
+<span class="line"><span style="color:#E1E4E8">      max_samples_per_send </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 500</span><span style="color:#6A737D">    // batch size; larger batches reduce HTTP round-trips</span></span>
+<span class="line"><span style="color:#E1E4E8">      max_shards           </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 10</span><span style="color:#6A737D">     // KEY FIX: default is 200 — this single line is the CPU driver</span></span>
+<span class="line"><span style="color:#E1E4E8">      min_backoff          </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "2s"</span><span style="color:#6A737D">   // initial retry delay — gives the backend time to recover</span></span>
+<span class="line"><span style="color:#E1E4E8">      max_backoff          </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "60s"</span><span style="color:#6A737D">  // back off hard when Mimir is under sustained pressure</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    retry_on_http_429 </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> true</span><span style="color:#6A737D">        // respect Mimir's backpressure signals explicitly</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>max_shards</code> parameter is the load-bearing line. At 10 shards instead of 200, Alloy can still
+drain a full queue quickly when the backend recovers, but it cannot saturate a shared host’s CPU
+during a retry storm.</p>
+<h3 id="layer-3-independent-self-monitoring-path">Layer 3: Independent Self-Monitoring Path</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph VM["Shared VM"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        subgraph Alloy["Grafana Alloy"]</span></span>
+<span class="line"><span style="color:#E1E4E8">            ES["exporter.self&#x3C;br/>'alloy_health'"]</span></span>
+<span class="line"><span style="color:#E1E4E8">            RWM["remote_write 'mimir'&#x3C;br/>(main pipeline)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">            SC["scrape&#x3C;br/>'alloy_self'"]</span></span>
+<span class="line"><span style="color:#E1E4E8">            RWL["remote_write 'local_only'&#x3C;br/>(separate destination)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">            ES -->|"independent scrape path"| SC</span></span>
+<span class="line"><span style="color:#E1E4E8">            SC --> RWL</span></span>
+<span class="line"><span style="color:#E1E4E8">        end</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"><span style="color:#E1E4E8">    Mimir["Mimir&#x3C;br/>(may be congested)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    LP["Local Prometheus&#x3C;br/>(always reachable)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    RWM --> Mimir</span></span>
+<span class="line"><span style="color:#E1E4E8">    RWL --> LP</span></span>
+<span class="line"></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#6A737D"># Context: Alloy River config — independent self-monitoring path</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># [CORRECT] Alloy's health metrics routed to a SEPARATE destination</span></span>
+<span class="line"><span style="color:#6A737D"># If routed through the same mimir endpoint, health data goes dark precisely</span></span>
+<span class="line"><span style="color:#6A737D"># when Mimir is the problem — exactly when you need to see what's happening</span></span>
+<span class="line"><span style="color:#E1E4E8">prometheus</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">exporter</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">self </span><span style="color:#9ECBFF">"alloy_health"</span><span style="color:#E1E4E8"> { }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">prometheus</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">scrape </span><span style="color:#9ECBFF">"alloy_self_monitoring"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  targets         </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> prometheus.exporter.self.alloy_health.targets</span></span>
+<span class="line"><span style="color:#E1E4E8">  forward_to      </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [prometheus.remote_write.local_only.receiver]</span></span>
+<span class="line"><span style="color:#E1E4E8">  scrape_interval </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "15s"</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// Separate destination — local Prometheus, secondary Mimir tenant, or any</span></span>
+<span class="line"><span style="color:#6A737D">// independent write endpoint that does NOT share the main pipeline's fate</span></span>
+<span class="line"><span style="color:#E1E4E8">prometheus</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">remote_write </span><span style="color:#9ECBFF">"local_only"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  endpoint {</span></span>
+<span class="line"><span style="color:#E1E4E8">    url </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "http://local-prometheus:9090/api/v1/write"</span></span>
+<span class="line"><span style="color:#6A737D">    // This endpoint must be reachable independently of the primary Mimir cluster</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="validation-test">Validation Test</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Context: Linux — confirm all three layers are active</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Layer 1: OS limits applied</span></span>
+<span class="line"><span style="color:#B392F0">systemctl</span><span style="color:#9ECBFF"> show</span><span style="color:#9ECBFF"> alloy</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#79B8FF"> -E</span><span style="color:#9ECBFF"> 'CPUQuota|MemoryMax|OOMScoreAdjust'</span></span>
+<span class="line"><span style="color:#6A737D"># Expected:</span></span>
+<span class="line"><span style="color:#6A737D"># CPUQuotaPerSecUSec=300000</span></span>
+<span class="line"><span style="color:#6A737D"># MemoryMax=536870912</span></span>
+<span class="line"><span style="color:#6A737D"># OOMScoreAdjust=500</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Layer 2: max_shards is in effect (check rendered config and live metric)</span></span>
+<span class="line"><span style="color:#B392F0">grep</span><span style="color:#9ECBFF"> max_shards</span><span style="color:#9ECBFF"> /etc/alloy/config.alloy</span></span>
+<span class="line"><span style="color:#6A737D"># Expected: max_shards = 10</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> http://localhost:12345/metrics</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> grep</span><span style="color:#9ECBFF"> prometheus_remote_storage_shards_max</span></span>
+<span class="line"><span style="color:#6A737D"># Expected: prometheus_remote_storage_shards_max{...} 10</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Layer 3: self-monitoring is live and routing independently</span></span>
+<span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> http://local-prometheus:9090/api/v1/query</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --data-urlencode</span><span style="color:#9ECBFF"> 'query=up{job="alloy"}'</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> jq</span><span style="color:#9ECBFF"> '.data.result[].value[1]'</span></span>
+<span class="line"><span style="color:#6A737D"># Expected: "1"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Chaos injection — simulate Mimir unavailability and verify CPU stays bounded</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> tc</span><span style="color:#9ECBFF"> qdisc</span><span style="color:#9ECBFF"> add</span><span style="color:#9ECBFF"> dev</span><span style="color:#9ECBFF"> eth0</span><span style="color:#9ECBFF"> root</span><span style="color:#9ECBFF"> netem</span><span style="color:#9ECBFF"> delay</span><span style="color:#9ECBFF"> 10000ms</span><span style="color:#6A737D">  # 10s artificial latency to Mimir</span></span>
+<span class="line"><span style="color:#B392F0">sleep</span><span style="color:#79B8FF"> 60</span></span>
+<span class="line"><span style="color:#6A737D"># While degraded: health metrics should remain visible via local Prometheus</span></span>
+<span class="line"><span style="color:#B392F0">curl</span><span style="color:#79B8FF"> -s</span><span style="color:#9ECBFF"> http://local-prometheus:9090/api/v1/query</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --data-urlencode</span><span style="color:#9ECBFF"> 'query=prometheus_remote_storage_pending_samples'</span><span style="color:#F97583"> |</span><span style="color:#B392F0"> jq</span><span style="color:#9ECBFF"> .</span></span>
+<span class="line"><span style="color:#6A737D"># Queue will grow, but CPU should stay within the 30% quota</span></span>
+<span class="line"><span style="color:#6A737D"># Restore</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> tc</span><span style="color:#9ECBFF"> qdisc</span><span style="color:#9ECBFF"> del</span><span style="color:#9ECBFF"> dev</span><span style="color:#9ECBFF"> eth0</span><span style="color:#9ECBFF"> root</span></span>
+<span class="line"></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="powershell"><code><span class="line"><span style="color:#6A737D"># Context: Windows — confirm all three layers after Ansible deploy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Layer 1: Job Object active</span></span>
+<span class="line"><span style="color:#E1E4E8">$inJob </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> $false</span></span>
+<span class="line"><span style="color:#E1E4E8">[</span><span style="color:#F97583">ProcJob</span><span style="color:#E1E4E8">]::IsProcessInJob((</span><span style="color:#79B8FF">Get-Process</span><span style="color:#E1E4E8"> alloy).Handle</span><span style="color:#F97583">,</span><span style="color:#E1E4E8"> [</span><span style="color:#F97583">IntPtr</span><span style="color:#E1E4E8">]::Zero</span><span style="color:#F97583">,</span><span style="color:#E1E4E8"> [</span><span style="color:#F97583">ref</span><span style="color:#E1E4E8">]$inJob)</span></span>
+<span class="line"><span style="color:#E1E4E8">$inJob  </span><span style="color:#6A737D"># expected: True</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Layer 2: max_shards in config</span></span>
+<span class="line"><span style="color:#79B8FF">Select-String</span><span style="color:#E1E4E8"> max_shards </span><span style="color:#9ECBFF">"C:\Program Files\GrafanaLabs\Alloy\config.alloy"</span></span>
+<span class="line"><span style="color:#6A737D"># Expected: max_shards = 10</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Limits re-apply automatically after service restart</span></span>
+<span class="line"><span style="color:#79B8FF">Restart-Service</span><span style="color:#E1E4E8"> Alloy</span></span>
+<span class="line"><span style="color:#79B8FF">Start-Sleep</span><span style="color:#79B8FF"> 75</span></span>
+<span class="line"><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">Get-ScheduledTask</span><span style="color:#F97583"> -</span><span style="color:#E1E4E8">TaskName AlloyResourceLimits).State  </span><span style="color:#6A737D"># expected: Running</span></span>
+<span class="line"><span style="color:#E1E4E8">$inJob </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> $false</span></span>
+<span class="line"><span style="color:#E1E4E8">[</span><span style="color:#F97583">ProcJob</span><span style="color:#E1E4E8">]::IsProcessInJob((</span><span style="color:#79B8FF">Get-Process</span><span style="color:#E1E4E8"> alloy).Handle</span><span style="color:#F97583">,</span><span style="color:#E1E4E8"> [</span><span style="color:#F97583">IntPtr</span><span style="color:#E1E4E8">]::Zero</span><span style="color:#F97583">,</span><span style="color:#E1E4E8"> [</span><span style="color:#F97583">ref</span><span style="color:#E1E4E8">]$inJob)</span></span>
+<span class="line"><span style="color:#E1E4E8">$inJob  </span><span style="color:#6A737D"># expected: True</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="key-metrics">Key Metrics</h2>
+<p>Instrument these on the <strong>independent self-monitoring Prometheus instance</strong>. Placing them on the
+same congested pipeline they describe defeats the purpose — they go dark at exactly the wrong
+moment.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Signal</th><th>PromQL</th><th>Alert Threshold</th><th>What It Tells You</th></tr></thead><tbody><tr><td>Samples being dropped</td><td><code>rate(prometheus_remote_storage_dropped_samples_total[5m])</code></td><td><code>> 0</code></td><td>Data loss in progress — fire P1</td></tr><tr><td>Queue filling</td><td><code>prometheus_remote_storage_pending_samples</code></td><td><code>> 3000</code></td><td>Backend pressure building; investigate before drops begin</td></tr><tr><td>Active shards near ceiling</td><td><code>prometheus_remote_storage_shards</code></td><td><code>> 8</code> (with max=10)</td><td>Workers near ceiling; backend may be degraded</td></tr><tr><td>Alloy CPU consumption</td><td><code>rate(process_cpu_seconds_total{job="alloy"}[2m])</code></td><td><code>> 0.3</code></td><td>Climbing toward contention; check co-tenant health</td></tr><tr><td>WAL fsync latency</td><td><code>rate(prometheus_tsdb_wal_fsync_duration_seconds_count[5m])</code></td><td>spike</td><td>WAL under I/O pressure — common cascade trigger</td></tr><tr><td>Send timestamp staleness</td><td><code>time() - prometheus_remote_storage_queue_highest_sent_timestamp_seconds</code></td><td><code>> 120s</code></td><td>Samples not reaching Mimir; queue accumulating</td></tr></tbody></table>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span># Composite alert: catch backend pressure before it reaches the CPU ceiling</span></span>
+<span class="line"><span>(</span></span>
+<span class="line"><span>  prometheus_remote_storage_pending_samples > 3000</span></span>
+<span class="line"><span>  and</span></span>
+<span class="line"><span>  prometheus_remote_storage_shards > 7</span></span>
+<span class="line"><span>)</span></span>
+<span class="line"><span># Fires when queue is deep AND near the shard ceiling simultaneously</span></span>
+<span class="line"><span># Both conditions together mean max_shards is the next wall to hit</span></span>
+<span class="line"><span></span></span></code></pre>
+<hr>
+<h2 id="pattern-generalization">Pattern Generalization</h2>
+<p>The underlying failure is uncontrolled retry escalation by a co-located non-primary workload. The
+same pattern surfaces across the collector ecosystem.</p>
+<p><strong>Fluent Bit / Fluentd on shared nodes:</strong> buffer overflow during log backend degradation drives I/O
+and CPU in the same way. The equivalent of <code>max_shards</code> is <code>flush_thread_count</code> in Fluent Bit. The
+fix is the same: explicit ceilings and OS-level quotas.</p>
+<p><strong>OpenTelemetry Collector:</strong> the <code>otlphttp</code> exporter has a <code>num_consumers</code> parameter that governs
+parallel export goroutines. The <code>retry_on_failure</code> config block’s <code>max_elapsed_time</code> is the
+equivalent of <code>max_backoff</code>. Default configs are similarly optimized for dedicated deployments.</p>
+<p><strong>Prometheus <code>remote_write</code> (pre-Alloy):</strong> Alloy inherited this subsystem directly. The <code>max_shards</code>
+parameter and its default of 200 exist in <code>prometheus.yml</code> with identical semantics and the same
+failure mode on shared hosts.</p>
+<p>The underlying principle is constant across all of them: <strong>any agent that implements “retry harder
+when the backend is slow” becomes a CPU bomb on a shared host during backend degradation.</strong> The
+retry strategy that maximizes throughput in isolation becomes resource contention in co-location.
+This is not a bug — it is a design tradeoff that is only visible when the deployment constraint
+changes from isolated to shared.</p>
+<p>The broader engineering rule: an observability agent must have an explicit resource budget when
+co-located, and its health metrics must be routed independently of the pipeline it monitors.</p>
+<hr>
+<h2 id="production-incident">Production Incident</h2>
+<p>This is a representative account based on the incident described in this post-mortem. The specific
+VM hosted a business-critical application and Grafana Alloy, both installed during an observability
+expansion to hybrid on-premises workloads.</p>
+<p><strong>T+0:00</strong> — The Mimir cluster experiences elevated write latency. Alloy’s <code>remote_write</code> component
+begins seeing timeouts on POST requests to the Mimir push endpoint. The WAL queue starts filling.</p>
+<p><strong>T+0:02</strong> — Alloy’s queue manager detects the growing backlog. Shard count begins climbing. With no
+<code>max_shards</code> constraint and no CPU quota, escalation is immediate and uncapped.</p>
+<p><strong>T+0:05</strong> — VM CPU utilization reaches 95%. The business-critical application begins queuing
+internal requests. User-facing latency spikes. This triggers a separate application alert.</p>
+<p><strong>T+0:12</strong> — On-call engineer responds to the application latency alert. Opens the dashboard to
+investigate. The dashboard is stale — Alloy has been unable to push metrics for 12 minutes, and
+Alloy’s health metrics are routed through the same congested pipeline. The engineer cannot see
+recent CPU utilization, memory, or application-level signals. They are diagnosing a live performance
+problem with 12-minute-old data.</p>
+<p><strong>T+0:18</strong> — Engineer identifies the anomaly via the process table rather than a dashboard: Alloy
+consuming 60%+ CPU. No runbook entry for this failure mode. Single available action: kill Alloy.</p>
+<p><strong>T+0:19</strong> — <code>systemctl stop alloy</code>. CPU drops. Application recovers within 30 seconds.</p>
+<p><strong>T+0:45</strong> — Mimir recovers. Engineer manually restarts Alloy. Queue partially drains from WAL;
+samples older than WAL retention window are lost.</p>
+<p><strong>Total impact:</strong> approximately 14 minutes of application degradation, 45 minutes of monitoring
+blackout, partial metric data loss for the incident window, and materially extended MTTR because the
+engineer was operating without observability signal during the most critical phase of triage. The
+Mimir event was a 45-minute brownout that should have been invisible. Instead, Alloy’s default retry
+behavior amplified it into an application incident.</p>
+<hr>
+<h2 id="maang-scale-considerations">MAANG-Scale Considerations</h2>
+<p>At Google, Netflix, or Meta scale, this specific failure mode is less likely in the steady state —
+Alloy almost always runs as a DaemonSet pod with Kubernetes resource limits. But the underlying
+pattern is more dangerous, not less.</p>
+<p><strong>Templated resource limits are not reasoned resource limits.</strong> At fleet scale,
+<code>resources.limits.cpu: "500m"</code> in a shared Helm values file is the Kubernetes equivalent of
+<code>CPUQuota</code> — and most teams that set it via copy-paste have never stress-tested what happens when
+10,000 Alloy instances simultaneously encounter a degraded Mimir ruler. The value was chosen once
+and never revisited.</p>
+<p><strong>Fleet-wide retry storms as a correlated failure.</strong> At 10,000 nodes with default
+<code>max_shards = 200</code>, a 30-second Mimir unavailability eventcan trigger 2,000,000 parallel goroutines
+all retrying in near-lockstep. The thundering herd problem at this scale can extend a 30-second blip
+into a multi-minute recovery event: Mimir recovers, but cannot absorb the burst of simultaneous
+reconnects. The fix at MAANG scale is not just <code>max_shards = 10</code> but also jitter in <code>min_backoff</code> —
+staggered reconnects rather than synchronized ones.</p>
+<p><strong>Multi-tenant Mimir isolation for self-monitoring.</strong> At Netflix or Google scale, the correct
+architecture routes Alloy self-monitoring metrics to a separate Mimir tenant with its own ingest
+quota and independent ruler. This ensures that a quota exhaustion event in the primary tenant (which
+causes Alloy to retry, filling the queue, triggering shard escalation) does not also suppress the
+health signals that would tell you the quota was exhausted in the first place. Circular
+observability is the MAANG-scale version of the same routing mistake that burned this VM.</p>
+<p><strong>WAL replay bursts on rolling restarts.</strong> At 10,000 nodes × 200 shards × 500 samples per flush, the
+burst on a fleet-wide rolling restart can saturate Mimir’s ingestion path regardless of per-instance
+<code>max_shards</code>. The combination of explicit per-instance shard limits and staggered rollout timing
+(max surge + max unavailable in the DaemonSet rollout policy) is how MAANG-scale teams control the
+blast radius of a routine deploy. Neither constraint alone is sufficient.</p>
+<hr>
+<h2 id="summary-table">Summary Table</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>Anti-Pattern</th><th>Correct Design</th></tr></thead><tbody><tr><td>Retry behavior</td><td>Default <code>max_shards=200</code>; unbounded goroutine escalation on backend failure</td><td><code>max_shards=10</code>, <code>min_backoff=2s</code>, <code>max_backoff=60s</code> — bounded and progressive</td></tr><tr><td>CPU governance</td><td>No systemd limits; Alloy competes freely with all co-located processes</td><td><code>CPUQuota=30%</code> in systemd unit; Windows Job Object via Ansible</td></tr><tr><td>Memory governance</td><td>No ceiling; WAL queue can bloat the host into OOM</td><td><code>MemoryMax=512M</code>; Windows Job Object commit limit</td></tr><tr><td>OOM priority</td><td>Default score of 0 — OS may kill the business process before Alloy</td><td><code>OOMScoreAdjust=500</code>; Windows <code>BelowNormal</code> priority class</td></tr><tr><td>Health signal path</td><td>Self-monitoring routed through the same congested pipeline</td><td>Independent <code>prometheus.remote_write</code> destination — local or secondary Prometheus</td></tr><tr><td>Failure detection</td><td>Engineer notices application degradation manually; dashboard is stale</td><td>Alert on queue depth (<code>>3000</code>) and shard ceiling (<code>>8/10</code>) from independent path</td></tr><tr><td>Failure cascade</td><td>Backend blip → CPU storm → business process starved → monitoring blackout</td><td>Backend blip → bounded retry → CPU stays within quota → health metrics always visible</td></tr><tr><td>Blast radius</td><td>Single Mimir event cascades to application incident and monitoring gap</td><td>Backend event isolated to queue accumulation; no co-lateral process impact</td></tr></tbody></table>
+<hr>
+<h2 id="conclusion">Conclusion</h2>
+<p>When Alloy co-locates with any workload that must be protected, apply the three-layer fix before
+deployment — not after the first incident. Set <code>CPUQuota</code> in the systemd unit, drop <code>max_shards</code> to
+10, and route self-monitoring metrics to an independent destination. The default config is not
+wrong; it is optimized for isolated deployments. Shared hosts are not isolated deployments, and the
+gap between those two assumptions is where incidents are born.</p>  </div> <!-- Related posts --> <div class="mt-16 pt-8 border-t border-slate-800"><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Related posts</p><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><a href="/blog/2026-q2/20260610-grafana-azure-monitor-plugin-limitations-push-exporter" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">Observability</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">Unbounded Cardinality, Zero Alerts, and 14-Second Dashboard Loads: The Structural Limits of the Grafana Azure Monitor Plugin</h3><p class="text-xs font-mono text-slate-600">Jun 10, 2026</p></a><a href="/blog/2026-q2/20260523-grafana-cloud-lbac-provider-gap-three-layers" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">Grafana</span><span class="tag text-xs">Terraform</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">The Grafana Terraform Provider Silently Drops LBAC Rules — and the Three-Layer Fix</h3><p class="text-xs font-mono text-slate-600">May 23, 2026</p></a><a href="/blog/2026-q2/20260524-yaml-driven-grafana-cloud-self-service" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">Grafana</span><span class="tag text-xs">Terraform</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">The Terraform Module That Has No Provider: How a Pure YAML Registry Drives a Multi-Tenant Grafana Platform</h3><p class="text-xs font-mono text-slate-600">May 24, 2026</p></a></div></div> <!-- Prev / Next navigation --> <div class="mt-16 pt-8 border-t border-slate-800 grid grid-cols-2 gap-4" data-astro-cid-bvzihdzo> <a href="/blog/2026-q2/20260525-self-silencing-observability" class="card group block hover:-translate-y-0.5 no-underline" data-astro-cid-bvzihdzo> <p class="text-xs font-mono text-slate-600 mb-1.5 flex items-center gap-1" data-astro-cid-bvzihdzo> <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" data-astro-cid-bvzihdzo></path> </svg>
+Older
+</p> <p class="text-sm text-slate-300 group-hover:text-accent transition-colors leading-snug" data-astro-cid-bvzihdzo> The Self-Silencing Anti-Pattern: Why Your Observability Stack Goes Blind When You Need It Most </p> </a> <a href="/blog/2026-q2/20260602-prioritization-frameworks-for-engineering" class="card group block hover:-translate-y-0.5 no-underline text-right" data-astro-cid-bvzihdzo> <p class="text-xs font-mono text-slate-600 mb-1.5 flex items-center gap-1 justify-end" data-astro-cid-bvzihdzo>
+Newer
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-bvzihdzo></path> </svg> </p> <p class="text-sm text-slate-300 group-hover:text-accent transition-colors leading-snug" data-astro-cid-bvzihdzo> Prioritization Frameworks for Engineering: Make Decisions That Actually Move the Needle </p> </a> </div> <!-- Back / Home links --> <div class="mt-8 flex items-center justify-between" data-astro-cid-bvzihdzo> <a href="/blog" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-bvzihdzo>
+← All posts
+</a> <a href="/" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-bvzihdzo>Home</a> </div> <!-- Comments --> <div class="mt-16 pt-8 border-t border-slate-800"> <p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Discussion</p> <script src="https://giscus.app/client.js" data-repo="shipsolid/shipsolid.github.io" data-repo-id="R_kgDOOr14lw" data-category="General" data-category-id="DIC_kwDOOr14l84C9sb9" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async></script> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-bvzihdzo> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-bvzihdzo> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#tldr" data-slug="tldr" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>TL;DR</a></li><li data-astro-cid-xvrfupwn><a href="#the-problem" data-slug="the-problem" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The Problem</a></li><li data-astro-cid-xvrfupwn><a href="#failure-chain" data-slug="failure-chain" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Failure Chain</a></li><li data-astro-cid-xvrfupwn><a href="#phase-1-backend-degradation" data-slug="phase-1-backend-degradation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Phase 1: Backend Degradation</a></li><li data-astro-cid-xvrfupwn><a href="#phase-2-shard-escalation" data-slug="phase-2-shard-escalation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Phase 2: Shard Escalation</a></li><li data-astro-cid-xvrfupwn><a href="#phase-3-cpu-saturation" data-slug="phase-3-cpu-saturation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Phase 3: CPU Saturation</a></li><li data-astro-cid-xvrfupwn><a href="#phase-4-manual-intervention" data-slug="phase-4-manual-intervention" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Phase 4: Manual Intervention</a></li><li data-astro-cid-xvrfupwn><a href="#phase-5-monitoring-blackout" data-slug="phase-5-monitoring-blackout" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Phase 5: Monitoring Blackout</a></li><li data-astro-cid-xvrfupwn><a href="#why-it-persists" data-slug="why-it-persists" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Why It Persists</a></li><li data-astro-cid-xvrfupwn><a href="#anti-pattern-the-default-config-on-a-shared-host" data-slug="anti-pattern-the-default-config-on-a-shared-host" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Anti-Pattern: The Default Config on a Shared Host</a></li><li data-astro-cid-xvrfupwn><a href="#correct-design" data-slug="correct-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Correct Design</a></li><li data-astro-cid-xvrfupwn><a href="#options-table" data-slug="options-table" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Options Table</a></li><li data-astro-cid-xvrfupwn><a href="#layer-1-os-level-cpu-quota" data-slug="layer-1-os-level-cpu-quota" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 1: OS-Level CPU Quota</a></li><li data-astro-cid-xvrfupwn><a href="#layer-2-bounded-remote-write-queue" data-slug="layer-2-bounded-remote-write-queue" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 2: Bounded Remote Write Queue</a></li><li data-astro-cid-xvrfupwn><a href="#layer-3-independent-self-monitoring-path" data-slug="layer-3-independent-self-monitoring-path" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 3: Independent Self-Monitoring Path</a></li><li data-astro-cid-xvrfupwn><a href="#validation-test" data-slug="validation-test" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Validation Test</a></li><li data-astro-cid-xvrfupwn><a href="#key-metrics" data-slug="key-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Key Metrics</a></li><li data-astro-cid-xvrfupwn><a href="#pattern-generalization" data-slug="pattern-generalization" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Pattern Generalization</a></li><li data-astro-cid-xvrfupwn><a href="#production-incident" data-slug="production-incident" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Production Incident</a></li><li data-astro-cid-xvrfupwn><a href="#maang-scale-considerations" data-slug="maang-scale-considerations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>MAANG-Scale Considerations</a></li><li data-astro-cid-xvrfupwn><a href="#summary-table" data-slug="summary-table" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Summary Table</a></li><li data-astro-cid-xvrfupwn><a href="#conclusion" data-slug="conclusion" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Conclusion</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

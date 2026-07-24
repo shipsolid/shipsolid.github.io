@@ -1,0 +1,760 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>RFC: Editor &amp; Agentic IDE Selection — VS Code vs. Google Antigravity — Notes — Amit Singh</title><meta name="description" content="RFC: Editor &#38; Agentic IDE Selection — VS Code vs. Google Antigravity"><link rel="canonical" href="https://shipsolid.github.io/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="RFC: Editor &#38; Agentic IDE Selection — VS Code vs. Google Antigravity — Notes — Amit Singh"><meta property="og:description" content="RFC: Editor &#38; Agentic IDE Selection — VS Code vs. Google Antigravity"><meta property="og:url" content="https://shipsolid.github.io/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="RFC: Editor &#38; Agentic IDE Selection — VS Code vs. Google Antigravity — Notes — Amit Singh"><meta name="twitter:description" content="RFC: Editor &#38; Agentic IDE Selection — VS Code vs. Google Antigravity"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Platform Shipsolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>01 Platform Architecture</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Rfcs</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> RFC: Editor &amp; Agentic IDE Selection — VS Code vs. Google Antigravity  </h1>  <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated July 6, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202607060112-10</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/devx" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>devx</a><a href="/notes/tag/tooling" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>tooling</a><a href="/notes/tag/ide" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ide</a><a href="/notes/tag/vscode" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>vscode</a><a href="/notes/tag/antigravity" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>antigravity</a><a href="/notes/tag/ai-agents" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ai-agents</a><a href="/notes/tag/claude-code" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>claude-code</a><a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:RFC: Editor &#38; Agentic IDE Selection — VS Code vs. Google Antigravity" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-07-06T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:devx" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:tooling" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:ide" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:vscode" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:antigravity" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:ai-agents" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:claude-code" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="rfc-editor--agentic-ide-selection--vs-code-vs-google-antigravity">RFC: Editor &#x26; Agentic IDE Selection — VS Code vs. Google Antigravity</h2>
+<ul>
+<li><strong>RFC ID</strong>: rfc-2026-07-ide-vscode-vs-antigravity-ShipSolid</li>
+<li><strong>Authors</strong>: Amit Singh, Observability Architect</li>
+<li><strong>Status</strong>: Draft</li>
+<li><strong>Created</strong>: 2026-07-06</li>
+<li><strong>Last Updated</strong>: 2026-07-06</li>
+<li><strong>Target Release</strong>: N/A — tooling decision, no release train</li>
+<li><strong>Supersedes</strong>: —</li>
+<li><strong>Related Docs</strong>:
+<ul>
+<li><code>n-devx/01-runway</code> (infra repo, not published on this site) — IDP the team already develops
+against</li>
+<li>Google Antigravity: <a href="https://antigravity.google/pricing">Pricing</a> ·
+<a href="https://antigravity.google/terms">Terms of Service</a></li>
+<li><a href="https://techcrunch.com/2026/05/19/google-launches-antigravity-2-0-with-an-updated-desktop-app-and-cli-tool-at-io-2026/">TechCrunch — Antigravity 2.0 launch, I/O 2026</a></li>
+<li><a href="https://simonwillison.net/2025/Nov/25/google-antigravity-exfiltrates-data/">simonwillison.net — Google Antigravity Exfiltrates Data</a></li>
+<li><a href="https://www.darkreading.com/vulnerabilities-threats/google-fixes-critical-rce-flaw-ai-based-antigravity-tool">Dark Reading — Google fixes critical RCE flaw in Antigravity</a></li>
+<li><a href="/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/_template/">RFC Template</a> — the
+template this RFC follows.</li>
+<li><a href="/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-adopt-grafana-cloud-for-centralized-observability/">RFC-001: Adopt Grafana Cloud</a>
+— prior RFC in this series.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="1-summary">1. Summary</h2>
+<p>This RFC evaluates whether to adopt <strong>Google Antigravity</strong> — Google’s agent-first IDE, relaunched as
+a full platform (“Antigravity 2.0”) at I/O 2026 — as a day-to-day editor alongside or instead of
+<strong>VS Code</strong>, our current default across the lab and ShipSolid platform-architecture work.</p>
+<p><strong>Recommendation: keep VS Code + Claude Code as the required default. Do not adopt Antigravity
+team-wide.</strong> Permit a single-person, timeboxed, sandboxed pilot (Amit only, <code>l-labs/</code> only, no
+ShipSolid/platform credentials in scope) to re-evaluate once Antigravity’s enterprise security and
+compliance posture stabilizes. Revisit this RFC in Q4 2026.</p>
+<p>The driver is not a feature gap — Antigravity’s multi-agent “Mission Control” and
+browser-verification workflow are genuinely interesting — it’s that the platform is seven months
+old, has already shipped a disclosed prompt-injection data-exfiltration vulnerability that Google
+classified partly as “intended behavior,” and its non-training data-handling guarantee is contingent
+on Google Workspace/GCP-authenticated access — which ShipSolid, an Azure-native shop, does not
+currently have.</p>
+<hr>
+<h2 id="2-background--motivation">2. Background &#x26; Motivation</h2>
+<p>No incident is driving this — it’s a proactive tooling review triggered by Google Antigravity’s
+relaunch at I/O 2026 (2026-05-19) as a full platform: desktop IDE, CLI, SDK, a Managed Agents tier
+in the Gemini API, and an enterprise deployment path via the Gemini Enterprise Agent Platform.
+That’s a materially bigger surface than the November 2025 preview, and it raises the question of
+whether it belongs in the standard toolchain next to VS Code + Claude Code.</p>
+<p>Today, the team (Amit, Amlan, Ansh, Archit) standardizes on VS Code across every pillar in this repo
+— <code>n-devx/01-runway</code>, the Terraform/Helm workloads in <code>c-platform</code> and <code>f-observability</code>, and the
+application code in <code>d-apps</code> — with Claude Code as the agentic layer on top. That combination is a
+known quantity: it works through the corporate Zscaler proxy (cert injection is already solved for
+Docker/k3d, and VS Code itself is a long-vetted enterprise binary), and its extension/marketplace
+behavior is well understood.</p>
+<p>Antigravity is also a VS Code fork (built substantially by the former Windsurf team, which Google
+absorbed in 2025), so the switching cost isn’t “learn a new editor” — it’s “trust a new
+agent-execution model with repo access, terminal access, and (via its browser tool) network access.”</p>
+<hr>
+<h2 id="3-goals--non-goals">3. Goals &#x26; Non-Goals</h2>
+<h3 id="goals">Goals</h3>
+<ul>
+<li>Decide the default editor/agent stack for day-to-day work across the lab and ShipSolid
+platform-architecture workstreams.</li>
+<li>Establish an explicit security and data-handling bar that any AI-agentic IDE must clear before it
+touches ShipSolid-adjacent code (especially anything near OT/plant, GxP, or SignalForge surfaces).</li>
+<li>Define a bounded, low-risk path to keep evaluating Antigravity without exposing production
+credentials or regulated data.</li>
+</ul>
+<h3 id="non-goals">Non-Goals</h3>
+<ul>
+<li>Not a bake-off of every VS Code fork (Cursor, Windsurf, Zed, JetBrains + AI plugins are out of
+scope; noted briefly under Alternatives).</li>
+<li>Not a model-quality comparison between Gemini 3 and Claude — that’s a separate, faster-moving
+question and shouldn’t gate an editor decision.</li>
+<li>Not a decision about ShipSolid’s org-wide approved-tools list — that’s IT/Security’s call; this
+RFC only governs Amit’s/the team’s own lab and platform-architecture repos.</li>
+</ul>
+<hr>
+<h2 id="4-scope">4. Scope</h2>
+<ul>
+<li><strong>In scope:</strong> editor/IDE choice for work in this monorepo — all pillars (<code>a-governance</code> through
+<code>n-devx</code>) and the ShipSolid platform-architecture project docs.</li>
+<li><strong>Out of scope:</strong> OT plant-node terminals and any air-gapped or network-constrained environment —
+these aren’t edited via a cloud-agentic IDE regardless of this decision.</li>
+<li><strong>Explicitly excluded from any Antigravity usage, pilot or otherwise:</strong> <code>b-security/</code>, anything
+touching plant/OT credentials, GxP-adjacent code paths, and any repo holding real
+(non-lab-scaffolding) secrets.</li>
+</ul>
+<hr>
+<h2 id="5-proposed-solution">5. Proposed Solution</h2>
+<h3 id="51-overview">5.1 Overview</h3>
+<p>Two-tier model, not a switch:</p>
+<ol>
+<li><strong>Default (required):</strong> VS Code + Claude Code. No change from current practice.</li>
+<li><strong>Exploration (optional, gated):</strong> a single-user Antigravity pilot under the guardrails in §5.3,
+feeding a go/no-go decision at the Q4 2026 review.</li>
+</ol>
+<p>No team-wide Antigravity adoption is proposed in this RFC.</p>
+<h3 id="52-comparison">5.2 Comparison</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>VS Code (+ Copilot/Claude Code)</th><th>Google Antigravity 2.0</th></tr></thead><tbody><tr><td>Maturity</td><td>~11 years, ubiquitous enterprise deployment</td><td>Public preview Nov 2025 → platform relaunch May 2026; ~7 months old</td></tr><tr><td>Base</td><td>Native</td><td>VS Code fork (ex-Windsurf team)</td></tr><tr><td>Agent model</td><td>Inline chat / CLI agent (Claude Code) driving editor + terminal</td><td>”Mission Control” — multiple asynchronous agents across workspaces, background task scheduling, browser-driven self-verification (screenshots, recordings as review artifacts)</td></tr><tr><td>Model flexibility</td><td>Model-agnostic (Claude Code, Copilot, any CLI-based agent)</td><td>Gemini-centric; broader model support unclear at platform tier</td></tr><tr><td>Remote/enclave dev</td><td>Mature — SSH, containers, WSL; proven in this repo’s k3d/Zscaler workflow</td><td>Not established for this repo’s Zscaler-proxied, k3d-based workflow</td></tr><tr><td>Extension ecosystem</td><td>Massive, vetted marketplace</td><td>Inherits VS Code compatibility in principle; ecosystem maturity as a fork unverified here</td></tr><tr><td>Enterprise admin controls</td><td>Mature — Copilot Enterprise policies, per-file suppression, long track record</td><td>Enterprise tier exists (~$40–60/user/mo per one source; ~$19+/user/mo per another — pricing not yet consistent across sources) with SSO (Okta/Azure AD) and agent-action audit logs, but no compliance certifications (SOC 2, ISO) surfaced publicly yet</td></tr><tr><td>Security track record</td><td>Long-vetted</td><td>Disclosed prompt-injection → data-exfiltration vulnerability within ~1 week of launch (PromptArmor, Nov 2025); separate critical RCE patched (Dark Reading); Google classified part of the exfiltration path as “intended” default behavior</td></tr><tr><td>Data/training policy</td><td>Copilot Enterprise: no training on private code (contractual)</td><td>Interactions used for training by default <strong>unless</strong> accessed via Google Workspace/GCP-authenticated login — ShipSolid has no confirmed GCP/Workspace tenant</td></tr><tr><td>Pricing (individual)</td><td>Free (editor) + existing Copilot/Claude Code spend</td><td>Free tier, Pro $20/mo, Ultra $100/mo, Ultra Max $200/mo</td></tr><tr><td>Corporate proxy (Zscaler) compatibility</td><td>Proven in this repo today</td><td>Unverified — new Electron app, not literally VS Code’s binary; cert trust store behavior needs its own validation</td></tr></tbody></table>
+<h3 id="53-guardrails-for-the-antigravity-pilot-if-run">5.3 Guardrails for the Antigravity pilot (if run)</h3>
+<ul>
+<li>Pilot is <strong>single-user (Amit), lab-only</strong> — scoped to <code>l-labs/</code> directories with no production,
+ShipSolid-platform, or OT credentials ever loaded into the workspace.</li>
+<li>Work in a disposable git worktree/branch; treat every agent-authored change as untrusted until
+reviewed, same bar as any AI-authored diff.</li>
+<li>Disable or tightly scope the browser tool’s URL allowlist — the disclosed exfiltration path relied
+on a permissive default allowlist (it included <code>webhook.site</code>). Don’t accept the shipped defaults.</li>
+<li>No login via a personal Google account against a corpus containing anything sensitive — if there’s
+ever a business justification to go further, that must go through a Workspace/GCP-authenticated
+path first, specifically to get out from under the default train-on-interactions terms.</li>
+<li>No plant/OT-adjacent, GxP-adjacent, or <code>b-security/</code> content in any workspace opened in
+Antigravity, full stop.</li>
+</ul>
+<h3 id="54-rollout">5.4 Rollout</h3>
+<ul>
+<li><strong>Phase 0 (now):</strong> No change. VS Code + Claude Code remains the required default for all team
+members.</li>
+<li><strong>Phase 1 (optional, 60-day timebox):</strong> Amit runs the guarded pilot above on a handful of bounded
+<code>l-labs/</code> tasks and logs friction/wins.</li>
+<li><strong>Phase 2 (conditional):</strong> Only if Phase 1 surfaces a clear capability advantage <strong>and</strong>
+Antigravity has, by the Q4 2026 review, (a) a named compliance certification (SOC 2 Type II or
+equivalent) and (b) no further disclosed critical CVEs in the interim — reopen this RFC for a
+scoped team pilot with 1–2 other volunteers, still lab-only.</li>
+<li><strong>Rollback:</strong> trivial at every phase — uninstall the app; nothing ShipSolid-scoped was ever placed
+in it.</li>
+</ul>
+<hr>
+<h2 id="6-security--compliance">6. Security &#x26; Compliance</h2>
+<ul>
+<li><strong>Disclosed vulnerability:</strong> researchers at PromptArmor demonstrated indirect prompt injection via
+content hidden in a web page (tiny/invisible font-size tricks), which manipulated an Antigravity
+agent into exfiltrating local data through its browser tool to an attacker-controlled endpoint —
+enabled in part by a default browser URL allowlist that included a public request-bin service
+(<code>webhook.site</code>). Google’s own classification treated part of this as intended tool behavior
+rather than a bug, which means the residual risk isn’t fully “patched” — it’s a standing
+default-configuration hazard. A separate, unrelated critical RCE was patched by Google (per Dark
+Reading).</li>
+<li><strong>Training-data exposure:</strong> per Antigravity’s Additional Terms of Service, Interactions (which
+include your code, prompts, and agent activity) are used for Google/Alphabet product-improvement
+and training <strong>unless</strong> access is via Google Workspace or GCP-authenticated login. ShipSolid’s
+stack is Azure-native (see Context.md tech stack) with no confirmed GCP/Workspace tenant, so any
+ShipSolid-adjacent use today would default to the consumer terms — i.e., code potentially used for
+training. This alone is disqualifying for anything beyond personal lab experimentation
+until/unless ShipSolid stands up a Workspace/GCP-authenticated path.</li>
+<li><strong>No compliance certification surfaced:</strong> unlike the VS Code + Copilot Enterprise baseline
+(established enterprise policies, documented data handling), Antigravity has no SOC 2/ISO
+certification visible in public materials as of this writing. Treat it as unaudited for anything
+regulated (GxP-adjacent, OT).</li>
+<li><strong>Zscaler/corporate proxy:</strong> not yet validated in this environment. Before any pilot, confirm the
+Antigravity desktop app trusts the corporate CA the way VS Code and other Electron/Chromium-based
+dev tools in this repo already do (see the <code>zcert.crt</code> injection pattern used elsewhere in the
+repo) — don’t assume it “just works” because it’s VS Code-based.</li>
+</ul>
+<hr>
+<h2 id="7-testing--validation-plan">7. Testing &#x26; Validation Plan</h2>
+<ul>
+<li>Before the pilot starts: confirm Zscaler CA trust in the Antigravity desktop app (open an
+internal/corporate HTTPS endpoint and verify no TLS interception errors).</li>
+<li>During the pilot: run 2–3 bounded, repeatable tasks (e.g., a lab-scoped bug fix, a small feature
+in <code>l-labs/</code>) once in VS Code + Claude Code and once in Antigravity; compare
+time-to-review-ready-PR and the quality of the review artifacts each produces.</li>
+<li>Security check before opening any workspace: confirm no plant/OT, GxP, or <code>b-security/</code> paths are
+present, and confirm the browser tool’s allowlist has been tightened from shipped defaults.</li>
+</ul>
+<hr>
+<h2 id="8-rollout-plan">8. Rollout Plan</h2>
+<h3 id="81-phases">8.1 Phases</h3>
+<p>See §5.4.</p>
+<h3 id="82-rollback-plan">8.2 Rollback Plan</h3>
+<p>Uninstall the Antigravity desktop app; no ShipSolid-platform or production credentials are ever
+placed in scope, so rollback has no cleanup burden beyond removing the binary.</p>
+<hr>
+<h2 id="9-success-criteria">9. Success Criteria</h2>
+<p>Phase 1 pilot is judged a success (→ proceed to Phase 2 conditions) if, over the 60-day window:</p>
+<ul>
+<li>Zero security guardrail violations (no credential/OT/GxP exposure, allowlist stayed tightened).</li>
+<li>At least one bounded task shows a clear, reproducible speed or quality advantage over the VS
+Code + Claude Code baseline.</li>
+<li>No new critical CVE disclosed against Antigravity during the window.</li>
+</ul>
+<p>If any guardrail is violated, the pilot ends immediately regardless of capability findings.</p>
+<hr>
+<h2 id="10-alternatives-considered">10. Alternatives Considered</h2>
+<ul>
+<li><strong>Cursor</strong> — also a VS Code fork with agentic features; SOC 2 Type II certified with a public
+trust portal, a materially stronger compliance starting point than Antigravity’s current public
+posture. Not evaluated in depth here; worth its own RFC if Antigravity’s Phase 2 doesn’t clear the
+bar.</li>
+<li><strong>Windsurf</strong> — same lineage as Antigravity (the team Google acquired); not separately evaluated
+since Antigravity is the successor investment.</li>
+<li><strong>JetBrains + AI plugins</strong> — not adopted; the team’s existing tooling, extensions, and muscle
+memory are VS Code-based, and none of the pillars in this repo need JetBrains-specific tooling.</li>
+<li><strong>Status quo (VS Code + Claude Code only, no pilot at all)</strong> — rejected in favor of a guarded
+pilot: the capability direction (multi-agent orchestration, browser-verified changes) is worth
+tracking even if not yet adoptable, and a bounded pilot costs nothing if the guardrails hold.</li>
+</ul>
+<hr>
+<h2 id="11-risks--mitigations">11. Risks &#x26; Mitigations</h2>
+<ul>
+<li><strong>Risk:</strong> Prompt-injection-driven data exfiltration via Antigravity’s browser tool →
+<strong>Mitigation:</strong> pilot is lab-only, no sensitive data in scope, allowlist tightened before first
+use (§5.3, §6).</li>
+<li><strong>Risk:</strong> ShipSolid/personal code used for Google model training by default → <strong>Mitigation:</strong> no
+ShipSolid-platform content enters any Antigravity workspace until a Workspace/GCP-authenticated
+path exists; pilot is lab-only under Amit’s personal account.</li>
+<li><strong>Risk:</strong> Vendor lock-in to the Gemini stack if adoption proceeds → <strong>Mitigation:</strong> VS Code +
+Claude Code remains the required default; Antigravity stays additive/optional, never the only
+agentic surface.</li>
+<li><strong>Risk:</strong> Tooling fragmentation if team members self-adopt Antigravity ad hoc without this review
+→ <strong>Mitigation:</strong> this RFC is the documented decision; anything beyond the Phase 1 single-user
+pilot requires a Phase 2 reopening.</li>
+<li><strong>Risk:</strong> Platform immaturity — Antigravity shipped a major architecture change (1.0 → 2.0) within
+six months, suggesting continued API/behavior churn → <strong>Mitigation:</strong> the Q4 2026 review
+checkpoint exists precisely to avoid committing to a moving target.</li>
+</ul>
+<hr>
+<h2 id="12-open-questions">12. Open Questions</h2>
+<ul>
+<li>Does ShipSolid IT/Security already have an approved- or blocked-tools list that resolves this
+question independently of this RFC?</li>
+<li>Is a Google Workspace/GCP-authenticated tenant something ShipSolid would ever stand up, given the
+org is Azure-native? If never, Antigravity’s non-training data path may simply never be available
+to us, which would harden the “lab-only, indefinitely” conclusion rather than it being a temporary
+gap.</li>
+<li>Should the same guardrail framework (§5.3) be applied retroactively to any other AI-agentic tool
+with browser/network tool-use, not just Antigravity?</li>
+</ul>
+<hr>
+<h2 id="13-stakeholders--reviewers">13. Stakeholders &#x26; Reviewers</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Name</th><th>Role</th><th>Responsibility</th></tr></thead><tbody><tr><td>Amit Singh</td><td>Observability Architect, RFC author</td><td>Decision owner, runs the Phase 1 pilot</td></tr><tr><td>Amlan</td><td>Team collaborator</td><td>Feedback if/when Phase 2 is reopened</td></tr><tr><td>Ansh</td><td>Team collaborator</td><td>Feedback if/when Phase 2 is reopened</td></tr><tr><td>Archit</td><td>Team collaborator</td><td>Feedback if/when Phase 2 is reopened</td></tr><tr><td>ShipSolid IT/Security (TBD contact)</td><td>Approver for any tool touching ShipSolid-adjacent code</td><td>Confirm approved-tools status; own the Open Questions above</td></tr></tbody></table>
+<hr>
+<h2 id="14-references">14. References</h2>
+<ul>
+<li><a href="https://antigravity.google/pricing">Google Antigravity — Pricing</a></li>
+<li><a href="https://antigravity.google/terms">Google Antigravity — Additional Terms of Service</a></li>
+<li><a href="https://techcrunch.com/2026/05/19/google-launches-antigravity-2-0-with-an-updated-desktop-app-and-cli-tool-at-io-2026/">TechCrunch — Google launches Antigravity 2.0 with an updated desktop app and CLI tool at I/O 2026</a></li>
+<li><a href="https://simonwillison.net/2025/Nov/25/google-antigravity-exfiltrates-data/">simonwillison.net — Google Antigravity Exfiltrates Data</a></li>
+<li><a href="https://bdtechtalks.com/2025/11/27/google-antigravity-prompt-injection/">bdtechtalks — Antigravity prompt injection vulnerability highlights security threats of AI-powered coding tools</a></li>
+<li><a href="https://www.csoonline.com/article/4161382/prompt-injection-turned-googles-antigravity-file-search-into-rce.html">CSO Online — Prompt injection turned Google’s Antigravity file search into RCE</a></li>
+<li><a href="https://www.darkreading.com/vulnerabilities-threats/google-fixes-critical-rce-flaw-ai-based-antigravity-tool">Dark Reading — Google Fixes Critical RCE Flaw in AI-Based ‘Antigravity’ Tool</a></li>
+<li><a href="https://www.augmentcode.com/tools/cursor-vs-google-antigravity">Augment Code — Cursor vs Google Antigravity: Which Fits Your Enterprise Team’s Reality?</a></li>
+</ul>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"projects/platform-shipsolid/01-platform-architecture/platform-architecture","title":"01 — Platform Architecture","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity","title":"RFC: Editor & Agentic IDE Selection — VS Code vs. Google Antigravity","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-adopt-grafana-cloud-for-centralized-observability","title":"RFC-001: Adopt Grafana Cloud for Centralized Observability","topic":"projects","noteType":"note"}];
+const edges = [{"source":"projects/platform-shipsolid/01-platform-architecture/rfcs/_template","target":"projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity","target":"projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-adopt-grafana-cloud-for-centralized-observability","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/platform-architecture","target":"projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-adopt-grafana-cloud-for-centralized-observability","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/platform-architecture","target":"projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 1 note </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/01-platform-architecture/platform-architecture" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 01 — Platform Architecture </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How the platform is built — views, planes, signals, and the decision record indexes.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/api/grpc" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> gRPC API Reference </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Reference for the OrderService gRPC contract between gateway-api and order-api, covering RPCs, error codes, and trace propagation.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/architecture/adrs/adr-separate-collector-configmaps-per-mode" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Signal Forge ADR-005: Separate collector configmaps per deployment mode </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Keeps cloud and local Alloy collector configs in separate files rather than one conditional configmap, so each mode&#39;s exporters stay explicit and uncoupled.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/architecture/adrs/adr-span-metrics-before-tail-sampling" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Signal Forge ADR-003: Span metrics generated before tail sampling </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Places the spanmetrics connector ahead of tail_sampling so RED metrics reflect all traffic instead of only the ~25% of traces that survive sampling.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Signal Forge ADR-002: SpanLink for async RabbitMQ propagation (not parent-child) </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Uses a SpanLink, not a parent-child span relationship, to connect RabbitMQ consumer spans back to the producer span across async, retry-prone delivery.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Telemetry Schema Design — Azure Container Apps on Grafana Cloud </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-adopt-grafana-cloud-for-centralized-observability" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> RFC-001: Adopt Grafana Cloud for Centralized Observability </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#rfc-editor--agentic-ide-selection--vs-code-vs-google-antigravity" data-slug="rfc-editor--agentic-ide-selection--vs-code-vs-google-antigravity" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>RFC: Editor &amp; Agentic IDE Selection — VS Code vs. Google Antigravity</a></li><li data-astro-cid-xvrfupwn><a href="#1-summary" data-slug="1-summary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Summary</a></li><li data-astro-cid-xvrfupwn><a href="#2-background--motivation" data-slug="2-background--motivation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Background &amp; Motivation</a></li><li data-astro-cid-xvrfupwn><a href="#3-goals--non-goals" data-slug="3-goals--non-goals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Goals &amp; Non-Goals</a></li><li data-astro-cid-xvrfupwn><a href="#goals" data-slug="goals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Goals</a></li><li data-astro-cid-xvrfupwn><a href="#non-goals" data-slug="non-goals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Non-Goals</a></li><li data-astro-cid-xvrfupwn><a href="#4-scope" data-slug="4-scope" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Scope</a></li><li data-astro-cid-xvrfupwn><a href="#5-proposed-solution" data-slug="5-proposed-solution" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Proposed Solution</a></li><li data-astro-cid-xvrfupwn><a href="#51-overview" data-slug="51-overview" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5.1 Overview</a></li><li data-astro-cid-xvrfupwn><a href="#52-comparison" data-slug="52-comparison" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5.2 Comparison</a></li><li data-astro-cid-xvrfupwn><a href="#53-guardrails-for-the-antigravity-pilot-if-run" data-slug="53-guardrails-for-the-antigravity-pilot-if-run" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5.3 Guardrails for the Antigravity pilot (if run)</a></li><li data-astro-cid-xvrfupwn><a href="#54-rollout" data-slug="54-rollout" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5.4 Rollout</a></li><li data-astro-cid-xvrfupwn><a href="#6-security--compliance" data-slug="6-security--compliance" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Security &amp; Compliance</a></li><li data-astro-cid-xvrfupwn><a href="#7-testing--validation-plan" data-slug="7-testing--validation-plan" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. Testing &amp; Validation Plan</a></li><li data-astro-cid-xvrfupwn><a href="#8-rollout-plan" data-slug="8-rollout-plan" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>8. Rollout Plan</a></li><li data-astro-cid-xvrfupwn><a href="#81-phases" data-slug="81-phases" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8.1 Phases</a></li><li data-astro-cid-xvrfupwn><a href="#82-rollback-plan" data-slug="82-rollback-plan" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8.2 Rollback Plan</a></li><li data-astro-cid-xvrfupwn><a href="#9-success-criteria" data-slug="9-success-criteria" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>9. Success Criteria</a></li><li data-astro-cid-xvrfupwn><a href="#10-alternatives-considered" data-slug="10-alternatives-considered" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>10. Alternatives Considered</a></li><li data-astro-cid-xvrfupwn><a href="#11-risks--mitigations" data-slug="11-risks--mitigations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>11. Risks &amp; Mitigations</a></li><li data-astro-cid-xvrfupwn><a href="#12-open-questions" data-slug="12-open-questions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>12. Open Questions</a></li><li data-astro-cid-xvrfupwn><a href="#13-stakeholders--reviewers" data-slug="13-stakeholders--reviewers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>13. Stakeholders &amp; Reviewers</a></li><li data-astro-cid-xvrfupwn><a href="#14-references" data-slug="14-references" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>14. References</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-adopt-grafana-cloud-for-centralized-observability" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">RFC-001: Adopt Grafana Cloud for Centralized Observability</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/platform-shipsolid/01-platform-architecture/platform-architecture" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">01 — Platform Architecture</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

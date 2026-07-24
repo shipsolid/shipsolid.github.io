@@ -1,0 +1,691 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>5 — Advanced PromQL — Notes — Amit Singh</title><meta name="description" content="The complete recording-rule syntax reference (rule files, worked example, level:metric_name:operations naming), the offset and @ modifiers, and subqueries."><link rel="canonical" href="https://shipsolid.github.io/notes/prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="5 — Advanced PromQL — Notes — Amit Singh"><meta property="og:description" content="The complete recording-rule syntax reference (rule files, worked example, level:metric_name:operations naming), the offset and @ modifiers, and subqueries."><meta property="og:url" content="https://shipsolid.github.io/notes/prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="5 — Advanced PromQL — Notes — Amit Singh"><meta name="twitter:description" content="The complete recording-rule syntax reference (rule files, worked example, level:metric_name:operations naming), the offset and @ modifiers, and subqueries."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/prometheus" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Prometheus</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/prometheus#subtopic-05-promql-masterclass" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>05 Promql Masterclass</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/prometheus#subtopic-05-promql-masterclass-5-advanced-promql" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>5 Advanced Promql</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> 5 — Advanced PromQL  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>The complete recording-rule syntax reference (rule files, worked example, level:metric_name:operations naming), the offset and @ modifiers, and subqueries.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated July 18, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202607181229-16</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/prometheus" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>prometheus</a><a href="/notes/tag/promql" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>promql</a><a href="/notes/tag/book" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>book</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Prometheus</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/prometheus#subtopic-00-monitoring-foundations" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">00 Monitoring Foundations</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-00-monitoring-foundations-1-why-monitoring-exists" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Why Monitoring Exists</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-00-monitoring-foundations-2-time-series-fundamentals" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Time Series Fundamentals</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-00-monitoring-foundations-3-prometheus-in-the-observability-ecosystem" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Prometheus In The Observability Ecosystem</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-01-prometheus-architecture" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">01 Prometheus Architecture</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-01-prometheus-architecture-1-prometheus-components" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Prometheus Components</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-01-prometheus-architecture-2-pull-model-deep-dive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Pull Model Deep Dive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-01-prometheus-architecture-3-data-flow" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Data Flow</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-02-prometheus-data-model" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">02 Prometheus Data Model</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-02-prometheus-data-model-1-metrics-deep-dive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Metrics Deep Dive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-02-prometheus-data-model-2-labels-and-cardinality" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Labels And Cardinality</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-02-prometheus-data-model-3-tsdb-internals" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Tsdb Internals</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-03-instrumentation" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">03 Instrumentation</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-03-instrumentation-1-client-libraries" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Client Libraries</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-03-instrumentation-2-exporters" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Exporters</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-03-instrumentation-3-custom-instrumentation" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Custom Instrumentation</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-04-service-discovery" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">04 Service Discovery</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-04-service-discovery-1-discovery-mechanisms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Discovery Mechanisms</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-04-service-discovery-2-kubernetes-discovery" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Kubernetes Discovery</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-04-service-discovery-3-cloud-discovery" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Cloud Discovery</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-05-promql-masterclass" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">05 Promql Masterclass</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">5</span></a><div><a href="/notes/topic/prometheus#subtopic-05-promql-masterclass-1-promql-fundamentals" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Promql Fundamentals</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-05-promql-masterclass-2-promql-functions" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Promql Functions</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-05-promql-masterclass-3-aggregation-operators" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Aggregation Operators</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-05-promql-masterclass-4-vector-matching" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Vector Matching</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-05-promql-masterclass-5-advanced-promql" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Advanced Promql</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-06-alerting" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">06 Alerting</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-06-alerting-1-recording-rules" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Recording Rules</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-06-alerting-2-alerting-rules" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Alerting Rules</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-06-alerting-3-alertmanager" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Alertmanager</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-07-production-prometheus" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">07 Production Prometheus</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/topic/prometheus#subtopic-07-production-prometheus-1-scaling-prometheus" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Scaling Prometheus</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-07-production-prometheus-2-long-term-storage" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Long Term Storage</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-07-production-prometheus-3-performance-tuning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Performance Tuning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-07-production-prometheus-4-high-availability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 High Availability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-08-operating-prometheus" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">08 Operating Prometheus</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-08-operating-prometheus-1-kubernetes-best-practices" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Kubernetes Best Practices</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-08-operating-prometheus-2-security" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Security</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-08-operating-prometheus-3-troubleshooting" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Troubleshooting</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-09-prometheus-certified-associate" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">09 Prometheus Certified Associate</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/topic/prometheus#subtopic-09-prometheus-certified-associate-1-pca-exam-objectives" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Pca Exam Objectives</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-09-prometheus-certified-associate-2-hands-on-labs" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Hands On Labs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-09-prometheus-certified-associate-3-practice-exams" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Practice Exams</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-10-maang-interview-preparation" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">10 Maang Interview Preparation</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/topic/prometheus#subtopic-10-maang-interview-preparation-1-prometheus-system-design" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Prometheus System Design</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-10-maang-interview-preparation-2-interview-questions" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Interview Questions</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-10-maang-interview-preparation-3-deep-dive-discussions" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Deep Dive Discussions</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-10-maang-interview-preparation-4-real-production-architectures" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Real Production Architectures</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">11 Appendices</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">8</span></a><div><a href="/notes/topic/prometheus#subtopic-11-appendices-1-promql-cheat-sheet" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>1 Promql Cheat Sheet</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices-2-recording-rule-cookbook" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>2 Recording Rule Cookbook</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices-3-alert-rule-cookbook" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>3 Alert Rule Cookbook</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices-4-exporter-catalog" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>4 Exporter Catalog</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices-5-prometheus-configuration-reference" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>5 Prometheus Configuration Reference</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices-6-common-anti-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>6 Common Anti Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices-7-pca-exam-cheat-sheet" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>7 Pca Exam Cheat Sheet</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/prometheus#subtopic-11-appendices-8-interview-cheat-sheet" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>8 Interview Cheat Sheet</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div> <div data-astro-cid-v5yihett> <a href="/notes/topic/prometheus#subtopic-other" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline" data-astro-cid-v5yihett> <span class="group-hover:text-accent transition-colors" data-astro-cid-v5yihett>Other</span> <span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors" data-astro-cid-v5yihett>1</span> </a> </div> </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:5 — Advanced PromQL" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-07-18T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Prometheus" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:prometheus" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:promql" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:book" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h1 id="5--advanced-promql">5 — Advanced PromQL</h1>
+<p>This chapter rounds out the PromQL masterclass with the pieces that don’t fit cleanly into
+selectors, functions, aggregation, or vector matching: pre-computing expressions ahead of time with
+recording rules, reaching backward in time with offsets, and running an instant query over a sliding
+window with subqueries.</p>
+<h2 id="recording-rules">Recording Rules</h2>
+<p>A recording rule lets Prometheus periodically evaluate a PromQL expression on its own schedule and
+store the result as a brand-new time series — instead of every dashboard panel or alert re-running
+the same expensive expression from scratch on every load, it’s computed once and read back cheaply
+as a simple metric name. The two payoffs are speeding up dashboards that would otherwise re-run a
+heavy aggregation on every refresh, and producing a pre-aggregated series that other rules or
+dashboards can build on. This chapter is the authoritative syntax reference for recording rules for
+the whole book — the <em>why and when</em> to reach for one is covered separately
+<a href="/notes/prometheus/06-alerting/1-recording-rules/recording-rules/">wherever alerting is discussed</a>, and that material links back here rather than
+repeating the syntax.</p>
+<h3 id="wiring-a-rule-file-into-prometheusyml">Wiring a Rule File into <code>prometheus.yml</code></h3>
+<p>Recording rules don’t live inline in the main config — they go in a separate <strong>rule file</strong>, which
+<code>prometheus.yml</code> references by glob under <code>rule_files</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">global</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  scrape_interval</span><span style="color:#E1E4E8">:     </span><span style="color:#9ECBFF">15s</span></span>
+<span class="line"><span style="color:#85E89D">  evaluation_interval</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">15s</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#85E89D">rule_files</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#9ECBFF">"rules/*.yml"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#85E89D">scrape_configs</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">job_name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"prometheus"</span></span>
+<span class="line"><span style="color:#85E89D">    static_configs</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">targets</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">"localhost:9090"</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span></code></pre>
+<p>One operational gotcha: changes to a rule file are <strong>not</strong> picked up automatically the way scrape
+target changes can be via service discovery — Prometheus needs a restart (or a reload signal) to
+notice a new or edited rule file.</p>
+<h3 id="rule-file-structure">Rule File Structure</h3>
+<p>Every rule file is organized into one or more named <strong>groups</strong>, each holding an ordered list of
+rules:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">groups</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;group name 1></span></span>
+<span class="line"><span style="color:#85E89D">    interval</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;evaluation interval></span></span>
+<span class="line"><span style="color:#85E89D">    rules</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;rule name 1></span></span>
+<span class="line"><span style="color:#85E89D">        expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;promql expression 1></span></span>
+<span class="line"><span style="color:#85E89D">        labels</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          &#x3C;label name></span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;label value></span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;rule name 2></span></span>
+<span class="line"><span style="color:#85E89D">        expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;promql expression 2></span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;group name 2></span></span>
+<span class="line"><span style="color:#85E89D">    rules</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">      ...</span></span>
+<span class="line"></span></code></pre>
+<p>A few structural rules worth being precise about:</p>
+<ul>
+<li><strong><code>interval</code></strong> — how often the group’s rules are evaluated; if omitted, it falls back to the
+global <code>evaluation_interval</code>.</li>
+<li><strong><code>record</code></strong> — the name of the new metric this rule produces.</li>
+<li><strong><code>expr</code></strong> — the PromQL expression Prometheus evaluates on each tick to populate that metric.</li>
+<li><strong><code>labels</code></strong> — optional; adds or overrides labels on the resulting series before it’s stored.</li>
+<li>Rules <strong>within a group</strong> are evaluated <strong>sequentially</strong>, in the order they’re declared — a later
+rule in the same group can reference the metric a rule above it just produced.</li>
+</ul>
+<h3 id="worked-example">Worked Example</h3>
+<p>Two expressions worth turning into recording rules — free memory percentage on a node, and free
+filesystem space percentage:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>100 - (100 * node_memory_MemFree_bytes / node_memory_MemTotal_bytes)</span></span>
+<span class="line"><span></span></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>100 * node_filesystem_free_bytes / node_filesystem_avail_bytes</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Rather than re-typing either expression every time, both become rules in a group:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">groups</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">example1</span></span>
+<span class="line"><span style="color:#85E89D">    interval</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">15s</span></span>
+<span class="line"><span style="color:#85E89D">    rules</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">node_memory_memFree_percent</span></span>
+<span class="line"><span style="color:#85E89D">        expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">100 - (100 * node_memory_MemFree_bytes / node_memory_MemTotal_bytes)</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">node_filesystem_free_percent</span></span>
+<span class="line"><span style="color:#85E89D">        expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">100 * node_filesystem_free_bytes / node_filesystem_size_bytes</span></span>
+<span class="line"></span></code></pre>
+<p>Once loaded, both rules show up in the Prometheus UI under <strong>Status → Rules</strong>, alongside Runtime &#x26;
+Build information, Command-Line Flags, Configuration, Service Discovery, and TSDB Status — each
+entry showing its last evaluation time and how long that evaluation took.</p>
+<p>The recorded metrics are then queried exactly like any other metric — no special syntax required:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_memFree_percent</span></span>
+<span class="line"><span>  {instance="192.168.1.168:9100", job="node"}   ...</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>node_filesystem_free_percent</span></span>
+<span class="line"><span>  {device="/dev/sda3", instance="192.168.1.168:9100", job="node", mountpoint="/"}     ...</span></span>
+<span class="line"><span>  {device="tmpfs",     instance="192.168.1.168:9100", job="node", mountpoint="/run"}  ...</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Because a recording rule’s output is a normal metric, later rules in the same group (or a later
+group) can build on it — here a second rule averages the first rule’s own output by instance:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">groups</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">example1</span></span>
+<span class="line"><span style="color:#85E89D">    interval</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">15s</span></span>
+<span class="line"><span style="color:#85E89D">    rules</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">node_filesystem_free_percent</span></span>
+<span class="line"><span style="color:#85E89D">        expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">100 * node_filesystem_free_bytes / node_filesystem_size_bytes{job="node"}</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">node_filesystem_free_percent_avg</span></span>
+<span class="line"><span style="color:#85E89D">        expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">avg by(instance) (node_filesystem_free_percent)</span></span>
+<span class="line"></span></code></pre>
+<h3 id="naming-convention-levelmetric_nameoperations">Naming Convention: <code>level:metric_name:operations</code></h3>
+<p>Prometheus’s own documentation recommends a three-part naming scheme for recorded metrics, and it’s
+worth following mechanically rather than improvising:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>level:metric_name:operations</span></span>
+<span class="line"><span></span></span></code></pre>
+<ul>
+<li><strong><code>level</code></strong> — the aggregation level of the metric, expressed as the labels it still carries. This
+always includes the <code>job</code> label plus whatever other target labels survived the aggregation.</li>
+<li><strong><code>metric_name</code></strong> — the underlying metric/time-series name the rule is derived from.</li>
+<li><strong><code>operations</code></strong> — the functions and aggregators applied, in the order that matters (e.g. <code>rate5m</code>
+for a <code>rate(...)</code> over a 5-minute window).</li>
+</ul>
+<p>Take an <code>http_errors</code> counter carrying two instrumentation labels, <code>method</code> and <code>path</code>:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">job_method_path:http_errors:rate5m</span></span>
+<span class="line"><span style="color:#85E89D">  expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">sum without(instance) (rate(http_errors{job="api"}[5m]))</span></span>
+<span class="line"></span></code></pre>
+<p>Both <code>method</code> and <code>path</code> are still present after the <code>sum without(instance)</code>, so the aggregation
+level is <code>job_method_path</code>. The metric name is <code>http_errors</code>. The operation applied is <code>rate</code> over a
+<code>5m</code> window, hence <code>rate5m</code>.</p>
+<p>Drop <code>path</code> from the aggregation and the level shrinks to match:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">job_method:http_errors:rate5m</span></span>
+<span class="line"><span style="color:#85E89D">  expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">sum without(instance, path) (rate(http_errors{job="api"}[5m]))</span></span>
+<span class="line"></span></code></pre>
+<p>If <code>method</code> were dropped too, the level would collapse to just <code>job</code>. The name is a direct,
+mechanical readout of what the <code>expr</code> actually does — anyone reading <code>job_method:http_errors:rate5m</code>
+in a dashboard knows exactly what it means without opening the rule file.</p>
+<h3 id="best-practice-group-by-job">Best Practice: Group by Job</h3>
+<p>All the rules for a given job should live together in a single group, rather than spread across
+multiple files or groups — it keeps the sequential-evaluation guarantee useful and makes a job’s
+full set of derived metrics discoverable in one place:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">groups</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">node</span></span>
+<span class="line"><span style="color:#85E89D">    interval</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#x3C;interval></span></span>
+<span class="line"><span style="color:#85E89D">    rules</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">record</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">job:node_memory_memFree_percent:avg</span></span>
+<span class="line"><span style="color:#85E89D">        expr</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">avg by(job) (100 - (100 * node_memory_MemFree_bytes{job="node"} / node_memory_MemTotal_bytes{job="node"}))</span></span>
+<span class="line"><span style="color:#6A737D">      # ...</span></span>
+<span class="line"></span></code></pre>
+<h2 id="offset-modifier">Offset Modifier</h2>
+<p>A plain query always returns the <strong>current</strong> value:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_Active_bytes{instance="node1"}     22259302   # most recent value</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Appending <code>offset &#x3C;duration></code> after the label matchers shifts the query back in time instead:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_Active_bytes{instance="node1"} offset 5m      22259302   # value 5 minutes ago</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="time-units">Time Units</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Suffix</th><th>Meaning</th></tr></thead><tbody><tr><td><code>ms</code></td><td>Milliseconds</td></tr><tr><td><code>s</code></td><td>Seconds</td></tr><tr><td><code>m</code></td><td>Minutes</td></tr><tr><td><code>h</code></td><td>Hours</td></tr><tr><td><code>d</code></td><td>Days</td></tr><tr><td><code>w</code></td><td>Weeks</td></tr><tr><td><code>y</code></td><td>Years (365 days)</td></tr></tbody></table>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_Active_bytes{instance="node1"} offset 5d      22259302</span></span>
+<span class="line"><span>node_memory_Active_bytes{instance="node1"} offset 2w      44823311</span></span>
+<span class="line"><span>node_memory_Active_bytes{instance="node1"} offset 1h30m   11864917</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="the--modifier">The <code>@</code> Modifier</h3>
+<p>Where <code>offset</code> is relative (“N minutes/hours/days ago”), the <code>@</code> modifier pins a query to an
+<strong>absolute</strong> Unix timestamp:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_Active_bytes{instance="node1"} @1663265188     22259302</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><code>1663265188</code> corresponds to September 15, 2022, 6:06:28 PM GMT.</p>
+<p>The two can be combined — <code>@</code> sets the anchor point, <code>offset</code> shifts relative to it:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_Active_bytes{instance="node1"} @1663265188 offset 5m     22259302</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>That returns the value 5 minutes before the anchor timestamp. Order between the two doesn’t matter:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_Active_bytes{instance="node1"} @1663265188 offset 5m</span></span>
+<span class="line"><span>= node_memory_Active_bytes{instance="node1"} offset 5m @1663265188</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Both modifiers also apply to range vectors — get 2 minutes of data ending 10 minutes before the
+anchor timestamp:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>node_memory_Active_bytes{instance="node1"}[2m] @1663265188 offset 10m</span></span>
+<span class="line"><span></span></span></code></pre>
+<h2 id="subqueries">Subqueries</h2>
+<p>Some computations need a range vector as <em>input</em> to a function that itself only accepts a range
+vector — for a gauge, the maximum over a 10-minute window is a direct call:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>max_over_time(node_filesystem_avail_bytes[10m])</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>But for a counter, what’s usually wanted is the maximum <em>rate</em> over that window, and this doesn’t
+work directly:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>max_over_time(rate(http_requests_total[10m]))    # ERROR</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><code>rate()</code> returns an instant vector, but <code>max_over_time()</code> expects a range vector as its argument —
+the two don’t compose without something in between to re-expand the instant result back into a
+range. That’s the gap subqueries close.</p>
+<h3 id="subquery-format">Subquery Format</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>&#x3C;instant_query> [&#x3C;range>:&#x3C;resolution>] [offset &#x3C;duration>]</span></span>
+<span class="line"><span></span></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>rate(http_requests_total[1m]) [5m:30s]</span></span>
+<span class="line"><span></span></span></code></pre>
+<ul>
+<li><code>1m</code> — the sample range fed to <code>rate()</code></li>
+<li><code>5m</code> — the subquery’s own range (pull data from the last 5 minutes)</li>
+<li><code>30s</code> — the resolution/step at which the inner instant query is re-evaluated across that range</li>
+</ul>
+<p>Wrapping the original problem in a subquery makes it valid:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>max_over_time(rate(http_requests_total[1m])[5m:30s])</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Read as: evaluate <code>rate(http_requests_total[1m])</code> every 30 seconds over the last 5 minutes, then
+take the maximum of those evaluations.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>rate(node_cpu_seconds_total[1m])[2m:10s]</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Sampled every 10 seconds, over a 2-minute range.</p>
+<h2 id="joins">Joins</h2>
+<p>PromQL doesn’t have a <code>JOIN</code> keyword, but the mechanism that plays the same role — matching samples
+across two different metrics by their shared labels, with explicit control over cardinality via
+<code>group_left</code>/<code>group_right</code> — is exactly vector matching. Rather than re-explain it here, see
+<a href="/notes/prometheus/05-promql-masterclass/4-vector-matching/vector-matching/">Vector Matching</a> for the full
+treatment of <code>ignoring</code>/<code>on</code> and one-to-one vs. many-to-one matching.</p>
+<h2 id="query-optimization-and-performance">Query Optimization and Performance</h2>
+<p>Two habits from this book’s own material carry most of the weight when it comes to query
+performance. First, the ordering rule from
+<a href="/notes/prometheus/05-promql-masterclass/2-promql-functions/promql-functions/">PromQL Functions</a>: always call <code>rate()</code> before
+aggregating, never after — aggregating first destroys the per-series counter information <code>rate()</code>
+needs to detect resets, so the two aren’t interchangeable in cost or correctness. Second, histogram
+cardinality is a direct cost lever: every additional <code>_bucket</code> boundary is its own time series, so a
+histogram with too many buckets means higher active-series count, higher RAM and disk usage on the
+Prometheus server, and slower writes — the accuracy gained from an extra bucket has to be weighed
+against that cost, not assumed to be free. Everything below the query layer — storage engine tuning,
+scrape performance, and TSDB-level knobs — belongs to
+<a href="/notes/prometheus/07-production-prometheus/3-performance-tuning/performance-tuning/">Performance Tuning</a>,
+which isn’t written yet; this section only covers what’s controllable from inside a PromQL
+expression itself.</p>
+<h2 id="metadata">Metadata</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Author</td><td>Amit Singh</td></tr><tr><td>Scope</td><td>prometheus</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"prometheus/05-promql-masterclass/2-promql-functions/promql-functions","title":"2 — PromQL Functions","topic":"prometheus","noteType":"note"},{"slug":"prometheus/05-promql-masterclass/4-vector-matching/vector-matching","title":"4 — Vector Matching","topic":"prometheus","noteType":"note"},{"slug":"prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql","title":"5 — Advanced PromQL","topic":"prometheus","noteType":"note"},{"slug":"prometheus/06-alerting/1-recording-rules/recording-rules","title":"1 — Recording Rules","topic":"prometheus","noteType":"note"},{"slug":"prometheus/07-production-prometheus/3-performance-tuning/performance-tuning","title":"3 — Performance Tuning","topic":"prometheus","noteType":"note"},{"slug":"prometheus/11-appendices/2-recording-rule-cookbook/recording-rule-cookbook","title":"2 — Recording Rule Cookbook","topic":"prometheus","noteType":"note"},{"slug":"prometheus/readme","title":"Prometheus","topic":"prometheus","noteType":"moc"}];
+const edges = [{"source":"prometheus/05-promql-masterclass/4-vector-matching/vector-matching","target":"prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql","kind":"depends_on"},{"source":"prometheus/05-promql-masterclass/2-promql-functions/promql-functions","target":"prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql","kind":"depends_on"},{"source":"prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql","target":"prometheus/06-alerting/1-recording-rules/recording-rules","kind":"related"},{"source":"prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql","target":"prometheus/07-production-prometheus/3-performance-tuning/performance-tuning","kind":"related"},{"source":"prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql","target":"prometheus/11-appendices/2-recording-rule-cookbook/recording-rule-cookbook","kind":"related"},{"source":"prometheus/05-promql-masterclass/2-promql-functions/promql-functions","target":"prometheus/readme","kind":"related"},{"source":"prometheus/05-promql-masterclass/4-vector-matching/vector-matching","target":"prometheus/readme","kind":"related"},{"source":"prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql","target":"prometheus/readme","kind":"related"},{"source":"prometheus/06-alerting/1-recording-rules/recording-rules","target":"prometheus/readme","kind":"related"},{"source":"prometheus/07-production-prometheus/3-performance-tuning/performance-tuning","target":"prometheus/readme","kind":"related"},{"source":"prometheus/11-appendices/2-recording-rule-cookbook/recording-rule-cookbook","target":"prometheus/readme","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 4 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/prometheus/06-alerting/1-recording-rules/recording-rules" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — Recording Rules </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Why recording rules exist in an alerting pipeline: pre-computing expensive or frequently-evaluated expressions so alert rules stay cheap, and how that ties to rule-group evaluation cadence.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/prometheus/06-alerting/1-recording-rules/recording-rules" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — Recording Rules </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Why recording rules exist in an alerting pipeline: pre-computing expensive or frequently-evaluated expressions so alert rules stay cheap, and how that ties to rule-group evaluation cadence.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/prometheus/11-appendices/2-recording-rule-cookbook/recording-rule-cookbook" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2 — Recording Rule Cookbook </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A cookbook of distinct, ready-to-paste recording rule patterns — currently the only worked examples in this book&#39;s source material are already the teaching example in Advanced PromQL, so there isn&#39;t yet a second, genuinely different set of recipes.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/prometheus/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Prometheus </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for Prometheus: monitoring foundations through architecture, data model, instrumentation, service discovery, PromQL, alerting, production operation, PCA certification, and MAANG interview prep — cross-linking existing notes instead of duplicating them.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/prometheus/05-promql-masterclass/3-aggregation-operators/aggregation-operators" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 3 — Aggregation Operators </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The PromQL aggregation operator table, the by clause, the without clause, and worked collapsing examples across single and multiple labels.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/prometheus/05-promql-masterclass/2-promql-functions/promql-functions" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2 — PromQL Functions </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Math, date/time, type-conversion, and sorting functions; the rate() vs irate() decision; and the histogram_quantile() function-call mechanics.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/prometheus/05-promql-masterclass/1-promql-fundamentals/promql-fundamentals" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — PromQL Fundamentals </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The four PromQL data types, label matchers and selectors, and how to run PromQL outside the Prometheus UI via the HTTP API.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/prometheus/05-promql-masterclass/4-vector-matching/vector-matching" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4 — Vector Matching </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How PromQL matches labels between two instant vectors — ignoring/on, one-to-one vs many-to-one/one-to-many with group_left/group_right — plus arithmetic, comparison, and logical operators.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/prometheus" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Prometheus notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/prometheus/05-promql-masterclass/5-advanced-promql/advanced-promql.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/prometheus/05-promql-masterclass/4-vector-matching/vector-matching" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4 — Vector Matching </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/prometheus/06-alerting/1-recording-rules/recording-rules" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — Recording Rules </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#recording-rules" data-slug="recording-rules" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Recording Rules</a></li><li data-astro-cid-xvrfupwn><a href="#wiring-a-rule-file-into-prometheusyml" data-slug="wiring-a-rule-file-into-prometheusyml" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Wiring a Rule File into prometheus.yml</a></li><li data-astro-cid-xvrfupwn><a href="#rule-file-structure" data-slug="rule-file-structure" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Rule File Structure</a></li><li data-astro-cid-xvrfupwn><a href="#worked-example" data-slug="worked-example" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Worked Example</a></li><li data-astro-cid-xvrfupwn><a href="#naming-convention-levelmetric_nameoperations" data-slug="naming-convention-levelmetric_nameoperations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Naming Convention: level:metric_name:operations</a></li><li data-astro-cid-xvrfupwn><a href="#best-practice-group-by-job" data-slug="best-practice-group-by-job" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Best Practice: Group by Job</a></li><li data-astro-cid-xvrfupwn><a href="#offset-modifier" data-slug="offset-modifier" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Offset Modifier</a></li><li data-astro-cid-xvrfupwn><a href="#time-units" data-slug="time-units" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Time Units</a></li><li data-astro-cid-xvrfupwn><a href="#the--modifier" data-slug="the--modifier" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>The @ Modifier</a></li><li data-astro-cid-xvrfupwn><a href="#subqueries" data-slug="subqueries" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Subqueries</a></li><li data-astro-cid-xvrfupwn><a href="#subquery-format" data-slug="subquery-format" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Subquery Format</a></li><li data-astro-cid-xvrfupwn><a href="#joins" data-slug="joins" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Joins</a></li><li data-astro-cid-xvrfupwn><a href="#query-optimization-and-performance" data-slug="query-optimization-and-performance" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Query Optimization and Performance</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Depends On</p><a href="/notes/prometheus/05-promql-masterclass/4-vector-matching/vector-matching" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">4 — Vector Matching</span></a><a href="/notes/prometheus/05-promql-masterclass/2-promql-functions/promql-functions" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">2 — PromQL Functions</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/prometheus/06-alerting/1-recording-rules/recording-rules" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">1 — Recording Rules</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/prometheus/06-alerting/1-recording-rules/recording-rules" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">1 — Recording Rules</span></a><a href="/notes/prometheus/06-alerting/1-recording-rules/recording-rules" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">1 — Recording Rules</span></a><a href="/notes/prometheus/11-appendices/2-recording-rule-cookbook/recording-rule-cookbook" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">2 — Recording Rule Cookbook</span></a><a href="/notes/prometheus/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Prometheus</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

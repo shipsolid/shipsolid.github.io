@@ -1,0 +1,1888 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Telemetry Schema Design — Azure Container Apps on Grafana Cloud — Notes — Amit Singh</title><meta name="description" content="This schema is optimised for: - 50+ Azure Container Apps"><link rel="canonical" href="https://shipsolid.github.io/notes/projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Telemetry Schema Design — Azure Container Apps on Grafana Cloud — Notes — Amit Singh"><meta property="og:description" content="This schema is optimised for: - 50+ Azure Container Apps"><meta property="og:url" content="https://shipsolid.github.io/notes/projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Telemetry Schema Design — Azure Container Apps on Grafana Cloud — Notes — Amit Singh"><meta name="twitter:description" content="This schema is optimised for: - 50+ Azure Container Apps"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Platform Shipsolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>01 Platform Architecture</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Designs</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> Telemetry Schema Design — Azure Container Apps on Grafana Cloud  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>This schema is optimised for: - 50+ Azure Container Apps</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 7, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202605071859</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/architecture" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Architecture</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:Telemetry Schema Design — Azure Container Apps on Grafana Cloud" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-05-07T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Architecture" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="telemetry-schema-design">Telemetry Schema Design</h2>
+<h2 id="azure-container-apps-net--python--grafana-cloud--opentelemetry-reference-architecture">Azure Container Apps (.NET + Python) — Grafana Cloud + OpenTelemetry Reference Architecture</h2>
+<blockquote>
+<p>Companion to <a href="/notes/projects/platform-shipsolid/07-cost-governance/metric-label-standards/">metric-label-standards.md</a>
+(cost-attribution labels), <a href="/notes/projects/platform-shipsolid/01-platform-architecture/observability-overview/">observability-overview.md</a>,
+<a href="/notes/projects/platform-shipsolid/03-reliability-engineering/kpis-slis-slos-slas/">kpis-slis-slos-slas.md</a>, and
+<a href="/notes/projects/platform-shipsolid/05-platform-configuration/security-access-compliance/">security-access-compliance.md</a>.
+This document owns the <strong>schema contract</strong>; the metric-label doc owns the <strong>billing/attribution
+contract</strong>. Read both before changing labels.</p>
+</blockquote>
+<hr>
+<h2 id="1-design-goals">1. Design Goals</h2>
+<p>This schema is optimised for:</p>
+<ul>
+<li>50+ Azure Container Apps</li>
+<li>12+ engineering teams</li>
+<li>Multi-region deployments</li>
+<li>Mixed runtime (.NET 8 + Python 3.11+)</li>
+<li>Grafana Cloud (Mimir + Loki + Tempo)</li>
+<li>OTel-native instrumentation</li>
+<li>High-scale cardinality governance</li>
+<li>SLO-driven operations</li>
+<li>Cross-service distributed tracing</li>
+<li>Federated governance model</li>
+</ul>
+<p>Priorities, in order:</p>
+<ol>
+<li>Query consistency</li>
+<li>Controlled cardinality</li>
+<li>Cross-language interoperability</li>
+<li>Cost-efficient aggregation</li>
+<li>Incident debugging velocity</li>
+<li>Async trace continuity</li>
+<li>Platform-wide observability contracts</li>
+</ol>
+<hr>
+<h2 id="2-core-principles">2. Core Principles</h2>
+<h3 id="principle-1--telemetry-is-a-platform-api">Principle 1 — Telemetry Is a Platform API</h3>
+<p>Telemetry attributes are versioned contracts, query interfaces, aggregation keys, and operational
+dependencies. Teams MUST NOT emit arbitrary labels without governance review (§20).</p>
+<h3 id="principle-2--resource-attributes-must-be-stable">Principle 2 — Resource Attributes Must Be Stable</h3>
+<p>Resource attributes define identity. They:</p>
+<ul>
+<li>SHOULD be low cardinality</li>
+<li>MUST remain stable for the process lifetime</li>
+<li>MUST exist on metrics, logs, and traces alike</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td><code>service.name</code></td><td><code>request.id</code></td></tr><tr><td><code>deployment.environment</code></td><td><code>user.id</code></td></tr><tr><td><code>cloud.region</code></td><td><code>session.id</code></td></tr></tbody></table>
+<h3 id="principle-3--business-dimensions-belong-in-spanlog-attributes">Principle 3 — Business Dimensions Belong in Span/Log Attributes</h3>
+<p>Dynamic business metadata (<code>tenant.id</code>, <code>workflow.name</code>, <code>feature.flag</code>, <code>order.id</code>) MUST NOT appear
+as metric labels unless explicitly approved through the schema-change process (§20).</p>
+<h3 id="principle-4--metrics-are-aggregation-signals">Principle 4 — Metrics Are Aggregation Signals</h3>
+<p>Metrics optimise for alerting, SLOs, trend analysis, and low query cost. <strong>Metrics are not forensic
+storage.</strong></p>
+<h3 id="principle-5--logs-carry-forensic-detail">Principle 5 — Logs Carry Forensic Detail</h3>
+<p>Logs are the primary location for exception context, payload metadata, business identifiers, and
+debugging breadcrumbs.</p>
+<h3 id="principle-6--traces-are-the-connective-tissue">Principle 6 — Traces Are the Connective Tissue</h3>
+<p>Traces link metrics (via exemplars) and logs (via <code>trace_id</code>/<code>span_id</code>). Any high-cardinality
+dimension dropped from metrics MUST be discoverable through a trace or log (§6.3, §7.3).</p>
+<hr>
+<h2 id="3-high-level-architecture">3. High-Level Architecture</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>Azure Container Apps (.NET / Python)</span></span>
+<span class="line"><span>    |</span></span>
+<span class="line"><span>    | OTel SDK (OTLP/gRPC, batch)</span></span>
+<span class="line"><span>    v</span></span>
+<span class="line"><span>[Agent Tier] OTel Collector / Alloy DaemonSet      &#x3C;-- per-region, in-cluster</span></span>
+<span class="line"><span>    |</span></span>
+<span class="line"><span>    | OTLP/gRPC (mTLS, compressed)</span></span>
+<span class="line"><span>    v</span></span>
+<span class="line"><span>[Gateway Tier] Alloy stateful gateway              &#x3C;-- tail sampling, redaction, schema enforcement</span></span>
+<span class="line"><span>    |</span></span>
+<span class="line"><span>    +--- remote_write (Mimir)</span></span>
+<span class="line"><span>    +--- loki.write   (Loki)</span></span>
+<span class="line"><span>    +--- otlphttp     (Tempo)</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Two-tier topology rationale: tail sampling and PII redaction need full-trace visibility, which a
+per-pod agent cannot guarantee. See §13 Collector Topology.</p>
+<hr>
+<h2 id="4-canonical-resource-schema">4. Canonical Resource Schema</h2>
+<h3 id="41-required-attributes-all-signals">4.1 Required attributes (all signals)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Attribute</th><th>Required</th><th>Cardinality</th><th>Notes</th></tr></thead><tbody><tr><td><code>service.name</code></td><td>Yes</td><td>Low</td><td>Logical service name (§5.1)</td></tr><tr><td><code>service.namespace</code></td><td>Yes</td><td>Low</td><td>Business/domain grouping (§5.2)</td></tr><tr><td><code>service.version</code></td><td>Yes</td><td>Medium</td><td>Semantic version or image SHA prefix; see §14 retention warning</td></tr><tr><td><code>service.instance.id</code></td><td>Yes</td><td>High</td><td>Per-replica UUID; <strong>never</strong> a metric label, exposed on traces/logs</td></tr><tr><td><code>deployment.environment</code></td><td>Yes</td><td>Low</td><td><code>dev</code>/<code>qa</code>/<code>train</code>/<code>prod</code></td></tr><tr><td><code>cloud.provider</code></td><td>Yes</td><td>Low</td><td><code>azure</code></td></tr><tr><td><code>cloud.region</code></td><td>Yes</td><td>Low</td><td>Azure region</td></tr><tr><td><code>cloud.platform</code></td><td>Yes</td><td>Low</td><td><code>azure_container_apps</code></td></tr><tr><td><code>aca.revision.name</code></td><td>Yes</td><td>Medium</td><td>ACA revision (rolls forward on every deploy) — drop from metrics</td></tr><tr><td><code>aca.replica.name</code></td><td>Yes</td><td>High</td><td>KEDA-driven, churns on scale events — traces/logs only</td></tr><tr><td><code>container.name</code></td><td>Yes</td><td>Medium</td><td>ACA container name</td></tr><tr><td><code>k8s.namespace.name</code></td><td>Yes</td><td>Low</td><td>ACA managed namespace</td></tr><tr><td><code>telemetry.sdk.language</code></td><td>Yes</td><td>Low</td><td><code>dotnet</code> / <code>python</code></td></tr><tr><td><code>telemetry.sdk.version</code></td><td>Yes</td><td>Low</td><td>Set automatically by SDK; useful for upgrade tracking</td></tr><tr><td><code>team.name</code></td><td>Yes</td><td>Low</td><td>Owning team — joins cost-attribution (see §25)</td></tr><tr><td><code>business.unit</code></td><td>Optional</td><td>Low</td><td>Domain ownership; see cost-attribution doc</td></tr></tbody></table>
+<p><code>host.name</code> is intentionally absent: on ACA the underlying host is platform-managed and changes
+frequently. Use <code>service.instance.id</code> for replica identity.</p>
+<h3 id="42-azure-container-apps-specifics">4.2 Azure Container Apps specifics</h3>
+<ul>
+<li><strong><code>service.instance.id</code> SHOULD be set from <code>CONTAINER_APP_REPLICA_NAME</code></strong> (env var injected by
+ACA). Resource Detector for ACA does not yet land this attribute consistently in the OTel SDK —
+set it manually in startup until upstream parity exists.</li>
+<li><strong>KEDA scale events cause replica churn</strong>, which inflates <code>service.instance.id</code> cardinality. This
+is acceptable on traces/logs but is the strongest reason to keep <code>service.instance.id</code> off every
+metric.</li>
+<li><strong>ACA built-in logs (Container Apps environment logs)</strong> are written to Log Analytics by the
+platform; do not duplicate them through OTel. Application logs and access logs SHOULD flow through
+OTel only.</li>
+<li><strong>Cold starts</strong> (replica count 0 → 1) produce a one-off bimodal latency distribution. Histogram
+buckets in §6.2 cover this; alerts SHOULD use p95 over a window long enough to absorb cold-start
+tails.</li>
+</ul>
+<hr>
+<h2 id="5-naming-standards">5. Naming Standards</h2>
+<h3 id="51-service-naming">5.1 Service Naming</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>&#x3C;domain>-&#x3C;capability>-&#x3C;service></span></span>
+<span class="line"><span></span></span></code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td><code>payments-checkout-api</code></td><td><code>api</code></td></tr><tr><td><code>catalog-search-worker</code></td><td><code>backend</code></td></tr><tr><td><code>identity-auth-service</code></td><td><code>service1</code></td></tr><tr><td></td><td><code>prod-api</code></td></tr></tbody></table>
+<p>Environment MUST NOT appear in <code>service.name</code> — it lives in <code>deployment.environment</code>.</p>
+<h3 id="52-namespace-naming">5.2 Namespace Naming</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>&#x3C;business-domain></span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Examples: <code>payments</code>, <code>identity</code>, <code>recommendations</code>, <code>supplychain</code>.</p>
+<hr>
+<h2 id="6-metrics-schema">6. Metrics Schema</h2>
+<h3 id="61-golden-signals">6.1 Golden Signals</h3>
+<h4 id="http-server-metrics">HTTP Server Metrics</h4>
+<p>OTel-native names (semconv 1.26 baseline — see §15):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Type</th><th>Allowed labels</th></tr></thead><tbody><tr><td><code>http.server.request.duration</code></td><td>Histogram</td><td><code>service.name</code>, <code>http.route</code>, <code>http.request.method</code>, <code>http.response.status_code</code>, <code>deployment.environment</code></td></tr><tr><td><code>http.server.request.count</code></td><td>Counter</td><td>same</td></tr><tr><td><code>http.server.active_requests</code></td><td>Gauge</td><td><code>service.name</code>, <code>deployment.environment</code></td></tr></tbody></table>
+<p><strong><code>http.route</code> MUST be the templated route</strong> (<code>/orders/{id}</code>), not the raw URL. Both .NET
+(<code>AspNetCore.Routing</code>) and Python (FastAPI/Flask) auto-instrumentations supply this. The collector
+MUST drop the metric outright if <code>http.route</code> is unset or contains numeric path segments — see §9.2.</p>
+<p>Forbidden as labels: <code>user.id</code>, <code>session.id</code>, <code>request.id</code>, raw URL, email, query string.</p>
+<h4 id="queue--messaging-metrics">Queue / Messaging Metrics</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Type</th></tr></thead><tbody><tr><td><code>messaging.queue.depth</code></td><td>Gauge</td></tr><tr><td><code>messaging.consumer.lag</code></td><td>Gauge</td></tr><tr><td><code>messaging.process.duration</code></td><td>Histogram</td></tr><tr><td><code>messaging.retry.count</code></td><td>Counter</td></tr><tr><td><code>messaging.dlq.count</code></td><td>Counter</td></tr></tbody></table>
+<p>Allowed labels: <code>messaging.system</code> (<code>servicebus</code>/<code>kafka</code>/<code>eventgrid</code>), <code>messaging.destination.name</code>,
+<code>messaging.consumer.group</code>, <code>messaging.operation</code> (<code>publish</code>/<code>receive</code>/<code>process</code>),
+<code>deployment.environment</code>.</p>
+<p>DLQ count is mandatory — it is the canary metric for poison-message storms and is silently absent
+from most teams’ first-pass instrumentation.</p>
+<h4 id="workflow-metrics">Workflow Metrics</h4>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Type</th></tr></thead><tbody><tr><td><code>workflow.execution.duration</code></td><td>Histogram</td></tr><tr><td><code>workflow.execution.success</code></td><td>Counter</td></tr><tr><td><code>workflow.execution.failure</code></td><td>Counter</td></tr></tbody></table>
+<p>Allowed labels: <code>workflow.name</code> (medium-cardinality, requires registry approval), <code>workflow.type</code>,
+<code>deployment.environment</code>.</p>
+<h3 id="62-histogram-bucket-standards">6.2 Histogram Bucket Standards</h3>
+<p><strong>HTTP latency</strong> — aligned to OTel semconv 1.26 default explicit bucket boundaries (do not deviate
+without ADR):</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>Queue/messaging processing</strong> — diverges from OTel default because tail latency for async work is
+measured in seconds, not ms:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>0.01, 0.05, 0.1, 0.25, 0.5, 1, 5, 10, 30, 60, 300</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Native histograms (Mimir): teams MAY emit in addition to explicit buckets, but SHOULD NOT replace
+them yet — alerting tooling parity is incomplete (revisit on next <code>last_reviewed</code>).</p>
+<h3 id="63-exemplars-mandatory-on-histograms">6.3 Exemplars (mandatory on histograms)</h3>
+<p>Every histogram metric MUST carry exemplars when a sampled trace is in scope. This is the only
+mechanism that lets a Mimir SLO drilldown reach the originating Tempo trace, and it is free at
+emission time.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># OTel SDK config (.NET / Python — both default-on once TracerProvider is registered)</span></span>
+<span class="line"><span style="color:#85E89D">metrics</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  exemplar_filter</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">trace_based</span></span>
+<span class="line"></span></code></pre>
+<p>Mimir-side: <code>--ingester.native-histograms-ingestion-enabled</code> and
+<code>--query-frontend.exemplars-enabled</code> MUST be on. Confirm via Grafana Cloud account settings.</p>
+<h3 id="64-otel--prometheus-name-translation">6.4 OTel → Prometheus Name Translation</h3>
+<p>Prometheus rejects dots, so the OTel <code>http.server.request.duration</code> becomes
+<code>http_server_request_duration_seconds_bucket</code> after the Prometheus exporter rewrites. Resource
+attributes do NOT auto-promote to labels: configure the OTel Prometheus exporter / Alloy
+<code>otelcol.exporter.prometheus</code> with an explicit <code>add_metric_suffixes: true</code> and the
+resource-attributes-to-labels list in §4.1 (low and medium only).</p>
+<p>Document in dashboards using <strong>the rewritten Prometheus name</strong> but reference <strong>the OTel name</strong> in
+this schema. PromQL example uses <code>http_server_request_duration_seconds_bucket</code>; Tempo and Loki
+queries use <code>service.name</code> (dotted) — see §17.</p>
+<hr>
+<h2 id="7-logging-schema">7. Logging Schema</h2>
+<h3 id="71-log-shape">7.1 Log Shape</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="json"><code><span class="line"><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#79B8FF">  "timestamp"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"2026-05-07T12:00:00Z"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "severity"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"ERROR"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "message"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"Payment authorization failed"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "service.name"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"payments-checkout-api"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "deployment.environment"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"prod"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "trace_id"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"4bf92f3577b34da6a3ce929d0e0e4736"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "span_id"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"00f067aa0ba902b7"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "tenant.id"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"tenant-001"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "workflow.name"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"checkout"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "operation.name"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"authorize-payment"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "error.type"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"TimeoutException"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "http.response.status_code"</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">504</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">  "feature.flag"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"new-gateway-enabled"</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<h3 id="72-required-fields">7.2 Required Fields</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Required</th></tr></thead><tbody><tr><td><code>timestamp</code></td><td>Yes</td></tr><tr><td><code>severity</code></td><td>Yes</td></tr><tr><td><code>message</code></td><td>Yes</td></tr><tr><td><code>service.name</code></td><td>Yes</td></tr><tr><td><code>deployment.environment</code></td><td>Yes</td></tr><tr><td><code>trace_id</code></td><td>Yes (when in trace context)</td></tr><tr><td><code>span_id</code></td><td>Yes (when in trace context)</td></tr></tbody></table>
+<h3 id="73-loki-stream-labels-vs-structured-metadata-vs-body">7.3 Loki Stream Labels vs Structured Metadata vs Body</h3>
+<p>Loki 3.x introduced <strong>structured metadata</strong> — high-cardinality fields that are queryable via <code>|=</code>
+and <code>| &#x3C;field>=</code> without contributing to stream cardinality. This is the single most important
+change to internalise; pre-3.x guidance forced everything onto labels or body, and that is no longer
+correct.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th align="center">Stream label</th><th align="center">Structured metadata</th><th align="center">Body</th></tr></thead><tbody><tr><td><code>service.name</code></td><td align="center">✓</td><td align="center"></td><td align="center"></td></tr><tr><td><code>deployment.environment</code></td><td align="center">✓</td><td align="center"></td><td align="center"></td></tr><tr><td><code>cloud.region</code></td><td align="center">✓</td><td align="center"></td><td align="center"></td></tr><tr><td><code>severity</code></td><td align="center">✓</td><td align="center"></td><td align="center"></td></tr><tr><td><code>team.name</code></td><td align="center">✓</td><td align="center"></td><td align="center"></td></tr><tr><td><code>workflow.name</code></td><td align="center"></td><td align="center">✓</td><td align="center"></td></tr><tr><td><code>tenant.id</code></td><td align="center"></td><td align="center">✓</td><td align="center"></td></tr><tr><td><code>trace_id</code> / <code>span_id</code></td><td align="center"></td><td align="center">✓</td><td align="center"></td></tr><tr><td><code>operation.name</code></td><td align="center"></td><td align="center">✓</td><td align="center"></td></tr><tr><td><code>request.id</code></td><td align="center"></td><td align="center">✓</td><td align="center"></td></tr><tr><td><code>user.id</code>, <code>order.id</code></td><td align="center"></td><td align="center"></td><td align="center">✓</td></tr><tr><td>Stack traces, payloads</td><td align="center"></td><td align="center"></td><td align="center">✓</td></tr></tbody></table>
+<p>Stream-label budget: <strong>≤ 6 labels per stream</strong>. Adding any new label requires registry review.
+<code>workflow.name</code> was misclassified as a stream label in earlier drafts — at 12 teams × ~5 workflows ×
+env × region × service.name the cross-product blows past Loki’s <code>max_streams_per_user</code> default.</p>
+<h3 id="74-high-cardinality-identifiers">7.4 High-Cardinality Identifiers</h3>
+<p>Allowed in <strong>structured metadata</strong> or <strong>body</strong> only — never as Loki stream labels and never as
+metric labels:</p>
+<p><code>user.id</code>, <code>session.id</code>, <code>order.id</code>, <code>request.id</code>, <code>correlation.id</code>, payload identifiers.</p>
+<hr>
+<h2 id="8-trace-schema">8. Trace Schema</h2>
+<h3 id="81-span-naming">8.1 Span Naming</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>&#x3C;operation> &#x3C;resource></span></span>
+<span class="line"><span></span></span></code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Good</th><th>Bad</th></tr></thead><tbody><tr><td><code>GET /orders/{id}</code></td><td><code>HandleRequest</code></td></tr><tr><td><code>POST /payments</code></td><td><code>Execute</code></td></tr><tr><td><code>consume kafka.payment-events</code></td><td><code>Process</code></td></tr><tr><td><code>process checkout-workflow</code></td><td></td></tr></tbody></table>
+<p>The resource part MUST be templated, mirroring §6.1’s <code>http.route</code> rule.</p>
+<h3 id="82-required-span-attributes">8.2 Required Span Attributes</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Attribute</th><th>Required</th></tr></thead><tbody><tr><td><code>service.name</code></td><td>Yes</td></tr><tr><td><code>deployment.environment</code></td><td>Yes</td></tr><tr><td><code>operation.name</code></td><td>Yes</td></tr><tr><td><code>span.kind</code></td><td>Yes</td></tr><tr><td><code>tenant.id</code></td><td>Recommended</td></tr><tr><td><code>workflow.name</code></td><td>Recommended</td></tr><tr><td><code>error.type</code></td><td>When <code>status=error</code></td></tr></tbody></table>
+<p><code>trace_id</code> and <code>span_id</code> are managed by the SDK and are not user-set attributes.</p>
+<h3 id="83-async-messaging-propagation">8.3 Async Messaging Propagation</h3>
+<p>Mandatory propagators:</p>
+<ul>
+<li>W3C Trace Context (<code>traceparent</code>, <code>tracestate</code>)</li>
+<li>W3C Baggage (<code>baggage</code>)</li>
+<li>Application-level <code>x-correlation-id</code> (preserved across async hops)</li>
+</ul>
+<h4 id="831-azure-service-bus-caveat">8.3.1 Azure Service Bus caveat</h4>
+<p>The <code>Azure.Messaging.ServiceBus</code> SDK propagates W3C Trace Context <strong>only when running with
+<code>OpenTelemetry.Instrumentation.AzureMessaging</code> ≥ 1.0.0-beta.5</strong> and the <code>ActivitySource</code> is
+registered. Older <code>Microsoft.Azure.ServiceBus</code> (v4) does <strong>not</strong> auto-propagate — services still on
+it MUST inject <code>traceparent</code> into application properties manually until upgrade. There is no
+equivalent caveat for Kafka (Confluent .NET / kafka-python instrumentations propagate by default)
+but Event Grid event-handlers MUST attach <code>traceparent</code> to the custom event payload — Event Grid
+does not preserve transport headers across the broker.</p>
+<h4 id="832-cross-language-consistency">8.3.2 Cross-language consistency</h4>
+<p>.NET defaults to W3C; Python OTel defaults to W3C; legacy Jaeger headers MUST be disabled on
+producers to avoid double-context confusion.</p>
+<h3 id="84-messaging-span-kind">8.4 Messaging Span Kind</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Operation</th><th><code>span.kind</code></th></tr></thead><tbody><tr><td>Kafka producer</td><td><code>PRODUCER</code></td></tr><tr><td>Kafka consumer</td><td><code>CONSUMER</code></td></tr><tr><td>Service Bus send</td><td><code>PRODUCER</code></td></tr><tr><td>Service Bus receive</td><td><code>CONSUMER</code></td></tr><tr><td>Event Grid publish</td><td><code>PRODUCER</code></td></tr><tr><td>Workflow execution</td><td><code>INTERNAL</code></td></tr><tr><td>Outbound HTTP</td><td><code>CLIENT</code></td></tr><tr><td>Inbound HTTP</td><td><code>SERVER</code></td></tr></tbody></table>
+<hr>
+<h2 id="9-cardinality-governance">9. Cardinality Governance</h2>
+<h3 id="91-cardinality-classes">9.1 Cardinality Classes</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Class</th><th>Range</th><th>Allowed in metrics?</th><th>Examples</th></tr></thead><tbody><tr><td>Low</td><td>&#x3C; 100</td><td>Yes</td><td><code>deployment.environment</code>, <code>cloud.region</code>, <code>service.name</code>, <code>http.request.method</code>, <code>http.response.status_code</code></td></tr><tr><td>Medium</td><td>100–10k</td><td>Selectively, with registry approval</td><td><code>http.route</code>, <code>workflow.name</code>, <code>messaging.destination.name</code>, <code>service.version</code></td></tr><tr><td>High</td><td>> 10k</td><td><strong>Forbidden</strong></td><td><code>user.id</code>, <code>order.id</code>, <code>request.id</code>, <code>session.id</code>, raw URL, email, UUID, <code>service.instance.id</code></td></tr></tbody></table>
+<p>High-cardinality identifiers belong in traces (span attributes) or logs (structured metadata or
+body) — not metric labels and not Loki stream labels.</p>
+<h3 id="92-collector-enforcement-rules">9.2 Collector Enforcement Rules</h3>
+<p>The Alloy gateway tier (§13) MUST:</p>
+<ul>
+<li>Reject metrics whose label set is not in the registry</li>
+<li>Drop <code>http.server.*</code> metrics whose <code>http.route</code> is unset OR contains numeric path segments (regex:
+<code>/[0-9a-f]{8,}|/\d{2,}</code>)</li>
+<li>Hash PII fields per §10</li>
+<li>Truncate spans where any attribute exceeds 4 KB</li>
+<li>Drop unknown resource attributes outside the catalog (fail-safe to bounded set, not unbounded
+passthrough)</li>
+<li>Emit collector-internal metrics so violations are observable
+(<code>alloy_processor_dropped_total{reason=...}</code>)</li>
+</ul>
+<h3 id="93-cardinality-budgets-federated-governance">9.3 Cardinality Budgets (federated governance)</h3>
+<p>Hard ceilings, enforced via Mimir usage groups + alerts. Numbers are starting points; calibrate via
+Cardinality Budget Calculator before any new label ships.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Scope</th><th>Active series ceiling</th><th>Source of truth</th></tr></thead><tbody><tr><td>Per service</td><td>50,000</td><td>Mimir <code>usage_group=service.name</code></td></tr><tr><td>Per team</td><td>250,000</td><td>Mimir <code>usage_group=team.name</code></td></tr><tr><td>Per environment</td><td>5,000,000</td><td>Mimir tenant total</td></tr><tr><td>Whole platform</td><td>20,000,000</td><td>Mimir tenant total</td></tr></tbody></table>
+<p>When a service exceeds 80% of its budget, the platform team raises a ticket against the owning team.
+At 100% the gateway begins dropping new series for that service (<code>accept</code> → <code>drop_new_series</code>) —
+existing series continue to flow.</p>
+<hr>
+<h2 id="10-pii-governance">10. PII Governance</h2>
+<p>PII MUST NEVER appear in:</p>
+<ul>
+<li>Metric labels</li>
+<li>Span names</li>
+<li>Loki stream labels</li>
+</ul>
+<p>PII includes: email, phone number, address, full payment identifiers (PAN, account number), customer
+name, government ID.</p>
+<h3 id="101-collector-enforcement-primitives">10.1 Collector enforcement primitives</h3>
+<p>Approved redaction patterns. The platform team owns these processors centrally; teams cannot disable
+them per service.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>otelcol.processor.transform "redact_pii" {</span></span>
+<span class="line"><span>  log_statements {</span></span>
+<span class="line"><span>    context = "log"</span></span>
+<span class="line"><span>    statements = [</span></span>
+<span class="line"><span>      // hash email</span></span>
+<span class="line"><span>      `set(attributes["user.email"], SHA256(attributes["user.email"])) where attributes["user.email"] != nil`,</span></span>
+<span class="line"><span>      // tokenise PAN-like 13-19 digit runs</span></span>
+<span class="line"><span>      `replace_pattern(body, "\\b[0-9]{13,19}\\b", "[REDACTED-PAN]")`,</span></span>
+<span class="line"><span>      // strip AuthZ headers</span></span>
+<span class="line"><span>      `delete_key(attributes, "http.request.header.authorization")`,</span></span>
+<span class="line"><span>    ]</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>  trace_statements {</span></span>
+<span class="line"><span>    context = "span"</span></span>
+<span class="line"><span>    statements = [</span></span>
+<span class="line"><span>      `set(attributes["user.email"], SHA256(attributes["user.email"])) where attributes["user.email"] != nil`,</span></span>
+<span class="line"><span>    ]</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Enforcement direction: redact at the <strong>gateway tier</strong>, not the agent. Agent-tier redaction is
+best-effort because not every replica routes through the same redaction config; gateway-tier
+guarantees a single chokepoint.</p>
+<h3 id="102-what-must-flow-through-attributesprocessor-deny-list">10.2 What MUST flow through <code>attributes.processor</code> deny-list</h3>
+<ul>
+<li><code>http.request.header.authorization</code></li>
+<li><code>http.request.header.cookie</code></li>
+<li><code>http.request.header.x-api-key</code></li>
+<li><code>db.statement</code> (sanitise via <code>db.operation</code> + parameterised hash, never raw SQL)</li>
+</ul>
+<hr>
+<h2 id="11-loki-label-strategy">11. Loki Label Strategy</h2>
+<p>See §7.3 for the full table including structured metadata. Summary:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Stream label</th><th>Status</th></tr></thead><tbody><tr><td><code>service.name</code></td><td>Required</td></tr><tr><td><code>deployment.environment</code></td><td>Required</td></tr><tr><td><code>cloud.region</code></td><td>Required</td></tr><tr><td><code>severity</code></td><td>Required</td></tr><tr><td><code>team.name</code></td><td>Required</td></tr><tr><td><code>cluster</code></td><td>Optional (multi-cluster regions only)</td></tr></tbody></table>
+<p>Stream-label budget: <strong>≤ 6 labels per stream</strong> (Loki active-stream cost driver). Anything dynamic
+(<code>workflow.name</code>, <code>tenant.id</code>, <code>trace_id</code>, etc.) MUST be structured metadata, not a stream label.</p>
+<hr>
+<h2 id="12-sampling-strategy">12. Sampling Strategy</h2>
+<h3 id="121-lower-environments-dev-qa-train">12.1 Lower environments (<code>dev</code>, <code>qa</code>, <code>train</code>)</h3>
+<p>100% trace sampling. Volume is low and debug velocity matters more than ingest cost.</p>
+<h3 id="122-production--head-sampling">12.2 Production — head sampling</h3>
+<p>Default 10% head sampling at the SDK, set via <code>TraceIdRatioBased(0.10)</code>. Configured via env var so
+the gateway can override per service:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#E1E4E8">OTEL_TRACES_SAMPLER</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">parentbased_traceidratio</span></span>
+<span class="line"><span style="color:#E1E4E8">OTEL_TRACES_SAMPLER_ARG</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">0.10</span></span>
+<span class="line"></span></code></pre>
+<p><code>parentbased_traceidratio</code> — child spans inherit the parent’s sample decision, which keeps traces
+complete across service boundaries.</p>
+<h3 id="123-production--tail-sampling-gateway-only">12.3 Production — tail sampling (gateway only)</h3>
+<p>Tail sampling runs <strong>only on the gateway tier</strong> (§13). Agents cannot make tail decisions because
+they do not see the full trace.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>otelcol.processor.tail_sampling "policies" {</span></span>
+<span class="line"><span>  decision_wait = "30s"</span></span>
+<span class="line"><span>  num_traces    = 100000</span></span>
+<span class="line"><span>  expected_new_traces_per_sec = 5000</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>  policy {</span></span>
+<span class="line"><span>    name = "errors"</span></span>
+<span class="line"><span>    type = "status_code"</span></span>
+<span class="line"><span>    status_code { status_codes = ["ERROR"] }</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>  policy {</span></span>
+<span class="line"><span>    name = "slow_http"</span></span>
+<span class="line"><span>    type = "latency"</span></span>
+<span class="line"><span>    latency { threshold_ms = 1000 }</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>  policy {</span></span>
+<span class="line"><span>    name = "retries"</span></span>
+<span class="line"><span>    type = "string_attribute"</span></span>
+<span class="line"><span>    string_attribute { key = "messaging.retry", values = ["true"] }</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>  policy {</span></span>
+<span class="line"><span>    name = "high_value_tenants"</span></span>
+<span class="line"><span>    type = "string_attribute"</span></span>
+<span class="line"><span>    string_attribute { key = "tenant.tier", values = ["gold", "platinum"] }</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>  policy {</span></span>
+<span class="line"><span>    name = "baseline"</span></span>
+<span class="line"><span>    type = "probabilistic"</span></span>
+<span class="line"><span>    probabilistic { sampling_percentage = 1 }</span></span>
+<span class="line"><span>  }</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><code>decision_wait = 30s</code> is a deliberate ceiling — long workflow spans (>30s) MUST emit interim <code>event</code>
+attributes so the tail decision has signal before the trace closes.</p>
+<h3 id="124-sampling-fallback-contract">12.4 Sampling fallback contract</h3>
+<p>If the gateway is restarting or <code>tail_sampling</code> is OOM-evicting traces, the SDK head sampling rate
+(10%) is the floor. <strong>Never disable head sampling expecting tail-only.</strong> Outages of the gateway then
+become silent observability outages.</p>
+<hr>
+<h2 id="13-collector-topology">13. Collector Topology</h2>
+<blockquote>
+<p>Captured as ADR-007: Adopt Two-Tier Grafana Alloy Collector Topology.</p>
+</blockquote>
+<p>Two-tier (agent + gateway) is the default for the stated scale. Justification:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Concern</th><th align="center">Agent-only</th><th align="center">Gateway-only</th><th align="center">Two-tier</th></tr></thead><tbody><tr><td>Tail sampling correctness</td><td align="center">✗</td><td align="center">✓</td><td align="center">✓</td></tr><tr><td>Per-replica resource detection</td><td align="center">✓</td><td align="center">✗</td><td align="center">✓</td></tr><tr><td>Schema enforcement chokepoint</td><td align="center">✗</td><td align="center">✓</td><td align="center">✓</td></tr><tr><td>Network egress reduction (batching)</td><td align="center">✗</td><td align="center">✓</td><td align="center">✓</td></tr><tr><td>Failure blast radius</td><td align="center">per-replica</td><td align="center">platform-wide</td><td align="center">scoped</td></tr><tr><td>Operational complexity</td><td align="center">Low</td><td align="center">Medium</td><td align="center">High</td></tr></tbody></table>
+<p>Mitigations for the gateway-tier blast radius:</p>
+<ul>
+<li>Run gateway as a stateful set with ≥ 3 replicas, anti-affinity across zones</li>
+<li>Mimir/Loki/Tempo have client-side load balancing in Alloy (<code>gomemlimit</code>-aware)</li>
+<li>Gateway restart MUST drain <code>tail_sampling</code> decisions via <code>shutdown_timeout</code> (default 5s is too
+low; set 60s)</li>
+<li>Persistent buffer (<code>file_storage</code> extension) on gateway to survive backend stalls</li>
+</ul>
+<p>Per-region: one gateway per Azure region. Cross-region cross-traces are stitched at Tempo (no need
+for cross-region span-buffering).</p>
+<hr>
+<h2 id="14-retention--storage-tiering">14. Retention &#x26; Storage Tiering</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Signal</th><th>Hot tier</th><th>Warm tier</th><th>Drop after</th><th>Notes</th></tr></thead><tbody><tr><td>Metrics</td><td>30d</td><td>13mo</td><td>13mo</td><td>Aligned to year-over-year capacity planning</td></tr><tr><td>Logs</td><td>7d</td><td>30d</td><td>30d</td><td>Audit logs split into separate Loki tenant w/ 1y retention</td></tr><tr><td>Traces</td><td>7d</td><td>—</td><td>30d</td><td>Tempo single-tier in Grafana Cloud; sampled traces only</td></tr></tbody></table>
+<p><code>service.version</code> cardinality drives metrics cost — releases bump it weekly. Mitigation: drop
+<code>service.version</code> from non-SLO metrics via OTel <code>attributes.processor</code>, keep it on traces and logs
+where it has debugging value.</p>
+<p>Audit-class logs (security events, AuthZ decisions, admin actions) ship to a separate Loki tenant
+with 1y retention. Schema is identical except <code>audit.actor.id</code> and <code>audit.action</code> are required and
+<code>severity</code> is always <code>INFO</code> or higher.</p>
+<hr>
+<h2 id="15-semantic-conventions-versioning">15. Semantic Conventions Versioning</h2>
+<blockquote>
+<p>Captured as ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Baseline.</p>
+</blockquote>
+<p>Pin to <strong>OTel semconv 1.26</strong> as the baseline. The 1.21→1.23 rename of <code>http.server.duration</code> →
+<code>http.server.request.duration</code> is the most recent breaking change; alerts and dashboards assume the
+post-rename name throughout this doc.</p>
+<p>Bumping semconv requires:</p>
+<ol>
+<li>ADR draft (use <code>adr-writer</code> skill)</li>
+<li>Cardinality / query-impact assessment</li>
+<li>Six-week dual-emission window (<code>emit_old: true</code> on the SDK exporter) before flipping</li>
+<li>Dashboard / alert rule update PR landing <strong>before</strong> the flip date</li>
+</ol>
+<p>SDK upgrades that bump semconv silently are an incident — pin SDK versions in the service template
+(a-governance/service-template/).</p>
+<hr>
+<h2 id="16-net-instrumentation-standards">16. .NET Instrumentation Standards</h2>
+<h3 id="161-libraries">16.1 Libraries</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Concern</th><th>Library</th></tr></thead><tbody><tr><td>OTel SDK</td><td><code>OpenTelemetry.Extensions.Hosting</code></td></tr><tr><td>ASP.NET</td><td><code>OpenTelemetry.Instrumentation.AspNetCore</code></td></tr><tr><td>HttpClient</td><td><code>OpenTelemetry.Instrumentation.Http</code></td></tr><tr><td>EF Core</td><td><code>OpenTelemetry.Instrumentation.EntityFrameworkCore</code> (beta)</td></tr><tr><td>Service Bus</td><td><code>Azure.Messaging.ServiceBus</code> ≥ 7.17 (W3C-native)</td></tr><tr><td>Logs</td><td><code>OpenTelemetry.Logs</code> (built-in <code>ILogger</code> integration)</td></tr><tr><td>Metrics</td><td><code>OpenTelemetry.Metrics</code></td></tr></tbody></table>
+<h3 id="162-required-enrichers">16.2 Required enrichers</h3>
+<p>Add <code>tenant.id</code>, <code>workflow.name</code>, <code>team.name</code>, <code>deployment.environment</code> via:</p>
+<ul>
+<li><code>Activity.AddTag</code> for spans</li>
+<li><code>ILogger.BeginScope</code> for logs</li>
+<li>ASP.NET middleware, run before routing</li>
+</ul>
+<h3 id="163-exporter-config">16.3 Exporter config</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="csharp"><code><span class="line"><span style="color:#E1E4E8">services.</span><span style="color:#B392F0">AddOpenTelemetry</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">ConfigureResource</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">r</span><span style="color:#F97583"> =></span><span style="color:#E1E4E8"> r</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddService</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">serviceName</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"payments-checkout-api"</span><span style="color:#E1E4E8">, </span><span style="color:#B392F0">serviceVersion</span><span style="color:#E1E4E8">: assemblyVersion)</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddAttributes</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#E1E4E8">[] {</span></span>
+<span class="line"><span style="color:#F97583">            new</span><span style="color:#B392F0"> KeyValuePair</span><span style="color:#E1E4E8">&#x3C;</span><span style="color:#F97583">string</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">object</span><span style="color:#E1E4E8">>(</span><span style="color:#9ECBFF">"service.namespace"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"payments"</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#F97583">            new</span><span style="color:#B392F0"> KeyValuePair</span><span style="color:#E1E4E8">&#x3C;</span><span style="color:#F97583">string</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">object</span><span style="color:#E1E4E8">>(</span><span style="color:#9ECBFF">"team.name"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"payments-platform"</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#F97583">            new</span><span style="color:#B392F0"> KeyValuePair</span><span style="color:#E1E4E8">&#x3C;</span><span style="color:#F97583">string</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">object</span><span style="color:#E1E4E8">>(</span></span>
+<span class="line"><span style="color:#9ECBFF">                "service.instance.id"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">                Environment.</span><span style="color:#B392F0">GetEnvironmentVariable</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"CONTAINER_APP_REPLICA_NAME"</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">??</span><span style="color:#E1E4E8"> Guid.</span><span style="color:#B392F0">NewGuid</span><span style="color:#E1E4E8">().</span><span style="color:#B392F0">ToString</span><span style="color:#E1E4E8">()),</span></span>
+<span class="line"><span style="color:#E1E4E8">        }))</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">WithTracing</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">t</span><span style="color:#F97583"> =></span><span style="color:#E1E4E8"> t</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddAspNetCoreInstrumentation</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddHttpClientInstrumentation</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddOtlpExporter</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">o</span><span style="color:#F97583"> =></span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">            o.Endpoint </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> Uri</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"http://otel-agent:4317"</span><span style="color:#E1E4E8">); </span><span style="color:#6A737D">// agent tier</span></span>
+<span class="line"><span style="color:#E1E4E8">            o.Protocol </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> OtlpExportProtocol.Grpc;</span></span>
+<span class="line"><span style="color:#E1E4E8">            o.BatchExportProcessorOptions.MaxQueueSize </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 8192</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">            o.BatchExportProcessorOptions.MaxExportBatchSize </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 1024</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">            o.BatchExportProcessorOptions.ScheduledDelayMilliseconds </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 5000</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">        }))</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">WithMetrics</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">m</span><span style="color:#F97583"> =></span><span style="color:#E1E4E8"> m</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddAspNetCoreInstrumentation</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddHttpClientInstrumentation</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">        .</span><span style="color:#B392F0">AddOtlpExporter</span><span style="color:#E1E4E8">());</span></span>
+<span class="line"></span></code></pre>
+<p>OTLP/gRPC over HTTP/proto: gRPC for lower CPU + better compression. Switch to HTTP/proto only when
+there is a network constraint (e.g., HTTP/2 not available end-to-end).</p>
+<h3 id="164-logging-standard">16.4 Logging standard</h3>
+<p>Structured logging only.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="csharp"><code><span class="line"><span style="color:#6A737D">// Good</span></span>
+<span class="line"><span style="color:#E1E4E8">logger.</span><span style="color:#B392F0">LogInformation</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Payment processed for tenant {TenantId}"</span><span style="color:#E1E4E8">, tenantId);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// Bad — interpolated string, no structure</span></span>
+<span class="line"><span style="color:#E1E4E8">logger.</span><span style="color:#B392F0">LogInformation</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">$"Payment processed for tenant {</span><span style="color:#E1E4E8">tenantId</span><span style="color:#9ECBFF">}"</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="17-python-instrumentation-standards">17. Python Instrumentation Standards</h2>
+<h3 id="171-libraries">17.1 Libraries</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Concern</th><th>Library</th></tr></thead><tbody><tr><td>FastAPI</td><td><code>opentelemetry-instrumentation-fastapi</code></td></tr><tr><td>Flask</td><td><code>opentelemetry-instrumentation-flask</code></td></tr><tr><td>Requests</td><td><code>opentelemetry-instrumentation-requests</code></td></tr><tr><td>HTTPX</td><td><code>opentelemetry-instrumentation-httpx</code></td></tr><tr><td>Celery</td><td><code>opentelemetry-instrumentation-celery</code></td></tr><tr><td>Kafka</td><td><code>opentelemetry-instrumentation-confluent-kafka</code> / <code>-aiokafka</code></td></tr><tr><td>Service Bus</td><td><code>opentelemetry-instrumentation-azure-servicebus</code> (community)</td></tr><tr><td>Logging</td><td><code>structlog</code> + <code>opentelemetry-sdk._logs</code> for trace correlation</td></tr></tbody></table>
+<h3 id="172-logging-pattern">17.2 Logging pattern</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">logger.info(</span></span>
+<span class="line"><span style="color:#9ECBFF">    "payment_processed"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">    tenant_id</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">tenant_id,</span></span>
+<span class="line"><span style="color:#FFAB70">    workflow_name</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"checkout"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<p><code>structlog</code> processors MUST inject <code>trace_id</code>/<code>span_id</code> from the active span context.</p>
+<h3 id="173-exporter-config">17.3 Exporter config</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.exporter.otlp.proto.grpc.trace_exporter </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> OTLPSpanExporter</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.resources </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Resource</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.trace </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> TracerProvider</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.trace.export </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> BatchSpanProcessor</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> os</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">resource </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> Resource.create({</span></span>
+<span class="line"><span style="color:#9ECBFF">    "service.name"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"payments-checkout-api"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    "service.namespace"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"payments"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    "service.version"</span><span style="color:#E1E4E8">: os.environ[</span><span style="color:#9ECBFF">"IMAGE_TAG"</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">    "deployment.environment"</span><span style="color:#E1E4E8">: os.environ[</span><span style="color:#9ECBFF">"DEPLOY_ENV"</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">    "service.instance.id"</span><span style="color:#E1E4E8">: os.environ.get(</span><span style="color:#9ECBFF">"CONTAINER_APP_REPLICA_NAME"</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">or</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(uuid.uuid4()),</span></span>
+<span class="line"><span style="color:#9ECBFF">    "team.name"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"payments-platform"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">})</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">provider </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> TracerProvider(</span><span style="color:#FFAB70">resource</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">resource)</span></span>
+<span class="line"><span style="color:#E1E4E8">provider.add_span_processor(</span></span>
+<span class="line"><span style="color:#E1E4E8">    BatchSpanProcessor(</span></span>
+<span class="line"><span style="color:#E1E4E8">        OTLPSpanExporter(</span><span style="color:#FFAB70">endpoint</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"http://otel-agent:4317"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">insecure</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#FFAB70">        max_queue_size</span><span style="color:#F97583">=</span><span style="color:#79B8FF">8192</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        max_export_batch_size</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1024</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        schedule_delay_millis</span><span style="color:#F97583">=</span><span style="color:#79B8FF">5000</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<h3 id="174-async-workloads">17.4 Async workloads</h3>
+<p>For Celery / Kafka / Service Bus consumers:</p>
+<ul>
+<li>Propagate trace context via the broker headers (the instrumentation handles this when in-process;
+for hand-rolled consumers use <code>propagate.extract(carrier)</code>)</li>
+<li>Attach <code>workflow.name</code> and <code>workflow.run.id</code> as span attributes — <code>workflow.run.id</code> is
+high-cardinality and lives only on the span, never as a metric label</li>
+<li>Preserve <code>x-correlation-id</code> across hops</li>
+</ul>
+<hr>
+<h2 id="18-slo-aligned-telemetry">18. SLO-Aligned Telemetry</h2>
+<h3 id="181-sli-sources">18.1 SLI sources</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>SLI</th><th>Source</th><th>Notes</th></tr></thead><tbody><tr><td>Latency</td><td>Histogram</td><td>p95/p99 from <code>http.server.request.duration</code></td></tr><tr><td>Availability</td><td>Counter</td><td>1 - (5xx / total) from <code>http.server.request.count</code></td></tr><tr><td>Errors</td><td>Counter</td><td>Domain-specific failure counters</td></tr><tr><td>Queue lag</td><td>Gauge</td><td><code>messaging.consumer.lag</code></td></tr><tr><td>Workflow success</td><td>Counter</td><td><code>workflow.execution.success</code> / <code>(success + failure)</code></td></tr><tr><td><strong>Error budget burn rate</strong></td><td>Recording rule</td><td>Multi-window multi-burn-rate alert (Google SRE workbook §5)</td></tr></tbody></table>
+<p>The error budget burn rate is the <strong>operationally most important</strong> alert signal; static threshold
+alerts on raw error rate are noisy. Recording rule sketch:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span># 1h short window</span></span>
+<span class="line"><span>sum(rate(http_server_request_count_total{status_class="5xx"}[1h]))</span></span>
+<span class="line"><span>  /</span></span>
+<span class="line"><span>sum(rate(http_server_request_count_total[1h]))</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Pair with a 5m fast-burn alert and a 1h slow-burn alert per the SRE workbook.</p>
+<h3 id="182-slo-catalog-every-service">18.2 SLO catalog (every service)</h3>
+<p>Each service MUST register:</p>
+<ul>
+<li>One latency SLO (default: p95 &#x3C; threshold over 30d)</li>
+<li>One availability SLO (default: success ratio over 30d)</li>
+<li>Burn-rate alerts on both (5m fast-burn @ 14.4× exhaust, 1h slow-burn @ 1× exhaust)</li>
+</ul>
+<p>SLO definitions live alongside Helm values in <code>f-observability/&#x3C;env>/slos/&#x3C;service>.yaml</code>. They are
+NOT a free-form per-team artefact.</p>
+<hr>
+<h2 id="19-query-standards">19. Query Standards</h2>
+<h3 id="191-promql">19.1 PromQL</h3>
+<p>Note the underscored names — Prometheus exporter rewrite, see §6.4.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>histogram_quantile(</span></span>
+<span class="line"><span>  0.95,</span></span>
+<span class="line"><span>  sum by (le, service_name, http_route) (</span></span>
+<span class="line"><span>    rate(http_server_request_duration_seconds_bucket{</span></span>
+<span class="line"><span>      service_name="payments-checkout-api",</span></span>
+<span class="line"><span>      deployment_environment="prod"</span></span>
+<span class="line"><span>    }[5m])</span></span>
+<span class="line"><span>  )</span></span>
+<span class="line"><span>)</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="192-logql">19.2 LogQL</h3>
+<p>Stream labels stay dotted in this schema; Loki accepts both, but for consistency with the OTel
+resource attribute, use dots.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>{service_name="payments-checkout-api", severity="ERROR"}</span></span>
+<span class="line"><span>| json</span></span>
+<span class="line"><span>| workflow_name="checkout"</span></span>
+<span class="line"><span>| line_format "{{.message}} (trace_id={{.trace_id}})"</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><code>workflow_name</code> is structured metadata (§7.3), not a stream selector.</p>
+<h3 id="193-tempo">19.3 Tempo</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>{ service.name = "payments-checkout-api"</span></span>
+<span class="line"><span>  &#x26;&#x26; deployment.environment = "prod"</span></span>
+<span class="line"><span>  &#x26;&#x26; status = error</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>For exemplar-driven drilldowns, link from a Mimir histogram panel using the <code>{__address__}</code> exemplar
+and Tempo trace ID.</p>
+<hr>
+<h2 id="20-governance-operating-model">20. Governance Operating Model</h2>
+<h3 id="201-platform-team-owns">20.1 Platform team owns</h3>
+<ul>
+<li>Schema standards (this document)</li>
+<li>Collector policies (Alloy gateway config)</li>
+<li>Approved dimension catalog (registry repo)</li>
+<li>Sampling policies</li>
+<li>Dashboards / templates</li>
+<li>Semantic convention version pinning</li>
+</ul>
+<h3 id="202-application-team-owns">20.2 Application team owns</h3>
+<ul>
+<li>Business instrumentation</li>
+<li>Workflow spans</li>
+<li>Service-level metrics inside the registry’s allowed set</li>
+<li>Domain-specific alerts (subject to platform review)</li>
+</ul>
+<h3 id="203-schema-change-process">20.3 Schema change process</h3>
+<ol>
+<li>Cardinality review — pair with Cardinality Budget Calculator</li>
+<li>Query impact assessment (does it break dashboards / alerts?)</li>
+<li>Storage cost evaluation (Mimir series count delta, Loki stream delta, Tempo span size delta)</li>
+<li>ADR — use <code>adr-writer</code> skill, file under adrs/</li>
+<li>Governance approval (platform team async sign-off)</li>
+<li>Registry PR + dual-emission window where applicable (§15)</li>
+</ol>
+<hr>
+<h2 id="21-maturity-model">21. Maturity Model</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Level</th><th>Description</th></tr></thead><tbody><tr><td>L1</td><td>Unstructured logs, inconsistent labels</td></tr><tr><td>L2</td><td>Basic OTel adoption</td></tr><tr><td>L3</td><td>Standardised service / resource schema</td></tr><tr><td>L4</td><td>Governance + sampling + collector enforcement</td></tr><tr><td>L5</td><td>SLO-aligned telemetry platform with cost attribution and budgets</td></tr></tbody></table>
+<p>Target state: <strong>L4 → L5</strong> within the 90-day horizon.</p>
+<hr>
+<h2 id="22-recommended-next-steps">22. Recommended Next Steps</h2>
+<h3 id="immediate--14-days">Immediate (≤ 14 days)</h3>
+<ol>
+<li>Publish the approved label catalog as a registry repo</li>
+<li>Deploy two-tier collector (agent + gateway) per region (§13)</li>
+<li>Enable head sampling defaults via service template</li>
+<li>Standardise service naming (§5)</li>
+<li>Enforce structured logging in CI (lint rule, .NET analyser + Python <code>flake8-logging</code>)</li>
+</ol>
+<h3 id="30-days">30 days</h3>
+<ol>
+<li>Build schema registry with PR-based change flow</li>
+<li>Introduce gateway-tier validation (drop-on-violation + observability)</li>
+<li>Remove high-cardinality labels from existing metrics (audit + migrate)</li>
+<li>Standardise dashboards from registry (<code>grafana-tf</code> modules)</li>
+<li>Define SLO templates per service archetype (sync API, async worker, batch)</li>
+</ol>
+<h3 id="90-days">90 days</h3>
+<ol>
+<li>Cost attribution wired to
+<a href="/notes/projects/platform-shipsolid/07-cost-governance/metric-label-standards/">metric-label-standards.md</a></li>
+<li>Implement telemetry budgets (§9.3) with alerting at 80%</li>
+<li>Add governance CI checks (semconv pin, label allow-list, exporter config)</li>
+<li>Platform scorecards (per-team telemetry quality)</li>
+<li>Telemetry quality SLIs (drop rate, schema-violation rate, gateway uptime)</li>
+</ol>
+<hr>
+<h2 id="23-anti-patterns-normative">23. Anti-Patterns (normative)</h2>
+<p>This list is the single normative source — rules elsewhere in the doc derive from these.</p>
+<ul>
+<li>Raw URLs in metric labels (use <code>http.route</code>)</li>
+<li>Request / user / session IDs as labels</li>
+<li>Per-user metrics</li>
+<li>Free-form labels not in the registry</li>
+<li>Logging entire request / response payloads</li>
+<li>Inconsistent service naming</li>
+<li>Direct SDK-to-backend export at scale (skip the agent or gateway)</li>
+<li>Unbounded <code>workflow.name</code> cardinality (workflow names must be from a registry)</li>
+<li>Dynamic metric creation (metric names must be statically declarable)</li>
+<li>Disabling head sampling and relying on tail-only</li>
+<li>Stream-label expansion past 6 fields</li>
+<li>Mixing Jaeger + W3C propagation on the same producer</li>
+</ul>
+<hr>
+<h2 id="24-recommended-reference-stack">24. Recommended Reference Stack</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Layer</th><th>Recommendation</th></tr></thead><tbody><tr><td>SDK</td><td>OpenTelemetry (semconv 1.26 pinned)</td></tr><tr><td>Agent</td><td>Grafana Alloy (DaemonSet, per-pod sidecar opt)</td></tr><tr><td>Gateway</td><td>Grafana Alloy (StatefulSet, per region)</td></tr><tr><td>Metrics</td><td>Mimir</td></tr><tr><td>Logs</td><td>Loki 3.x (structured metadata enabled)</td></tr><tr><td>Traces</td><td>Tempo</td></tr><tr><td>Dashboards</td><td>Grafana</td></tr><tr><td>Alerting</td><td>Grafana Alerting + Mimir alertmanager</td></tr><tr><td>Governance</td><td>GitOps schema registry + Alloy policy</td></tr></tbody></table>
+<hr>
+<h2 id="25-see-also">25. See Also</h2>
+<ul>
+<li><a href="/notes/projects/platform-shipsolid/07-cost-governance/metric-label-standards/">metric-label-standards.md</a> —
+billing/cost-attribution label contract; this doc and that one MUST agree on <code>team.name</code>,
+<code>business_unit</code>, <code>product</code>, <code>env</code>.</li>
+<li><a href="/notes/projects/platform-shipsolid/01-platform-architecture/observability-overview/">observability-overview.md</a> — pillar overview.</li>
+<li><a href="/notes/projects/platform-shipsolid/03-reliability-engineering/kpis-slis-slos-slas/">kpis-slis-slos-slas.md</a> — SLO
+definitions and burn-rate methodology.</li>
+<li><a href="/notes/projects/platform-shipsolid/05-platform-configuration/security-access-compliance/">security-access-compliance.md</a> —
+audit log retention, PII redaction context.</li>
+<li>ADRs governing this schema: see adrs/ (<code>telemetry-*</code>, <code>observability-*</code>, semconv-pinning).</li>
+<li>Cardinality Budget Calculator skill — gate before any new label ships.</li>
+</ul>
+<hr>
+<h2 id="26-final-recommendation">26. Final Recommendation</h2>
+<p>The stated scale profile (50 apps × 12 teams × multi-region × dual runtime) requires:</p>
+<ul>
+<li>Centralised, two-tier collector architecture</li>
+<li>Enforced schema governance with collector-level rejection</li>
+<li>Federated ownership: platform owns the schema, teams own the instrumentation</li>
+<li>Aggressive cardinality controls with per-team budgets</li>
+<li>SLO-driven instrumentation, not vanity dashboards</li>
+<li>Tail-based production sampling on top of a non-zero head sample floor</li>
+</ul>
+<p>Without governance, telemetry growth becomes nonlinear:</p>
+<ul>
+<li>Query latency increases</li>
+<li>MTTR rises</li>
+<li>Dashboard trust collapses</li>
+<li>Storage cost accelerates</li>
+<li>Cross-team debugging degrades</li>
+</ul>
+<p>The schema itself is part of platform reliability engineering — treat changes to it with the same
+rigour as changes to a production API.</p>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"projects/platform-shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid","title":"ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/adrs/adr-two-tier-alloy-collector-topology-shipsolid","title":"ADR-007: Adopt Two-Tier Grafana Alloy Collector Topology","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/designs/architectural-design","title":"Architectural Design","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy","title":"Data Source Strategy","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy","title":"Collector Deployment Strategy","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","title":"Telemetry Schema Design — Azure Container Apps on Grafana Cloud","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/01-platform-architecture/observability-overview","title":"Observability Overview","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/03-reliability-engineering/kpis-slis-slos-slas","title":"KPIs, SLIs, SLOs & SLAs","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/security-access-compliance","title":"Security, Access & Compliance","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/07-cost-governance/metric-label-standards","title":"Metric Label Standards for Cost Attribution","topic":"projects","noteType":"note"}];
+const edges = [{"source":"projects/platform-shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid","target":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/adrs/adr-two-tier-alloy-collector-topology-shipsolid","target":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","kind":"depends_on"},{"source":"projects/platform-shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid","target":"projects/platform-shipsolid/01-platform-architecture/adrs/adr-two-tier-alloy-collector-topology-shipsolid","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/architectural-design","target":"projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/architectural-design","target":"projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/architectural-design","target":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy","target":"projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy","target":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy","target":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","target":"projects/platform-shipsolid/07-cost-governance/metric-label-standards","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","target":"projects/platform-shipsolid/01-platform-architecture/observability-overview","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","target":"projects/platform-shipsolid/03-reliability-engineering/kpis-slis-slos-slas","kind":"related"},{"source":"projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design","target":"projects/platform-shipsolid/05-platform-configuration/security-access-compliance","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 10 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>- **Status**: Proposed - **Date**: 2026-05-07</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-two-tier-alloy-collector-topology-shipsolid" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> ADR-007: Adopt Two-Tier Grafana Alloy Collector Topology </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>- **Status**: Proposed - **Date**: 2026-05-07</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/architectural-design" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Architectural Design </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>This document outlines the architectural design of a scalable, modular observability framework</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Data Source Strategy </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>To ensure comprehensive observability across infrastructure, applications, and business workflows,</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Collector Deployment Strategy </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A key pillar of the observability framework is the standardized and automated deployment of</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>- **Status**: Proposed - **Date**: 2026-05-07</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-two-tier-alloy-collector-topology-shipsolid" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> ADR-007: Adopt Two-Tier Grafana Alloy Collector Topology </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>- **Status**: Proposed - **Date**: 2026-05-07</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/architectural-design" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Architectural Design </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>This document outlines the architectural design of a scalable, modular observability framework</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Data Source Strategy </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>To ensure comprehensive observability across infrastructure, applications, and business workflows,</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Collector Deployment Strategy </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A key pillar of the observability framework is the standardized and automated deployment of</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/architecture/adrs/adr-separate-collector-configmaps-per-mode" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Signal Forge ADR-005: Separate collector configmaps per deployment mode </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Keeps cloud and local Alloy collector configs in separate files rather than one conditional configmap, so each mode&#39;s exporters stay explicit and uncoupled.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/architecture/adrs/adr-span-metrics-before-tail-sampling" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Signal Forge ADR-003: Span metrics generated before tail sampling </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Places the spanmetrics connector ahead of tail_sampling so RED metrics reflect all traffic instead of only the ~25% of traces that survive sampling.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Signal Forge ADR-002: SpanLink for async RabbitMQ propagation (not parent-child) </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Uses a SpanLink, not a parent-child span relationship, to connect RabbitMQ consumer spans back to the producer span across async, retry-prone delivery.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/architecture/overview" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Architecture Overview </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Signal Forge&#39;s topology, service communication, trace propagation, and per-signal pipeline flow across local and Grafana Cloud deployment modes.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/platform-shipsolid/01-platform-architecture/designs/telemetry-schema-design.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/technical-design-documents" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Technical Design Documents </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/01-platform-architecture/rfcs/rfc-2026-07-ide-vscode-vs-antigravity" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> RFC: Editor &amp; Agentic IDE Selection — VS Code vs. Google Antigravity </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#telemetry-schema-design" data-slug="telemetry-schema-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Telemetry Schema Design</a></li><li data-astro-cid-xvrfupwn><a href="#azure-container-apps-net--python--grafana-cloud--opentelemetry-reference-architecture" data-slug="azure-container-apps-net--python--grafana-cloud--opentelemetry-reference-architecture" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Azure Container Apps (.NET + Python) — Grafana Cloud + OpenTelemetry Reference Architecture</a></li><li data-astro-cid-xvrfupwn><a href="#1-design-goals" data-slug="1-design-goals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Design Goals</a></li><li data-astro-cid-xvrfupwn><a href="#2-core-principles" data-slug="2-core-principles" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Core Principles</a></li><li data-astro-cid-xvrfupwn><a href="#principle-1--telemetry-is-a-platform-api" data-slug="principle-1--telemetry-is-a-platform-api" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Principle 1 — Telemetry Is a Platform API</a></li><li data-astro-cid-xvrfupwn><a href="#principle-2--resource-attributes-must-be-stable" data-slug="principle-2--resource-attributes-must-be-stable" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Principle 2 — Resource Attributes Must Be Stable</a></li><li data-astro-cid-xvrfupwn><a href="#principle-3--business-dimensions-belong-in-spanlog-attributes" data-slug="principle-3--business-dimensions-belong-in-spanlog-attributes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Principle 3 — Business Dimensions Belong in Span/Log Attributes</a></li><li data-astro-cid-xvrfupwn><a href="#principle-4--metrics-are-aggregation-signals" data-slug="principle-4--metrics-are-aggregation-signals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Principle 4 — Metrics Are Aggregation Signals</a></li><li data-astro-cid-xvrfupwn><a href="#principle-5--logs-carry-forensic-detail" data-slug="principle-5--logs-carry-forensic-detail" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Principle 5 — Logs Carry Forensic Detail</a></li><li data-astro-cid-xvrfupwn><a href="#principle-6--traces-are-the-connective-tissue" data-slug="principle-6--traces-are-the-connective-tissue" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Principle 6 — Traces Are the Connective Tissue</a></li><li data-astro-cid-xvrfupwn><a href="#3-high-level-architecture" data-slug="3-high-level-architecture" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. High-Level Architecture</a></li><li data-astro-cid-xvrfupwn><a href="#4-canonical-resource-schema" data-slug="4-canonical-resource-schema" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Canonical Resource Schema</a></li><li data-astro-cid-xvrfupwn><a href="#41-required-attributes-all-signals" data-slug="41-required-attributes-all-signals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.1 Required attributes (all signals)</a></li><li data-astro-cid-xvrfupwn><a href="#42-azure-container-apps-specifics" data-slug="42-azure-container-apps-specifics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4.2 Azure Container Apps specifics</a></li><li data-astro-cid-xvrfupwn><a href="#5-naming-standards" data-slug="5-naming-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Naming Standards</a></li><li data-astro-cid-xvrfupwn><a href="#51-service-naming" data-slug="51-service-naming" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5.1 Service Naming</a></li><li data-astro-cid-xvrfupwn><a href="#52-namespace-naming" data-slug="52-namespace-naming" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5.2 Namespace Naming</a></li><li data-astro-cid-xvrfupwn><a href="#6-metrics-schema" data-slug="6-metrics-schema" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Metrics Schema</a></li><li data-astro-cid-xvrfupwn><a href="#61-golden-signals" data-slug="61-golden-signals" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>6.1 Golden Signals</a></li><li data-astro-cid-xvrfupwn><a href="#62-histogram-bucket-standards" data-slug="62-histogram-bucket-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>6.2 Histogram Bucket Standards</a></li><li data-astro-cid-xvrfupwn><a href="#63-exemplars-mandatory-on-histograms" data-slug="63-exemplars-mandatory-on-histograms" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>6.3 Exemplars (mandatory on histograms)</a></li><li data-astro-cid-xvrfupwn><a href="#64-otel--prometheus-name-translation" data-slug="64-otel--prometheus-name-translation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>6.4 OTel → Prometheus Name Translation</a></li><li data-astro-cid-xvrfupwn><a href="#7-logging-schema" data-slug="7-logging-schema" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. Logging Schema</a></li><li data-astro-cid-xvrfupwn><a href="#71-log-shape" data-slug="71-log-shape" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.1 Log Shape</a></li><li data-astro-cid-xvrfupwn><a href="#72-required-fields" data-slug="72-required-fields" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.2 Required Fields</a></li><li data-astro-cid-xvrfupwn><a href="#73-loki-stream-labels-vs-structured-metadata-vs-body" data-slug="73-loki-stream-labels-vs-structured-metadata-vs-body" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.3 Loki Stream Labels vs Structured Metadata vs Body</a></li><li data-astro-cid-xvrfupwn><a href="#74-high-cardinality-identifiers" data-slug="74-high-cardinality-identifiers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>7.4 High-Cardinality Identifiers</a></li><li data-astro-cid-xvrfupwn><a href="#8-trace-schema" data-slug="8-trace-schema" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>8. Trace Schema</a></li><li data-astro-cid-xvrfupwn><a href="#81-span-naming" data-slug="81-span-naming" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8.1 Span Naming</a></li><li data-astro-cid-xvrfupwn><a href="#82-required-span-attributes" data-slug="82-required-span-attributes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8.2 Required Span Attributes</a></li><li data-astro-cid-xvrfupwn><a href="#83-async-messaging-propagation" data-slug="83-async-messaging-propagation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8.3 Async Messaging Propagation</a></li><li data-astro-cid-xvrfupwn><a href="#84-messaging-span-kind" data-slug="84-messaging-span-kind" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8.4 Messaging Span Kind</a></li><li data-astro-cid-xvrfupwn><a href="#9-cardinality-governance" data-slug="9-cardinality-governance" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>9. Cardinality Governance</a></li><li data-astro-cid-xvrfupwn><a href="#91-cardinality-classes" data-slug="91-cardinality-classes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>9.1 Cardinality Classes</a></li><li data-astro-cid-xvrfupwn><a href="#92-collector-enforcement-rules" data-slug="92-collector-enforcement-rules" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>9.2 Collector Enforcement Rules</a></li><li data-astro-cid-xvrfupwn><a href="#93-cardinality-budgets-federated-governance" data-slug="93-cardinality-budgets-federated-governance" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>9.3 Cardinality Budgets (federated governance)</a></li><li data-astro-cid-xvrfupwn><a href="#10-pii-governance" data-slug="10-pii-governance" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>10. PII Governance</a></li><li data-astro-cid-xvrfupwn><a href="#101-collector-enforcement-primitives" data-slug="101-collector-enforcement-primitives" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>10.1 Collector enforcement primitives</a></li><li data-astro-cid-xvrfupwn><a href="#102-what-must-flow-through-attributesprocessor-deny-list" data-slug="102-what-must-flow-through-attributesprocessor-deny-list" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>10.2 What MUST flow through attributes.processor deny-list</a></li><li data-astro-cid-xvrfupwn><a href="#11-loki-label-strategy" data-slug="11-loki-label-strategy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>11. Loki Label Strategy</a></li><li data-astro-cid-xvrfupwn><a href="#12-sampling-strategy" data-slug="12-sampling-strategy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>12. Sampling Strategy</a></li><li data-astro-cid-xvrfupwn><a href="#121-lower-environments-dev-qa-train" data-slug="121-lower-environments-dev-qa-train" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>12.1 Lower environments (dev, qa, train)</a></li><li data-astro-cid-xvrfupwn><a href="#122-production--head-sampling" data-slug="122-production--head-sampling" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>12.2 Production — head sampling</a></li><li data-astro-cid-xvrfupwn><a href="#123-production--tail-sampling-gateway-only" data-slug="123-production--tail-sampling-gateway-only" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>12.3 Production — tail sampling (gateway only)</a></li><li data-astro-cid-xvrfupwn><a href="#124-sampling-fallback-contract" data-slug="124-sampling-fallback-contract" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>12.4 Sampling fallback contract</a></li><li data-astro-cid-xvrfupwn><a href="#13-collector-topology" data-slug="13-collector-topology" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>13. Collector Topology</a></li><li data-astro-cid-xvrfupwn><a href="#14-retention--storage-tiering" data-slug="14-retention--storage-tiering" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>14. Retention &amp; Storage Tiering</a></li><li data-astro-cid-xvrfupwn><a href="#15-semantic-conventions-versioning" data-slug="15-semantic-conventions-versioning" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>15. Semantic Conventions Versioning</a></li><li data-astro-cid-xvrfupwn><a href="#16-net-instrumentation-standards" data-slug="16-net-instrumentation-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>16. .NET Instrumentation Standards</a></li><li data-astro-cid-xvrfupwn><a href="#161-libraries" data-slug="161-libraries" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>16.1 Libraries</a></li><li data-astro-cid-xvrfupwn><a href="#162-required-enrichers" data-slug="162-required-enrichers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>16.2 Required enrichers</a></li><li data-astro-cid-xvrfupwn><a href="#163-exporter-config" data-slug="163-exporter-config" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>16.3 Exporter config</a></li><li data-astro-cid-xvrfupwn><a href="#164-logging-standard" data-slug="164-logging-standard" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>16.4 Logging standard</a></li><li data-astro-cid-xvrfupwn><a href="#17-python-instrumentation-standards" data-slug="17-python-instrumentation-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>17. Python Instrumentation Standards</a></li><li data-astro-cid-xvrfupwn><a href="#171-libraries" data-slug="171-libraries" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>17.1 Libraries</a></li><li data-astro-cid-xvrfupwn><a href="#172-logging-pattern" data-slug="172-logging-pattern" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>17.2 Logging pattern</a></li><li data-astro-cid-xvrfupwn><a href="#173-exporter-config" data-slug="173-exporter-config" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>17.3 Exporter config</a></li><li data-astro-cid-xvrfupwn><a href="#174-async-workloads" data-slug="174-async-workloads" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>17.4 Async workloads</a></li><li data-astro-cid-xvrfupwn><a href="#18-slo-aligned-telemetry" data-slug="18-slo-aligned-telemetry" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>18. SLO-Aligned Telemetry</a></li><li data-astro-cid-xvrfupwn><a href="#181-sli-sources" data-slug="181-sli-sources" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>18.1 SLI sources</a></li><li data-astro-cid-xvrfupwn><a href="#182-slo-catalog-every-service" data-slug="182-slo-catalog-every-service" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>18.2 SLO catalog (every service)</a></li><li data-astro-cid-xvrfupwn><a href="#19-query-standards" data-slug="19-query-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>19. Query Standards</a></li><li data-astro-cid-xvrfupwn><a href="#191-promql" data-slug="191-promql" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>19.1 PromQL</a></li><li data-astro-cid-xvrfupwn><a href="#192-logql" data-slug="192-logql" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>19.2 LogQL</a></li><li data-astro-cid-xvrfupwn><a href="#193-tempo" data-slug="193-tempo" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>19.3 Tempo</a></li><li data-astro-cid-xvrfupwn><a href="#20-governance-operating-model" data-slug="20-governance-operating-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>20. Governance Operating Model</a></li><li data-astro-cid-xvrfupwn><a href="#201-platform-team-owns" data-slug="201-platform-team-owns" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>20.1 Platform team owns</a></li><li data-astro-cid-xvrfupwn><a href="#202-application-team-owns" data-slug="202-application-team-owns" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>20.2 Application team owns</a></li><li data-astro-cid-xvrfupwn><a href="#203-schema-change-process" data-slug="203-schema-change-process" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>20.3 Schema change process</a></li><li data-astro-cid-xvrfupwn><a href="#21-maturity-model" data-slug="21-maturity-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>21. Maturity Model</a></li><li data-astro-cid-xvrfupwn><a href="#22-recommended-next-steps" data-slug="22-recommended-next-steps" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>22. Recommended Next Steps</a></li><li data-astro-cid-xvrfupwn><a href="#immediate--14-days" data-slug="immediate--14-days" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Immediate (≤ 14 days)</a></li><li data-astro-cid-xvrfupwn><a href="#30-days" data-slug="30-days" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>30 days</a></li><li data-astro-cid-xvrfupwn><a href="#90-days" data-slug="90-days" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>90 days</a></li><li data-astro-cid-xvrfupwn><a href="#23-anti-patterns-normative" data-slug="23-anti-patterns-normative" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>23. Anti-Patterns (normative)</a></li><li data-astro-cid-xvrfupwn><a href="#24-recommended-reference-stack" data-slug="24-recommended-reference-stack" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>24. Recommended Reference Stack</a></li><li data-astro-cid-xvrfupwn><a href="#25-see-also" data-slug="25-see-also" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>25. See Also</a></li><li data-astro-cid-xvrfupwn><a href="#26-final-recommendation" data-slug="26-final-recommendation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>26. Final Recommendation</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/projects/platform-shipsolid/07-cost-governance/metric-label-standards" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Metric Label Standards for Cost Attribution</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/observability-overview" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Observability Overview</span></a><a href="/notes/projects/platform-shipsolid/03-reliability-engineering/kpis-slis-slos-slas" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">KPIs, SLIs, SLOs &amp; SLAs</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/security-access-compliance" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Security, Access &amp; Compliance</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-two-tier-alloy-collector-topology-shipsolid" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">ADR-007: Adopt Two-Tier Grafana Alloy Collector Topology</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/architectural-design" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Architectural Design</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Data Source Strategy</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Collector Deployment Strategy</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-pin-otel-semconv-126-shipsolid" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">ADR-006: Pin OpenTelemetry Semantic Conventions to v1.26 as Platform Baseline</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/adrs/adr-two-tier-alloy-collector-topology-shipsolid" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">ADR-007: Adopt Two-Tier Grafana Alloy Collector Topology</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/architectural-design" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Architectural Design</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/data-source-strategy" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Data Source Strategy</span></a><a href="/notes/projects/platform-shipsolid/01-platform-architecture/designs/deployment-strategy" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Collector Deployment Strategy</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

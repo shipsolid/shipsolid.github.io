@@ -1,0 +1,980 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Observability KPIs for the Fan-out / Fan-in Pattern — Notes — Amit Singh</title><meta name="description" content="Observability KPIs for the Fan-out / Fan-in Pattern"><link rel="canonical" href="https://shipsolid.github.io/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Observability KPIs for the Fan-out / Fan-in Pattern — Notes — Amit Singh"><meta property="og:description" content="Observability KPIs for the Fan-out / Fan-in Pattern"><meta property="og:url" content="https://shipsolid.github.io/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Observability KPIs for the Fan-out / Fan-in Pattern — Notes — Amit Singh"><meta name="twitter:description" content="Observability KPIs for the Fan-out / Fan-in Pattern"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/patterns" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Patterns</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/patterns#section-04-microservice-patterns" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>04 Microservice Patterns</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/patterns#section-04-microservice-patterns-04-fan-out-fan-in" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>04 Fan Out Fan In</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> Observability KPIs for the Fan-out / Fan-in Pattern  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Observability KPIs for the Fan-out / Fan-in Pattern</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated July 6, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202607071933</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/patterns" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>patterns</a><a href="/notes/tag/distributed-systems" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>distributed-systems</a><a href="/notes/tag/concurrency" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>concurrency</a><a href="/notes/tag/maang-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>maang-prep</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Patterns</p> <div class="space-y-1" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/patterns#section-overview" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline" data-astro-cid-v5yihett> <span class="group-hover:text-accent transition-colors" data-astro-cid-v5yihett>Overview</span> <span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors" data-astro-cid-v5yihett>1</span> </a> </div> <div><a href="/notes/patterns#section-00-pattern-thinking" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">00 Pattern Thinking</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-00-pattern-thinking-01-what-is-a-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 What Is A Pattern</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-00-pattern-thinking-02-pattern-selection-and-trade-offs" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Pattern Selection And Trade Offs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-00-pattern-thinking-03-solid-revisited" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Solid Revisited</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-01-object-oriented-design-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">01 Object Oriented Design Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-01-object-oriented-design-patterns-01-creational-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Creational Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-01-object-oriented-design-patterns-02-structural-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Structural Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-01-object-oriented-design-patterns-03-behavioral-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Behavioral Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-02-enterprise-application-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">02 Enterprise Application Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/patterns#section-02-enterprise-application-patterns-01-layering-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Layering Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-02-enterprise-application-patterns-02-domain-modeling-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Domain Modeling Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-02-enterprise-application-patterns-03-transaction-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Transaction Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-02-enterprise-application-patterns-04-integration-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Integration Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-03-dependency-injection-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">03 Dependency Injection Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">2</span></a><div><a href="/notes/patterns#section-03-dependency-injection-patterns-01-dependency-management" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Dependency Management</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-03-dependency-injection-patterns-02-extensibility-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Extensibility Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-04-microservice-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">04 Microservice Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">26</span></a><div><a href="/notes/patterns#section-04-microservice-patterns-01-monolithic" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Monolithic</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-02-strangler-fig" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Strangler Fig</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-03-service-decomposition" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Service Decomposition</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-04-fan-out-fan-in" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Fan Out Fan In</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-05-backpressure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Backpressure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-06-service-communication" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Service Communication</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-07-circuit-breaker" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Circuit Breaker</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-08-retry-with-jitter" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Retry With Jitter</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-09-bulkhead" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Bulkhead</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-10-hedged-requests" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Hedged Requests</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-11-reliability-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>11 Reliability Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-12-cqrs" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>12 Cqrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-13-event-sourcing" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>13 Event Sourcing</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-14-outbox" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>14 Outbox</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-15-saga" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>15 Saga</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-04-microservice-patterns-16-data-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>16 Data Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-05-distributed-systems-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">05 Distributed Systems Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/patterns#section-05-distributed-systems-patterns-01-consensus-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Consensus Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-05-distributed-systems-patterns-02-coordination-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Coordination Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-05-distributed-systems-patterns-03-replication-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Replication Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-05-distributed-systems-patterns-04-consistency-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Consistency Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-06-messaging-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">06 Messaging Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-06-messaging-patterns-01-message-broker-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Message Broker Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-06-messaging-patterns-02-event-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Event Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-06-messaging-patterns-03-streaming-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Streaming Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-07-api-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">07 Api Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-07-api-patterns-01-rest-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Rest Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-07-api-patterns-02-rpc-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Rpc Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-07-api-patterns-03-api-gateway-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Api Gateway Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-08-data-storage-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">08 Data Storage Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-08-data-storage-patterns-01-database-design-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Database Design Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-08-data-storage-patterns-02-caching-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Caching Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-08-data-storage-patterns-03-search-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Search Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-09-cloud-native-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">09 Cloud Native Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/patterns#section-09-cloud-native-patterns-01-sidecar" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Sidecar</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-09-cloud-native-patterns-02-kubernetes-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Kubernetes Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-09-cloud-native-patterns-03-cloud-infrastructure-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Cloud Infrastructure Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-09-cloud-native-patterns-04-multi-region-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Multi Region Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-10-observability-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">10 Observability Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">4</span></a><div><a href="/notes/patterns#section-10-observability-patterns-01-monitoring-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Monitoring Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-10-observability-patterns-02-logging-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Logging Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-10-observability-patterns-03-tracing-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Tracing Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-10-observability-patterns-04-alerting-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Alerting Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-11-resilience-availability-scale" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">11 Resilience Availability Scale</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-11-resilience-availability-scale-01-resilience" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Resilience</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-11-resilience-availability-scale-02-availability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Availability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-11-resilience-availability-scale-03-scalability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Scalability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-12-security-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">12 Security Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-12-security-patterns-01-authentication-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Authentication Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-12-security-patterns-02-authorization-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Authorization Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-12-security-patterns-03-secure-communication-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Secure Communication Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-13-concurrency-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">13 Concurrency Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-13-concurrency-patterns-01-threading-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Threading Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-13-concurrency-patterns-02-lock-free-programming" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Lock Free Programming</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-13-concurrency-patterns-03-async-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Async Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-14-ai-agentic-system-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">14 Ai Agentic System Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">2</span></a><div><a href="/notes/patterns#section-14-ai-agentic-system-patterns-01-llm-system-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Llm System Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-14-ai-agentic-system-patterns-02-ai-infrastructure-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Ai Infrastructure Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-15-organizational-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">15 Organizational Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-15-organizational-patterns-01-team-topologies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Team Topologies</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-15-organizational-patterns-02-conways-law" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Conways Law</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-15-organizational-patterns-03-engineering-leadership-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Engineering Leadership Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-16-architecture-decision-patterns" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">16 Architecture Decision Patterns</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">2</span></a><div><a href="/notes/patterns#section-16-architecture-decision-patterns-01-decision-making-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Decision Making Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-16-architecture-decision-patterns-02-trade-off-analysis" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Trade Off Analysis</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/patterns#section-17-pattern-composition" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">17 Pattern Composition</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">3</span></a><div><a href="/notes/patterns#section-17-pattern-composition-01-combining-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Combining Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-17-pattern-composition-02-anti-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Anti Patterns</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/patterns#section-17-pattern-composition-03-case-studies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Case Studies</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:Observability KPIs for the Fan-out / Fan-in Pattern" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-07-06T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Patterns" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:patterns" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:distributed-systems" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:concurrency" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:maang-prep" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="overview">Overview</h2>
+<p>The <strong><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in/">Fan-out / Fan-in</a></strong> pattern is a distributed systems design pattern where a
+single incoming request is split into multiple parallel sub-requests (fan-out), and the results are
+later aggregated into a single response (fan-in).</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                   Client Request</span></span>
+<span class="line"><span>                         |</span></span>
+<span class="line"><span>                  Search Service</span></span>
+<span class="line"><span>                         |</span></span>
+<span class="line"><span>        +--------+--------+--------+--------+</span></span>
+<span class="line"><span>        |        |        |        |        |</span></span>
+<span class="line"><span>     Worker1  Worker2  Worker3  Worker4  Worker5</span></span>
+<span class="line"><span>        |        |        |        |        |</span></span>
+<span class="line"><span>        +--------+--------+--------+--------+</span></span>
+<span class="line"><span>                         |</span></span>
+<span class="line"><span>                   Aggregator (Fan-in)</span></span>
+<span class="line"><span>                         |</span></span>
+<span class="line"><span>                    Final Response</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Unlike a traditional service, the performance of a fan-out system depends on:</p>
+<ul>
+<li>Number of parallel workers</li>
+<li>Slowest worker</li>
+<li>Aggregation efficiency</li>
+<li>Partial failures</li>
+<li>Cancellation propagation</li>
+<li>Tail-latency mitigation</li>
+</ul>
+<p>Generic RED metrics (Rate, Errors, Duration) are necessary but insufficient. A fan-out service
+should expose additional pattern-specific telemetry.</p>
+<hr>
+<h2 id="1-fan-out-width">1. Fan-out Width</h2>
+<h3 id="metric">Metric</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_width{service,operation}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>Type</strong></p>
+<p>Histogram</p>
+<p><strong>Purpose</strong></p>
+<p>Measures how many child requests are created for every parent request.</p>
+<p>Example</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Search Request</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>20 shard requests</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Fan-out width = <strong>20</strong></p>
+<p>This metric helps identify:</p>
+<ul>
+<li>Query amplification</li>
+<li>Routing issues</li>
+<li>Retry storms</li>
+<li>Shard count growth</li>
+<li>Unexpected increases in parallelism</li>
+</ul>
+<p>Useful Grafana panels:</p>
+<ul>
+<li>Average fan-out width</li>
+<li>P95 fan-out width</li>
+<li>Histogram of width distribution</li>
+</ul>
+<p>Example PromQL</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>histogram_quantile(</span></span>
+<span class="line"><span>  0.95,</span></span>
+<span class="line"><span>  sum(rate(fan_out_width_bucket[5m])) by (le)</span></span>
+<span class="line"><span>)</span></span>
+<span class="line"><span></span></span></code></pre>
+<hr>
+<h2 id="2-per-shard-latency">2. Per-Shard Latency</h2>
+<h3 id="metric-1">Metric</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_shard_latency_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation,</span></span>
+<span class="line"><span>    shard_id</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>Type</strong></p>
+<p>Histogram</p>
+<p><strong>Purpose</strong></p>
+<p>Measures latency of each individual worker or shard.</p>
+<p>Example</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Shard</th><th>Latency</th></tr></thead><tbody><tr><td>1</td><td>20 ms</td></tr><tr><td>2</td><td>18 ms</td></tr><tr><td>3</td><td>145 ms</td></tr><tr><td>4</td><td>22 ms</td></tr></tbody></table>
+<p>Although three shards are fast, the client waits for the slowest one.</p>
+<p>This metric identifies:</p>
+<ul>
+<li>Hot partitions</li>
+<li>Slow databases</li>
+<li>Network issues</li>
+<li>Uneven workload distribution</li>
+</ul>
+<p>Recommended labels</p>
+<ul>
+<li>service</li>
+<li>operation</li>
+<li>shard_id</li>
+<li>region</li>
+<li>availability_zone</li>
+</ul>
+<p>Useful dashboards</p>
+<ul>
+<li>Heatmap</li>
+<li>Top slowest shards</li>
+<li>P95 latency by shard</li>
+</ul>
+<hr>
+<h2 id="3-aggregation-latency">3. Aggregation Latency</h2>
+<h3 id="metric-2">Metric</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_aggregation_latency_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>Type</strong></p>
+<p>Histogram</p>
+<p><strong>Purpose</strong></p>
+<p>Measures the time spent in the fan-in stage.</p>
+<p>Aggregation often performs:</p>
+<ul>
+<li>Merge</li>
+<li>Sort</li>
+<li>Deduplication</li>
+<li>Ranking</li>
+<li>Filtering</li>
+<li>Response serialization</li>
+</ul>
+<p>Example</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Workers complete in</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>40 ms</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Aggregation</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>150 ms</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Total</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>190 ms</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Without this metric, it is easy to incorrectly blame downstream services.</p>
+<p>Useful dashboard</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Total Request Time</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>├── Child Processing</span></span>
+<span class="line"><span>└── Aggregation</span></span>
+<span class="line"><span></span></span></code></pre>
+<hr>
+<h2 id="4-partial-result-count">4. Partial Result Count</h2>
+<h3 id="metric-3">Metric</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_partial_result_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation,</span></span>
+<span class="line"><span>    reason</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>Type</strong></p>
+<p>Counter</p>
+<p><strong>Purpose</strong></p>
+<p>Counts requests that returned partial responses.</p>
+<p>Example</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>20 shards</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>18 succeeded</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>2 timed out</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Client still receives response</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Reasons might include</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>timeout</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>cancelled</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>quota</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>circuit_open</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>unavailable</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>hedged_loser</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Without this metric, successful HTTP 200 responses may hide significant backend degradation.</p>
+<p>Useful dashboard</p>
+<ul>
+<li>Partial response rate</li>
+<li>Partial responses by reason</li>
+<li>Trend over time</li>
+</ul>
+<hr>
+<h2 id="5-cancelled-workers">5. Cancelled Workers</h2>
+<h3 id="metric-4">Metric</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_cancelled_worker_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>Type</strong></p>
+<p>Counter</p>
+<p><strong>Purpose</strong></p>
+<p>Counts workers cancelled because the parent request expired or was cancelled.</p>
+<p>Example</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Client timeout</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Parent context cancelled</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Workers terminate immediately</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>This validates proper <a href="/notes/observability/06-opentelemetry/8-context-propagation/deadline-propagation/">deadline propagation</a>.</p>
+<p>A spike may indicate:</p>
+<ul>
+<li>Downstream slowdown</li>
+<li>Parent timeout reached</li>
+<li>Correct cancellation behavior during incidents</li>
+</ul>
+<p>If parent requests time out but this metric remains zero, workers may be ignoring cancellation.</p>
+<hr>
+<h2 id="6-hedged-requests">6. Hedged Requests</h2>
+<h3 id="metric-5">Metric</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_hedged_requests_used_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p><strong>Type</strong></p>
+<p>Counter</p>
+<p><strong>Purpose</strong></p>
+<p>Measures how often hedged requests were issued.</p>
+<p>Hedging reduces <a href="/notes/observability/11-visualization/2-golden-signals/tail-latency/">tail latency</a>.</p>
+<p>Example</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Original request</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Taking too long</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Launch duplicate request</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>First response wins</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Second response cancelled</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Useful for monitoring</p>
+<ul>
+<li>Tail latency</li>
+<li>Replica imbalance</li>
+<li>Slow storage</li>
+<li>Overloaded shards</li>
+</ul>
+<p>Increasing hedged requests often indicate degrading infrastructure before users notice failures.</p>
+<hr>
+<h2 id="recommended-additional-metrics">Recommended Additional Metrics</h2>
+<h3 id="slowest-child-latency">Slowest Child Latency</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_max_child_latency_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Tracks the latency of the slowest child request.</p>
+<p>Since overall request latency is constrained by the slowest worker, this is often the most important
+latency metric.</p>
+<hr>
+<h3 id="straggler-count">Straggler Count</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_stragglers_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Counts workers significantly slower than the median.</p>
+<p>Example</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Median worker</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>20 ms</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Slow worker</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>400 ms</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>↓</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Straggler detected</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Useful for detecting:</p>
+<ul>
+<li>Hot partitions</li>
+<li>Resource contention</li>
+<li>Garbage collection pauses</li>
+<li>Network congestion</li>
+</ul>
+<hr>
+<h3 id="queue-wait-time">Queue Wait Time</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_queue_wait_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Measures time spent waiting for an available worker.</p>
+<p>High queue wait usually indicates:</p>
+<ul>
+<li>Worker pool exhaustion</li>
+<li>Downstream saturation</li>
+<li>Insufficient concurrency</li>
+</ul>
+<hr>
+<h3 id="worker-utilization">Worker Utilization</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_worker_utilization{</span></span>
+<span class="line"><span>    service</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Measures</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Busy Workers</span></span>
+<span class="line"><span>-------------</span></span>
+<span class="line"><span>Total Workers</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>High utilization (>90%) often precedes latency increases.</p>
+<hr>
+<h3 id="deadline-exceeded">Deadline Exceeded</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_deadline_exceeded_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Counts parent requests that exceeded their deadline.</p>
+<p>Useful for SLO monitoring.</p>
+<hr>
+<h3 id="retry-count">Retry Count</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_retry_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Tracks retries performed by workers.</p>
+<p>An increasing retry rate often signals downstream instability before outright failures occur.</p>
+<hr>
+<h3 id="success-ratio">Success Ratio</h3>
+<p>Derived metric</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Successful Child Requests</span></span>
+<span class="line"><span>-------------------------</span></span>
+<span class="line"><span>Total Child Requests</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Example</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>98 / 100</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>=</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>98%</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Useful for measuring graceful degradation.</p>
+<hr>
+<h2 id="recommended-metric-types">Recommended Metric Types</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric</th><th>Type</th></tr></thead><tbody><tr><td>fan_out_width</td><td>Histogram</td></tr><tr><td>fan_out_shard_latency_seconds</td><td>Histogram</td></tr><tr><td>fan_out_aggregation_latency_seconds</td><td>Histogram</td></tr><tr><td>fan_out_queue_wait_seconds</td><td>Histogram</td></tr><tr><td>fan_out_max_child_latency_seconds</td><td>Histogram</td></tr><tr><td>fan_out_partial_result_total</td><td>Counter</td></tr><tr><td>fan_out_cancelled_worker_total</td><td>Counter</td></tr><tr><td>fan_out_hedged_requests_used_total</td><td>Counter</td></tr><tr><td>fan_out_retry_total</td><td>Counter</td></tr><tr><td>fan_out_deadline_exceeded_total</td><td>Counter</td></tr><tr><td>fan_out_stragglers_total</td><td>Counter</td></tr></tbody></table>
+<hr>
+<h2 id="example-grafana-dashboard">Example Grafana Dashboard</h2>
+<h3 id="row-1--overview">Row 1 — Overview</h3>
+<ul>
+<li>Request Rate</li>
+<li>Error Rate</li>
+<li>P95 Latency</li>
+<li>P99 Latency</li>
+<li>Availability</li>
+</ul>
+<hr>
+<h3 id="row-2--fan-out">Row 2 — Fan-out</h3>
+<ul>
+<li>Fan-out Width Distribution</li>
+<li>Average Width</li>
+<li>Queue Wait</li>
+<li>Worker Utilization</li>
+</ul>
+<hr>
+<h3 id="row-3--child-requests">Row 3 — Child Requests</h3>
+<ul>
+<li>P95 Latency by Shard</li>
+<li>Heatmap</li>
+<li>Top Slowest Shards</li>
+<li>Retry Rate</li>
+</ul>
+<hr>
+<h3 id="row-4--aggregation">Row 4 — Aggregation</h3>
+<ul>
+<li>Aggregation Latency</li>
+<li>Aggregation CPU</li>
+<li>Merge Size</li>
+</ul>
+<hr>
+<h3 id="row-5--resilience">Row 5 — Resilience</h3>
+<ul>
+<li>Partial Result Rate</li>
+<li>Cancelled Workers</li>
+<li>Deadline Exceeded</li>
+<li>Hedged Requests</li>
+</ul>
+<hr>
+<h3 id="row-6--resources">Row 6 — Resources</h3>
+<ul>
+<li>CPU</li>
+<li>Memory</li>
+<li>Goroutines / Threads</li>
+<li>Active Connections</li>
+</ul>
+<hr>
+<h2 id="example-metrics">Example Metrics</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>fan_out_width{service,operation}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_shard_latency_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation,</span></span>
+<span class="line"><span>    shard_id</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_aggregation_latency_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_partial_result_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation,</span></span>
+<span class="line"><span>    reason</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_cancelled_worker_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_hedged_requests_used_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_max_child_latency_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_queue_wait_seconds{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_retry_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_deadline_exceeded_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fan_out_stragglers_total{</span></span>
+<span class="line"><span>    service,</span></span>
+<span class="line"><span>    operation</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span></code></pre>
+<hr>
+<h2 id="key-takeaways">Key Takeaways</h2>
+<ul>
+<li>Fan-out systems require <strong>pattern-specific observability</strong> beyond standard RED metrics.</li>
+<li><strong>Histograms</strong> should be used for measurements such as latency, width, and queue wait time to
+enable percentile analysis.</li>
+<li><strong>Counters</strong> are appropriate for events such as retries, cancellations, partial responses, and
+hedged requests.</li>
+<li>The <strong>slowest child request</strong> determines end-to-end latency, making per-shard latency one of the
+most valuable KPIs.</li>
+<li>Monitoring <strong>aggregation latency</strong> is essential, as the fan-in stage can become a bottleneck
+independent of downstream services.</li>
+<li>Metrics for <strong>partial results</strong>, <strong>cancelled workers</strong>, and <strong>hedged requests</strong> provide visibility
+into resilience mechanisms that are otherwise invisible in standard HTTP success rates.</li>
+<li>Combining these metrics with <strong>distributed tracing</strong> and <strong>RED/USE methodologies</strong> provides a
+comprehensive observability strategy for fan-out/fan-in architectures.</li>
+</ul>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"observability/04-distributed-tracing/9-critical-path-analysis/trace-shape","title":"9 — Fan-Out Metrics and Trace Shape","topic":"observability","noteType":"note"},{"slug":"observability/06-opentelemetry/8-context-propagation/deadline-propagation","title":"8 — Deadline Propagation","topic":"observability","noteType":"note"},{"slug":"observability/11-visualization/2-golden-signals/tail-latency","title":"2 — Tail Latency","topic":"observability","noteType":"note"},{"slug":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in","title":"04 — Fan-Out / Fan-In","topic":"patterns","noteType":"moc"},{"slug":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis","title":"Observability KPIs for the Fan-out / Fan-in Pattern","topic":"patterns","noteType":"note"},{"slug":"patterns/04-microservice-patterns/04-fan-out-fan-in/q4-answer-aggregator-bottleneck","title":"Q4 Answer — Aggregator Bottleneck","topic":"patterns","noteType":"note"},{"slug":"patterns/readme","title":"Patterns","topic":"patterns","noteType":"moc"}];
+const edges = [{"source":"observability/04-distributed-tracing/9-critical-path-analysis/trace-shape","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis","kind":"related"},{"source":"observability/04-distributed-tracing/9-critical-path-analysis/trace-shape","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in","kind":"depends_on"},{"source":"observability/06-opentelemetry/8-context-propagation/deadline-propagation","target":"observability/11-visualization/2-golden-signals/tail-latency","kind":"related"},{"source":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis","kind":"depends_on"},{"source":"observability/06-opentelemetry/8-context-propagation/deadline-propagation","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis","kind":"related"},{"source":"observability/11-visualization/2-golden-signals/tail-latency","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis","kind":"related"},{"source":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/q4-answer-aggregator-bottleneck","kind":"depends_on"},{"source":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/q4-answer-aggregator-bottleneck","kind":"related"},{"source":"observability/04-distributed-tracing/9-critical-path-analysis/trace-shape","target":"observability/11-visualization/2-golden-signals/tail-latency","kind":"related"},{"source":"observability/06-opentelemetry/8-context-propagation/deadline-propagation","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in","kind":"related"},{"source":"observability/11-visualization/2-golden-signals/tail-latency","target":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in","kind":"related"},{"source":"observability/06-opentelemetry/8-context-propagation/deadline-propagation","target":"patterns/readme","kind":"related"},{"source":"observability/04-distributed-tracing/9-critical-path-analysis/trace-shape","target":"patterns/readme","kind":"related"},{"source":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in","target":"patterns/readme","kind":"related"},{"source":"patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis","target":"patterns/readme","kind":"related"},{"source":"patterns/04-microservice-patterns/04-fan-out-fan-in/q4-answer-aggregator-bottleneck","target":"patterns/readme","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 4 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/observability/04-distributed-tracing/9-critical-path-analysis/trace-shape" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 9 — Fan-Out Metrics and Trace Shape </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The Prometheus metrics that instrument a fan-out pattern (width, shard latency, aggregation, partial results, cancelled workers, hedged requests), the OTel trace waterfall shape that reveals the tail shard, and when requests fan out to multiple shards vs route to a single one.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/q4-answer-aggregator-bottleneck" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q4 Answer — Aggregator Bottleneck </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Worked answer to Fan-Out/Fan-In Practice Q4: min-heap merge strategy for a 500-shard top-K aggregation, its complexity, and how to keep aggregator latency from contaminating per-shard dashboards.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 04 — Fan-Out / Fan-In </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Decompose a request into parallel sub-tasks (fan-out), execute concurrently, then merge results (fan-in). The foundational pattern for latency-bound aggregation.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Patterns </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for reusable engineering patterns spanning object-oriented design, enterprise architecture, distributed systems, messaging, APIs, cloud infrastructure, observability, security, concurrency, AI/agentic systems, and organizational design — grounded in production experience at scale.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/q1-answer-search-fan-out-design" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q1 Answer — Search Fan-Out Design </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Worked answer to Fan-Out/Fan-In Practice Q1: partitioning, deadline propagation, partial-result policy, and instrumentation priority for a 200-shard search API at 150ms P99.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/q2-answer-hedging-trade-off" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q2 Answer — Hedging Trade-off </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Worked answer to Fan-Out/Fan-In Practice Q2: the load-vs-latency math of hedged requests, when to enable them, and what to instrument first to justify the decision.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/q3-answer-context-cancellation-leak" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q3 Answer — Context Cancellation Leak </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Worked answer to Fan-Out/Fan-In Practice Q3: diagnosing a ghost-request leak where client-visible errors look healthy but infra cost and downstream CPU are elevated.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/q4-answer-aggregator-bottleneck" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q4 Answer — Aggregator Bottleneck </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Worked answer to Fan-Out/Fan-In Practice Q4: min-heap merge strategy for a 500-shard top-K aggregation, its complexity, and how to keep aggregator latency from contaminating per-shard dashboards.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/patterns" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Patterns notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-olly-kpis.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 04 — Fan-Out / Fan-In </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/q1-answer-search-fan-out-design" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q1 Answer — Search Fan-Out Design </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#overview" data-slug="overview" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Overview</a></li><li data-astro-cid-xvrfupwn><a href="#1-fan-out-width" data-slug="1-fan-out-width" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. Fan-out Width</a></li><li data-astro-cid-xvrfupwn><a href="#metric" data-slug="metric" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metric</a></li><li data-astro-cid-xvrfupwn><a href="#2-per-shard-latency" data-slug="2-per-shard-latency" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Per-Shard Latency</a></li><li data-astro-cid-xvrfupwn><a href="#metric-1" data-slug="metric-1" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metric</a></li><li data-astro-cid-xvrfupwn><a href="#3-aggregation-latency" data-slug="3-aggregation-latency" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Aggregation Latency</a></li><li data-astro-cid-xvrfupwn><a href="#metric-2" data-slug="metric-2" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metric</a></li><li data-astro-cid-xvrfupwn><a href="#4-partial-result-count" data-slug="4-partial-result-count" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Partial Result Count</a></li><li data-astro-cid-xvrfupwn><a href="#metric-3" data-slug="metric-3" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metric</a></li><li data-astro-cid-xvrfupwn><a href="#5-cancelled-workers" data-slug="5-cancelled-workers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Cancelled Workers</a></li><li data-astro-cid-xvrfupwn><a href="#metric-4" data-slug="metric-4" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metric</a></li><li data-astro-cid-xvrfupwn><a href="#6-hedged-requests" data-slug="6-hedged-requests" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. Hedged Requests</a></li><li data-astro-cid-xvrfupwn><a href="#metric-5" data-slug="metric-5" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Metric</a></li><li data-astro-cid-xvrfupwn><a href="#recommended-additional-metrics" data-slug="recommended-additional-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Recommended Additional Metrics</a></li><li data-astro-cid-xvrfupwn><a href="#slowest-child-latency" data-slug="slowest-child-latency" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Slowest Child Latency</a></li><li data-astro-cid-xvrfupwn><a href="#straggler-count" data-slug="straggler-count" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Straggler Count</a></li><li data-astro-cid-xvrfupwn><a href="#queue-wait-time" data-slug="queue-wait-time" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Queue Wait Time</a></li><li data-astro-cid-xvrfupwn><a href="#worker-utilization" data-slug="worker-utilization" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Worker Utilization</a></li><li data-astro-cid-xvrfupwn><a href="#deadline-exceeded" data-slug="deadline-exceeded" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Deadline Exceeded</a></li><li data-astro-cid-xvrfupwn><a href="#retry-count" data-slug="retry-count" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Retry Count</a></li><li data-astro-cid-xvrfupwn><a href="#success-ratio" data-slug="success-ratio" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Success Ratio</a></li><li data-astro-cid-xvrfupwn><a href="#recommended-metric-types" data-slug="recommended-metric-types" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Recommended Metric Types</a></li><li data-astro-cid-xvrfupwn><a href="#example-grafana-dashboard" data-slug="example-grafana-dashboard" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Example Grafana Dashboard</a></li><li data-astro-cid-xvrfupwn><a href="#row-1--overview" data-slug="row-1--overview" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Row 1 — Overview</a></li><li data-astro-cid-xvrfupwn><a href="#row-2--fan-out" data-slug="row-2--fan-out" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Row 2 — Fan-out</a></li><li data-astro-cid-xvrfupwn><a href="#row-3--child-requests" data-slug="row-3--child-requests" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Row 3 — Child Requests</a></li><li data-astro-cid-xvrfupwn><a href="#row-4--aggregation" data-slug="row-4--aggregation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Row 4 — Aggregation</a></li><li data-astro-cid-xvrfupwn><a href="#row-5--resilience" data-slug="row-5--resilience" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Row 5 — Resilience</a></li><li data-astro-cid-xvrfupwn><a href="#row-6--resources" data-slug="row-6--resources" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Row 6 — Resources</a></li><li data-astro-cid-xvrfupwn><a href="#example-metrics" data-slug="example-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Example Metrics</a></li><li data-astro-cid-xvrfupwn><a href="#key-takeaways" data-slug="key-takeaways" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Key Takeaways</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Depends On</p><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">04 — Fan-Out / Fan-In</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/observability/06-opentelemetry/8-context-propagation/deadline-propagation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">8 — Deadline Propagation</span></a><a href="/notes/observability/11-visualization/2-golden-signals/tail-latency" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">2 — Tail Latency</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/observability/04-distributed-tracing/9-critical-path-analysis/trace-shape" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">9 — Fan-Out Metrics and Trace Shape</span></a><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/q4-answer-aggregator-bottleneck" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Q4 Answer — Aggregator Bottleneck</span></a><a href="/notes/patterns/04-microservice-patterns/04-fan-out-fan-in/fan-out-fan-in" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">04 — Fan-Out / Fan-In</span></a><a href="/notes/patterns/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Patterns</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

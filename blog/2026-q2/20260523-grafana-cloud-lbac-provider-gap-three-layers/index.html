@@ -1,0 +1,326 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>The Grafana Terraform Provider Silently Drops LBAC Rules — and the Three-Layer Fix — Amit Singh</title><meta name="description" content="When we codified Grafana Cloud multi-tenancy as Terraform, label-based access control rules applied cleanly in the plan and silently did nothing at runtime. The provider ignores LBAC config on Terraform-provisioned datasources. This post covers what actually works: a three-layer architecture splitting access control across provider aliases, manually-created datasource UIDs, and Alloy write-time label enforcement."><link rel="canonical" href="https://shipsolid.github.io/blog/2026-q2/20260523-grafana-cloud-lbac-provider-gap-three-layers/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="The Grafana Terraform Provider Silently Drops LBAC Rules — and the Three-Layer Fix — Amit Singh"><meta property="og:description" content="When we codified Grafana Cloud multi-tenancy as Terraform, label-based access control rules applied cleanly in the plan and silently did nothing at runtime. The provider ignores LBAC config on Terraform-provisioned datasources. This post covers what actually works: a three-layer architecture splitting access control across provider aliases, manually-created datasource UIDs, and Alloy write-time label enforcement."><meta property="og:url" content="https://shipsolid.github.io/blog/2026-q2/20260523-grafana-cloud-lbac-provider-gap-three-layers/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="The Grafana Terraform Provider Silently Drops LBAC Rules — and the Three-Layer Fix — Amit Singh"><meta name="twitter:description" content="When we codified Grafana Cloud multi-tenancy as Terraform, label-based access control rules applied cleanly in the plan and silently did nothing at runtime. The provider ignores LBAC config on Terraform-provisioned datasources. This post covers what actually works: a three-layer architecture splitting access control across provider aliases, manually-created datasource UIDs, and Alloy write-time label enforcement."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.copy-btn[data-astro-cid-bvzihdzo]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-bvzihdzo]:hover .copy-btn[data-astro-cid-bvzihdzo],.copy-btn[data-astro-cid-bvzihdzo]:focus-visible{opacity:1}.copy-btn[data-astro-cid-bvzihdzo]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CIHCLQex.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-bvzihdzo></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a>  <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-bvzihdzo> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-bvzihdzo> <div class="flex flex-wrap gap-2 mb-4" data-astro-cid-bvzihdzo> <a href="/blog/tag/grafana" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Grafana </a><a href="/blog/tag/terraform" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Terraform </a><a href="/blog/tag/observability" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Observability </a><a href="/blog/tag/platform-engineering" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Platform Engineering </a><a href="/blog/tag/sre" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> SRE </a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4" data-astro-cid-bvzihdzo> The Grafana Terraform Provider Silently Drops LBAC Rules — and the Three-Layer Fix </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-bvzihdzo>When we codified Grafana Cloud multi-tenancy as Terraform, label-based access control rules applied cleanly in the plan and silently did nothing at runtime. The provider ignores LBAC config on Terraform-provisioned datasources. This post covers what actually works: a three-layer architecture splitting access control across provider aliases, manually-created datasource UIDs, and Alloy write-time label enforcement.</p> <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-bvzihdzo> <time datetime="2026-05-23T00:00:00.000Z" data-astro-cid-bvzihdzo>May 23, 2026</time> <span data-astro-cid-bvzihdzo>·</span> <span data-astro-cid-bvzihdzo>11 min read</span>  <div class="ml-auto flex items-center gap-4" data-astro-cid-bvzihdzo> <img src="https://hits.sh/shipsolid.github.io/blog/2026-q2/20260523-grafana-cloud-lbac-provider-gap-three-layers.svg?style=flat-square&color=00d9a6&labelColor=1e293b&label=views" alt="view count" class="h-5 rounded" loading="eager" data-astro-cid-bvzihdzo> <a href="/rss.xml" class="flex items-center gap-1.5 text-slate-600 hover:text-accent transition-colors" title="RSS feed" data-astro-cid-bvzihdzo> <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20 4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" data-astro-cid-bvzihdzo></path> </svg>
+RSS
+</a> </div> </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-bvzihdzo> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-bvzihdzo> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Post" data-astro-cid-bvzihdzo> <span hidden data-pagefind-meta="title:The Grafana Terraform Provider Silently Drops LBAC Rules — and the Three-Layer Fix" data-astro-cid-bvzihdzo></span> <span hidden data-pagefind-meta="date:2026-05-23T00:00:00.000Z" data-astro-cid-bvzihdzo></span> <span hidden data-pagefind-filter="tag:Grafana" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Terraform" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Observability" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Platform Engineering" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:SRE" data-astro-cid-bvzihdzo></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-bvzihdzo>  <p>The apply succeeded. The plan was clean. Terraform state showed
+<code>grafana_data_source_config_lbac_rules</code> as applied with the correct label selectors. And a user on
+team B could still execute a PromQL query against team A’s Mimir metrics.</p>
+<p>This is the story of that gap, what it took to diagnose, and the architecture we shipped to actually
+enforce multi-tenant access control on a shared Grafana Cloud instance.</p>
+<h2 id="why-we-built-it">Why we built it</h2>
+<p>We run a shared Grafana Cloud instance serving multiple product teams under a single organizational
+account. The shared model makes sense operationally: one platform team owns the Grafana stack, alert
+routing, and the SLO catalog. Product teams are onboarded via Terraform — folders, datasources,
+dashboards, alert rules, on-call schedules — without touching the platform layer.</p>
+<p>The problem with shared Grafana instances is scope creep at the query layer. RBAC in Grafana
+controls what a user sees in the UI: which folders, which dashboards, which menu items. It does not
+restrict what a user can query. A user with Explore access to any Mimir datasource can run arbitrary
+PromQL. If teams share a Mimir remote-write endpoint and there is no query-layer filtering, team B
+can craft selectors for team A’s application metrics.</p>
+<p>Label-based access control (LBAC) is Grafana’s answer. LBAC attaches label matchers to datasource
+permissions — a user or team can only return series where <code>deployment_environment</code> matches the
+values they’re authorized for. It operates between the query execution layer and the storage layer,
+not at the folder-permissions level.</p>
+<p>For a platform serving products across AKS workloads, on-premises OT plants, and container apps —
+each with distinct <code>deployment_environment</code> values — LBAC was the right control. The goal was to
+automate its setup entirely in Terraform: define authorized environments per team in a central
+registry, generate LBAC rules at plan time, apply deterministically.</p>
+<p>That goal turned out to be partially achievable. The Terraform path to LBAC enforcement has a hole
+in it that the provider documentation doesn’t surface.</p>
+<h2 id="architecture">Architecture</h2>
+<p>The architecture we shipped has three independent layers. Each addresses a different attack surface
+and operates at a different point in the data lifecycle.</p>
+<p><img  src="/_astro/lbac-layers.Vo7jhv8b_Z1uNuwm.webp" alt="Three access control layers: provider scope isolation via Terraform aliases, LBAC rules on manually-created Mimir/Loki datasources, and write-time label enforcement via Alloy pipeline" width="696" height="1142" loading="lazy" decoding="async"></p>
+<h3 id="layer-1-provider-alias-isolation">Layer 1: Provider alias isolation</h3>
+<p>Most Grafana Cloud Terraform setups use a single provider block. We split ours into three aliases
+pointing at distinct endpoints with distinct authentication tokens:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#B392F0">provider</span><span style="color:#79B8FF"> "grafana"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  alias</span><span style="color:#F97583">         =</span><span style="color:#9ECBFF"> "cloud"</span></span>
+<span class="line"><span style="color:#E1E4E8">  cloud_api_key</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> var</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">grafana_cloud_api_key</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">provider</span><span style="color:#79B8FF"> "grafana"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  alias</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "instance"</span></span>
+<span class="line"><span style="color:#E1E4E8">  url</span><span style="color:#F97583">   =</span><span style="color:#E1E4E8"> var</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">grafana_instance_url</span></span>
+<span class="line"><span style="color:#E1E4E8">  auth</span><span style="color:#F97583">  =</span><span style="color:#E1E4E8"> data</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">grafana_cloud_stack</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">main</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">service_account_token</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">provider</span><span style="color:#79B8FF"> "grafana"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  alias</span><span style="color:#F97583">               =</span><span style="color:#9ECBFF"> "oncall"</span></span>
+<span class="line"><span style="color:#E1E4E8">  url</span><span style="color:#F97583">                 =</span><span style="color:#E1E4E8"> data</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">grafana_cloud_stack</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">main</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">oncall_url</span></span>
+<span class="line"><span style="color:#E1E4E8">  auth</span><span style="color:#F97583">                =</span><span style="color:#E1E4E8"> var</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">grafana_oncall_access_token</span></span>
+<span class="line"><span style="color:#E1E4E8">  oncall_access_token</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> var</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">grafana_oncall_access_token</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>The split enforces scope boundaries at the API level: a compromised <code>grafana.instance</code> token cannot
+touch Cloud-level policies. A module that imports <code>grafana.cloud</code> is visibly managing
+organizational-level resources — the alias makes the blast radius explicit before you read the
+resource definitions.</p>
+<h3 id="layer-2-lbac-on-manually-created-datasources">Layer 2: LBAC on manually-created datasources</h3>
+<p>This is the layer that required the most rethinking. The Grafana provider’s
+<code>grafana_data_source_config_lbac_rules</code> resource does not take effect when the datasource it
+references was created by <code>grafana_data_source</code>. The provider provisions the datasource correctly,
+the LBAC rule is written to state — but the rule is not evaluated at query time. Confirmed by
+Grafana support after a debugging cycle.</p>
+<p>The workaround: create Mimir and Loki datasources manually in the Grafana UI, capture their UIDs in
+the product registry, and bind LBAC rules to those UIDs via Terraform.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># products.yml — manual UID capture after UI creation</span></span>
+<span class="line"><span style="color:#85E89D">meta</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  sre</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    dev</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      lbac_datasources</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">        mimir</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">grafana-cloud-mimir-dev</span></span>
+<span class="line"><span style="color:#85E89D">          uid</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"&#x3C;captured from UI>"</span></span>
+<span class="line"><span style="color:#85E89D">          type</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">prometheus</span></span>
+<span class="line"><span style="color:#85E89D">          default</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#85E89D">        loki</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">grafana-cloud-loki-dev</span></span>
+<span class="line"><span style="color:#85E89D">          uid</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"&#x3C;captured from UI>"</span></span>
+<span class="line"><span style="color:#85E89D">          type</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">loki</span></span>
+<span class="line"><span style="color:#85E89D">          default</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">false</span></span>
+<span class="line"></span></code></pre>
+<p>The LBAC module gates on UID presence so that a missing entry doesn’t break the rest of the apply:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#B392F0">resource</span><span style="color:#79B8FF"> "grafana_data_source_config_lbac_rules"</span><span style="color:#79B8FF"> "mimir"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  count</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> local</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">mimir_uid </span><span style="color:#F97583">!=</span><span style="color:#9ECBFF"> ""</span><span style="color:#F97583"> ?</span><span style="color:#79B8FF"> 1</span><span style="color:#F97583"> :</span><span style="color:#79B8FF"> 0</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">  datasource_uid</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> local</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">mimir_uid</span></span>
+<span class="line"><span style="color:#E1E4E8">  rules</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> jsonencode</span><span style="color:#E1E4E8">([</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> team_key, env_list </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> var</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">team_env_map </span><span style="color:#F97583">:</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">      selector = </span><span style="color:#79B8FF">length</span><span style="color:#E1E4E8">(env_list) </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">        ?</span><span style="color:#9ECBFF"> "{ deployment_environment=</span><span style="color:#79B8FF">\"</span><span style="color:#F97583">${</span><span style="color:#E1E4E8">env_list</span><span style="color:#9ECBFF">[</span><span style="color:#79B8FF">0</span><span style="color:#9ECBFF">]</span><span style="color:#F97583">}</span><span style="color:#79B8FF">\"</span><span style="color:#9ECBFF"> }"</span></span>
+<span class="line"><span style="color:#F97583">        :</span><span style="color:#9ECBFF"> "{ deployment_environment=~</span><span style="color:#79B8FF">\"</span><span style="color:#F97583">${</span><span style="color:#79B8FF">join</span><span style="color:#9ECBFF">("|", env_list)</span><span style="color:#F97583">}</span><span style="color:#79B8FF">\"</span><span style="color:#9ECBFF"> }"</span></span>
+<span class="line"><span style="color:#E1E4E8">      teams = [var</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">team_ids[team_key]]</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">  ])</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>The selector format is intentional: single-environment teams get an equality matcher (<code>=</code>),
+multi-environment teams get a regex union (<code>=~</code>). Grafana evaluates these as label selectors on
+every query, not as post-query filters.</p>
+<h3 id="layer-3-write-time-label-enforcement-via-alloy">Layer 3: Write-time label enforcement via Alloy</h3>
+<p>LBAC controls reads. It cannot control what labels data arrives with. Without write-time
+enforcement, a misconfigured agent could inject metrics without <code>deployment_environment</code> — or with
+the wrong value — and those series would either satisfy every team’s LBAC matcher or none of them.</p>
+<p>Alloy pipelines stamp the label unconditionally at collection time before remote-write. Each agent
+deployment is scoped to a single environment, and <code>deployment_environment</code> is applied as a constant
+label before the Mimir remote-write stage. The label cannot be overridden by the application being
+scraped.</p>
+<p>Cloud Access Policies on the Grafana Cloud side grant write access scoped to the stack. The
+<code>label_policy</code> attribute on access policies — which would let you restrict writes to specific label
+values — only applies to read scopes, not write scopes. This is a second provider gap, separate from
+the LBAC one. Write-side label isolation is Alloy’s responsibility until Grafana extends label
+policy enforcement to write tokens.</p>
+<p>The combination: LBAC stops unauthorized reads. Alloy-enforced labels guarantee that data at rest
+carries the attributes LBAC depends on. Neither control works without the other.</p>
+<h2 id="what-worked">What worked</h2>
+<p><strong>The pure data module</strong></p>
+<p>The <code>observability-stack</code> module is entirely provider-free. It reads <code>products.yml</code> at plan time via
+<code>yamldecode(file(...))</code> and derives team memberships, LBAC label rules, dashboard file lists, alert
+group configurations, and OnCall escalation maps. Because it uses no provider resources, you can
+evaluate all derivations locally without a TFC token.</p>
+<p>This matters more than it seems. Being able to run <code>terraform plan -target=module.computed</code> on a
+branch without credentials — or inside a CI step before real infrastructure access is granted —
+means you catch structural errors in the product registry before they touch running resources.</p>
+<p><strong>VCS-driven apply enforcement</strong></p>
+<p>HCP Terraform with a VCS-driven workspace intentionally breaks local <code>terraform apply</code>. The
+workspace packages only <code>environments/&#x3C;stack>/</code> on push, which means the runner cannot resolve
+<code>../../modules</code>. Every infrastructure change must flow through a peer-reviewed PR and a speculative
+plan posted as a PR check.</p>
+<p>This is not a limitation we worked around. It is a policy we designed for. The constraint forces the
+behavior you want: no direct applies, no hotfixes that bypass review.</p>
+<p><strong>Jinja2 generation with <code>[[ ]]</code> delimiters</strong></p>
+<p>Alert rules and dashboards are generated from Jinja2 templates. Grafana alert annotations use
+<code>{{ $labels.foo }}</code> notation — the same as Jinja2’s default delimiters. Rather than escaping every
+annotation variable in every template, we reconfigured the generator:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">env </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> jinja2.Environment(</span></span>
+<span class="line"><span style="color:#FFAB70">    variable_start_string</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"[["</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">    variable_end_string</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"]]"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<p>Generated files are committed to version control. A CI gate fails the PR if generated files are
+stale (<code>git diff --exit-code</code> on <code>alert_rules/generated/</code> and <code>dashboards/generated/</code>). What is in
+the repo is exactly what gets deployed — no template rendering at apply time, no substitution
+surprises during a 2 AM rollback.</p>
+<h2 id="what-didnt-work">What didn’t work</h2>
+<p><strong>LBAC on Terraform-provisioned datasources</strong></p>
+<p>Already detailed above, but worth naming the failure mode precisely: the plan reports success, the
+state file contains the resource, and <code>terraform show</code> returns the correct rule definitions. The
+enforcement is not there. There is no error, no warning, no diff on subsequent plans. Without active
+query-level testing against the datasource as a non-privileged user, this failure is invisible.</p>
+<p>The lesson is that infrastructure correctness tests must include negative cases. A clean apply is
+not evidence that a security control is working. We now maintain a validation job that executes a
+PromQL query as a service account that should be denied, and fails the pipeline if the query returns
+data. That job should have been part of the original definition of done.</p>
+<p><strong>CAP label_policy on write scopes</strong></p>
+<p>Cloud Access Policies support a <code>label_policy</code> attribute that restricts which label values a token
+can write. It appeared to be the right tool for write-time isolation. It is not — at least for
+write-scoped tokens. The <code>label_policy</code> attribute is only evaluated on read scopes. Write tokens
+with label policy rules attached are treated as unrestricted. The Terraform provider does not
+surface this as an error or warning.</p>
+<p>We have no precise data on when Grafana plans to extend label policy enforcement to write tokens.
+Until then, write-side isolation is an Alloy pipeline responsibility.</p>
+<p><strong>Notification policy destroy</strong></p>
+<p>The Grafana provider cannot truly delete a notification policy. Its destroy lifecycle action
+executes a PUT that writes Terraform state values back to Grafana — which re-pins the root receiver
+and causes 409 Conflict errors on subsequent contact point deletion. A working destroy sequence
+requires API pre-cleanup outside Terraform’s lifecycle: reset the notification policy via the
+Grafana API before running <code>terraform destroy</code>, then reset it again after as a safety guard. There
+is no clean automated path for this; it requires manual steps every time.</p>
+<h2 id="the-non-obvious-insight">The non-obvious insight</h2>
+<p>The trust boundary in a shared Grafana Cloud deployment is not at the Terraform configuration layer.
+It is at the data injection layer.</p>
+<p>Most platform teams treat Terraform as the policy enforcement plane. If a resource is in state, it
+is enforced. Grafana Cloud multi-tenancy breaks that assumption in two distinct places:
+Terraform-provisioned datasources bypass LBAC evaluation, and write-scoped access policies bypass
+label policy evaluation. Both failures are silent. Neither surfaces in plan output.</p>
+<p>The architecture that actually works inverts the usual framing. You cannot declare a read-access
+restriction in Terraform and trust it to hold — not unless you have also guaranteed that the data at
+rest carries the labels the restriction relies on, and that those labels were stamped by an agent
+outside the control of the tenant being restricted.</p>
+<p>Multi-tenant access control in Grafana Cloud requires defense in depth across the full data
+lifecycle: enforce what is written (Alloy pipeline labels), enforce what is configured (Terraform
+LBAC on manually-created UIDs), and test what is actually queryable (negative integration tests as a
+required gate). Any one of the three alone is insufficient.</p>
+<h2 id="what-wed-do-differently">What we’d do differently</h2>
+<p><strong>Design the manual/automated split from the start</strong></p>
+<p>We spent time trying to make Terraform provision everything before hitting the provider gap. The
+right starting point — given current provider capabilities — is to treat Mimir and Loki datasource
+UIDs as external inputs that Terraform consumes but does not create. A clear contract between what
+Grafana UI manages and what Terraform manages would have bypassed the debugging cycle entirely.</p>
+<p><strong>Ship negative query tests before calling LBAC done</strong></p>
+<p>The LBAC gap is invisible without active testing. A CI job that executes a denied query and
+validates the 403 response would have surfaced this in the first apply. Shipping LBAC without a
+negative test is shipping a control without a test that the control works. We have this now; it
+should have been the acceptance criterion, not the remediation.</p>
+<p><strong>Explicit UID validation in the product registry</strong></p>
+<p>The <code>count = … != "" ? 1 : 0</code> gate prevents broken bootstraps when UIDs are missing, but it also
+silently skips LBAC rule creation for incomplete entries. A Terraform validation block or a pre-plan
+script that fails if a product is marked <code>status: active</code> but has empty <code>lbac_datasources</code> UIDs
+would make missing UIDs a loud error rather than a quiet no-op.</p>
+<h2 id="takeaway">Takeaway</h2>
+<p>If you are codifying Grafana Cloud multi-tenancy in Terraform: assume the provider will not enforce
+label-based access control on any datasource it also creates. Validate LBAC enforcement with a
+negative test — a service account that should be denied executing a query that should return nothing
+— before marking a tenant as onboarded. Wire write-time label enforcement in your Alloy pipelines as
+a hard requirement, not a best-effort optimization. Trust the plan output for resource creation;
+test the policy outcome independently.</p>  </div> <!-- Related posts --> <div class="mt-16 pt-8 border-t border-slate-800"><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Related posts</p><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><a href="/blog/2026-q2/20260610-grafana-azure-monitor-plugin-limitations-push-exporter" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">Observability</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">Unbounded Cardinality, Zero Alerts, and 14-Second Dashboard Loads: The Structural Limits of the Grafana Azure Monitor Plugin</h3><p class="text-xs font-mono text-slate-600">Jun 10, 2026</p></a><a href="/blog/2026-q2/20260526-alloy-max-shards-monitoring-blackout" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">Observability</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">How Alloy&#39;s Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout</h3><p class="text-xs font-mono text-slate-600">May 26, 2026</p></a><a href="/blog/2026-q2/20260524-yaml-driven-grafana-cloud-self-service" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">Grafana</span><span class="tag text-xs">Terraform</span></div><h3 class="text-sm font-semibold text-slate-200 group-hover:text-accent transition-colors leading-snug mb-2">The Terraform Module That Has No Provider: How a Pure YAML Registry Drives a Multi-Tenant Grafana Platform</h3><p class="text-xs font-mono text-slate-600">May 24, 2026</p></a></div></div> <!-- Prev / Next navigation --> <div class="mt-16 pt-8 border-t border-slate-800 grid grid-cols-2 gap-4" data-astro-cid-bvzihdzo> <a href="/blog/2026-q2/20260501-sre-agent-autonomous-incident-response" class="card group block hover:-translate-y-0.5 no-underline" data-astro-cid-bvzihdzo> <p class="text-xs font-mono text-slate-600 mb-1.5 flex items-center gap-1" data-astro-cid-bvzihdzo> <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" data-astro-cid-bvzihdzo></path> </svg>
+Older
+</p> <p class="text-sm text-slate-300 group-hover:text-accent transition-colors leading-snug" data-astro-cid-bvzihdzo> Building an SRE Agent: From Playbook to Autonomous Incident Response </p> </a> <a href="/blog/2026-q2/20260524-yaml-driven-grafana-cloud-self-service" class="card group block hover:-translate-y-0.5 no-underline text-right" data-astro-cid-bvzihdzo> <p class="text-xs font-mono text-slate-600 mb-1.5 flex items-center gap-1 justify-end" data-astro-cid-bvzihdzo>
+Newer
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-bvzihdzo></path> </svg> </p> <p class="text-sm text-slate-300 group-hover:text-accent transition-colors leading-snug" data-astro-cid-bvzihdzo> The Terraform Module That Has No Provider: How a Pure YAML Registry Drives a Multi-Tenant Grafana Platform </p> </a> </div> <!-- Back / Home links --> <div class="mt-8 flex items-center justify-between" data-astro-cid-bvzihdzo> <a href="/blog" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-bvzihdzo>
+← All posts
+</a> <a href="/" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-bvzihdzo>Home</a> </div> <!-- Comments --> <div class="mt-16 pt-8 border-t border-slate-800"> <p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-6">Discussion</p> <script src="https://giscus.app/client.js" data-repo="shipsolid/shipsolid.github.io" data-repo-id="R_kgDOOr14lw" data-category="General" data-category-id="DIC_kwDOOr14l84C9sb9" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async></script> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-bvzihdzo> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-bvzihdzo> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#why-we-built-it" data-slug="why-we-built-it" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Why we built it</a></li><li data-astro-cid-xvrfupwn><a href="#architecture" data-slug="architecture" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Architecture</a></li><li data-astro-cid-xvrfupwn><a href="#layer-1-provider-alias-isolation" data-slug="layer-1-provider-alias-isolation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 1: Provider alias isolation</a></li><li data-astro-cid-xvrfupwn><a href="#layer-2-lbac-on-manually-created-datasources" data-slug="layer-2-lbac-on-manually-created-datasources" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 2: LBAC on manually-created datasources</a></li><li data-astro-cid-xvrfupwn><a href="#layer-3-write-time-label-enforcement-via-alloy" data-slug="layer-3-write-time-label-enforcement-via-alloy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Layer 3: Write-time label enforcement via Alloy</a></li><li data-astro-cid-xvrfupwn><a href="#what-worked" data-slug="what-worked" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What worked</a></li><li data-astro-cid-xvrfupwn><a href="#what-didnt-work" data-slug="what-didnt-work" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What didn’t work</a></li><li data-astro-cid-xvrfupwn><a href="#the-non-obvious-insight" data-slug="the-non-obvious-insight" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>The non-obvious insight</a></li><li data-astro-cid-xvrfupwn><a href="#what-wed-do-differently" data-slug="what-wed-do-differently" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>What we’d do differently</a></li><li data-astro-cid-xvrfupwn><a href="#takeaway" data-slug="takeaway" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Takeaway</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

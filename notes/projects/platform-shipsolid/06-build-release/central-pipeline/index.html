@@ -1,0 +1,1187 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Adopting the ShipSolid Central Terraform CI/CD Pipeline — Notes — Amit Singh</title><meta name="description" content="- Org consistency across all ShipSolid Terraform repos (Grafana Cloud IaC, SDLC Portal infra,"><link rel="canonical" href="https://shipsolid.github.io/notes/projects/platform-shipsolid/06-build-release/central-pipeline/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Adopting the ShipSolid Central Terraform CI/CD Pipeline — Notes — Amit Singh"><meta property="og:description" content="- Org consistency across all ShipSolid Terraform repos (Grafana Cloud IaC, SDLC Portal infra,"><meta property="og:url" content="https://shipsolid.github.io/notes/projects/platform-shipsolid/06-build-release/central-pipeline/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Adopting the ShipSolid Central Terraform CI/CD Pipeline — Notes — Amit Singh"><meta name="twitter:description" content="- Org consistency across all ShipSolid Terraform repos (Grafana Cloud IaC, SDLC Portal infra,"><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Platform Shipsolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>06 Build Release</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> Adopting the ShipSolid Central Terraform CI/CD Pipeline  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>- Org consistency across all ShipSolid Terraform repos (Grafana Cloud IaC, SDLC Portal infra,</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 1, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202604291907</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/ci-cd" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>CI/CD</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:Adopting the ShipSolid Central Terraform CI/CD Pipeline" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/platform-shipsolid/06-build-release/central-pipeline" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-05-01T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:CI/CD" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="adopting-the-shipsolid-central-terraform-cicd-pipeline">Adopting the ShipSolid Central Terraform CI/CD Pipeline</h2>
+<blockquote>
+<p><strong>Provenance:</strong> Originally authored in the ShipSolid <code>sre-grafana-cloud-tf</code> repository. “This
+repo” in the prose below refers to that repository. Sibling-file references that exist in k-docs
+have been rewritten to their new locations; references that exist only in the source repo are
+flagged inline with <code>(source-repo only)</code>.</p>
+<p><strong>Status (2026-04-28):</strong> Implementation in progress on the <code>sec-test</code> branch. Consumer workflows +
+<code>checkov_skips.cfg</code> files added. Activation blocked on:</p>
+<ol>
+<li>Platform-team review/merge of the parameterisation PR drafted on
+<code>feat/parameterise-iac-terraform-workflows</code> in <code>ShipSolidFoods/mf-core-pipelines</code> (4 of 5
+blockers).</li>
+<li>Confirmation that <code>MY_GITHUB_TOKEN</code>, <code>TF_API_TOKEN</code>, <code>AZURE_CREDENTIALS</code> are accessible
+org-level (5th blocker — provisioning, not code).</li>
+<li>Creation of GitHub Environments <code>shipsolid-dev</code> and <code>shipsolid-prod</code> in this repo with reviewer
+rules.</li>
+</ol>
+<p><strong>Pull-request triggers in the new consumer workflows stay commented out</strong> until items 1-3 are
+resolved. <code>workflow_dispatch</code> only — manual trigger for testing.</p>
+<p><strong>Reference consumer studied:</strong> <code>ShipSolidFoods/mf-dt-azrsda-SDLCPortal-infra-repo</code> (single-stack
+Azure Terraform repo using the central pipeline). <strong>Source of truth:</strong> >
+<code>ShipSolidFoods/mf-core-pipelines</code> at <code>@main</code> (post-merge of our PR). <strong>Audience:</strong> SRE engineers
+planning the post-TFC consolidation onto ShipSolid’s standard IaC pipeline. <strong>Scope:</strong> Replace
+this repo’s bespoke <code>plan.yml</code> / <code>apply.yml</code> workflows with the org-standard
+<code>iac-terraform-pr-create.yaml</code> / <code>iac-terraform-pr-merge.yaml</code> reusable workflows from
+<code>mf-core-pipelines</code>.</p>
+</blockquote>
+<hr>
+<h2 id="why-adopt-this">Why adopt this</h2>
+<ul>
+<li>Org consistency across all ShipSolid Terraform repos (Grafana Cloud IaC, SDLC Portal infra,
+foundation repos, application landing zones).</li>
+<li>Centralised guardrails (Checkov, tfsec, terraform-docs, terraform-compliance, terratest)
+maintained once in <code>mf-core-pipelines</code>, inherited by every consumer.</li>
+<li>Less custom CI per repo. Reduces the surface area we own.</li>
+</ul>
+<blockquote>
+<p><strong>Note on Azure OIDC:</strong> an earlier version of this doc claimed the central pipeline uses OIDC for
+Azure auth. <strong>It does not</strong> — the apply step uses <code>azure/login@v2</code> with
+<code>creds: ${{ secrets.AZURE_CREDENTIALS }}</code> (a JSON-format SP credential), and the plan/apply jobs
+export <code>ARM_CLIENT_ID</code> / <code>ARM_CLIENT_SECRET</code> / <code>ARM_TENANT_ID</code> from secrets. The <code>id-token: write</code>
+permission is set but currently unused. Static SP creds are still the auth model.</p>
+</blockquote>
+<p>This change layers <strong>on top of</strong> the TFC migration (<a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc/">migrate-to-tfc.md</a>). The TFC
+<code>cloud {}</code> backend stays as we set it up; only the GitHub Actions workflows change.</p>
+<p><strong>Sequence:</strong> finish the TFC migration first (Phases 3-7 in <a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc/">migrate-to-tfc.md</a>),
+validate one apply through the current <code>apply.yml</code>, then adopt the central pipeline on a separate
+branch — <em>only</em> after the compatibility issues below are resolved.</p>
+<hr>
+<h2 id="system-design">System design</h2>
+<h3 id="components">Components</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>┌──────────────────────────────────────────────────────────────────────┐</span></span>
+<span class="line"><span>│  CONSUMER REPO  (ShipSolidFoods--sre-grafana-cloud-tf, this repo)       │</span></span>
+<span class="line"><span>│  ────────────────────────────────────────────────────────────────    │</span></span>
+<span class="line"><span>│   .github/workflows/                                                 │</span></span>
+<span class="line"><span>│     pr_creation_central.yml   ── trigger: PR opened/synchronize      │</span></span>
+<span class="line"><span>│     pr_merge_central.yml      ── trigger: PR closed (merged)         │</span></span>
+<span class="line"><span>│   environments/shipsoliddev/                                            │</span></span>
+<span class="line"><span>│     backend.tf            cloud { organization=ShipSolid, ... }   │</span></span>
+<span class="line"><span>│     checkov_skips.cfg     per-stack Checkov skip list                │</span></span>
+<span class="line"><span>│   environments/shipsolid/    (same shape)                               │</span></span>
+<span class="line"><span>│   modules/, tools/, products.yml ...                                 │</span></span>
+<span class="line"><span>└──────────┬───────────────────────────────────────────────────────────┘</span></span>
+<span class="line"><span>           │ uses: ShipSolidFoods/mf-core-pipelines/.github/workflows/</span></span>
+<span class="line"><span>           │       iac-terraform-pr-{create,merge}.yaml@main</span></span>
+<span class="line"><span>           │ with: working_directory, checkov_skip_checks, pr_*, branch</span></span>
+<span class="line"><span>           │ secrets: inherit</span></span>
+<span class="line"><span>           ▼</span></span>
+<span class="line"><span>┌──────────────────────────────────────────────────────────────────────┐</span></span>
+<span class="line"><span>│  CENTRAL PIPELINE REPO  (ShipSolidFoods/mf-core-pipelines)              │</span></span>
+<span class="line"><span>│  ────────────────────────────────────────────────────────────────    │</span></span>
+<span class="line"><span>│   iac-terraform-pr-create.yaml   plan path                           │</span></span>
+<span class="line"><span>│   iac-terraform-pr-merge.yaml    apply path                          │</span></span>
+<span class="line"><span>│                                                                      │</span></span>
+<span class="line"><span>│   Triggers: workflow_call (what we use) OR repository_dispatch       │</span></span>
+<span class="line"><span>│   Runs on: github-hosted ubuntu-latest                               │</span></span>
+<span class="line"><span>│   Terraform version: 1.11.4 (HARDCODED — see Compatibility issues)   │</span></span>
+<span class="line"><span>└──────────┬───────────────────────────────────────────────────────────┘</span></span>
+<span class="line"><span>           │ Talks to:</span></span>
+<span class="line"><span>           ▼</span></span>
+<span class="line"><span>┌─────────────────────────┐    ┌─────────────────────────┐</span></span>
+<span class="line"><span>│  HCP Terraform (TFC)    │    │  Azure                  │</span></span>
+<span class="line"><span>│  ────────────────────   │    │  ────────────────────   │</span></span>
+<span class="line"><span>│  Org: ShipSolid      │    │  Static SP creds:       │</span></span>
+<span class="line"><span>│  Workspaces:            │    │   ARM_CLIENT_ID         │</span></span>
+<span class="line"><span>│    grafana-tf-shipsoliddev │    │   ARM_CLIENT_SECRET     │</span></span>
+<span class="line"><span>│    grafana-tf-shipsolid    │    │   ARM_TENANT_ID         │</span></span>
+<span class="line"><span>│                         │    │   AAD_CLIENT_SECRET     │</span></span>
+<span class="line"><span>│  Auth from runner:      │    │                         │</span></span>
+<span class="line"><span>│    TF_TOKEN_app_         │    │  Plus AZURE_CREDENTIALS │</span></span>
+<span class="line"><span>│    terraform_io          │    │  JSON for azure/login   │</span></span>
+<span class="line"><span>│    (org-level secret)   │    │  (apply job only)       │</span></span>
+<span class="line"><span>│                         │    │                         │</span></span>
+<span class="line"><span>│  - Stores state         │    │  KV writes happen       │</span></span>
+<span class="line"><span>│  - Holds variable set   │    │  during the TFC remote  │</span></span>
+<span class="line"><span>│  - Runs plan/apply      │    │  apply, not on the      │</span></span>
+<span class="line"><span>│    remotely             │    │  GitHub runner.         │</span></span>
+<span class="line"><span>└─────────────────────────┘    └─────────────────────────┘</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="confirmed-step-list-pr-create--plan-path">Confirmed step list (PR create — plan path)</h3>
+<p>Read directly from iac-terraform-pr-create.yaml. Job dependency graph:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>pipeline-trigger-information     (logs trigger metadata to step summary)</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ▼</span></span>
+<span class="line"><span>terraform-init                   (init + list files)</span></span>
+<span class="line"><span>        │</span></span>
+<span class="line"><span>        ├──▶ terraform-format    (terraform fmt -check -recursive)</span></span>
+<span class="line"><span>        ├──▶ terraform-validate  (terraform validate)</span></span>
+<span class="line"><span>        ├──▶ terraform-docs      (auto-generates README sections, GIT-PUSHES)</span></span>
+<span class="line"><span>        ├──▶ terraform-tfsec     (aquasecurity/tfsec-action)</span></span>
+<span class="line"><span>        └──▶ terraform-checkov   (init only — actual scan is commented out here)</span></span>
+<span class="line"><span>                │</span></span>
+<span class="line"><span>                ▼  (all five gates must pass)</span></span>
+<span class="line"><span>       terraform-plan            (terraform plan -out=pr-plan.out)</span></span>
+<span class="line"><span>                │                 uploads artifact "tfplan"</span></span>
+<span class="line"><span>                │                 outputs plan_has_changes (true/false)</span></span>
+<span class="line"><span>                │</span></span>
+<span class="line"><span>                ├──▶ nochanges   (if plan_has_changes=false; just logs)</span></span>
+<span class="line"><span>                │</span></span>
+<span class="line"><span>                ├──▶ checkov     (if plan_has_changes=true)</span></span>
+<span class="line"><span>                │                 downloads artifact, runs Checkov against tfplan.json</span></span>
+<span class="line"><span>                │                 with skip_check from input</span></span>
+<span class="line"><span>                │</span></span>
+<span class="line"><span>                ├──▶ compliance  (if true; downloads artifact, terraform-compliance step</span></span>
+<span class="line"><span>                │                 is currently commented out)</span></span>
+<span class="line"><span>                │</span></span>
+<span class="line"><span>                └──▶ terratest   (if true; init only — Terratest step is commented out)</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="confirmed-step-list-pr-merge--apply-path">Confirmed step list (PR merge — apply path)</h3>
+<p>Same pre-plan jobs as the plan path, plus:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>terraform-plan</span></span>
+<span class="line"><span>   ├──▶ checkov      ─┐</span></span>
+<span class="line"><span>   ├──▶ compliance   ─┤</span></span>
+<span class="line"><span>   └──▶ terratest    ─┤  all four gates ─▶  terraform-apply</span></span>
+<span class="line"><span>                     ─┘                       (environment: production)</span></span>
+<span class="line"><span>                                              azure/login + apply plan.out</span></span>
+<span class="line"><span>                                              [optional destroy_after_create flow:</span></span>
+<span class="line"><span>                                               apply → re-plan → destroy → wait → re-plan →</span></span>
+<span class="line"><span>                                               re-apply → destroy. Default: disabled.]</span></span>
+<span class="line"><span>                                              │</span></span>
+<span class="line"><span>                                              ▼</span></span>
+<span class="line"><span>                                     tfcpublish-module</span></span>
+<span class="line"><span>                                     (only if tfcpublish_flag=true; we won't use)</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="data-flow-per-pr">Data flow per PR</h3>
+<p><strong>On PR open / push (plan path):</strong></p>
+<ol>
+<li>Developer pushes a commit on a feature branch and opens a PR to <code>main</code>.</li>
+<li>Consumer’s <code>pr_creation_central.yml</code> fires.</li>
+<li>Job 1 (<code>get_checkov_skips_job_&#x3C;env></code>): reads <code>environments/&#x3C;env>/checkov_skips.cfg</code>, exposes the
+comma-list as a job output.</li>
+<li>Job 2 (<code>trigger_central_pr_plan_pipeline_reusable_workflow_&#x3C;env></code>): calls the central reusable
+workflow with <code>working_directory: environments/&#x3C;env></code>, <code>checkov_skip_checks: &#x3C;list></code>, plus PR
+metadata. <code>secrets: inherit</code> makes the consumer’s secrets visible to the central workflow.</li>
+<li>Central workflow checks out the consumer code (using <code>secrets.MY_GITHUB_TOKEN</code>), sets up
+Terraform 1.11.4, runs <code>terraform init</code> against TFC, then in parallel: <code>fmt -check</code>, <code>validate</code>,
+<code>tfsec</code>, <code>terraform-docs</code> (which <strong>commits back</strong> to the PR branch), and <code>checkov</code> init.</li>
+<li>Once those pass, <code>terraform plan -out=pr-plan.out</code> runs. With <code>cloud {}</code> backend, this <strong>executes
+inside TFC</strong> as a remote run; the runner waits and downloads the plan reference.</li>
+<li>Plan is uploaded as an artifact <code>tfplan</code>; the JSON form is checked for <code>applyable</code> to set
+<code>plan_has_changes</code>.</li>
+<li>If changes detected, <code>checkov</code> runs against <code>tfplan.json</code> with the consumer’s skip list;
+<code>terraform-compliance</code> and <code>terratest</code> jobs run their setup (the actual scan/test commands are
+commented out in <code>mf-core-pipelines</code>, so these are placeholders).</li>
+</ol>
+<p><strong>On PR merge to main (apply path):</strong></p>
+<ol>
+<li>Same triggers; <code>pr_merge_central.yml</code> invokes <code>iac-terraform-pr-merge.yaml</code>.</li>
+<li>Same pre-plan gates run, then <code>terraform-plan</code> runs again (the create-workflow plan is <strong>not</strong>
+carried forward — there’s a fresh plan at merge time).</li>
+<li>After Checkov + compliance + terratest gates pass, <code>terraform-apply</code> job:
+<ul>
+<li>Sets <code>environment: production</code> (GitHub Environment in the consumer repo — see compatibility
+issue 4).</li>
+<li>Logs into Azure with <code>azure/login@v2</code> using <code>secrets.AZURE_CREDENTIALS</code>.</li>
+<li>Downloads the plan artifact from the merge-time plan job.</li>
+<li>Runs <code>terraform apply -auto-approve plan.out</code>, which confirms the TFC remote run.</li>
+</ul>
+</li>
+<li>KV writes happen inside the TFC remote run via the <code>azurerm</code> provider, using <code>ARM_*</code> env vars
+from the workspace variable set.</li>
+</ol>
+<h3 id="auth--trust-boundaries-confirmed">Auth / trust boundaries (confirmed)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Boundary</th><th>Who authenticates</th><th>How</th></tr></thead><tbody><tr><td>GitHub runner → TFC</td><td>Central workflow</td><td><code>TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}</code> env var, plus <code>cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}</code> passed to <code>hashicorp/setup-terraform@v3</code>. <code>TF_API_TOKEN</code> is <strong>expected as an org-level or consumer-repo secret</strong> propagated via <code>secrets: inherit</code>.</td></tr><tr><td>Central workflow → Consumer code</td><td><code>secrets.MY_GITHUB_TOKEN</code></td><td>A custom-named secret (PAT or GitHub App token) used in <code>actions/checkout@v4</code> to clone the consumer repo. <strong>Must exist in the consumer repo’s secrets</strong> (or org-level), since <code>secrets: inherit</code> passes consumer secrets into the reusable workflow.</td></tr><tr><td>GitHub runner → Azure (apply only)</td><td><code>azure/login@v2</code></td><td><code>creds: ${{ secrets.AZURE_CREDENTIALS }}</code> — JSON-format SP credential. Static, not OIDC.</td></tr><tr><td>Plan/apply Terraform → Azure</td><td>Static SP env vars</td><td><code>ARM_CLIENT_ID</code>, <code>ARM_CLIENT_SECRET</code>, <code>ARM_TENANT_ID</code>, <code>AAD_CLIENT_SECRET</code> from secrets, exported into the job env.</td></tr><tr><td>TFC remote run → Azure</td><td>TFC variable set</td><td>Same <code>ARM_*</code> vars in the TFC workspace variable set (configured during the TFC migration). KV writes happen here, not on the runner.</td></tr></tbody></table>
+<p>The <code>id-token: write</code> permission on both workflows is currently unused. Likely future-proofing for
+an OIDC migration, but as of <code>@main</code> it doesn’t change the auth model.</p>
+<hr>
+<h2 id="compatibility-issues">Compatibility issues</h2>
+<p>Five hard blockers between the central pipeline as written and our repo as it stands. <strong>4 of the 5
+are addressed by the parameterisation PR drafted on <code>feat/parameterise-iac-terraform-workflows</code> in
+<code>ShipSolidFoods/mf-core-pipelines</code></strong> (commit <code>9e005f6</code>, +142/-77 lines, awaiting push + review). The
+5th is a provisioning question.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Issue</th><th>Status</th></tr></thead><tbody><tr><td>1</td><td><code>terraform_version: 1.11.4</code> hardcoded</td><td><strong>Fixed in PR</strong> — <code>terraform_version</code> input added, default <code>"1.11.4"</code>. We pass <code>"1.14.9"</code> from the consumer workflow.</td></tr><tr><td>2</td><td>Hardcoded <code>-var cfg_aad_client_secret=...</code></td><td><strong>Fixed in PR</strong> — flag is now conditional on <code>AAD_CLIENT_SECRET</code> being non-empty. We leave the secret unset; no flag passed.</td></tr><tr><td>3</td><td><code>terraform-docs</code> <code>git-push: 'true'</code></td><td><strong>Fixed in PR</strong> — <code>terraform_docs_git_push</code> input added, default <code>true</code> (backwards compat). We pass <code>false</code>.</td></tr><tr><td>4</td><td><code>environment: production</code> apply gate</td><td><strong>Fixed in PR</strong> — <code>apply_environment</code> input added, default <code>"production"</code>. We pass <code>"shipsolid-dev"</code> / <code>"shipsolid-prod"</code>. Combined with caller-side <code>environment:</code> on the calling jobs, gives two-tier per-stack gating.</td></tr><tr><td>5</td><td><code>MY_GITHUB_TOKEN</code> secret name</td><td><strong>Provisioning question</strong> — confirm with platform team whether org-provisioned or per-repo. No code change.</td></tr></tbody></table>
+<p>The full text of each blocker, recommended resolution, and patch shape is preserved below for the
+platform-team review.</p>
+<h3 id="1-hardcoded-terraform-version-1114">1. Hardcoded Terraform version <code>1.11.4</code></h3>
+<p>The central workflow pins <code>terraform_version: 1.11.4</code> in every <code>setup-terraform</code> step. Our
+<em>environments/shipsoliddev/backend.tf (source-repo only)</em> pins <code>required_version = "1.14.9"</code>.
+Terraform will refuse to init:
+<code>Terraform 1.11.4 is configured, but configuration requires "1.14.9"</code>.</p>
+<p><strong>Resolution options:</strong></p>
+<ul>
+<li><strong>(a)</strong> Loosen our <code>required_version</code> to <code>>= 1.11.0</code> (or just remove the pin). Cheapest; loses the
+strict version guarantee.</li>
+<li><strong>(b)</strong> Ask the platform team to make <code>terraform_version</code> an input on the reusable workflow. Most
+correct; depends on platform team timeline.</li>
+<li><strong>(c)</strong> Fork the central workflow into our repo and bump the version locally. Defeats the
+consistency goal.</li>
+</ul>
+<p><strong>Recommendation:</strong> request (b); use (a) as an interim if (b) is slow.</p>
+<h3 id="2-hardcoded--var-cfg_aad_client_secret-and-metadata_db_password">2. Hardcoded <code>-var cfg_aad_client_secret=...</code> and <code>metadata_db_password</code></h3>
+<p>Every <code>terraform plan</code> and <code>terraform apply</code> step runs:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">terraform</span><span style="color:#9ECBFF"> plan</span><span style="color:#79B8FF"> -out=plan.out</span><span style="color:#79B8FF"> -var</span><span style="color:#9ECBFF"> cfg_aad_client_secret="${{ </span><span style="color:#E1E4E8">secrets</span><span style="color:#9ECBFF">.</span><span style="color:#E1E4E8">AAD_CLIENT_SECRET</span><span style="color:#9ECBFF"> }}"</span></span>
+<span class="line"></span></code></pre>
+<p>(With branching on repo name to also pass <code>metadata_db_password</code> for <code>*-foundation-repo</code> and
+<code>mf-platform-azure-application-landing-zone</code>.)</p>
+<p>Our root modules <strong>don’t declare <code>cfg_aad_client_secret</code> as a variable</strong>. Terraform will fail with
+<code>Value for undeclared variable: cfg_aad_client_secret</code>.</p>
+<p><strong>Resolution options:</strong></p>
+<ul>
+<li><strong>(a)</strong> Add a no-op <code>cfg_aad_client_secret</code> variable to our root modules just to satisfy the
+central workflow. Ugly; pollutes the variable surface with something we don’t use.</li>
+<li><strong>(b)</strong> Ask the platform team to remove the hardcoded <code>-var</code> flags or make them conditional on a
+flag/input. Correct fix.</li>
+<li><strong>(c)</strong> Fork the workflow.</li>
+</ul>
+<p><strong>Recommendation:</strong> (b). This is a clear sign that the central workflow has accreted assumptions
+from foundation repos that don’t generalise. Worth raising as a structural improvement.</p>
+<h3 id="3-terraform-docs-auto-commits-to-the-pr-branch">3. <code>terraform-docs</code> auto-commits to the PR branch</h3>
+<p>The <code>terraform-docs</code> job runs:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">uses</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">terraform-docs/gh-actions@v1.0.0</span></span>
+<span class="line"><span style="color:#85E89D">  with</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    working-dir</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"${{ ... working_directory ... }}"</span></span>
+<span class="line"><span style="color:#85E89D">    output-file</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">README.md</span></span>
+<span class="line"><span style="color:#85E89D">    output-method</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">inject</span></span>
+<span class="line"><span style="color:#85E89D">    git-push</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">'true'</span></span>
+<span class="line"></span></code></pre>
+<p>(And again at repo root.) <code>git-push: true</code> means it commits any README changes back to the PR branch
+under the workflow’s identity.</p>
+<p><strong>Impact for us:</strong></p>
+<ul>
+<li>Our READMEs don’t have terraform-docs comment markers. The action’s <code>output-method: inject</code> only
+modifies content between markers, so the no-op case might be safe — but if it inserts the markers
+on first run, our READMEs gain auto-managed sections we didn’t ask for, and every PR gets an extra
+auto-commit.</li>
+<li>This breaks branch-protection-required-status-check workflows that expect the PR head SHA to be
+stable.</li>
+</ul>
+<p><strong>Resolution options:</strong></p>
+<ul>
+<li><strong>(a)</strong> Add terraform-docs markers to our READMEs and accept the auto-generated sections.</li>
+<li><strong>(b)</strong> Ask platform team to make <code>git-push</code> a configurable input (default false) or make the
+<code>terraform-docs</code> job opt-in via a flag.</li>
+<li><strong>(c)</strong> Fork.</li>
+</ul>
+<p><strong>Recommendation:</strong> (b). Flag-gating intrusive behaviour is a basic platform-team hygiene ask.</p>
+<h3 id="4-apply-gate-uses-environment-production-not-our-shipsolid-dev--shipsolid-prod">4. Apply gate uses <code>environment: production</code>, not our <code>shipsolid-dev</code> / <code>shipsolid-prod</code></h3>
+<p>The <code>terraform-apply</code> job in <code>iac-terraform-pr-merge.yaml</code> declares <code>environment: production</code>. For
+reusable workflows, environment protection rules are enforced in the <strong>calling</strong> repo. So we’d need
+to:</p>
+<ul>
+<li>Create a GitHub Environment named <code>production</code> in this repo (with required reviewers).</li>
+<li>Stop using <code>shipsolid-dev</code> and <code>shipsolid-prod</code> (or keep them for legacy/manual workflows).</li>
+</ul>
+<p>The bigger gap: the central workflow has <strong>one</strong> environment gate, no separation between dev and
+prod. For our two-stack repo (shipsoliddev → shipsolid promotion), this is a regression from our
+current per-stack <code>shipsolid-dev</code> / <code>shipsolid-prod</code> gates. There’s no obvious way to make the
+central workflow distinguish.</p>
+<p><strong>Resolution options:</strong></p>
+<ul>
+<li><strong>(a)</strong> Run shipsoliddev jobs without an environment gate, gate only shipsolid via… but the
+central workflow always sets <code>environment: production</code>, so we can’t selectively skip it.</li>
+<li><strong>(b)</strong> Accept one shared <code>production</code> environment with reviewers strict enough for prod. Means
+dev applies also wait for approval — slower iteration but safer.</li>
+<li><strong>(c)</strong> Ask platform team to make the environment name an input (default <code>production</code>), so we pass
+<code>shipsolid-dev</code> for dev runs and <code>shipsolid-prod</code> for prod runs.</li>
+<li><strong>(d)</strong> Fork.</li>
+</ul>
+<p><strong>Recommendation:</strong> (c). Environment name as an input is a small, low-risk parameterisation.</p>
+<h3 id="5-my_github_token-secret-must-exist">5. <code>MY_GITHUB_TOKEN</code> secret must exist</h3>
+<p>The central workflow checks out the consumer repo with <code>token: ${{ secrets.MY_GITHUB_TOKEN }}</code>. This
+is a custom secret, not the auto-provided <code>GITHUB_TOKEN</code>.</p>
+<p><code>secrets: inherit</code> from our consumer workflow passes consumer secrets into the reusable workflow. So
+<strong>a secret literally named <code>MY_GITHUB_TOKEN</code></strong> must exist in either:</p>
+<ul>
+<li>This repo’s Actions secrets, or</li>
+<li>An org-level secret accessible to this repo.</li>
+</ul>
+<p>Likely a ShipSolid platform-team-provisioned PAT or GitHub App token with cross-repo read. Easy to
+provision but a one-time setup task; needs platform team coordination.</p>
+<p><strong>Resolution:</strong> confirm with platform team whether <code>MY_GITHUB_TOKEN</code> is provisioned org-wide for all
+consumers. If yes, we just inherit it. If no, we need our own.</p>
+<hr>
+<h2 id="other-findings-worth-noting-not-blockers">Other findings (worth noting, not blockers)</h2>
+<ul>
+<li><strong>Plan-of-record drift:</strong> <code>pr_creation_central.yaml</code> and <code>iac-terraform-pr-merge.yaml</code> each run
+their own <code>terraform plan</code> independently. The plan reviewed at PR-time is <strong>not</strong> the plan that
+runs at merge-time — the merge workflow re-plans before applying. Acceptable for our low-frequency
+infra changes; same as we documented earlier.</li>
+<li><strong>Several jobs are placeholders:</strong> <code>terraform-checkov</code> (init-only — Checkov-against-directory
+commented out), <code>compliance</code> (terraform-compliance install only — actual run commented out),
+<code>terratest</code> (init-only — <code>go test</code> commented out). The <code>checkov</code> job (separate, runs against
+<code>tfplan.json</code>) <strong>is active</strong> and uses our skip list.</li>
+<li><strong>Generator step missing:</strong> confirmed — the central workflow does not run <code>tools/generate.py</code>. We
+add a <code>generator_sync_check</code> pre-step in our consumer workflow (see <a href="#decisions">Decisions</a>).</li>
+<li><strong><code>tfcpublish-module</code> job:</strong> optional, gated by <code>tfcpublish_flag</code> input (default <code>"false"</code>).
+Publishes the consumer repo as a TFC private module. Not relevant for us.</li>
+<li><strong><code>destroy_after_create</code> flow:</strong> optional, gated by <code>destroy_after_create</code> input (default
+<code>false</code>). Used for testing module idempotency by applying, destroying, re-applying. Not relevant
+for us.</li>
+<li><strong><code>workflow_dispatch</code> works</strong> as a manual trigger on both reusable workflows. Useful for testing
+without opening a PR.</li>
+</ul>
+<hr>
+<h2 id="adoption-plan-for-this-repo">Adoption plan for this repo</h2>
+<h3 id="whats-missing-for-this-to-work">What’s missing for this to work</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Need</th><th>Status</th><th>Owner</th></tr></thead><tbody><tr><td>Compatibility issues 1-5 resolved (see above)</td><td><strong>Blocked</strong> — needs platform team and/or our own variable plumbing</td><td>This repo + Platform</td></tr><tr><td><code>pr_creation_central.yml</code> + <code>pr_merge_central.yml</code> (one each, two jobs each for dev+prod)</td><td>TODO</td><td>This repo</td></tr><tr><td><code>environments/shipsoliddev/checkov_skips.cfg</code>, <code>environments/shipsolid/checkov_skips.cfg</code></td><td>TODO</td><td>This repo</td></tr><tr><td>Org-level secret <code>TF_API_TOKEN</code> accessible to this repo</td><td><strong>Verify</strong></td><td>Platform team</td></tr><tr><td><code>MY_GITHUB_TOKEN</code> (PAT or GitHub App) accessible to this repo</td><td><strong>Verify</strong></td><td>Platform team</td></tr><tr><td><code>AZURE_CREDENTIALS</code> JSON SP credential as a secret</td><td><strong>Verify</strong></td><td>Platform team</td></tr><tr><td><code>AAD_CLIENT_SECRET</code> as a secret (mapped to our <code>azure_ad_client_secret</code> use case)</td><td><strong>Verify</strong></td><td>This repo</td></tr><tr><td>GitHub Environment <code>production</code> (or whatever resolves issue 4)</td><td>TODO</td><td>This repo</td></tr><tr><td>Generator sync pre-step</td><td>Designed (see Decisions)</td><td>This repo</td></tr><tr><td>Delete <code>plan.yml</code>, <code>plan-shipsolid.yml</code>, <code>apply.yml</code>, <code>apply-shipsolid.yml</code></td><td>TODO once central is verified end-to-end</td><td>This repo</td></tr></tbody></table>
+<h3 id="two-stacks--one-workflow-file-or-two">Two stacks → one workflow file or two?</h3>
+<p>The reference repo has only <code>dev/</code>. We have <code>environments/shipsoliddev/</code> and
+<code>environments/shipsolid/</code>. Two equally valid options:</p>
+<h4 id="option-a--one-file-per-phase-two-jobs-each-recommended">Option (a) — one file per phase, two jobs each (recommended)</h4>
+<p>Closest to the reference pattern; uses <code>needs:</code> to enforce the <code>shipsoliddev</code> → <code>shipsolid</code>
+promotion at the job level:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">jobs</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  generator_sync_check</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">...</span></span>
+<span class="line"><span style="color:#85E89D">  get_checkov_skips_job_dev</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    needs</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">generator_sync_check</span></span>
+<span class="line"><span style="color:#79B8FF">    ...</span></span>
+<span class="line"><span style="color:#85E89D">  trigger_central_pr_apply_pipeline_reusable_workflow_dev</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    needs</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">get_checkov_skips_job_dev</span></span>
+<span class="line"><span style="color:#85E89D">    with</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      working_directory</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"environments/shipsoliddev"</span></span>
+<span class="line"><span style="color:#79B8FF">      ...</span></span>
+<span class="line"><span style="color:#85E89D">  get_checkov_skips_job_prod</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    needs</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">generator_sync_check</span></span>
+<span class="line"><span style="color:#79B8FF">    ...</span></span>
+<span class="line"><span style="color:#85E89D">  trigger_central_pr_apply_pipeline_reusable_workflow_prod</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    needs</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">get_checkov_skips_job_prod</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">trigger_central_pr_apply_pipeline_reusable_workflow_dev</span></span>
+<span class="line"><span style="color:#85E89D">    with</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">      working_directory</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"environments/shipsolid"</span></span>
+<span class="line"><span style="color:#79B8FF">      ...</span></span>
+<span class="line"></span></code></pre>
+<h4 id="option-b--two-file-pairs-pr_merge_centralyml--pr_merge_central_shipsolidyml">Option (b) — two file pairs (<code>pr_merge_central.yml</code> + <code>pr_merge_central_shipsolid.yml</code>)</h4>
+<p>Closer to the existing <code>*-shipsolid.yml</code> split. Easier to gate the prod file behind a label trigger
+or <code>workflow_dispatch</code>, but duplicates the trigger + checkov-skip-read boilerplate.</p>
+<p>Going with <strong>(a)</strong>: single file enforces ordering naturally; less duplication.</p>
+<h3 id="bugs--gaps-to-fix-in-our-consumer-workflow">Bugs / gaps to fix in our consumer workflow</h3>
+<ul>
+<li><strong>PR-close-without-merge will trigger apply.</strong> <code>pull_request: types: [closed]</code> fires on close, not
+just merge. Add a job-level guard:
+<code>if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'</code>.</li>
+<li><strong><code>pr_event_action</code> is empty on <code>workflow_dispatch</code>.</strong> <code>github.event.action</code> doesn’t exist for
+manual triggers. Defensive default in the inputs:
+<code>pr_event_action: "${{ github.event.action || 'manual' }}"</code>.</li>
+</ul>
+<h3 id="comparison-to-our-current-post-tfc-migration-design">Comparison to our current (post-TFC-migration) design</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Aspect</th><th>Current (post-TFC)</th><th>Central pipeline</th></tr></thead><tbody><tr><td>Plan trigger</td><td><code>plan.yml</code> on PR</td><td><code>pr_creation_central.yml</code> → reusable</td></tr><tr><td>Apply trigger</td><td><code>apply.yml</code> on push to main + Environment approval</td><td><code>pr_merge_central.yml</code> on PR close</td></tr><tr><td>State backend</td><td>TFC <code>cloud {}</code></td><td>TFC <code>cloud {}</code> (same)</td></tr><tr><td>Execution</td><td>TFC remote</td><td>TFC remote (same)</td></tr><tr><td>Approval gate</td><td>GitHub Environments (<code>shipsolid-dev</code>, <code>shipsolid-prod</code>)</td><td>GitHub Environment <code>production</code> (issue 4 — needs parameterisation for per-stack gating)</td></tr><tr><td>Generator step</td><td>Inline in workflow (<code>python tools/generate.py</code> + <code>git diff --exit-code</code>)</td><td>Pre-step in our consumer workflow, gates <code>trigger_central_*</code> jobs via <code>needs:</code> (see Decisions)</td></tr><tr><td>Plan-of-record</td><td>Saved tfplan artifact, applied verbatim within apply.yml</td><td>Re-plan at merge-time apply workflow (drift risk window between PR-time review and merge-time apply)</td></tr><tr><td>Promotion model</td><td><code>apply.yml</code> → manual <code>apply-shipsolid.yml</code></td><td>Single workflow file, two jobs, <code>needs:</code> ordering</td></tr><tr><td>Auth to Azure (apply)</td><td>Static SP via <code>ARM_*</code> workspace vars in TFC</td><td>Static SP via <code>ARM_*</code> env vars on runner + <code>azure/login</code> with <code>AZURE_CREDENTIALS</code> JSON</td></tr><tr><td>Terraform version</td><td><code>1.14.9</code> (our pin)</td><td><code>1.11.4</code> (central’s pin) — <strong>incompatible</strong></td></tr><tr><td>Org consistency</td><td>Repo-specific</td><td>Aligned with all ShipSolid IaC repos</td></tr></tbody></table>
+<hr>
+<h2 id="decisions">Decisions</h2>
+<p>Resolved items that constrain the adoption design.</p>
+<h3 id="generator-sync-check-stays--runs-as-a-consumer-side-pre-step">Generator sync check stays — runs as a consumer-side pre-step</h3>
+<p><strong>Decision:</strong> the central reusable workflow does not run <code>tools/generate.py</code>. We keep the
+generator-sync gate by adding a <code>generator_sync_check</code> job in both consumer workflows that runs
+<em>before</em> the <code>trigger_central_*</code> jobs.</p>
+<p><strong>Rationale:</strong></p>
+<ul>
+<li>Dropping the gate (option b — trust committed artifacts) silently allows stale <code>generated/</code> to
+ship: someone changes a template, forgets to run <code>./tf.sh generate</code>, the central workflow plans
+against the stale artifacts and applies stale dashboards/alerts. The whole point of the generator
+is to keep templates and their outputs in sync; trusting humans to remember is exactly what the
+gate prevents.</li>
+<li>Pre-commit hooks (option c) are not authoritative — they run only for developers who installed
+pre-commit, and CI must be the source of truth.</li>
+<li>The pre-step (option a) is cheap (~30-60s for Python setup + generator + <code>git diff</code>) and runs only
+on PRs whose <code>paths:</code> filter matches Terraform files.</li>
+</ul>
+<p><strong>Shape:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">jobs</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  generator_sync_check</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    runs-on</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">ubuntu-latest</span></span>
+<span class="line"><span style="color:#85E89D">    steps</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">uses</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">actions/checkout@v4</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">uses</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">actions/setup-python@v5</span></span>
+<span class="line"><span style="color:#85E89D">        with</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">          python-version</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"3.11"</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">run</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">pip install -r tools/requirements.txt</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">run</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">python tools/generate.py</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Fail if generated/ is stale</span></span>
+<span class="line"><span style="color:#85E89D">        run</span><span style="color:#E1E4E8">: </span><span style="color:#F97583">|</span></span>
+<span class="line"><span style="color:#9ECBFF">          git diff --exit-code alert_rules/generated/ dashboards/generated/ \</span></span>
+<span class="line"><span style="color:#9ECBFF">            || (echo "ERROR: Generated files are out of sync. Run: python tools/generate.py" &#x26;&#x26; exit 1)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#85E89D">  get_checkov_skips_job_dev</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    needs</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">generator_sync_check</span></span>
+<span class="line"><span style="color:#85E89D">    runs-on</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">ubuntu-latest</span></span>
+<span class="line"><span style="color:#85E89D">    steps</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#85E89D">  trigger_central_pr_plan_pipeline_reusable_workflow_dev</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    needs</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">generator_sync_check</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">get_checkov_skips_job_dev</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#85E89D">    uses</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">ShipSolidFoods/mf-core-pipelines/.github/workflows/iac-terraform-pr-create.yaml@main</span></span>
+<span class="line"><span style="color:#79B8FF">    ...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  # …shipsolid jobs follow the same needs: chain</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Trigger paths to include:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#79B8FF">on</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  pull_request</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    paths</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"alert_rules/templates/**"</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"dashboards/templates/**"</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"tools/**"</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"products.yml"</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"environments/**"</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"modules/**"</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"alert_rules/generated/**"</span><span style="color:#6A737D">   # catches manual hand-edits — diff against fresh generation will fail</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"dashboards/generated/**"</span><span style="color:#6A737D">    # same</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#9ECBFF">"k8s/**"</span></span>
+<span class="line"></span></code></pre>
+<h3 id="workflow-layout--one-file-per-phase-two-jobs-each-option-a">Workflow layout — one file per phase, two jobs each (option a)</h3>
+<p>Single file enforces <code>shipsoliddev</code> → <code>shipsolid</code> ordering naturally via <code>needs:</code>; less duplication
+than two file pairs. Documented above.</p>
+<h3 id="auth-model--accept-static-sp-credentials-for-now">Auth model — accept static SP credentials for now</h3>
+<p>The central workflow does not use OIDC despite having the permission set. Adopting the central
+pipeline does not bring us closer to OIDC. If OIDC is a goal, it has to be a separate platform-team
+initiative, not blocked on this adoption.</p>
+<hr>
+<h2 id="open-questions-still-unanswered">Open questions (still unanswered)</h2>
+<h3 id="critical">Critical</h3>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" disabled> <strong>Will the platform team accept a PR to <code>mf-core-pipelines</code></strong> to fix compatibility issues 1,
+2, 3, 4 (parameterise terraform version, remove hardcoded <code>-var</code> flags or gate them, gate
+<code>terraform-docs</code> git-push, parameterise environment name)? If yes, what’s the timeline?</li>
+<li class="task-list-item"><input type="checkbox" disabled> <strong>Are <code>TF_API_TOKEN</code>, <code>MY_GITHUB_TOKEN</code>, <code>AZURE_CREDENTIALS</code> org-level secrets</strong> automatically
+inherited by ShipSolidFoods repos, or do we need to provision per-repo?</li>
+</ul>
+<h3 id="important">Important</h3>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" disabled> <strong>What happens if <code>terraform-docs</code> runs without our READMEs having the inject markers?</strong> Read
+the action’s source/docs to confirm it no-ops vs auto-inserting markers.</li>
+<li class="task-list-item"><input type="checkbox" disabled> <strong>Can the <code>production</code> Environment in our repo have approval rules that distinguish dev vs
+prod runs?</strong> Likely no — Environment is set at the central-workflow job level, not by our
+caller. So approval logic moves into TFC (run approvals or Sentinel) for per-stack gating.</li>
+<li class="task-list-item"><input type="checkbox" disabled> <strong>Does the consumer workflow need <code>permissions: id-token: write</code> set even though OIDC isn’t
+used?</strong> Probably yes, to match the reusable workflow’s declared permissions; reusable
+workflows can’t grant permissions the caller doesn’t have.</li>
+</ul>
+<h3 id="nice-to-have">Nice to have</h3>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" disabled> <strong>Versioning policy for the reusable workflow.</strong> Reference repo uses <code>@main</code>. Pinning to
+<code>@v1.x</code> or a SHA gives change-management; staying on <code>@main</code> gets fixes faster but exposes us
+to breakage.</li>
+<li class="task-list-item"><input type="checkbox" disabled> <strong>Step summary / reporting.</strong> Anything queryable for fleet-level CI health across consumer
+repos?</li>
+<li class="task-list-item"><input type="checkbox" disabled> <strong>Slack/Teams notifications.</strong> None observed in the central workflow. We’d add our own if
+wanted.</li>
+</ul>
+<hr>
+<h2 id="implementation-status-sec-test-branch">Implementation status (sec-test branch)</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>#</th><th>Step</th><th>Status</th></tr></thead><tbody><tr><td>1</td><td>Drafted <code>mf-core-pipelines</code> PR fixing 4 of 5 blockers</td><td>✅ committed locally on <code>feat/parameterise-iac-terraform-workflows</code> (<code>9e005f6</code>); not yet pushed</td></tr><tr><td>2</td><td>Drafted platform-team feedback email</td><td>✅ <em>docs/email-platform-team-feedback.md (source-repo only)</em></td></tr><tr><td>3</td><td>Add <code>environments/shipsoliddev/checkov_skips.cfg</code></td><td>✅ Empty with format-rules header. Skips added as Checkov findings surface.</td></tr><tr><td>4</td><td>Add <code>environments/shipsolid/checkov_skips.cfg</code></td><td>✅ Same shape, prod-stricter guidance in the header.</td></tr><tr><td>5</td><td>Add <code>.github/workflows/pr_creation_central.yml</code></td><td>✅ Plan path. Two-stack with <code>needs:</code> promotion gate. <code>pull_request</code> trigger commented; <code>workflow_dispatch</code> only for now.</td></tr><tr><td>6</td><td>Add <code>.github/workflows/pr_merge_central.yml</code></td><td>✅ Apply path. Two-tier env gating (caller <code>shipsolid-dev</code>/<code>shipsolid-prod</code> + central <code>apply_environment</code>). <code>if: pull_request.merged == true || workflow_dispatch</code> guard on every job.</td></tr><tr><td>7</td><td>Confirm <code>TF_API_TOKEN</code>, <code>MY_GITHUB_TOKEN</code>, <code>AZURE_CREDENTIALS</code>, <code>ARM_*</code> accessibility</td><td>⏳ Pending platform-team confirmation</td></tr><tr><td>8</td><td>Create GitHub Environments <code>shipsolid-dev</code>, <code>shipsolid-prod</code> with reviewers</td><td>⏳ Pending</td></tr><tr><td>9</td><td>Push <code>mf-core-pipelines</code> branch + open PR</td><td>⏳ Pending user confirmation</td></tr><tr><td>10</td><td>After PR merges + Environments exist: uncomment <code>pull_request</code> triggers</td><td>⏳ Pending</td></tr><tr><td>11</td><td>Soak ≥3 PRs through central pipeline on <code>shipsoliddev</code> only</td><td>⏳ Pending</td></tr><tr><td>12</td><td>Delete <code>plan.yml</code>, <code>plan-shipsolid.yml</code>, <code>apply.yml</code>, <code>apply-shipsolid.yml</code></td><td>✅ Removed on <code>sec-test</code>. <strong>Do not merge sec-test to main until items 9-10 are complete</strong> — between branch-merge and trigger-activation there is no active PR plan/apply CI.</td></tr><tr><td>13</td><td>Update <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd/">docs/cicd.md</a>, <a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design/">docs/system-design.md</a> §4.13</td><td>⏳ Pending cutover completion</td></tr></tbody></table>
+<h3 id="whats-wired-vs-whats-not">What’s wired vs what’s not</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>sec-test branch</span></span>
+<span class="line"><span>  ├─ .github/workflows/</span></span>
+<span class="line"><span>  │     pr_creation_central.yml   ← NEW, workflow_dispatch only</span></span>
+<span class="line"><span>  │     pr_merge_central.yml      ← NEW, workflow_dispatch only</span></span>
+<span class="line"><span>  │     drift.yml                 ← stays</span></span>
+<span class="line"><span>  │     drift-shipsolid.yml          ← stays</span></span>
+<span class="line"><span>  │     test.yml                  ← stays</span></span>
+<span class="line"><span>  │     token-expiry.yml          ← stays</span></span>
+<span class="line"><span>  │     [plan.yml, plan-shipsolid.yml, apply.yml, apply-shipsolid.yml]   ← DELETED</span></span>
+<span class="line"><span>  ├─ environments/shipsoliddev/checkov_skips.cfg   ← NEW</span></span>
+<span class="line"><span>  └─ environments/shipsolid/checkov_skips.cfg     ← NEW</span></span>
+<span class="line"><span></span></span></code></pre>
+<blockquote>
+<p><strong>Branch-merge gating:</strong> sec-test must NOT merge to main until items 9-10 in the table above are
+complete. Between branch-merge and trigger-activation, there is no active PR-plan or
+apply-on-merge CI on main — only drift detection and module tests. Sequence is:</p>
+<ol>
+<li>Platform-team merges our <code>mf-core-pipelines</code> PR.</li>
+<li>Confirm <code>MY_GITHUB_TOKEN</code> etc. accessible.</li>
+<li>Create <code>shipsolid-dev</code> / <code>shipsolid-prod</code> GitHub Environments in this repo with reviewers.</li>
+<li><strong>Then</strong> uncomment the <code>pull_request:</code> triggers in <code>pr_creation_central.yml</code> and
+<code>pr_merge_central.yml</code>.</li>
+<li><strong>Then</strong> merge sec-test to main.</li>
+</ol>
+<p>The new workflow files themselves are safe (they fire only on <code>workflow_dispatch</code>, and even then
+would fail until the platform-team PR lands because <code>@main</code> doesn’t recognise the new inputs yet)
+— the operational risk is the gap on <code>main</code> while CI sits idle.</p>
+</blockquote>
+<hr>
+<h2 id="related-docs">Related docs</h2>
+<ul>
+<li><a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc/">migrate-to-tfc.md</a> — the prerequisite TFC migration. Must complete first.</li>
+<li><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd/">cicd.md</a> — current CI/CD shape. Will need a
+major rewrite once central pipeline is adopted.</li>
+<li><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design/">system-design.md</a> §4.13 — current CI/CD
+section will need updating.</li>
+</ul>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","title":"grafana_tf — CI/CD Workflows","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","title":"Technical Design — grafana_tf Platform","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/06-build-release/central-pipeline","title":"Adopting the ShipSolid Central Terraform CI/CD Pipeline","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/06-build-release/migrate-to-tfc","title":"Migrating to Terraform Cloud (TFC / HCP Terraform)","topic":"projects","noteType":"note"}];
+const edges = [{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","kind":"depends_on"},{"source":"projects/platform-shipsolid/06-build-release/central-pipeline","target":"projects/platform-shipsolid/06-build-release/migrate-to-tfc","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","target":"projects/platform-shipsolid/06-build-release/central-pipeline","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design","target":"projects/platform-shipsolid/06-build-release/central-pipeline","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd","target":"projects/platform-shipsolid/06-build-release/migrate-to-tfc","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/platform-shipsolid/06-build-release/central-pipeline";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 2 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Migrating to Terraform Cloud (TFC / HCP Terraform) </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Migrating to Terraform Cloud (TFC / HCP Terraform) is mostly mechanical, but there&#39;s one</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Migrating to Terraform Cloud (TFC / HCP Terraform) </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Migrating to Terraform Cloud (TFC / HCP Terraform) is mostly mechanical, but there&#39;s one</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/06-build-release/cicd-pipeline-guide" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> CI/CD Pipeline Guide </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How platform changes flow through CI/CD.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/06-build-release/deployment-runbooks/deployment-runbooks" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Deployment Runbooks </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step deployment runbooks per component.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/06-build-release/dev-environment-setup" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Development Environment Setup </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Set up a local dev environment to work on platform config.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/06-build-release/build-release" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 06 — Build &amp; Release </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>From local dev to production: CI/CD, releases, deploys, and rollbacks.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/platform-shipsolid/06-build-release/central-pipeline.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/06-build-release/build-release" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 06 — Build &amp; Release </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/06-build-release/cicd-overview" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> CI/CD Overview </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#adopting-the-shipsolid-central-terraform-cicd-pipeline" data-slug="adopting-the-shipsolid-central-terraform-cicd-pipeline" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Adopting the ShipSolid Central Terraform CI/CD Pipeline</a></li><li data-astro-cid-xvrfupwn><a href="#why-adopt-this" data-slug="why-adopt-this" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Why adopt this</a></li><li data-astro-cid-xvrfupwn><a href="#system-design" data-slug="system-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>System design</a></li><li data-astro-cid-xvrfupwn><a href="#components" data-slug="components" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Components</a></li><li data-astro-cid-xvrfupwn><a href="#confirmed-step-list-pr-create--plan-path" data-slug="confirmed-step-list-pr-create--plan-path" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Confirmed step list (PR create — plan path)</a></li><li data-astro-cid-xvrfupwn><a href="#confirmed-step-list-pr-merge--apply-path" data-slug="confirmed-step-list-pr-merge--apply-path" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Confirmed step list (PR merge — apply path)</a></li><li data-astro-cid-xvrfupwn><a href="#data-flow-per-pr" data-slug="data-flow-per-pr" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Data flow per PR</a></li><li data-astro-cid-xvrfupwn><a href="#auth--trust-boundaries-confirmed" data-slug="auth--trust-boundaries-confirmed" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Auth / trust boundaries (confirmed)</a></li><li data-astro-cid-xvrfupwn><a href="#compatibility-issues" data-slug="compatibility-issues" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Compatibility issues</a></li><li data-astro-cid-xvrfupwn><a href="#1-hardcoded-terraform-version-1114" data-slug="1-hardcoded-terraform-version-1114" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>1. Hardcoded Terraform version 1.11.4</a></li><li data-astro-cid-xvrfupwn><a href="#2-hardcoded--var-cfg_aad_client_secret-and-metadata_db_password" data-slug="2-hardcoded--var-cfg_aad_client_secret-and-metadata_db_password" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>2. Hardcoded -var cfg_aad_client_secret=... and metadata_db_password</a></li><li data-astro-cid-xvrfupwn><a href="#3-terraform-docs-auto-commits-to-the-pr-branch" data-slug="3-terraform-docs-auto-commits-to-the-pr-branch" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>3. terraform-docs auto-commits to the PR branch</a></li><li data-astro-cid-xvrfupwn><a href="#4-apply-gate-uses-environment-production-not-our-shipsolid-dev--shipsolid-prod" data-slug="4-apply-gate-uses-environment-production-not-our-shipsolid-dev--shipsolid-prod" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>4. Apply gate uses environment: production, not our shipsolid-dev / shipsolid-prod</a></li><li data-astro-cid-xvrfupwn><a href="#5-my_github_token-secret-must-exist" data-slug="5-my_github_token-secret-must-exist" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>5. MY_GITHUB_TOKEN secret must exist</a></li><li data-astro-cid-xvrfupwn><a href="#other-findings-worth-noting-not-blockers" data-slug="other-findings-worth-noting-not-blockers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Other findings (worth noting, not blockers)</a></li><li data-astro-cid-xvrfupwn><a href="#adoption-plan-for-this-repo" data-slug="adoption-plan-for-this-repo" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Adoption plan for this repo</a></li><li data-astro-cid-xvrfupwn><a href="#whats-missing-for-this-to-work" data-slug="whats-missing-for-this-to-work" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>What’s missing for this to work</a></li><li data-astro-cid-xvrfupwn><a href="#two-stacks--one-workflow-file-or-two" data-slug="two-stacks--one-workflow-file-or-two" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Two stacks → one workflow file or two?</a></li><li data-astro-cid-xvrfupwn><a href="#bugs--gaps-to-fix-in-our-consumer-workflow" data-slug="bugs--gaps-to-fix-in-our-consumer-workflow" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Bugs / gaps to fix in our consumer workflow</a></li><li data-astro-cid-xvrfupwn><a href="#comparison-to-our-current-post-tfc-migration-design" data-slug="comparison-to-our-current-post-tfc-migration-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Comparison to our current (post-TFC-migration) design</a></li><li data-astro-cid-xvrfupwn><a href="#decisions" data-slug="decisions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Decisions</a></li><li data-astro-cid-xvrfupwn><a href="#generator-sync-check-stays--runs-as-a-consumer-side-pre-step" data-slug="generator-sync-check-stays--runs-as-a-consumer-side-pre-step" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Generator sync check stays — runs as a consumer-side pre-step</a></li><li data-astro-cid-xvrfupwn><a href="#workflow-layout--one-file-per-phase-two-jobs-each-option-a" data-slug="workflow-layout--one-file-per-phase-two-jobs-each-option-a" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Workflow layout — one file per phase, two jobs each (option a)</a></li><li data-astro-cid-xvrfupwn><a href="#auth-model--accept-static-sp-credentials-for-now" data-slug="auth-model--accept-static-sp-credentials-for-now" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Auth model — accept static SP credentials for now</a></li><li data-astro-cid-xvrfupwn><a href="#open-questions-still-unanswered" data-slug="open-questions-still-unanswered" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Open questions (still unanswered)</a></li><li data-astro-cid-xvrfupwn><a href="#critical" data-slug="critical" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Critical</a></li><li data-astro-cid-xvrfupwn><a href="#important" data-slug="important" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Important</a></li><li data-astro-cid-xvrfupwn><a href="#nice-to-have" data-slug="nice-to-have" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Nice to have</a></li><li data-astro-cid-xvrfupwn><a href="#implementation-status-sec-test-branch" data-slug="implementation-status-sec-test-branch" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Implementation status (sec-test branch)</a></li><li data-astro-cid-xvrfupwn><a href="#whats-wired-vs-whats-not" data-slug="whats-wired-vs-whats-not" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>What’s wired vs what’s not</a></li><li data-astro-cid-xvrfupwn><a href="#related-docs" data-slug="related-docs" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Related docs</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Depends On</p><a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Migrating to Terraform Cloud (TFC / HCP Terraform)</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/cicd" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — CI/CD Workflows</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf/system-design" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Technical Design — grafana_tf Platform</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Migrating to Terraform Cloud (TFC / HCP Terraform)</span></a><a href="/notes/projects/platform-shipsolid/06-build-release/migrate-to-tfc" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Migrating to Terraform Cloud (TFC / HCP Terraform)</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

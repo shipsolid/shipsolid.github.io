@@ -1,0 +1,2317 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Observability Architecture: Questions to Ask — Notes — Amit Singh</title><meta name="description" content="A chronological sequence of 216 questions an architect asks when designing a production-grade observability platform — from business context through multi-tenancy, SLOs, onboarding, and validation."><link rel="canonical" href="https://shipsolid.github.io/notes/projects/platform-shipsolid/00-start-here/observability-architecture-qna/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Observability Architecture: Questions to Ask — Notes — Amit Singh"><meta property="og:description" content="A chronological sequence of 216 questions an architect asks when designing a production-grade observability platform — from business context through multi-tenancy, SLOs, onboarding, and validation."><meta property="og:url" content="https://shipsolid.github.io/notes/projects/platform-shipsolid/00-start-here/observability-architecture-qna/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Observability Architecture: Questions to Ask — Notes — Amit Singh"><meta name="twitter:description" content="A chronological sequence of 216 questions an architect asks when designing a production-grade observability platform — from business context through multi-tenancy, SLOs, onboarding, and validation."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Platform Shipsolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>00 Start Here</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> Observability Architecture: Questions to Ask  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>A chronological sequence of 216 questions an architect asks when designing a production-grade observability platform — from business context through multi-tenancy, SLOs, onboarding, and validation.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202606301457</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/observability" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>observability</a><a href="/notes/tag/system-design" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>system-design</a><a href="/notes/tag/maang-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>maang-prep</a><a href="/notes/tag/architecture" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>architecture</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:Observability Architecture: Questions to Ask" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/platform-shipsolid/00-start-here/observability-architecture-qna" data-astro-cid-v5yihett></span>  <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:observability" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:system-design" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:maang-prep" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:architecture" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <p>For
+<a href="/notes/system-design/08-observability/01-observability-architecture/observability-architecture/">observability architecture</a>,
+the most effective way to learn is to ask the right questions in the order an architect would
+naturally design a system. Below is a chronological sequence that takes you from first principles to
+operating a production-grade platform.</p>
+<h2 id="phase-1-understand-the-business">Phase 1: Understand the Business</h2>
+<p>Before thinking about technology, ask:</p>
+<ol>
+<li>
+<p>What business problem are we solving?</p>
+<details><summary>Hint</summary>
+<p>Typically one of three: reducing MTTR, enabling proactive detection before customers notice, or
+eliminating war-room firefighting. Anchor every technology choice to one of these outcomes — if a
+capability doesn’t move one of these needles, deprioritize it.</p>
+</details>
+</li>
+<li>
+<p>Who are the consumers of observability data?</p>
+<details><summary>Hint</summary>
+<p>Three distinct audiences: on-call engineers (need fast incident context), developers (need
+deployment feedback), management/SRE leads (need SLO/trend dashboards). Each needs a different
+interface — don’t design one dashboard to serve all three.</p>
+</details>
+</li>
+<li>
+<p>What decisions will this data help people make?</p>
+<details><summary>Hint</summary>
+<p>Incident triage (is this my service or upstream?), capacity (do I need to scale?), release (did
+this deploy degrade any SLIs?), and budget (what’s driving ingest cost?).</p>
+</details>
+</li>
+<li>
+<p>What does “good observability” mean for this organization?</p>
+<details><summary>Hint</summary>
+<p>Define it in outcome terms: “an on-call engineer can identify the root cause of a P1 within 15
+minutes without SSHing into a box.” If the org can’t state it that concretely, closing that gap
+is the first deliverable.</p>
+</details>
+</li>
+<li>
+<p>What are the SLAs and SLOs?</p>
+<details><summary>Hint</summary>
+<p>SLAs are contractual commitments to customers. SLOs are internal targets set tighter than SLAs to
+buffer error budget. Start with the customer-facing SLA, subtract a buffer, and derive SLOs for
+the critical-path services that underpin it.</p>
+</details>
+</li>
+<li>
+<p>Which applications are business-critical?</p>
+<details><summary>Hint</summary>
+<p>Classify by revenue impact, customer visibility, and dependency fan-in. P0: revenue-generating,
+customer-facing, no fallback. P1: internal but blocking P0s. Everything else is P2+.
+Observability investment should be proportional to this classification.</p>
+</details>
+</li>
+<li>
+<p>What incidents happen most frequently today?</p>
+<details><summary>Hint</summary>
+<p>Pull from your incident management system (SNOW, PagerDuty). Rank by frequency × impact. The top
+3 recurrers almost always reveal the first instrumentation gaps to close.</p>
+</details>
+</li>
+<li>
+<p>What does success look like after implementation?</p>
+<details><summary>Hint</summary>
+<p>Define before you build: MTTR target, alert-to-noise ratio target, onboarding time target,
+cost-per-service cap. Without these, you’ll ship something that looks good but can’t be
+evaluated.</p>
+</details>
+</li>
+<li>
+<p>What is the current observability maturity level?</p>
+<details><summary>Hint</summary>
+<p>Use a maturity model: Level 0 = logs only, ad hoc. Level 1 = structured logging, basic metrics.
+Level 2 = distributed tracing, SLOs defined. Level 3 = correlated signals, SLO-driven alerting.
+Level 4 = AIOps, automated remediation. Knowing where you are sets the realistic roadmap.</p>
+</details>
+</li>
+<li>
+<p>What budget and team capacity are available for this initiative?</p>
+<details><summary>Hint</summary>
+<p>Capacity constrains timeline and scope. Map each phase to team-weeks; flag phases that require
+specialist skills (distributed tracing, Alloy config) vs those that can be delegated to service
+teams. Budget determines managed cloud vs self-hosted.</p>
+</details>
+</li>
+<li>
+<p>Are there regulatory or compliance requirements (GDPR, SOC2, HIPAA, PCI)?</p>
+<details><summary>Hint</summary>
+<p>GDPR: PII must not appear in logs or traces — scrub at the pipeline. SOC2/HIPAA: access to audit
+logs must itself be audited. PCI: cardholder data must not transit observability pipelines.
+Identify these before instrumentation design, not after.</p>
+</details>
+</li>
+<li>
+<p>What is the appetite for vendor lock-in versus open-source tooling?</p>
+<details><summary>Hint</summary>
+<p>Default to OTel-native instrumentation regardless of backend — this gives portability at the
+data layer. Lock-in at the storage/visualization layer (Grafana Cloud, Datadog) is acceptable if
+instrumentation stays vendor-neutral.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-2-understand-the-applications">Phase 2: Understand the Applications</h2>
+<ol start="13">
+<li>
+<p>What applications exist?</p>
+<details><summary>Hint</summary>
+<p>Build a service inventory before doing anything else. If one doesn’t exist, reconstruct from
+network traffic, CI/CD pipelines, or Kubernetes service discovery. The inventory is the
+dependency graph you’ll instrument.</p>
+</details>
+</li>
+<li>
+<p>Which are monoliths and which are microservices?</p>
+<details><summary>Hint</summary>
+<p>Monoliths need structured logging and process-level metrics. Microservices additionally need
+distributed tracing to track request flow across service boundaries. Don’t apply the same
+instrumentation strategy to both.</p>
+</details>
+</li>
+<li>
+<p>Where are they hosted?</p>
+<details><summary>Hint</summary>
+<p>Location determines collection topology: cloud-native services use DaemonSet collectors; on-prem
+services need gateway collectors with VPN/private link. Hybrid environments need both.</p>
+</details>
+</li>
+<li>
+<p>What programming languages are used?</p>
+<details><summary>Hint</summary>
+<p>OTel SDK maturity varies by language: Java, Go, Python, and Node.js have stable
+auto-instrumentation. .NET is stable. Ruby and PHP are less mature. Language diversity
+multiplies the instrumentation surface — prioritize languages serving P0 services first.</p>
+</details>
+</li>
+<li>
+<p>Which protocols do they use (HTTP, gRPC, Kafka, etc.)?</p>
+<details><summary>Hint</summary>
+<p>HTTP/gRPC have excellent auto-instrumentation via OTel. Kafka consumers need manual span
+creation for producer-consumer correlation. Custom TCP protocols need custom instrumentation.
+Flag each protocol gap in the service inventory.</p>
+</details>
+</li>
+<li>
+<p>How do services communicate?</p>
+<details><summary>Hint</summary>
+<p>Map synchronous (HTTP/gRPC) vs asynchronous (Kafka, SQS, event bus) paths separately. Async
+paths break standard trace context propagation — you need W3C TraceContext injected into message
+headers and extracted at the consumer.</p>
+</details>
+</li>
+<li>
+<p>Which components are stateful?</p>
+<details><summary>Hint</summary>
+<p>Databases, caches, and message brokers need USE metrics (Utilization, Saturation, Errors).
+They’re often the bottleneck in incident investigations. Ensure query latency, connection pool
+saturation, and replication lag are instrumented.</p>
+</details>
+</li>
+<li>
+<p>Which dependencies are external?</p>
+<details><summary>Hint</summary>
+<p>External dependencies are outside your instrumentation boundary. Instrument the client side
+(latency, error rate, circuit-breaker state) and treat the dependency as a black box. Set
+synthetic monitors for their availability.</p>
+</details>
+</li>
+<li>
+<p>What is the deployment frequency for each application?</p>
+<details><summary>Hint</summary>
+<p>High-frequency deployments (multiple per day) require release markers on dashboards and SLI
+change-detection. A deployment that degrades an SLI by 0.5% can exhaust weekly error budget in
+hours — you need automated rollback signals tied to SLO burn rate.</p>
+</details>
+</li>
+<li>
+<p>Are any applications multi-tenant?</p>
+<details><summary>Hint</summary>
+<p>Multi-tenant apps need tenant ID as a label — but tenant ID is typically high-cardinality.
+Prefer log-level tenant attribution and aggregate metrics by tenant bucket (small/medium/large)
+rather than raw ID. Raw tenant ID in metric labels will blow up your cardinality budget.</p>
+</details>
+</li>
+<li>
+<p>What are the data residency or sovereignty requirements?</p>
+<details><summary>Hint</summary>
+<p>EU data must stay in EU regions; APAC in APAC. This constrains whether you can use a single
+global Grafana Cloud stack or need regional stacks with federation for cross-region aggregation.
+Decide topology before picking a single-stack vendor.</p>
+</details>
+</li>
+<li>
+<p>How many distinct teams own services, and do they operate independently?</p>
+<details><summary>Hint</summary>
+<p>Team count drives the multi-tenancy model. If > 5 teams, you need namespace/folder isolation in
+Grafana, per-team alerting namespaces, and a self-service onboarding process. Treating 20 teams
+as one is the fastest path to a shared-dashboard mess.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-3-identify-telemetry">Phase 3: Identify Telemetry</h2>
+<ol start="25">
+<li>
+<p>What metrics should be collected?</p>
+<details><summary>Hint</summary>
+<p>Start with the Four Golden Signals (latency, traffic, errors, saturation) for every
+external-facing service, and USE metrics for every resource. Add business metrics (order rate,
+payment success rate) for P0 services. Everything else is secondary.</p>
+</details>
+</li>
+<li>
+<p>What logs should be collected?</p>
+<details><summary>Hint</summary>
+<p>Structured JSON logs at INFO+ for normal operations, WARN/ERROR for exceptions, DEBUG on demand
+(never always-on in production). Include trace ID, span ID, service name, environment, and
+request ID in every log line.</p>
+</details>
+</li>
+<li>
+<p>What traces should be collected?</p>
+<details><summary>Hint</summary>
+<p>All inbound requests to P0 services. Sample everything that results in an error or latency
+outlier. Apply head-based sampling for normal traffic (1–5%) and tail-based for anomaly capture.
+Never trace every request in high-volume services without sampling.</p>
+</details>
+</li>
+<li>
+<p>Which events are important?</p>
+<details><summary>Hint</summary>
+<p>Deployments, config changes, scaling events, circuit-breaker trips, and scheduled job
+executions. These are the “what changed?” signals that correlate with metric inflections on
+dashboards. Inject them as Grafana annotations.</p>
+</details>
+</li>
+<li>
+<p>Which telemetry already exists?</p>
+<details><summary>Hint</summary>
+<p>Audit first: most cloud services expose Prometheus metrics natively; Kubernetes exposes cAdvisor
+and kube-state-metrics; cloud providers have native metrics (Azure Monitor). Avoid duplicating
+what’s already there.</p>
+</details>
+</li>
+<li>
+<p>What telemetry is missing?</p>
+<details><summary>Hint</summary>
+<p>Trace propagation across async boundaries, business-level metrics, SLI-aligned metrics (not just
+“is it up”), and synthetic probes for external availability. These are the most common gaps.</p>
+</details>
+</li>
+<li>
+<p>Which telemetry provides the highest value?</p>
+<details><summary>Hint</summary>
+<p>Rank by: (1) directly maps to an SLI, (2) appeared in the last 5 post-mortems, (3) reduces mean
+time to diagnose. Anything that doesn’t hit one of these three criteria is noise.</p>
+</details>
+</li>
+<li>
+<p>What is the expected metric cardinality per service?</p>
+<details><summary>Hint</summary>
+<p>Estimate: (number of label combinations) × (active instances). A service with 5 labels each with
+10 values = 100,000 potential series. In practice, active series are far fewer — but unbounded
+labels (user ID, request ID) can blow past any budget instantly.</p>
+</details>
+</li>
+<li>
+<p>Which labels have unbounded or high-churn values (user IDs, request IDs, raw timestamps)?</p>
+<details><summary>Hint</summary>
+<p>Common offenders: <code>user_id</code>, <code>customer_id</code>, <code>request_id</code>, <code>session_id</code>, <code>pod_name</code> (in
+auto-scaled environments), raw URL path (before normalization). These belong in logs and trace
+attributes, not metric labels. Drop or hash them at the pipeline.</p>
+</details>
+</li>
+<li>
+<p>What is the acceptable active series budget for the platform as a whole?</p>
+<details><summary>Hint</summary>
+<p>Set a hard budget before onboarding any services: e.g., 500k active series per environment, 50k
+per team. Enforce with Alloy’s <code>metric_relabel_configs</code> or Mimir per-tenant limits. Alert when a
+team hits 80% of their quota.</p>
+</details>
+</li>
+<li>
+<p>Which telemetry signals can be derived from others (e.g., logs → metrics via Loki recording
+rules)?</p>
+<details><summary>Hint</summary>
+<p>Loki recording rules can generate request-rate metrics from log lines when the app doesn’t
+expose Prometheus metrics. The OTel Span Metrics connector derives RED metrics from trace spans.
+Use derivation when adding instrumentation to the app is blocked.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-4-instrumentation">Phase 4: Instrumentation</h2>
+<ol start="36">
+<li>
+<p>Can automatic instrumentation be used?</p>
+<details><summary>Hint</summary>
+<p>Yes for HTTP, gRPC, and most database clients in Java, Python, Go, and Node.js via OTel
+auto-instrumentation agents. Default to auto-instrumentation first — it covers 80% of the
+surface with zero code changes and uses stable semantic conventions.</p>
+</details>
+</li>
+<li>
+<p>Is manual instrumentation needed?</p>
+<details><summary>Hint</summary>
+<p>Yes for: business events (payment processed, user registered), async Kafka consumer spans,
+custom attributes not captured by auto-instrumentation, and background workers/scheduled jobs
+that the auto-agent can’t see.</p>
+</details>
+</li>
+<li>
+<p>Which OpenTelemetry SDK should be used?</p>
+<details><summary>Hint</summary>
+<p>Match the SDK to the language. Use the stable release channel, not RC or alpha. Pin to a
+specific minor version in your dependency manifest. For new services, start with the SDK’s
+zero-code auto-instrumentation before adding manual spans.</p>
+</details>
+</li>
+<li>
+<p>Which semantic conventions apply?</p>
+<details><summary>Hint</summary>
+<p>Use OTel semantic conventions (semconv) for all standard attributes: <code>http.method</code>,
+<code>http.status_code</code>, <code>db.system</code>, <code>messaging.system</code>, etc. This ensures data is compatible with
+off-the-shelf dashboards and reduces schema drift between teams.</p>
+</details>
+</li>
+<li>
+<p>How should resources be identified?</p>
+<details><summary>Hint</summary>
+<p>Every telemetry signal must carry resource attributes: <code>service.name</code>, <code>service.version</code>,
+<code>service.namespace</code>, <code>deployment.environment</code>, <code>k8s.cluster.name</code>, <code>k8s.namespace.name</code>. Set
+these via the OTel SDK Resource or via Alloy’s resource processor. Consistent resource
+attributes are the foundation of correlation.</p>
+</details>
+</li>
+<li>
+<p>Which attributes should be attached?</p>
+<details><summary>Hint</summary>
+<p>On spans: <code>user.id</code> (hashed, not raw), <code>tenant.id</code> (bucketed), <code>feature.flag.name</code> if relevant.
+On metrics: environment, service, region. On logs: all of the above plus <code>trace_id</code>. Keep
+attribute count per signal under 20 — every attribute is storage cost.</p>
+</details>
+</li>
+<li>
+<p>Which telemetry should not be collected?</p>
+<details><summary>Hint</summary>
+<p>Health-check endpoint spans (noisy, zero value). Debug-level traces for hot paths in production.
+Raw PII in any signal. High-frequency polling metrics at &#x3C;15s scrape intervals unless the use
+case explicitly requires it.</p>
+</details>
+</li>
+<li>
+<p>Where will exemplars be emitted, and how will they link metric data points to trace spans?</p>
+<details><summary>Hint</summary>
+<p>Configure the Prometheus SDK or OTel SDK to attach exemplars to histogram buckets. Exemplars
+carry the trace ID of the request that produced that observation, enabling a one-click jump from
+a latency spike in Grafana to the corresponding trace in Tempo.</p>
+</details>
+</li>
+<li>
+<p>What is the head-based versus tail-based sampling decision for traces?</p>
+<details><summary>Hint</summary>
+<p>Head-based: decision at trace start — simple, low overhead, but can’t sample based on outcome
+(you’ll miss rare errors). Tail-based: decision after the full trace is assembled — can target
+100% error traces + 1% normal traffic. Default: head-based at 5% + 100% error traces via OTel
+Collector’s tail-sampling processor.</p>
+</details>
+</li>
+<li>
+<p>How will SDK versions be pinned and upgraded across services?</p>
+<details><summary>Hint</summary>
+<p>Pin to a specific minor version in your base Dockerfile/requirements.txt/go.mod. Track OTel SDK
+changelogs for breaking changes. Treat SDK upgrades as a release event — run your standard
+integration test suite against the new version before rolling out.</p>
+</details>
+</li>
+<li>
+<p>How will instrumentation correctness be validated before it reaches production?</p>
+<details><summary>Hint</summary>
+<p>Run the service locally with <code>OTEL_EXPORTER_OTLP_ENDPOINT</code> pointed at a dev collector. Use
+<code>otel-cli</code> or Jaeger UI to verify spans are emitting with correct attributes. Write integration
+tests that assert trace propagation headers are present on outbound calls.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-5-collection">Phase 5: Collection</h2>
+<ol start="47">
+<li>
+<p>How will telemetry leave the application?</p>
+<details><summary>Hint</summary>
+<p>Via OTLP/gRPC or OTLP/HTTP to the nearest collector. Never write directly to a storage backend
+from the application — the collector is the buffer, filter, and router layer between your app
+and the backend.</p>
+</details>
+</li>
+<li>
+<p>Push or pull?</p>
+<details><summary>Hint</summary>
+<p>Push (OTLP) for traces and logs — always. Metrics: pull (Prometheus scrape) if the app is
+already Prometheus-native; push (OTLP) for new services. Pull requires the scraper to reach the
+app; push works across network boundaries. In Kubernetes, Prometheus scrape via Alloy is the
+default for metrics.</p>
+</details>
+</li>
+<li>
+<p>Which protocols are supported?</p>
+<details><summary>Hint</summary>
+<p>OTLP/gRPC is the primary standard. Prometheus remote-write for metrics from existing stacks.
+Loki push API for logs from legacy shippers. Normalize everything to OTLP at the collector
+boundary — one protocol to one backend is far simpler to operate.</p>
+</details>
+</li>
+<li>
+<p>Should we use OTLP?</p>
+<details><summary>Hint</summary>
+<p>Yes, as the primary protocol. OTLP is the vendor-neutral standard, supported by Alloy, the OTel
+Collector, Grafana Cloud, and every major backend. Deviating from OTLP requires translation
+layers that add latency and failure modes.</p>
+</details>
+</li>
+<li>
+<p>Where should collectors run?</p>
+<details><summary>Hint</summary>
+<p>Agent-mode collectors run on every node (DaemonSet in Kubernetes) for node-level metrics and log
+file tailing. Gateway-mode collectors run as a Deployment for cross-team routing, tail sampling,
+and backend fan-out. Both are needed in production.</p>
+</details>
+</li>
+<li>
+<p>Sidecar, DaemonSet, or Gateway?</p>
+<details><summary>Hint</summary>
+<p>DaemonSet for per-node collection (node metrics, log files, Kubernetes metadata enrichment).
+Gateway for global operations (routing, tail sampling, PII scrubbing, backend fan-out). Sidecar
+only for hard isolation requirements — avoid by default; DaemonSet is operationally simpler.</p>
+</details>
+</li>
+<li>
+<p>Should we use Grafana Alloy or the OpenTelemetry Collector?</p>
+<details><summary>Hint</summary>
+<p>Grafana Alloy if your backend is Grafana Cloud (native integration, River config language,
+Prometheus-compatible scraping). OTel Collector if you need maximum vendor neutrality or your
+team already operates it. They’re compatible at the OTLP protocol level — you can run both if
+needed.</p>
+</details>
+</li>
+<li>
+<p>What happens if a collector fails?</p>
+<details><summary>Hint</summary>
+<p>The app SDK’s export queue buffers in memory for a configurable duration (default 5 minutes of
+retries). Beyond that, telemetry is dropped — this is acceptable for observability data. Never
+let collector failure block application traffic. Use the dead-man’s-switch alert to detect
+silent pipelines.</p>
+</details>
+</li>
+<li>
+<p>How will backpressure be handled when the downstream backend is slow or unavailable?</p>
+<details><summary>Hint</summary>
+<p>Configure <code>sending_queue</code> and <code>retry_on_failure</code> in the OTel Collector/Alloy exporter. Set a max
+queue size in bytes, not in items (easier to reason about memory). Use persistent queue
+(disk-backed) only for critical signals where dropping is not acceptable.</p>
+</details>
+</li>
+<li>
+<p>What are the retry and timeout settings for failed exports?</p>
+<details><summary>Hint</summary>
+<p>Initial retry interval: 5s. Max retry interval: 30s. Total timeout before drop: 5 minutes. These
+are the OTel Collector defaults and are reasonable starting points. Increase for backends with
+scheduled maintenance windows; decrease if you want faster failure detection.</p>
+</details>
+</li>
+<li>
+<p>How will collector instances be load-balanced for high ingest volume?</p>
+<details><summary>Hint</summary>
+<p>For OTLP/gRPC push: put a load balancer (k8s Service, Envoy) in front of gateway collectors. For
+tail sampling specifically, use the OTel Collector’s <code>loadbalancingexporter</code> — it must route all
+spans of a trace to the same collector instance using consistent hashing by trace ID.</p>
+</details>
+</li>
+<li>
+<p>What is the expected throughput capacity per collector, and how many are needed?</p>
+<details><summary>Hint</summary>
+<p>A single OTel Collector instance handles approximately 10k–50k spans/sec and 50k–200k metric
+data points/sec depending on processors configured. Benchmark in your environment; add 3×
+headroom for burst. DaemonSet instances are sized per node; gateway instances are sized for
+global peak.</p>
+</details>
+</li>
+<li>
+<p>Should a fan-in (aggregating gateway) or fan-out (per-team collectors) topology be used?</p>
+<details><summary>Hint</summary>
+<p>Fan-in (multiple app collectors → single gateway) simplifies routing and PII scrubbing but
+creates a central failure point. Recommended: DaemonSet fan-in to a small gateway tier (2–3
+instances for HA), then fan-out from gateway to backends. This balances operational simplicity
+against resilience.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-6-processing">Phase 6: Processing</h2>
+<ol start="60">
+<li>
+<p>Should telemetry be filtered?</p>
+<details><summary>Hint</summary>
+<p>Yes. Drop health-check spans, debug-level logs in production, and metrics with no dashboard or
+alert consumers. “Collect everything” is a cost strategy, not an observability strategy. Filter
+at the pipeline, not at the backend.</p>
+</details>
+</li>
+<li>
+<p>Should it be enriched?</p>
+<details><summary>Hint</summary>
+<p>Yes. Add Kubernetes metadata (pod name, namespace, node, cluster) via the k8s attributes
+processor. Add environment (dev/qa/prod) from a resource attribute or label. Enrichment at the
+collector is cheaper than enriching at query time.</p>
+</details>
+</li>
+<li>
+<p>Should sensitive information be removed?</p>
+<details><summary>Hint</summary>
+<p>Always. Use the <code>transform</code> or <code>redaction</code> processor to scrub PII from log bodies and span
+attributes before data leaves the cluster. Define a PII pattern list (email regex, credit card
+regex, phone regex) and apply it at every pipeline stage.</p>
+</details>
+</li>
+<li>
+<p>Should logs be parsed?</p>
+<details><summary>Hint</summary>
+<p>Parse structured JSON logs with the JSON parser and extract fields as log attributes. Parse
+semi-structured logs with regex or Loki’s pipeline stages. Parsed fields become queryable — but
+add them selectively; every parsed field that becomes a label increases Loki cardinality.</p>
+</details>
+</li>
+<li>
+<p>Should metrics be aggregated?</p>
+<details><summary>Hint</summary>
+<p>Pre-aggregate high-cardinality metrics at the collector before shipping. For example, aggregate
+per-pod metrics to per-deployment. This reduces active series in Mimir/Prometheus and lowers
+ingest cost. Use OTel’s <code>metricstransform</code> processor or Alloy’s <code>prometheus.relabel</code> component.</p>
+</details>
+</li>
+<li>
+<p>Should traces be sampled?</p>
+<details><summary>Hint</summary>
+<p>Yes in production. 100% trace collection is prohibitively expensive at scale. Start with 5% head
+sampling + 100% error/slow traces. Tune after measuring storage cost. Never sample in
+development — full visibility is needed to catch bugs.</p>
+</details>
+</li>
+<li>
+<p>Which processors are required?</p>
+<details><summary>Hint</summary>
+<p>Minimum: <code>batch</code> (reduce export calls), <code>memory_limiter</code> (prevent OOM), <code>resource</code> (add/override
+resource attributes), <code>k8sattributes</code> (Kubernetes metadata enrichment). Add <code>transform</code> for PII
+scrubbing and <code>filter</code> for noise removal as needed.</p>
+</details>
+</li>
+<li>
+<p>How will metric cardinality be capped at the pipeline level before it reaches the backend?</p>
+<details><summary>Hint</summary>
+<p>Use <code>metric_relabel_configs</code> in Alloy’s prometheus scrape block to drop high-cardinality labels
+before they enter the pipeline. Set per-tenant series limits in Mimir’s <code>limits.yaml</code>. Alert
+when a single job contributes > 10% of the total series budget.</p>
+</details>
+</li>
+<li>
+<p>How will PII be detected and scrubbed from log payloads and span attributes?</p>
+<details><summary>Hint</summary>
+<p>Define a regex-based pattern library for known PII (email, phone, SSN, credit card). Apply via
+OTel Collector’s <code>redaction</code> processor on span attributes and log bodies. Run a quarterly audit
+query in Loki/Tempo to detect PII patterns that slipped through. Treat PII in telemetry as a P1
+security incident.</p>
+</details>
+</li>
+<li>
+<p>What is the batching window and timeout configuration for each signal type?</p>
+<details><summary>Hint</summary>
+<p><code>send_batch_size: 8192</code>, <code>send_batch_max_size: 0</code>, <code>timeout: 200ms</code> as starting defaults for the
+<code>batch</code> processor. For traces with tail sampling, increase timeout to allow spans to accumulate
+for the sampling decision (typically 5–10s).</p>
+</details>
+</li>
+<li>
+<p>How will transform cost (CPU and memory per processor) be estimated and controlled?</p>
+<details><summary>Hint</summary>
+<p>Measure CPU/memory per processor stage in staging under production-like load. The <code>transform</code>
+and <code>routing</code> processors are the most expensive. Disable processors that aren’t actively used.
+Pipeline cost scales linearly with ingest volume.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-7-routing">Phase 7: Routing</h2>
+<ol start="71">
+<li>
+<p>Where should metrics go?</p>
+<details><summary>Hint</summary>
+<p>Grafana Mimir (cloud) or self-hosted Prometheus + Thanos for long-term storage. Use remote-write
+from Alloy to Mimir. Multi-environment: separate Mimir tenants per environment, queried via
+Grafana’s data source federation.</p>
+</details>
+</li>
+<li>
+<p>Where should logs go?</p>
+<details><summary>Hint</summary>
+<p>Loki. Ship via Loki push API or OTLP from Alloy. Index only the labels needed for filtering
+(service, environment, level, trace_id). Everything else goes into the log body, not as a label.</p>
+</details>
+</li>
+<li>
+<p>Where should traces go?</p>
+<details><summary>Hint</summary>
+<p>Grafana Tempo (cloud) or self-hosted Tempo. Ship via OTLP from Alloy. Tempo is object-storage
+backed and cost-efficient for traces. Configure trace search via Tempo’s TraceQL.</p>
+</details>
+</li>
+<li>
+<p>Should telemetry be sent to multiple destinations?</p>
+<details><summary>Hint</summary>
+<p>Yes for disaster recovery: primary backend (Grafana Cloud), secondary (regional object storage).
+Yes for cost: route low-value telemetry to cheaper cold storage. No for live debugging: don’t
+duplicate expensive signals to multiple live backends simultaneously.</p>
+</details>
+</li>
+<li>
+<p>What happens if one destination becomes unavailable?</p>
+<details><summary>Hint</summary>
+<p>The exporter’s retry queue absorbs the failure for up to the configured max retry window (5
+minutes default). Beyond that, data is dropped. For P0 signal types, configure a fallback
+exporter in the OTel Collector pipeline. Alert on exporter send failures.</p>
+</details>
+</li>
+<li>
+<p>What is the failover routing strategy when the primary backend is unreachable?</p>
+<details><summary>Hint</summary>
+<p>Use the OTel Collector’s <code>failover</code> connector or a primary/secondary exporter pair with the
+<code>routing</code> processor checking backend health. For Grafana Cloud, rely on the vendor SLA and use
+persistent queue during outages rather than routing to a secondary.</p>
+</details>
+</li>
+<li>
+<p>Should a secondary destination receive a copy for disaster recovery?</p>
+<details><summary>Hint</summary>
+<p>For metrics: replicate to a cold S3 bucket via Alloy’s remote-write with a thanos-receive
+secondary. For traces: Tempo already writes to object storage — configure a second bucket in a
+different region. For logs: dual-ship to Loki Cloud + an S3 bucket for audit retention.</p>
+</details>
+</li>
+<li>
+<p>Is metadata-driven routing needed (e.g., route by team label or environment tag)?</p>
+<details><summary>Hint</summary>
+<p>Yes in multi-team environments. Route by <code>deployment.environment</code> (dev/qa/prod to separate Mimir
+tenants) and <code>team.id</code> (to separate Loki streams). Alloy’s <code>loki.process</code> and
+<code>otelcol.processor.routing</code> support label-based routing decisions.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-8-storage">Phase 8: Storage</h2>
+<ol start="79">
+<li>
+<p>How long should metrics be retained?</p>
+<details><summary>Hint</summary>
+<p>13 months minimum (to compare year-over-year). High-resolution (15s) for 30 days; downsample to
+5-minute resolution for 13 months. Grafana Mimir’s compactor handles downsampling automatically.</p>
+</details>
+</li>
+<li>
+<p>How long should logs be retained?</p>
+<details><summary>Hint</summary>
+<p>30 days at full resolution in Loki for operational use. Archive to object storage (S3/Azure
+Blob) for 1–7 years depending on compliance requirements. Compliance-retained logs should be
+immutable (WORM bucket policy).</p>
+</details>
+</li>
+<li>
+<p>How long should traces be retained?</p>
+<details><summary>Hint</summary>
+<p>7–14 days for operational debugging. Traces are the most storage-intensive signal — 14 days is
+typically sufficient since root-cause investigations happen within hours or days of an incident.
+Archive sampled error traces for 30 days if post-mortem timelines require it.</p>
+</details>
+</li>
+<li>
+<p>Which backend should store each telemetry type?</p>
+<details><summary>Hint</summary>
+<p>Metrics → Mimir. Logs → Loki. Traces → Tempo. All three are purpose-built for their signal type
+and integrate natively in Grafana. Avoid general-purpose storage (Elasticsearch, ClickHouse)
+unless you have specific query requirements that justify the operational overhead.</p>
+</details>
+</li>
+<li>
+<p>What storage tier should be used?</p>
+<details><summary>Hint</summary>
+<p>Hot (SSD-backed) for recent data (last 7 days for traces, last 30 days for metrics). Warm
+(object storage: S3/Azure Blob) for older data. Loki, Mimir, and Tempo all support
+object-storage backends natively — use this to keep costs manageable.</p>
+</details>
+</li>
+<li>
+<p>What is the expected storage growth?</p>
+<details><summary>Hint</summary>
+<p>Estimate: (active series) × (bytes per sample) × (scrape interval) × (retention days). For 500k
+series at 15s scrape, ~2 bytes/sample: ≈ 1 TB/month uncompressed, ~100–200 GB compressed. Logs:
+highly variable by verbosity. Traces: depends on sampling rate and span attribute size.</p>
+</details>
+</li>
+<li>
+<p>What hot/warm/cold tiering strategy applies for each signal type?</p>
+<details><summary>Hint</summary>
+<p>Hot (0–7 days): fast local disk or block storage, full-resolution queries. Warm (7–30 days):
+object storage, standard resolution. Cold (30+ days): deep archive (Azure Cool/Archive tier),
+accessed only for compliance or post-mortems. Automate transitions with lifecycle policies.</p>
+</details>
+</li>
+<li>
+<p>How is multi-tenant storage isolation enforced?</p>
+<details><summary>Hint</summary>
+<p>Mimir, Loki, and Tempo support tenant isolation via the <code>X-Scope-OrgID</code> header. Each tenant’s
+data is stored in a separate prefix in the object storage bucket. Query isolation is enforced by
+the gateway rejecting cross-tenant queries. Never allow tenants to query without a tenant header
+set.</p>
+</details>
+</li>
+<li>
+<p>Is object storage (S3 / Azure Blob) used for long-term retention, and what is the compaction
+strategy?</p>
+<details><summary>Hint</summary>
+<p>Yes — all three backends in their scalable mode write to object storage. Use separate buckets
+per signal type and per environment. Enable versioning on compliance-retained buckets.
+Compaction (Mimir) and chunk merging (Loki) reduce long-term storage cost significantly.</p>
+</details>
+</li>
+<li>
+<p>How are per-tenant storage quotas defined and enforced?</p>
+<details><summary>Hint</summary>
+<p>Via Mimir’s <code>limits.yaml</code> (<code>ingestion_rate</code>, <code>max_series_per_tenant</code>) and Loki’s per-tenant
+limits (<code>ingestion_rate_mb</code>, <code>max_streams_per_tenant</code>). Quotas are enforced at ingest time — the
+backend rejects over-limit writes with a 429. Alert at 80% of quota to give teams time to
+remediate.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-9-querying">Phase 9: Querying</h2>
+<ol start="89">
+<li>
+<p>How will engineers query metrics?</p>
+<details><summary>Hint</summary>
+<p>PromQL in Grafana for ad-hoc exploration and dashboard expressions. Provide a standard set of
+PromQL snippets (error rate, p99 latency, saturation) for the most common queries. Mimir’s
+multi-tenancy means engineers query only their tenant’s data.</p>
+</details>
+</li>
+<li>
+<p>How will logs be searched?</p>
+<details><summary>Hint</summary>
+<p>LogQL in Grafana Explore or pre-built Loki dashboards. Two query patterns: (1) filter by label
+then search body (<code>{service="payments"} |= "error"</code>), (2) parse fields and aggregate. Full-body
+search is expensive — always start with label filters.</p>
+</details>
+</li>
+<li>
+<p>How will traces be analyzed?</p>
+<details><summary>Hint</summary>
+<p>TraceQL in Grafana’s Tempo data source. Common patterns: find traces by trace ID (from a log
+line), find all traces with duration > 2s for a service, find traces with a specific span error.
+Correlate to metrics via exemplars: click a latency spike → jump to trace.</p>
+</details>
+</li>
+<li>
+<p>Which query languages are needed?</p>
+<details><summary>Hint</summary>
+<p>PromQL (metrics), LogQL (logs), TraceQL (traces). All three are available natively in Grafana.
+Don’t introduce a fourth query language unless there’s a hard requirement that none of these
+three can meet.</p>
+</details>
+</li>
+<li>
+<p>How should dashboards be organized?</p>
+<details><summary>Hint</summary>
+<p>Three tiers: (1) Platform overview — one per environment, owned by the SRE/platform team. (2)
+Service dashboards — one per service, owned by the service team. (3) On-call triage dashboards —
+curated set of signal-correlation views for incident response. Folder structure in Grafana
+should be team-aligned.</p>
+</details>
+</li>
+<li>
+<p>How are expensive queries (full log scans, high-cardinality metric queries) controlled or
+rate-limited?</p>
+<details><summary>Hint</summary>
+<p>Set query time limits in Mimir (<code>query_timeout</code>) and Loki (<code>query_timeout</code>, <code>query_limit</code>). Use
+Mimir’s cardinality API to detect high-cardinality label selectors before they hit production.
+Rate-limit users from running full-scan LogQL queries in shared environments.</p>
+</details>
+</li>
+<li>
+<p>Is query federation needed across multiple backends or environments?</p>
+<details><summary>Hint</summary>
+<p>Yes if you have separate backends per environment or per region. Grafana supports
+multi-datasource federation natively — configure one data source per Mimir tenant and use
+Grafana’s mixed data source for cross-environment dashboards. For cross-region, use Mimir’s
+query-federation or Thanos querier.</p>
+</details>
+</li>
+<li>
+<p>Are there cardinality guards to prevent query-time explosions on high-series label selectors?</p>
+<details><summary>Hint</summary>
+<p>Configure Mimir’s <code>max_fetched_series_per_query</code> and <code>max_fetched_chunks_per_query</code> limits.
+These prevent a single bad PromQL query from OOM-ing the query frontend. Set Loki’s
+<code>max_entries_limit_per_query</code>. Surface these limits as friendly error messages in Grafana, not
+opaque 500s.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-10-correlation">Phase 10: Correlation</h2>
+<ol start="97">
+<li>
+<p>How are metrics linked to logs?</p>
+<details><summary>Hint</summary>
+<p>Via shared labels: every log line must carry <code>service</code>, <code>environment</code>, and <code>pod</code> labels that
+match the metric labels. In Grafana, configure data links on metric panels that open a Loki
+Explore query pre-filtered to the same service/time window.</p>
+</details>
+</li>
+<li>
+<p>How are logs linked to traces?</p>
+<details><summary>Hint</summary>
+<p>Inject <code>trace_id</code> and <code>span_id</code> into every log line (OTel’s log bridge API does this
+automatically). In Grafana, the Loki data source detects <code>trace_id</code> fields and renders a link to
+Tempo. The link is zero-config if both data sources are configured and the field name matches.</p>
+</details>
+</li>
+<li>
+<p>How are traces linked to metrics?</p>
+<details><summary>Hint</summary>
+<p>Via exemplars: histogram metrics carry exemplar data points with the <code>trace_id</code> of the request.
+In Grafana, click any exemplar dot on a latency histogram panel to jump directly to that trace
+in Tempo.</p>
+</details>
+</li>
+<li>
+<p>Which labels are mandatory across all three signal types?</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;details>&#x3C;summary>Hint&#x3C;/summary></span></span>
+<span class="line"><span></span></span></code></pre>
+<p><code>service.name</code>, <code>deployment.environment</code>, <code>k8s.cluster.name</code> on every signal. Recommended:
+<code>service.version</code>, <code>k8s.namespace.name</code>. These are the correlation anchors — without them,
+cross-signal navigation breaks. Enforce via pipeline validation, not documentation.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;/details></span></span>
+<span class="line"><span></span></span></code></pre>
+</li>
+<li>
+<p>Which IDs should be propagated (trace ID, span ID, request ID)?</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;details>&#x3C;summary>Hint&#x3C;/summary></span></span>
+<span class="line"><span></span></span></code></pre>
+<p>W3C TraceContext (<code>traceparent</code>, <code>tracestate</code>) for distributed trace propagation across
+services. Propagate via HTTP headers, Kafka message headers, and gRPC metadata. Do not use B3
+headers for new services (legacy format). Ensure the OTel SDK is configured to extract and
+inject TraceContext on all outbound calls.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;/details></span></span>
+<span class="line"><span></span></span></code></pre>
+</li>
+<li>
+<p>How are exemplars used to jump from a metric data point to its originating trace?</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;details>&#x3C;summary>Hint&#x3C;/summary></span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Configure your Prometheus SDK or OTel SDK to emit exemplars on histogram observations. In
+Grafana, enable “Exemplars” on histogram panels. Each dot represents a single request — click
+it to open the trace. This is the most powerful metric-to-trace jump available.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;/details></span></span>
+<span class="line"><span></span></span></code></pre>
+</li>
+<li>
+<p>Is a service dependency graph maintained, and how is it derived from trace data?</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;details>&#x3C;summary>Hint&#x3C;/summary></span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Tempo generates a service graph automatically from trace data (the <code>spanmetrics</code> and
+<code>servicegraph</code> processors). Visualize in Grafana’s Service Graph panel. The graph shows call
+rates, error rates, and latency between services — use it during incident triage to identify
+the failing hop.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        &#x3C;/details></span></span>
+<span class="line"><span></span></span></code></pre>
+</li>
+</ol>
+<hr>
+<h2 id="phase-11-visualization">Phase 11: Visualization</h2>
+<ol start="104">
+<li>
+<p>What dashboards are needed?</p>
+<details><summary>Hint</summary>
+<p>Minimum viable set: (1) Platform health (collector status, ingest rate, backend availability).
+(2) Per-service RED dashboard (rate, errors, duration). (3) Infrastructure USE dashboard (CPU,
+memory, disk, network). (4) SLO burn-rate dashboard per P0 service. (5) On-call triage
+overview.</p>
+</details>
+</li>
+<li>
+<p>Who owns each dashboard?</p>
+<details><summary>Hint</summary>
+<p>Platform team: platform health, on-call triage, SLO overview. Service teams: their service RED
+dashboards and application-specific business metric views. Clear ownership means someone is
+paged when a dashboard breaks after a schema change.</p>
+</details>
+</li>
+<li>
+<p>Which KPIs matter?</p>
+<details><summary>Hint</summary>
+<p>Operational KPIs: MTTR, alert-to-noise ratio, SLO compliance rate, onboarding time per service.
+Business KPIs: whatever the business measures (order success rate, checkout latency, API
+availability). Both sets belong in observability dashboards.</p>
+</details>
+</li>
+<li>
+<p>Which RED metrics are needed?</p>
+<details><summary>Hint</summary>
+<p>Rate (requests/sec), Errors (error rate %), Duration (p50/p90/p99/p999 latency). Apply RED to
+every service that receives external requests. Express error rate as:
+<code>sum(rate(http_requests_total{service="X",status=~"5.."}[5m])) / sum(rate(http_requests_total{service="X"}[5m]))</code>.</p>
+</details>
+</li>
+<li>
+<p>Which USE metrics are needed?</p>
+<details><summary>Hint</summary>
+<p>Utilization (% of resource in use), Saturation (queue depth, wait time), Errors (I/O errors,
+dropped packets). Apply USE to every infrastructure resource: CPU, memory, disk I/O, network
+interface, database connections.</p>
+</details>
+</li>
+<li>
+<p>Which Golden Signals are required?</p>
+<details><summary>Hint</summary>
+<p>Latency, Traffic, Errors, Saturation — across all P0 services. These are the minimum signals
+for an on-call engineer to assess system health in under 60 seconds. Put them on a single pane
+of glass in the primary on-call dashboard.</p>
+</details>
+</li>
+<li>
+<p>Are dashboards managed as code (Terraform, Grafonnet, JSON model files in Git)?</p>
+<details><summary>Hint</summary>
+<p>Yes — use Grafana’s JSON model exported to Git, or Terraform’s <code>grafana_dashboard</code> resource, or
+Grafonnet (Jsonnet library). Dashboard-as-code enables PR review, change history, and
+environment promotion. Never create production dashboards manually and expect them to survive.</p>
+</details>
+</li>
+<li>
+<p>What is the folder and team organization in Grafana?</p>
+<details><summary>Hint</summary>
+<p>One folder per team. Inside each folder: service dashboards, SLO dashboards, and on-call views.
+A shared <code>Platform</code> folder for global dashboards. Use Grafana’s RBAC to allow teams to edit
+their own folder but not others’.</p>
+</details>
+</li>
+<li>
+<p>How are dashboard variables templatized for multi-service or multi-environment reuse?</p>
+<details><summary>Hint</summary>
+<p>Use Grafana template variables for <code>$env</code>, <code>$service</code>, <code>$namespace</code>, <code>$cluster</code>. Source them
+from metric labels or Grafana’s built-in datasource queries. Apply <code>$__rate_interval</code> for rate
+calculations to make dashboards zoom-level-aware. One parameterized dashboard serves N
+services.</p>
+</details>
+</li>
+<li>
+<p>How are dashboard changes reviewed and promoted across environments?</p>
+<details><summary>Hint</summary>
+<p>Dashboards are stored in Git. CI validates JSON syntax and checks for required panels (error
+rate, latency, saturation). Merge to main auto-applies to staging. A manual approval step
+promotes to production. Never hotpatch production dashboards — fix in Git.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-12-alerting">Phase 12: Alerting</h2>
+<ol start="114">
+<li>
+<p>What should generate alerts?</p>
+<details><summary>Hint</summary>
+<p>Only conditions that require human action within minutes: SLO burn rate violations,
+availability below SLA threshold, resource saturation above 90%. Not: brief latency spikes that
+auto-recover, informational log patterns, anything without a runbook.</p>
+</details>
+</li>
+<li>
+<p>What severity levels exist?</p>
+<details><summary>Hint</summary>
+<p>P1 (Critical): service down or SLO burn rate unsustainable — page immediately. P2 (High):
+degraded performance, error budget burning faster than target — respond within 1 hour. P3
+(Medium): warning trend, no current impact — address during business hours. P4 (Low):
+informational, review weekly.</p>
+</details>
+</li>
+<li>
+<p>Which alerts are actionable?</p>
+<details><summary>Hint</summary>
+<p>An alert is actionable if: (1) there is a runbook for it, (2) a human can take a defined action
+to resolve or mitigate it, (3) it doesn’t auto-resolve within 5 minutes without intervention.
+Review every alert against these three criteria quarterly.</p>
+</details>
+</li>
+<li>
+<p>How should alerts be routed?</p>
+<details><summary>Hint</summary>
+<p>By service ownership (team label) → team Slack channel and on-call rotation. By severity (P1) →
+PagerDuty/Grafana IRM immediate page. By environment (prod vs dev/qa) → separate routing trees.
+Use Alertmanager routing trees or Grafana IRM contact points.</p>
+</details>
+</li>
+<li>
+<p>Who receives them?</p>
+<details><summary>Hint</summary>
+<p>P1 in prod: on-call engineer via PagerDuty page. P2 in prod: team Slack channel. P3: async
+Slack notification. P4: weekly digest. Dev/QA alerts: team Slack only, no pages. Never page for
+non-production environments.</p>
+</details>
+</li>
+<li>
+<p>How do we reduce alert fatigue?</p>
+<details><summary>Hint</summary>
+<p>Inhibition rules (silence child alerts when parent fires), deduplication (group related
+alerts), evaluation window tuning (avoid alerts on transient 1-minute spikes), and ruthless
+pruning (delete any alert firing for 30+ days without a corresponding incident). Alert volume
+is a KPI — track it monthly.</p>
+</details>
+</li>
+<li>
+<p>Are SLO burn-rate alerts implemented using multi-window, multi-burn-rate thresholds?</p>
+<details><summary>Hint</summary>
+<p>Yes — this is the most important alerting pattern. Two-window, two-threshold: (1) fast: 5min +
+1hr window at 14.4× burn → page immediately. (2) slow: 6hr + 3day window at 1× burn → ticket.
+This gives both early warning and sustained burn detection. Use Grafana’s SLO feature or
+Prometheus recording rules.</p>
+</details>
+</li>
+<li>
+<p>How are alerts linked to runbooks?</p>
+<details><summary>Hint</summary>
+<p>Every alert rule must include a <code>runbook_url</code> annotation pointing to a specific runbook (not a
+generic doc). The runbook URL appears in PagerDuty/IRM notifications. If an alert fires and no
+runbook exists, create one before closing the incident.</p>
+</details>
+</li>
+<li>
+<p>What inhibition rules prevent cascading alert storms from a single root cause?</p>
+<details><summary>Hint</summary>
+<p>Example: inhibit all service-level alerts when a cluster-level “node not ready” alert is
+firing. Inhibit downstream service alerts when an upstream dependency alert fires. Define
+inhibition rules per dependency topology, not generically.</p>
+</details>
+</li>
+<li>
+<p>How are alerts tested (unit-tested via promtool or integration-tested) before reaching
+production?</p>
+<details><summary>Hint</summary>
+<p>Use <code>promtool test rules</code> for unit-testing Prometheus recording rules and alert expressions
+with synthetic input data. Test that the alert fires and resolves under expected conditions.
+Alert rule changes go through the same PR → staging → production pipeline as dashboards.</p>
+</details>
+</li>
+<li>
+<p>Is there a dead-man’s-switch alert to detect when the telemetry pipeline goes silent?</p>
+<details><summary>Hint</summary>
+<p>Yes. Configure an “always firing” synthetic alert that must be silenced by an active heartbeat
+from the collection pipeline. If the pipeline stops sending (collector crash, network
+partition), the heartbeat disappears and the dead-man alert fires. This catches silent
+telemetry loss that no other alert would detect.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-13-incident-response">Phase 13: Incident Response</h2>
+<ol start="125">
+<li>
+<p>How is an incident detected?</p>
+<details><summary>Hint</summary>
+<p>Via automated alerts (preferred) or customer reports (worst case). Automated detection should
+fire within 2–5 minutes of a threshold breach. Measure time-to-detect as an SLI. If customer
+reports are the primary detection mechanism, your alerting is broken.</p>
+</details>
+</li>
+<li>
+<p>How is an incident investigated?</p>
+<details><summary>Hint</summary>
+<p>Structured triage flow: (1) Check the on-call triage dashboard — one service or the whole
+platform? (2) Check SLO burn rate — how fast is error budget draining? (3) Correlate the
+timeline: what changed? (4) Drill into the affected service with RED + trace exploration.</p>
+</details>
+</li>
+<li>
+<p>Which dashboards are used first?</p>
+<details><summary>Hint</summary>
+<p>The platform-wide on-call triage dashboard (all P0 services’ error rates and latency on one
+pane). This immediately scopes the blast radius. Then the specific service RED dashboard for
+the affected service.</p>
+</details>
+</li>
+<li>
+<p>Which logs are checked next?</p>
+<details><summary>Hint</summary>
+<p>After confirming the service via metrics: filter Loki logs by <code>service</code> + <code>level=error</code> in the
+incident time window. Look for repeated error patterns, stack traces, or upstream dependency
+failures. Use <code>trace_id</code> from a failed trace to find the correlated log lines.</p>
+</details>
+</li>
+<li>
+<p>Which traces help identify root cause?</p>
+<details><summary>Hint</summary>
+<p>Traces with error spans show exactly which hop in the call chain failed and why. Filter Tempo
+for error traces on the affected service in the incident window. A single error trace often
+reveals the root cause in &#x3C; 5 minutes — which is why tail sampling must capture 100% of error
+traces.</p>
+</details>
+</li>
+<li>
+<p>How is MTTR reduced?</p>
+<details><summary>Hint</summary>
+<p>By shortening each phase: detection (alert within 2 minutes), triage (on-call dashboard within
+5 minutes), root cause (correlated signals within 15 minutes), mitigation (runbook automation).
+MTTR reduction is the primary ROI metric for the observability platform.</p>
+</details>
+</li>
+<li>
+<p>Is AIOps used for alert correlation and noise reduction across signals?</p>
+<details><summary>Hint</summary>
+<p>Yes for noise reduction — Grafana IRM, BigPanda, or OpsGenie AI correlate related alerts into a
+single incident, suppressing the storm. A single cloud zone failure can generate hundreds of
+redundant alerts. AIOps should reduce alert-to-incident ratio to &#x3C; 5:1.</p>
+</details>
+</li>
+<li>
+<p>What is the escalation path if the first responder cannot resolve within a defined window?</p>
+<details><summary>Hint</summary>
+<p>L1 on-call: first 15 minutes. L2 (service team lead): 15–30 minutes if unresolved. L3
+(platform/architect): 30+ minutes or P1 with customer impact. Escalation paths must be codified
+in IRM, not tribal knowledge. Test them quarterly via DR drills.</p>
+</details>
+</li>
+<li>
+<p>Are runbooks automated, semi-automated, or manual — and is that the right split for each
+scenario?</p>
+<details><summary>Hint</summary>
+<p>Partial automation is the target state: runbooks should have manual steps replaced by scripts
+where possible (scale up a Deployment, restart a stuck pod, drain a queue). Full automation is
+for well-understood, repeating failure modes only — unknown failure modes need human judgment.</p>
+</details>
+</li>
+<li>
+<p>How are post-mortems fed back into improvements in alerts, dashboards, and runbooks?</p>
+<details><summary>Hint</summary>
+<p>Every P1/P2 incident generates a blameless post-mortem within 48 hours. Action items land in
+the backlog as alert improvements, dashboard additions, or runbook updates. Review open
+post-mortem action items monthly — unclosed items are observability debt.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-14-reliability">Phase 14: Reliability</h2>
+<ol start="135">
+<li>
+<p>What happens if Grafana is unavailable?</p>
+<details><summary>Hint</summary>
+<p>Metrics and alerts continue to work (Prometheus/Mimir evaluate rules independently of Grafana).
+On-call engineers lose the visualization layer but can query Mimir/Loki/Tempo directly via
+their HTTP APIs or CLI tools (<code>logcli</code>, <code>tempoQuery</code>). Pre-document backup query commands in
+runbooks.</p>
+</details>
+</li>
+<li>
+<p>What happens if Alloy fails?</p>
+<details><summary>Hint</summary>
+<p>Applications buffer outbound telemetry in the SDK’s export queue (typically 5 minutes). After
+that, telemetry is dropped. Deploy Alloy as a DaemonSet with <code>restartPolicy: Always</code> and
+resource limits that prevent OOM. Alert on Alloy pod restarts and export failure rates.</p>
+</details>
+</li>
+<li>
+<p>What happens if Mimir is unavailable?</p>
+<details><summary>Hint</summary>
+<p>Metrics are lost for the outage duration (remote write queue is finite). Alerting based on
+Prometheus rules stops. Mitigate: multi-zone Mimir deployment (3 availability zones). For
+Grafana Cloud, rely on the vendor SLA and use the persistent queue in Alloy.</p>
+</details>
+</li>
+<li>
+<p>What happens if Loki is unavailable?</p>
+<details><summary>Hint</summary>
+<p>Logs are dropped — unlike metrics, logs cannot be replayed from a queue once dropped. Mitigate:
+write logs to a local file buffer + ship to Loki via a persistent queue. For
+compliance-retained logs, dual-ship to object storage to ensure durability independent of Loki
+availability.</p>
+</details>
+</li>
+<li>
+<p>What happens if Tempo is unavailable?</p>
+<details><summary>Hint</summary>
+<p>Traces are dropped. Traces are the most drop-tolerant signal (already sampled) — brief outages
+are acceptable. Alert on Tempo’s ingestion endpoint health. For critical trace data (100% error
+traces), configure a secondary OTLP endpoint in Alloy as a fallback.</p>
+</details>
+</li>
+<li>
+<p>How is high availability achieved?</p>
+<details><summary>Hint</summary>
+<p>Each component (Mimir, Loki, Tempo) runs in distributed mode across 3+ replicas in separate
+availability zones. Alloy runs as a DaemonSet (one per node). Grafana runs as a Deployment with
+2+ replicas behind a load balancer. Object storage provides inherent durability.</p>
+</details>
+</li>
+<li>
+<p>Is the observability platform itself monitored (meta-monitoring)?</p>
+<details><summary>Hint</summary>
+<p>Yes — meta-monitoring is non-negotiable. Run a separate lightweight monitoring stack (or use
+Grafana Cloud’s built-in meta-monitoring) that watches your primary stack. The meta-monitor
+must be independent of the stack it monitors.</p>
+</details>
+</li>
+<li>
+<p>What are the collector health metrics, and are they alerted on?</p>
+<details><summary>Hint</summary>
+<p>Key Alloy/OTel Collector metrics to alert on: <code>otelcol_exporter_send_failed_spans</code>,
+<code>otelcol_exporter_queue_capacity</code> (saturation), <code>otelcol_receiver_refused_metric_points</code>,
+<code>prometheus_remote_storage_failed_samples_total</code>. Dashboard these on the platform health
+overview.</p>
+</details>
+</li>
+<li>
+<p>What is the degraded-mode operation plan when telemetry is partially or fully lost?</p>
+<details><summary>Hint</summary>
+<p>Tiered degraded modes: (1) Visualization degraded (Grafana down) — use CLI queries. (2)
+Collection degraded (Alloy down) — metrics/logs lost, alerts still fire from cached Prometheus
+rules. (3) Storage degraded (Mimir/Loki down) — collection queues up, querying fails, alerts
+pause. Each mode has a documented response procedure.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-15-scalability">Phase 15: Scalability</h2>
+<ol start="144">
+<li>
+<p>How much telemetry is generated per second?</p>
+<details><summary>Hint</summary>
+<p>Measure current: use <code>otelcol_receiver_accepted_metric_points</code> and
+<code>otelcol_receiver_accepted_spans</code> from your collectors. Project forward based on onboarding
+roadmap. Design for 3× current peak as your capacity target.</p>
+</details>
+</li>
+<li>
+<p>How many applications are onboarded?</p>
+<details><summary>Hint</summary>
+<p>Track onboarding as a metric: <code>services_with_traces / total_services</code>,
+<code>services_with_slo / total_services</code>. These coverage metrics are the observability platform’s
+own SLIs. Report monthly to stakeholders.</p>
+</details>
+</li>
+<li>
+<p>How many collectors are needed?</p>
+<details><summary>Hint</summary>
+<p>Gateway collectors: start with 3 (for HA), scale horizontally as ingest grows. DaemonSet
+collectors: one per node (automatic). Size each gateway instance for 2× current peak
+throughput. Monitor <code>otelcol_exporter_queue_capacity</code> — if consistently > 50%, add instances.</p>
+</details>
+</li>
+<li>
+<p>How will storage scale?</p>
+<details><summary>Hint</summary>
+<p>Object-storage-backed Loki, Mimir, and Tempo scale horizontally by adding ingester/distributor
+replicas. Object storage is effectively infinite. The bottleneck is compactor and query
+throughput, not raw storage. Pre-plan compactor scaling with 6-month projections.</p>
+</details>
+</li>
+<li>
+<p>How will query performance change?</p>
+<details><summary>Hint</summary>
+<p>Query performance degrades with data volume. Mitigate: pre-compute frequently-used PromQL as
+recording rules. Use Loki’s bloom filters for log search. Enforce label cardinality limits so
+metric queries don’t fan out to millions of series. Cache query results at the Grafana layer
+for dashboard loads.</p>
+</details>
+</li>
+<li>
+<p>Which bottlenecks are likely?</p>
+<details><summary>Hint</summary>
+<p>#1: metric cardinality (Mimir memory pressure). #2: Loki ingest rate (distributor
+backpressure). #3: collector CPU (transform processors on hot path). #4: object storage API
+rate limits during compaction. Profile each at 3× current load before hitting them in
+production.</p>
+</details>
+</li>
+<li>
+<p>What per-tenant cardinality and ingest rate limits are enforced?</p>
+<details><summary>Hint</summary>
+<p>Mimir <code>limits.yaml</code>: <code>ingestion_rate: 50000</code> (samples/sec),
+<code>max_global_series_per_tenant: 500000</code>. Loki: <code>ingestion_rate_mb: 20</code>,
+<code>max_global_streams_per_tenant: 10000</code>. These prevent a single misbehaving service from
+crowding out other tenants.</p>
+</details>
+</li>
+<li>
+<p>How is the remote write queue sized for burst scenarios?</p>
+<details><summary>Hint</summary>
+<p>Configure <code>remote_write.queue_config.capacity</code> and <code>max_samples_per_send</code> in Alloy. The queue
+must hold at least 5 minutes of peak ingest during a backend outage without OOM-ing the
+collector. Validate by injecting a 5-minute backend blackhole in staging.</p>
+</details>
+</li>
+<li>
+<p>At 10× current load, which component fails first?</p>
+<details><summary>Hint</summary>
+<p>Run a load test in staging at 10× current ingest rate. Monitor: Mimir ingester memory
+(typically the first to break), Loki distributor CPU, Alloy gateway memory queue, object
+storage PUT request rate. The answer is environment-specific — measure it, don’t assume.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-16-security">Phase 16: Security</h2>
+<ol start="153">
+<li>
+<p>How is telemetry encrypted in transit and at rest?</p>
+<details><summary>Hint</summary>
+<p>In transit: TLS on all OTLP/gRPC and remote-write connections (enforce <code>tls_config</code> in Alloy;
+reject plain HTTP exporters). At rest: enable server-side encryption on the object storage
+bucket (AES-256 or Azure Storage Service Encryption).</p>
+</details>
+</li>
+<li>
+<p>How are collectors authenticated to backends?</p>
+<details><summary>Hint</summary>
+<p>Alloy/OTel Collector authenticates to Grafana Cloud via access-policy tokens (<code>glc_</code> prefix,
+not <code>glsa_</code> service-account tokens). Tokens are stored in Kubernetes Secrets, mounted as
+environment variables. Never embed tokens in config files committed to Git.</p>
+</details>
+</li>
+<li>
+<p>How are tenants isolated from each other’s data?</p>
+<details><summary>Hint</summary>
+<p>Mimir, Loki, and Tempo enforce isolation via the <code>X-Scope-OrgID</code> HTTP header. The gateway
+injects and validates this header. Tenants cannot override the header value — it’s set by the
+gateway based on the authenticated client identity, not the client’s self-reported ID.</p>
+</details>
+</li>
+<li>
+<p>How is RBAC implemented for dashboard and data access?</p>
+<details><summary>Hint</summary>
+<p>Grafana’s built-in RBAC: Viewers read dashboards, Editors create/modify in their team folder,
+Admins manage data sources. Data-layer RBAC: Mimir per-tenant isolation (already enforced). For
+fine-grained row-level access, Loki’s label-based access control policies apply.</p>
+</details>
+</li>
+<li>
+<p>Which secrets must be protected, and how are they supplied to collectors at runtime?</p>
+<details><summary>Hint</summary>
+<p>Grafana Cloud API tokens, Mimir/Loki write tokens, Alertmanager receiver credentials (PagerDuty
+API key, Slack webhook URL). Store in Azure Key Vault or Kubernetes External Secrets Operator.
+Never in config maps, environment variable literals, or Git-tracked files.</p>
+</details>
+</li>
+<li>
+<p>Which compliance requirements apply?</p>
+<details><summary>Hint</summary>
+<p>Map your signals against your compliance framework. GDPR: no PII in metrics labels or log
+bodies. SOC2: audit trail for data access, retention policy enforcement. HIPAA: PHI must not
+appear in any telemetry pipeline. Document which signals were audited and when.</p>
+</details>
+</li>
+<li>
+<p>How are access tokens rotated, and what is the rotation frequency?</p>
+<details><summary>Hint</summary>
+<p>Grafana Cloud access-policy tokens: rotate every 90 days via automated pipeline (GitHub Actions
+or Azure DevOps). Flow: create new token → update Kubernetes Secret → rolling restart of
+collectors → validate → revoke old token. Alert if a token is > 80 days old.</p>
+</details>
+</li>
+<li>
+<p>Is there a network policy controlling which collector pods can egress to which endpoints?</p>
+<details><summary>Hint</summary>
+<p>Yes — apply Kubernetes NetworkPolicy to restrict Alloy DaemonSet pods: allow egress only to the
+Grafana Cloud OTLP/remote-write endpoint IP ranges, Kubernetes API server (for metadata
+enrichment), and internal cluster services. Deny all other egress.</p>
+</details>
+</li>
+<li>
+<p>Is access to observability data audited, and are audit logs retained separately from
+operational logs?</p>
+<details><summary>Hint</summary>
+<p>Grafana Cloud logs API access. Enable access logging on the Mimir/Loki query frontend. Store
+audit logs separately in a WORM-configured bucket so they can’t be tampered with. Review
+quarterly for anomalous patterns.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-17-cost">Phase 17: Cost</h2>
+<ol start="162">
+<li>
+<p>What drives observability costs?</p>
+<details><summary>Hint</summary>
+<p>In priority order: (1) metric cardinality (active series × retention = Mimir storage and
+compute cost). (2) Log ingest volume (Loki charges per GB). (3) Trace volume (Tempo charges per
+GB). (4) Query compute (dashboard refresh rate × query cost). Address cardinality first — it’s
+almost always the biggest lever.</p>
+</details>
+</li>
+<li>
+<p>Which telemetry is most expensive?</p>
+<details><summary>Hint</summary>
+<p>Metrics if cardinality is uncontrolled. Logs if verbosity is unchecked (DEBUG logs in
+production). Traces if sampling is off (100% collection at scale). The cost hierarchy is
+environment-specific — measure actual cost per signal type in your billing dashboard.</p>
+</details>
+</li>
+<li>
+<p>Can telemetry volume be reduced?</p>
+<details><summary>Hint</summary>
+<p>Yes: drop health-check spans, aggregate per-pod metrics to per-deployment, increase scrape
+interval for non-critical services from 15s to 60s, apply tail sampling, filter DEBUG/TRACE
+logs at the pipeline. A 30–50% cost reduction from these changes is typical.</p>
+</details>
+</li>
+<li>
+<p>Which retention policies optimize cost?</p>
+<details><summary>Hint</summary>
+<p>Downsampling: keep 5m-resolution data for 13 months, raw 15s resolution for only 30 days.
+Tiered storage: Loki chunks move to S3 infrequent-access after 30 days. Trace retention at 14
+days operational + archive of sampled error traces for 30 days. Each tier transition reduces
+cost 60–80% vs hot storage.</p>
+</details>
+</li>
+<li>
+<p>Which sampling strategy minimizes cost without sacrificing root-cause visibility?</p>
+<details><summary>Hint</summary>
+<p>Tail-based sampling with: 100% error traces, 100% slow traces (p99 outliers), 1–5% of normal
+traces. This captures > 95% of valuable debugging information while discarding > 95% of trace
+volume. Never sample errors; aggressively sample the happy path.</p>
+</details>
+</li>
+<li>
+<p>Is metric cardinality tracked as the primary ingest cost driver?</p>
+<details><summary>Hint</summary>
+<p>Yes — build a cardinality dashboard using Mimir’s <code>/api/v1/cardinality/label_names</code> and
+<code>/label_values</code> APIs. Surface top-10 metrics by series count, top-10 labels by cardinality.
+Alert when a metric’s series count doubles week-over-week.</p>
+</details>
+</li>
+<li>
+<p>How is cost attributed to individual teams or tenants (FinOps tagging)?</p>
+<details><summary>Hint</summary>
+<p>Use <code>team</code> or <code>namespace</code> labels on all telemetry. In Grafana Cloud, per-tenant usage is
+available via the usage API. Build a cost attribution dashboard showing monthly ingest by
+team/service. Share monthly with team leads — visibility drives behavior change faster than
+quotas alone.</p>
+</details>
+</li>
+<li>
+<p>Is there an ingest budget per team, and how is overrun handled?</p>
+<details><summary>Hint</summary>
+<p>Set soft quotas (alert at 80%) and hard quotas (reject at 100%) per tenant in Mimir/Loki
+limits. When a team hits 80%, automatically open a ticket and schedule a cardinality review.
+Hard quota rejection is the backstop — teams should never reach it if the 80% alert is acted
+on.</p>
+</details>
+</li>
+<li>
+<p>Which dashboards or alerts will surface cost anomalies before billing surprises arrive?</p>
+<details><summary>Hint</summary>
+<p>A FinOps dashboard showing: (1) daily ingest trend by signal type, (2) top-10 services by
+series count (metrics) and GB/day (logs), (3) week-over-week ingest change by team, (4)
+projected monthly cost vs budget. Alert when projected monthly cost exceeds budget by > 10%
+with 14 days remaining.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-18-operations">Phase 18: Operations</h2>
+<ol start="171">
+<li>
+<p>Who owns the observability platform?</p>
+<details><summary>Hint</summary>
+<p>A dedicated platform/SRE team owns the collection pipeline, storage backends, and shared
+dashboards. Service teams own their own instrumentation and service-specific dashboards. The
+boundary: platform team owns everything from the collector gateway inward; service teams own
+everything from their app outward to the collector.</p>
+</details>
+</li>
+<li>
+<p>How are upgrades performed?</p>
+<details><summary>Hint</summary>
+<p>Alloy and backend upgrades follow a staged rollout: dev → qa → prod with a 48-hour bake time at
+each stage. Use Helm chart versioning with explicit image tags (never <code>latest</code>). Rollback plan:
+Helm rollback to the previous chart version.</p>
+</details>
+</li>
+<li>
+<p>How is configuration managed?</p>
+<details><summary>Hint</summary>
+<p>All configuration (Alloy River configs, Mimir limits, Loki config, alerting rules) lives in
+Git. Changes go through PR review and CI validation (<code>alloy fmt</code>, <code>promtool check rules</code>).
+Config is applied via GitOps (ArgoCD or Flux) — no manual <code>kubectl apply</code> on production
+configs.</p>
+</details>
+</li>
+<li>
+<p>How is the platform monitored?</p>
+<details><summary>Hint</summary>
+<p>Via meta-monitoring (see Phase 14). Key platform SLIs: collector export success rate (target: >
+99.5%), Mimir ingest success rate (> 99.9%), Loki query success rate (> 99%), Tempo ingest
+success rate (> 99.5%).</p>
+</details>
+</li>
+<li>
+<p>How are new services onboarded?</p>
+<details><summary>Hint</summary>
+<p>Via a golden-path template (Helm chart or OTel SDK configuration snippet) that pre-configures
+<code>service.name</code>, <code>deployment.environment</code>, resource attributes, and OTLP endpoint. A
+self-service guide walks teams through three steps: annotate the pod, point OTLP at the
+collector, verify in Grafana Explore. Target: &#x3C; 30 minutes from zero to first trace.</p>
+</details>
+</li>
+<li>
+<p>How are dashboards version controlled?</p>
+<details><summary>Hint</summary>
+<p>Dashboard JSON is stored in Git alongside the service code (or in a central dashboards
+repository). CI validates that dashboard JSON is parseable and contains required panels.
+Dashboard promotion (dev → prod) is a separate merge step.</p>
+</details>
+</li>
+<li>
+<p>Is observability configuration managed via GitOps (ArgoCD, Flux, Terraform VCS)?</p>
+<details><summary>Hint</summary>
+<p>Yes — ArgoCD or Flux syncs Alloy configurations, Prometheus rule CRDs, and Grafana dashboard
+ConfigMaps from Git to the cluster. The cluster state is always a reflection of Git state.
+Direct cluster edits are rolled back by the next GitOps sync.</p>
+</details>
+</li>
+<li>
+<p>Does the platform itself have defined SLOs, and who holds the error budget?</p>
+<details><summary>Hint</summary>
+<p>Yes. Example SLOs: (1) Telemetry delivery: 99.5% of spans delivered within 30s of emission. (2)
+Query availability: Mimir query API available 99.9% of the time. (3) Alert delivery: 99.9% of
+P1 alerts delivered to on-call within 2 minutes of threshold breach.</p>
+</details>
+</li>
+<li>
+<p>Is there a runbook library for common platform operations (collector restart, quota override,
+backend failover)?</p>
+<details><summary>Hint</summary>
+<p>Yes. Common runbooks: collector pod restarting (check memory limits, export backlog), Mimir 429
+rate-limit errors (identify the over-quota tenant, apply temporary limit increase), Loki stream
+limit hit (identify the high-cardinality label, apply pipeline filter), Alertmanager not
+routing (check config reload status).</p>
+</details>
+</li>
+<li>
+<p>How is the on-call rotation structured for the observability platform team?</p>
+<details><summary>Hint</summary>
+<p>One person on-call per week for platform P1/P2 issues. Escalation to the lead/architect for
+novel failures. A shared on-call calendar in PagerDuty/IRM, visible to all service teams. The
+platform on-call also acts as the first point of contact when service teams have
+instrumentation questions during incidents.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-19-architecture-review">Phase 19: Architecture Review</h2>
+<ol start="181">
+<li>
+<p>Where are the single points of failure?</p>
+<details><summary>Hint</summary>
+<p>Gateway collector (if not replicated), Alertmanager (if single instance), object storage region
+(if single-region), and the meta-monitoring stack itself. List these explicitly in the
+architecture doc and assign a mitigation owner to each.</p>
+</details>
+</li>
+<li>
+<p>Which components can fail independently?</p>
+<details><summary>Hint</summary>
+<p>Collection (Alloy) is independent of storage (Mimir/Loki/Tempo). Storage is independent of
+visualization (Grafana). Alerting rules evaluate independently of Grafana availability. Design
+for these independence boundaries — they determine your degraded-mode tiers.</p>
+</details>
+</li>
+<li>
+<p>Which components can scale horizontally?</p>
+<details><summary>Hint</summary>
+<p>Alloy DaemonSet (scales with nodes), Mimir distributor/ingester, Loki distributor/ingester,
+Tempo distributor/ingester, Grafana (stateless, add replicas). The only
+non-trivially-horizontal component is the compactor — run one per tenant with appropriate
+resource limits.</p>
+</details>
+</li>
+<li>
+<p>What assumptions have been made?</p>
+<details><summary>Hint</summary>
+<p>Document explicitly: assumed network bandwidth between collector and backend, assumed growth
+rate per quarter, assumed scrape interval for all services, assumed object storage durability.
+Unwritten assumptions are risks.</p>
+</details>
+</li>
+<li>
+<p>What trade-offs were accepted?</p>
+<details><summary>Hint</summary>
+<p>Common ones to document: head sampling (simplicity) vs tail sampling (accuracy), managed cloud
+(cost) vs self-hosted (control), Grafana Alloy (tighter integration) vs OTel Collector (vendor
+neutrality), per-service dashboards (detail) vs fleet dashboards (overview). Each trade-off
+should have a revisit date.</p>
+</details>
+</li>
+<li>
+<p>How could this design be simplified?</p>
+<details><summary>Hint</summary>
+<p>Ask this every 6 months: Can we eliminate a pipeline stage? Can two components be merged? Can
+we remove a deprecated backend? Complexity is technical debt in operational systems. The
+simplest architecture that meets the SLOs is the right architecture.</p>
+</details>
+</li>
+<li>
+<p>How would this architecture change at 10× scale?</p>
+<details><summary>Hint</summary>
+<p>Gateway collectors need horizontal autoscaling based on queue depth. Mimir needs zone-aware
+replication across 3 AZs. Loki needs ruler-based federation for recording rules. Tempo needs
+trace search optimized with bloom filters. Object storage costs dominate — tiered storage and
+aggressive compaction become critical.</p>
+</details>
+</li>
+<li>
+<p>Are architecture decisions captured in ADRs and linked from the design document?</p>
+<details><summary>Hint</summary>
+<p>Yes. Minimum ADRs to write: collector choice, sampling strategy, storage backend selection,
+tenant isolation model, cardinality budget policy. ADRs explain the “why” that the code cannot
+— without them, the same decisions get re-litigated with every new hire.</p>
+</details>
+</li>
+<li>
+<p>Is there a gap tracker for known observability blind spots?</p>
+<details><summary>Hint</summary>
+<p>Maintain a “dark corners” table: services with no tracing, services with no SLO defined, alert
+rules without runbooks, dashboards without owners, compliance gaps. Review monthly. The gap
+tracker turns “we should get to that” into “we haven’t closed this in 60 days.”</p>
+</details>
+</li>
+<li>
+<p>How will this architecture evolve as the OpenTelemetry specification matures?</p>
+<details><summary>Hint</summary>
+<p>OTel is still maturing: profiling signals are in beta, the logging bridge API is stabilizing,
+semantic conventions are versioned. Track the OTel specification changelog. Peg your SDK
+version to a stable release. Plan for a breaking semconv migration when the service schema you
+use is revised in a future release.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-20-multi-tenancy">Phase 20: Multi-Tenancy</h2>
+<ol start="191">
+<li>
+<p>How are tenants defined (by team, service, environment, or business unit)?</p>
+<details><summary>Hint</summary>
+<p>Tenant = team is the most common model for an internal platform. Alternatively: tenant =
+environment (dev/qa/prod), or tenant = business unit. Choose one model and be consistent —
+mixing models creates routing complexity. The tenant ID flows as <code>X-Scope-OrgID</code> in
+Mimir/Loki/Tempo.</p>
+</details>
+</li>
+<li>
+<p>What is the per-tenant quota model for ingest, storage, and query?</p>
+<details><summary>Hint</summary>
+<p>Three dimensions: ingest rate (samples/sec for metrics, MB/s for logs), active series/streams,
+and storage capacity. Set quotas proportional to team size and service criticality. Define a
+process for requesting quota increases (ticket with justification + cardinality analysis).</p>
+</details>
+</li>
+<li>
+<p>How is tenant isolation enforced at the collection, storage, and query layers independently?</p>
+<details><summary>Hint</summary>
+<p>Collection: Alloy adds <code>X-Scope-OrgID</code> header based on source namespace/team label. Storage:
+Mimir/Loki/Tempo store each tenant’s data in a separate object storage prefix. Query: gateway
+validates <code>X-Scope-OrgID</code> against authenticated identity and rejects cross-tenant queries. Test
+isolation by attempting a cross-tenant query in staging.</p>
+</details>
+</li>
+<li>
+<p>Can tenants see each other’s data, and is that intentional?</p>
+<details><summary>Hint</summary>
+<p>No by default. Grafana data source RBAC restricts which Mimir/Loki tenants a user can query.
+The only exception: a global SRE/platform team role that can query all tenants for incident
+response. This cross-tenant access must be logged and audited.</p>
+</details>
+</li>
+<li>
+<p>How are per-tenant dashboards, alerting rules, and on-call policies managed?</p>
+<details><summary>Hint</summary>
+<p>Each team’s dashboards live in their Grafana folder (RBAC-enforced). Alerting rules live in a
+per-team Prometheus rule namespace (e.g., <code>team-payments-alerts</code>). On-call contact points in
+IRM are team-specific. The platform team provides templates; teams customize within their
+namespace.</p>
+</details>
+</li>
+<li>
+<p>What is the self-service process for a new tenant to onboard onto the platform?</p>
+<details><summary>Hint</summary>
+<p>A GitOps-driven onboarding PR: (1) add tenant config to <code>tenants.yaml</code>, (2) CI generates the
+Mimir/Loki limit entries, Grafana folder, and default alerting contact point, (3) PR merged →
+ArgoCD applies → team is live within 10 minutes. Target: zero manual steps for the platform
+team.</p>
+</details>
+</li>
+<li>
+<p>How are tenant quotas reviewed and adjusted over time?</p>
+<details><summary>Hint</summary>
+<p>Monthly quota review: run the cardinality attribution query, share the top-10 consumers report
+with team leads. Quotas are adjusted quarterly based on demonstrated need + growth projection.
+Emergency quota increases are a manual approval process (ticket → platform-lead approval →
+applied within 1 hour).</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-21-slo-implementation--error-budget">Phase 21: SLO Implementation &#x26; Error Budget</h2>
+<ol start="198">
+<li>
+<p>How are SLIs defined and measured for each critical service?</p>
+<details><summary>Hint</summary>
+<p>SLIs must be measurable from existing telemetry. Common SLIs: availability (1 - error_rate),
+latency (% of requests &#x3C; 200ms), correctness (% of responses with valid payload). Define SLIs
+in terms of specific PromQL or LogQL expressions, not English prose — the expression is the
+contract.</p>
+</details>
+</li>
+<li>
+<p>Which backend stores SLO recording rules and error budget burn calculations?</p>
+<details><summary>Hint</summary>
+<p>Prometheus recording rules in Mimir (or Grafana Cloud’s native SLO feature). Record the error
+rate and burn rate as separate time series: <code>slo:error_rate:5m</code>, <code>slo:burn_rate:1h</code>, etc. Store
+rule definitions in Git, applied via GitOps. Grafana’s SLO feature auto-generates these but
+always export to Git.</p>
+</details>
+</li>
+<li>
+<p>How is error budget burn tracked in real time, not just at the end of a rolling window?</p>
+<details><summary>Hint</summary>
+<p>Use the multi-window burn rate formula: <code>error_rate / (1 - SLO_target)</code>. Display on a Grafana
+panel with threshold coloring: green (&#x3C; 1× burn), yellow (1–5×), red (> 5× burn). A 14.4× burn
+rate exhausts a 30-day budget in 2 hours — you need this number visible at all times during
+incidents.</p>
+</details>
+</li>
+<li>
+<p>What actions are triggered at different burn thresholds (2×, 5×, 14.4× burn rate)?</p>
+<details><summary>Hint</summary>
+<p>14.4× burn (5m + 1h window): P1 page, halt non-critical deployments. 6× burn (1h + 6h window):
+Slack alert to team, engineering manager informed. 3× burn (6h + 3d window): Jira ticket
+created for next sprint. 1× burn (30d window): monthly SLO review agenda item.</p>
+</details>
+</li>
+<li>
+<p>Who owns the error budget policy, and who can approve discretionary budget spend?</p>
+<details><summary>Hint</summary>
+<p>The service team owns day-to-day error budget spend. The SRE/platform team owns the policy (how
+the budget is allocated and what must be done when exhausted). A shared error budget committee
+(service lead + SRE lead) approves policy exceptions (e.g., planned maintenance that
+intentionally spends budget).</p>
+</details>
+</li>
+<li>
+<p>Are SLOs reviewed and recalibrated on a regular cadence (quarterly, per major release)?</p>
+<details><summary>Hint</summary>
+<p>Yes — quarterly SLO review: was the target achievable? Was it too loose (never stressed)? Did
+the SLI formula capture what customers actually experienced? SLOs that are never at risk are
+either too loose or measuring the wrong thing. Tighten them when reliability improves.</p>
+</details>
+</li>
+<li>
+<p>How are SLO violations surfaced during active incident response?</p>
+<details><summary>Hint</summary>
+<p>The on-call triage dashboard’s top panel shows current error budget burn rate for all P0
+services. When burn rate is elevated, it immediately communicates business impact. The IRM
+incident card automatically shows SLO status for the affected service, giving the incident
+commander context without a separate lookup.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-22-onboarding--change-management">Phase 22: Onboarding &#x26; Change Management</h2>
+<ol start="205">
+<li>
+<p>What is the self-service onboarding path for a new service (golden-path template)?</p>
+<details><summary>Hint</summary>
+<p>A golden-path template: a Helm chart or Kustomize overlay that pre-configures OTel SDK env vars
+(<code>OTEL_EXPORTER_OTLP_ENDPOINT</code>, <code>OTEL_SERVICE_NAME</code>, <code>OTEL_RESOURCE_ATTRIBUTES</code>) pointing to
+the cluster’s Alloy DaemonSet endpoint. Teams annotate their deployment with
+<code>instrumentation: enabled</code> and the auto-instrumentation webhook handles the rest.</p>
+</details>
+</li>
+<li>
+<p>How long does it take from “new service deployed” to “first dashboard and alert live”?</p>
+<details><summary>Hint</summary>
+<p>Target: &#x3C; 30 minutes. Baseline in most orgs today: hours to days. Measure this per-onboarding
+and trend it. The 30-minute target is achievable with: auto-instrumentation + pre-built service
+dashboard template + automated alert rule provisioning triggered by service registration.</p>
+</details>
+</li>
+<li>
+<p>How are breaking changes to the telemetry schema communicated to service teams?</p>
+<details><summary>Hint</summary>
+<p>Maintain a schema changelog in Git or Notion. Breaking changes (renaming a label used in
+alerts, removing a metric) require a deprecation notice 2 sprint cycles in advance, a migration
+guide, and a dual-emit period (old + new signal) before the old signal is dropped.</p>
+</details>
+</li>
+<li>
+<p>Is there a sandbox or staging environment where teams can validate their instrumentation before
+production?</p>
+<details><summary>Hint</summary>
+<p>Yes — a dev/sandbox Grafana Cloud tenant (or a local k3d cluster with Grafana stack) where
+teams can send instrumentation and verify it before the prod rollout. Teams must validate: data
+appears in Explore, trace IDs link correctly, alert rules fire on synthetic test data. Sandbox
+validation is a gate before prod promotion.</p>
+</details>
+</li>
+<li>
+<p>Who approves and merges changes to shared alerting rules and dashboards?</p>
+<details><summary>Hint</summary>
+<p>Shared rules (platform-wide alerts, on-call triage dashboards) require approval from the
+platform team lead. Team-scoped rules require the team lead’s approval. All changes go through
+PR review. A CODEOWNERS file in the dashboards repository enforces this approval chain
+automatically.</p>
+</details>
+</li>
+<li>
+<p>How is onboarding time measured, and what is the target?</p>
+<details><summary>Hint</summary>
+<p>Track: time from first commit annotating a service for instrumentation to first span visible in
+Tempo. Instrument this as a metric: emit an event when the first trace is received for a new
+<code>service.name</code>. Dashboard the distribution of onboarding durations. Set an SLO: 80% of services
+onboarded in &#x3C; 30 minutes.</p>
+</details>
+</li>
+</ol>
+<hr>
+<h2 id="phase-23-testing--validation">Phase 23: Testing &#x26; Validation</h2>
+<ol start="211">
+<li>
+<p>How is alert correctness verified before alerts reach production?</p>
+<details><summary>Hint</summary>
+<p><code>promtool test rules</code> for Prometheus alert expression unit tests — provide synthetic input time
+series and assert that alerts fire/resolve at expected thresholds. For Loki alerts, use LogQL
+in the sandbox environment with injected synthetic log lines. Alert tests run in CI; a failing
+alert test blocks the merge.</p>
+</details>
+</li>
+<li>
+<p>Is there synthetic telemetry (load generators, test spans) for validating the collection
+pipeline end-to-end?</p>
+<details><summary>Hint</summary>
+<p>Yes — a <code>synthetic-load-generator</code> deployment (e.g., <code>telemetrygen</code> from the OTel project)
+continuously emits test spans, metrics, and logs through the full pipeline. A validation job
+checks every 5 minutes that the synthetic trace appears in Tempo. This catches pipeline breaks
+before real services are affected.</p>
+</details>
+</li>
+<li>
+<p>How are dashboards tested for correctness after a backend schema change?</p>
+<details><summary>Hint</summary>
+<p>Dashboard queries are tested against the sandbox Mimir/Loki/Tempo instance before production
+promotion. A CI step renders each dashboard’s panels using Grafana’s <code>/api/ds/query</code> API
+against the sandbox backend and checks that no panels return errors. Panel errors block
+dashboard promotion.</p>
+</details>
+</li>
+<li>
+<p>Is there a chaos engineering practice targeting the observability platform (kill a collector,
+saturate ingest, drop a backend)?</p>
+<details><summary>Hint</summary>
+<p>Yes — quarterly chaos drills: (1) kill all Alloy pods on one node, verify dead-man alert fires
+within 5 minutes. (2) Inject 5× normal ingest rate, verify quota limits activate without data
+loss. (3) Block egress from collectors to backend, verify retry queue absorbs outage and
+delivers data on recovery. Results feed the reliability backlog.</p>
+</details>
+</li>
+<li>
+<p>How is the full pipeline validated (inject a test trace → verify it appears in the trace
+backend → verify the correlated log appears in the log backend)?</p>
+<details><summary>Hint</summary>
+<p>The synthetic load generator provides continuous validation. For on-demand testing: inject a
+test span with a known trace ID via <code>otelcli</code>, wait 30s, query Tempo for the trace ID, verify
+the trace appears. Then query Loki for log lines containing that trace ID. Full round-trip
+validation in &#x3C; 2 minutes — run this after every collector config change.</p>
+</details>
+</li>
+<li>
+<p>How often is the full observability stack exercised in a DR or failover drill?</p>
+<details><summary>Hint</summary>
+<p>Quarterly at minimum. Drill scenarios: (1) Simulate Grafana Cloud outage — verify on-call
+engineers can query data via CLI. (2) Simulate collector outage — verify dead-man alert fires
+and data recovers on collector restart. (3) Simulate object storage unavailability — verify
+Mimir/Loki ingesters buffer and recover. Drill results are documented in a post-drill report.</p>
+</details>
+</li>
+</ol>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"observability/00-foundations-of-observability/1-what-is-observability/what-observability-means","title":"1 — What Observability Actually Means","topic":"observability","noteType":"note"},{"slug":"observability/01-observability-architecture/7-multi-tenant-observability/multi-tenancy","title":"7 — Multi-Tenancy","topic":"observability","noteType":"note"},{"slug":"projects/platform-shipsolid/00-start-here/observability-architecture-qna","title":"Observability Architecture: Questions to Ask","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/00-start-here/start-here","title":"00 — Start Here","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/00-start-here/vision-and-mission","title":"Vision & Mission","topic":"projects","noteType":"note"},{"slug":"prometheus/06-alerting/2-alerting-rules/alerting-rules","title":"2 — Alerting Rules","topic":"prometheus","noteType":"note"},{"slug":"system-design/08-observability/01-observability-architecture/observability-architecture","title":"Chapter 1 — Observability Architecture","topic":"system-design","noteType":"note"}];
+const edges = [{"source":"observability/01-observability-architecture/7-multi-tenant-observability/multi-tenancy","target":"projects/platform-shipsolid/00-start-here/observability-architecture-qna","kind":"related"},{"source":"projects/platform-shipsolid/00-start-here/observability-architecture-qna","target":"projects/platform-shipsolid/00-start-here/vision-and-mission","kind":"related"},{"source":"projects/platform-shipsolid/00-start-here/observability-architecture-qna","target":"system-design/08-observability/01-observability-architecture/observability-architecture","kind":"related"},{"source":"projects/platform-shipsolid/00-start-here/observability-architecture-qna","target":"prometheus/06-alerting/2-alerting-rules/alerting-rules","kind":"related"},{"source":"observability/00-foundations-of-observability/1-what-is-observability/what-observability-means","target":"system-design/08-observability/01-observability-architecture/observability-architecture","kind":"depends_on"},{"source":"observability/00-foundations-of-observability/1-what-is-observability/what-observability-means","target":"projects/platform-shipsolid/00-start-here/observability-architecture-qna","kind":"related"},{"source":"projects/platform-shipsolid/00-start-here/start-here","target":"projects/platform-shipsolid/00-start-here/vision-and-mission","kind":"related"},{"source":"projects/platform-shipsolid/00-start-here/observability-architecture-qna","target":"projects/platform-shipsolid/00-start-here/start-here","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/platform-shipsolid/00-start-here/observability-architecture-qna";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 3 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/00-start-here/vision-and-mission" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Vision &amp; Mission </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Why the ShipSolid observability platform exists and where it is going.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/observability/00-foundations-of-observability/1-what-is-observability/what-observability-means" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — What Observability Actually Means </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Observability vs. monitoring, the three-pillars critique, and why observability is a property of how a system was instrumented — not a tool you bought or a dashboard you built.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/00-start-here/start-here" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 00 — Start Here </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Orientation for anyone joining or consuming the ShipSolid observability platform.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/system-design/15-complete-case-studies/01-telemetry-ingestion-pipeline/02-high-level-architecture" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2. High-Level Architecture </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The producers → ingestion gateway → Kafka → processors → storage diagram for the telemetry ingestion pipeline, plus the push-over-pull key insight to state early in the interview.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/system-design/15-complete-case-studies/01-telemetry-ingestion-pipeline/00-telemetry-ingestion-pipeline" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Chapter 1 — Telemetry Ingestion Pipeline </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Principal/Staff-level design of a high-throughput telemetry ingestion pipeline — requirements, architecture, deep dives, and trade-offs at 10x scale.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/system-design/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> System Design </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Principal/Staff-level system design reference collection for MAANG interview preparation — observability pipelines, distributed systems, reliability engineering, and beyond.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/system-design/15-complete-case-studies/01-telemetry-ingestion-pipeline/q1-answer-500m-ingest-zero-drop-rolling-deploy" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Q1: 500M Samples/Sec, Zero Drop on Rolling Deploy </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Full principal-level solution: design a telemetry ingestion pipeline for 500M metric samples/sec from 100K services globally with a zero-drop guarantee during rolling deployment of the ingestion tier.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/platform-shipsolid/00-start-here/observability-architecture-qna.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/00-start-here/glossary" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Glossary </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/00-start-here/quickstart-onboard-in-30-min" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Quickstart: Onboard in 30 Minutes </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#phase-1-understand-the-business" data-slug="phase-1-understand-the-business" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 1: Understand the Business</a></li><li data-astro-cid-xvrfupwn><a href="#phase-2-understand-the-applications" data-slug="phase-2-understand-the-applications" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 2: Understand the Applications</a></li><li data-astro-cid-xvrfupwn><a href="#phase-3-identify-telemetry" data-slug="phase-3-identify-telemetry" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 3: Identify Telemetry</a></li><li data-astro-cid-xvrfupwn><a href="#phase-4-instrumentation" data-slug="phase-4-instrumentation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 4: Instrumentation</a></li><li data-astro-cid-xvrfupwn><a href="#phase-5-collection" data-slug="phase-5-collection" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 5: Collection</a></li><li data-astro-cid-xvrfupwn><a href="#phase-6-processing" data-slug="phase-6-processing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 6: Processing</a></li><li data-astro-cid-xvrfupwn><a href="#phase-7-routing" data-slug="phase-7-routing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 7: Routing</a></li><li data-astro-cid-xvrfupwn><a href="#phase-8-storage" data-slug="phase-8-storage" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 8: Storage</a></li><li data-astro-cid-xvrfupwn><a href="#phase-9-querying" data-slug="phase-9-querying" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 9: Querying</a></li><li data-astro-cid-xvrfupwn><a href="#phase-10-correlation" data-slug="phase-10-correlation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 10: Correlation</a></li><li data-astro-cid-xvrfupwn><a href="#phase-11-visualization" data-slug="phase-11-visualization" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 11: Visualization</a></li><li data-astro-cid-xvrfupwn><a href="#phase-12-alerting" data-slug="phase-12-alerting" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 12: Alerting</a></li><li data-astro-cid-xvrfupwn><a href="#phase-13-incident-response" data-slug="phase-13-incident-response" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 13: Incident Response</a></li><li data-astro-cid-xvrfupwn><a href="#phase-14-reliability" data-slug="phase-14-reliability" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 14: Reliability</a></li><li data-astro-cid-xvrfupwn><a href="#phase-15-scalability" data-slug="phase-15-scalability" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 15: Scalability</a></li><li data-astro-cid-xvrfupwn><a href="#phase-16-security" data-slug="phase-16-security" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 16: Security</a></li><li data-astro-cid-xvrfupwn><a href="#phase-17-cost" data-slug="phase-17-cost" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 17: Cost</a></li><li data-astro-cid-xvrfupwn><a href="#phase-18-operations" data-slug="phase-18-operations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 18: Operations</a></li><li data-astro-cid-xvrfupwn><a href="#phase-19-architecture-review" data-slug="phase-19-architecture-review" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 19: Architecture Review</a></li><li data-astro-cid-xvrfupwn><a href="#phase-20-multi-tenancy" data-slug="phase-20-multi-tenancy" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 20: Multi-Tenancy</a></li><li data-astro-cid-xvrfupwn><a href="#phase-21-slo-implementation--error-budget" data-slug="phase-21-slo-implementation--error-budget" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 21: SLO Implementation &amp; Error Budget</a></li><li data-astro-cid-xvrfupwn><a href="#phase-22-onboarding--change-management" data-slug="phase-22-onboarding--change-management" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 22: Onboarding &amp; Change Management</a></li><li data-astro-cid-xvrfupwn><a href="#phase-23-testing--validation" data-slug="phase-23-testing--validation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>Phase 23: Testing &amp; Validation</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/observability/01-observability-architecture/7-multi-tenant-observability/multi-tenancy" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">7 — Multi-Tenancy</span></a><a href="/notes/projects/platform-shipsolid/00-start-here/vision-and-mission" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Vision &amp; Mission</span></a><a href="/notes/system-design/08-observability/01-observability-architecture/observability-architecture" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Chapter 1 — Observability Architecture</span></a><a href="/notes/prometheus/06-alerting/2-alerting-rules/alerting-rules" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">2 — Alerting Rules</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/platform-shipsolid/00-start-here/vision-and-mission" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Vision &amp; Mission</span></a><a href="/notes/observability/00-foundations-of-observability/1-what-is-observability/what-observability-means" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">1 — What Observability Actually Means</span></a><a href="/notes/projects/platform-shipsolid/00-start-here/start-here" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">00 — Start Here</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  

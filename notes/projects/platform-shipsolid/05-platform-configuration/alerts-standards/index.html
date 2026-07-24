@@ -1,0 +1,889 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>MDIxAI Alerts — Standards (extracted from current state) — Notes — Amit Singh</title><meta name="description" content="Rule group fields are identical across the 4 env files except for the env suffix."><link rel="canonical" href="https://shipsolid.github.io/notes/projects/platform-shipsolid/05-platform-configuration/alerts-standards/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="MDIxAI Alerts — Standards (extracted from current state) — Notes — Amit Singh"><meta property="og:description" content="Rule group fields are identical across the 4 env files except for the env suffix."><meta property="og:url" content="https://shipsolid.github.io/notes/projects/platform-shipsolid/05-platform-configuration/alerts-standards/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="MDIxAI Alerts — Standards (extracted from current state) — Notes — Amit Singh"><meta name="twitter:description" content="Rule group fields are identical across the 4 env files except for the env suffix."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.DouM9Z9h.css">
+<link rel="stylesheet" href="/_astro/_slug_.B_77dEJ2.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:#00d9a6;border-color:#00d9a6}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:#0f172a;border:1px solid #1e293b;border-radius:.5rem;font-size:.75rem;color:#f1f5f9;box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:#00d9a6;border-color:#00d9a64d;background:#00d9a60d}
+</style><script type="module" src="/_astro/hoisted.CiAMS7uJ.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between"> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5"> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">&lt;</span> <span class="text-accent">amit.singh</span> <span class="text-slate-600 group-hover:text-slate-400 transition-colors">/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1"> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200"> Blog </a> <a href="/search" class="p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800/50 transition-all duration-200" aria-label="Search" title="Search"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path> </svg> </a> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200">
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors" aria-label="Toggle menu"> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 border-t border-slate-800"> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1"> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-colors"> Blog </a> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors">
+Contact
+</a> </nav> </div> </header>  <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Platform Shipsolid</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>05 Platform Configuration</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> MDIxAI Alerts — Standards (extracted from current state)  </h1> <p class="text-lg text-slate-400 mb-6" data-astro-cid-v5yihett>Rule group fields are identical across the 4 env files except for the env suffix.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated May 14, 2026</span>  <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <span class="text-slate-600" title="Permanent note identifier" data-astro-cid-v5yihett>§202605061547</span>   <span class="text-slate-700" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/configuration" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Configuration</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[240px_1fr_240px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div class="space-y-1" data-astro-cid-v5yihett>  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">42</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 group-hover:text-slate-400 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 hover:text-slate-300 hover:bg-slate-800/30 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 group-hover/sub:text-slate-600">8</span></a></div></div>  </div> </div> </aside> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:MDIxAI Alerts — Standards (extracted from current state)" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/platform-shipsolid/05-platform-configuration/alerts-standards" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-05-14T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Configuration" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 prose-strong:font-semibold
+
+            prose-em:text-slate-300 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300
+            prose-li:text-slate-300 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700
+            prose-th:text-slate-300 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50
+
+            prose-hr:border-slate-800 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="mdixai-alerts--standards-extracted-from-current-state">MDIxAI Alerts — Standards (extracted from current state)</h2>
+<blockquote>
+<p>Reverse-engineered from <code>alerts/mdixai.{dev,qa,train,prod}.json</code> as of 2026-05-06. Treat this as a
+<strong>starting baseline</strong>, not a finished contract — open gaps are called out at the bottom for
+refinement. Pair this doc with the inventory in
+<a href="/notes/projects/platform-shipsolid/05-platform-configuration/platform-configuration/">platform-configuration.md</a>.</p>
+</blockquote>
+<hr>
+<h2 id="1-file-shape">1. File shape</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Top-level</td><td><code>{ apiVersion: 1, groups: [ ... ] }</code></td></tr><tr><td>Group count</td><td>1 per env file</td></tr><tr><td>Group fields</td><td><code>name</code>, <code>folder</code>, <code>folderUID</code>, <code>interval</code>, <code>orgId</code>, <code>rules</code>, <code>ruleGroup</code></td></tr><tr><td>Rules per env</td><td>24</td></tr></tbody></table>
+<p>Rule group fields are identical across the 4 env files except for the env suffix. One file per env;
+never mix envs in one file.</p>
+<h2 id="2-folder--group-naming">2. Folder &#x26; group naming</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Convention</th><th>Example</th></tr></thead><tbody><tr><td><code>folder</code></td><td><code>Golden-&#x3C;Product></code></td><td><code>Golden-MDIxAI</code></td></tr><tr><td><code>folderUID</code></td><td><code>golden-&#x3C;product></code></td><td><code>golden-mdixai</code></td></tr><tr><td>Rule group <code>name</code></td><td><code>&#x3C;product>.&#x3C;env>:&#x3C;eval></code></td><td><code>mdixai.prod:1m</code></td></tr><tr><td>Evaluation interval</td><td><code>1m</code></td><td><code>1m</code></td></tr></tbody></table>
+<h2 id="3-rule-uid">3. Rule UID</h2>
+<p>Convention: <code>&#x3C;product>&#x3C;env>&#x3C;nn></code> — lowercase, no separators, two-digit index.</p>
+<p>Examples: <code>mdixaiprod01</code>, <code>mdixaidev24</code>. Index is stable across envs (rule 01 in dev = rule 01 in
+prod, same signal, same threshold).</p>
+<p>UID is the contract Grafana keys on — never renumber.</p>
+<h2 id="4-rule-title-schema">4. Rule title schema</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>[&#x3C;env>] [&#x3C;product>] [&#x3C;category>] [&#x3C;signal>] [&#x3C;threshold_tag>] [&#x3C;priority>] [&#x3C;owner>]</span></span>
+<span class="line"><span></span></span></code></pre>
+<ul>
+<li>All segments <strong>lowercase</strong>, square-bracketed, single-space separated.</li>
+<li>Silences and notification policies that match titles by regex must also be lowercase.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Segment</th><th>Allowed values (today)</th><th>Notes</th></tr></thead><tbody><tr><td><code>env</code></td><td><code>dev</code>, <code>qa</code>, <code>train</code>, <code>prod</code></td><td>Matches the env file</td></tr><tr><td><code>product</code></td><td><code>mdixai</code></td><td>Lowercase product code</td></tr><tr><td><code>category</code></td><td><code>az_container_apps</code>, <code>az_container_apps.api</code>, <code>az_container_apps.container</code>, <code>app_gateway</code>, <code>azure_key_vault</code>, <code>sql_mi</code>, <code>synthetics.&#x3C;service></code></td><td>Dot-namespaced for sub-scopes</td></tr><tr><td><code>signal</code></td><td><code>cpu</code>, <code>mem</code>, <code>restarts</code>, <code>failed_requests</code>, <code>latency</code>, <code>latency_backend</code>, <code>unhealthy_hosts</code>, <code>availability</code>, <code>probe_data</code></td><td>One signal per rule</td></tr><tr><td><code>threshold_tag</code></td><td><code>gt_&#x3C;n>pct_&#x3C;window></code>, <code>gt_&#x3C;n>_&#x3C;window></code>, <code>lt_&#x3C;n>pct_&#x3C;window></code>, <code>p95_gt_&#x3C;n>ms_&#x3C;window></code>, <code>missing_&#x3C;window></code>, <code>eq_0_&#x3C;window></code></td><td>Window matches the LogQL/PromQL <code>[&#x3C;window>]</code></td></tr><tr><td><code>priority</code></td><td><code>p2</code>, <code>p3</code> (currently in use); <code>p1</code>, <code>p4</code> reserved</td><td>Only encoded here — no <code>severity</code> label (gap)</td></tr><tr><td><code>owner</code></td><td><code>sre_team</code></td><td>Only encoded here — no <code>team</code> label (gap)</td></tr></tbody></table>
+<p>Example: <code>[prod] [mdixai] [synthetics.auth_service] [availability] [lt_80pct_15m] [p2] [sre_team]</code></p>
+<h2 id="5-evaluation-timing">5. Evaluation timing</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Value</th><th>Reasoning</th></tr></thead><tbody><tr><td><code>interval</code></td><td><code>1m</code></td><td>Rule group re-eval cadence</td></tr><tr><td><code>for</code></td><td><code>15m</code></td><td>Universal — 15 consecutive hot 1-min evals before fire</td></tr><tr><td>MTTD</td><td>~15m</td><td>Suppresses revision swaps, HPA churn, cold-start, GC, single probe misses</td></tr><tr><td>Cost multiplier</td><td>15×</td><td>vs a 15m eval cadence; acceptable at 24 rules — <strong>watch as group grows</strong></td></tr></tbody></table>
+<p>Probe-missing rules use a <code>[1h]</code> LogQL window with <code>for: 15m</code>, so effective MTTD on probe-agent
+outage is ~15m + up-to-1h sliding window = up to ~75 min. Not a bug, but document it on the runbook.</p>
+<h2 id="6-state-handling">6. State handling</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Universal value</th><th>Exceptions</th></tr></thead><tbody><tr><td><code>execErrState</code></td><td><code>Error</code></td><td>none</td></tr><tr><td><code>noDataState</code></td><td><code>KeepLast</code></td><td><code>NoData</code> on rule 01 (mem); <code>Alerting</code> on rules 20–24 (probe_data)</td></tr><tr><td><code>provenance</code></td><td><code>file</code></td><td>none — UI edits will be blocked once provisioning honors this</td></tr><tr><td><code>isPaused</code></td><td><code>false</code></td><td>none currently</td></tr></tbody></table>
+<p>Why each <code>noDataState</code>:</p>
+<ul>
+<li><strong><code>KeepLast</code></strong> (default) — last-known state holds during a brief data gap, prevents flap on
+transient missing samples.</li>
+<li><strong><code>Alerting</code></strong> (probe<em>data rules) — absence _is</em> the signal; we want to fire when no probes land.</li>
+<li><strong><code>NoData</code></strong> (rule 01 mem) — currently the only rule using this; <strong>likely unintentional drift</strong>
+(gap, see §11).</li>
+</ul>
+<h2 id="7-data-source-standards">7. Data-source standards</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Datasource</th><th>UID</th><th>Used for</th></tr></thead><tbody><tr><td>Grafana Cloud Prom</td><td><code>grafanacloud-prom</code></td><td>OTel SDK metrics (per-service: cpu, mem, latency, errors)</td></tr><tr><td>Grafana Cloud Loki</td><td><code>grafanacloud-logs</code></td><td>Synthetic check results (availability, probe data)</td></tr><tr><td>Azure Monitor</td><td><code>eee3ss4y6vfuoc</code></td><td>Container Apps platform metrics, App Gateway, KV, SQL MI</td></tr><tr><td>Server-side Expression</td><td><code>__expr__</code></td><td><code>threshold</code>, <code>math</code>, <code>reducer</code>, <code>classic_conditions</code></td></tr></tbody></table>
+<p>Rule of thumb already followed:</p>
+<ul>
+<li><strong>Per-service signals</strong> (CPU, mem, latency, errors at process level) → <a href="/notes/tech/prometheus/">Prometheus</a>,
+group by <code>service_name</code> from OTel SDK.</li>
+<li><strong>Platform signals</strong> (Container App revision, App Gateway, KV, SQL MI) → Azure Monitor.</li>
+<li><strong>End-user availability</strong> → Loki (Grafana Synthetic Monitoring writes browser-check results to
+Loki).</li>
+</ul>
+<p>Only <code>__expr__</code> is allowed as the second hop. No raw cross-datasource math beyond SSE.</p>
+<h2 id="8-query-patterns">8. Query patterns</h2>
+<h3 id="8a-prometheus-process-level-otel-metrics">8a. Prometheus (process-level OTel metrics)</h3>
+<ul>
+<li><code>relativeTimeRange.from: 900</code> (15 min) for <code>[15m]</code> rules.</li>
+<li><code>instant: true</code>, <code>range: false</code>, <code>intervalMs: 1000</code>, <code>maxDataPoints: 43200</code>.</li>
+<li><code>legendFormat: "__auto"</code> (gap — see §11; explicit <code>{{service_name}}</code> would be safer).</li>
+<li><code>editorMode: "code"</code> (PromQL by hand, not builder).</li>
+<li>Selector pattern: <code>{deployment_environment="aca-dgeg-mdixai-&#x3C;env>"}</code>.</li>
+</ul>
+<h3 id="8b-loki-synthetics">8b. Loki (synthetics)</h3>
+<ul>
+<li>Stream selector: <code>{job="aca-dgeg-mdixai-&#x3C;env>"}</code> — <strong>single source of truth</strong>, do not re-introduce
+<code>label_deployment_environment</code>.</li>
+<li>Check filter: <code>| logfmt | check =~ \</code>(?i)<prefix> .<em>`<code>— anchored full-match, the trailing</code>.</em>` is
+required (Loki label-filter semantics).</prefix></li>
+<li>Availability math: <code>$A / ($A + $B)</code> where A = success count, B = failure count over the same
+<code>[15m]</code> window.</li>
+<li>Probe-missing: <code>sum(count_over_time({...}[1h]))</code> against <code>eq 0</code>.</li>
+<li>Window in title (<code>_15m</code>, <code>_1h</code>) <strong>must equal</strong> the <code>[&#x3C;window>]</code> in LogQL — if you re-tune cadence,
+update both.</li>
+</ul>
+<h3 id="8c-azure-monitor">8c. Azure Monitor</h3>
+<ul>
+<li><code>queryType: "Azure Monitor"</code>, <code>aggregation: "Average"</code>, <code>timeGrain: "auto"</code>,
+<code>region: "canadacentral"</code>.</li>
+<li>One <code>resources[]</code> entry per Azure resource. Multi-resource rules (cpu/mem/restarts on Container
+Apps) use one refId per resource (A, B, C, E, F, G — D reserved for the SSE expression) and
+<code>classic_conditions</code> with <code>or</code>-chain to fire if any one is hot.</li>
+<li><code>subscription</code> IDs and resource groups (<code>MF_DM_CC_&#x3C;ENV>_CORE-RG</code>) are env-scoped — by design, not
+drift.</li>
+</ul>
+<h3 id="8d-sse-expression-node">8d. SSE expression node</h3>
+<ul>
+<li><code>condition</code> field on the rule points at the <strong>last</strong> SSE refId (<code>C</code> for 2-step chains, <code>D</code> for the
+multi-resource Container-App rules).</li>
+<li><code>threshold</code> type for single-input comparisons; <code>classic_conditions</code> for the multi-resource <code>or</code>
+chains; <code>math</code> only for division (<code>$A / ($A + $B)</code>); <code>reducer</code> (<code>last</code>) explicitly when needed.</li>
+<li>Grafana SSE math supports unary functions only (<code>abs</code>, <code>log</code>, <code>sqrt</code>, <code>is_nan</code>, <code>is_null</code>, …) —
+<strong>do not</strong> add multi-arg <code>max</code>/<code>min</code>/ternaries. Use <code>noDataState: KeepLast</code> to handle NaN, not a
+guard expression.</li>
+</ul>
+<h2 id="9-annotations-contract">9. Annotations contract</h2>
+<p>Standard set on <strong>non-synthetic</strong> rules (BigPanda routing depends on these):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Key</th><th>Required</th><th>Purpose</th></tr></thead><tbody><tr><td><code>alert_title</code></td><td>yes</td><td>Human-readable title with templated identifiers — <code>{{ $labels.X }}</code></td></tr><tr><td><code>summary</code></td><td>yes</td><td>One-line description with current value — <code>{{ printf "%.2f" $values.A.Value }}%</code></td></tr><tr><td><code>description</code></td><td>yes</td><td>Why-this-matters paragraph (consequences + what we monitor)</td></tr><tr><td><code>assigned_to</code></td><td>yes</td><td><code>DIA - AMS MDIxAI</code> — group BigPanda routes to</td></tr><tr><td><code>category</code></td><td>yes</td><td><code>software</code> (current only value)</td></tr><tr><td><code>sub_category</code></td><td>yes</td><td><code>application</code> (current only value)</td></tr><tr><td><code>service_tag</code></td><td>yes</td><td>Hint for downstream of which label carries the service identifier — <code>service_name</code> (Prom), <code>Resource</code>/<code>resourceName</code> (Azure)</td></tr></tbody></table>
+<p>Synthetic rules (15–24) deviate — they emit <code>service_name</code> instead and <strong>drop</strong> <code>assigned_to</code>,
+<code>category</code>, <code>sub_category</code>, <code>service_tag</code> (gap, see §11).</p>
+<h3 id="templating-rules">Templating rules</h3>
+<ul>
+<li>Identifier templating: <code>{{ $labels.service_name }}</code> — never hard-code service names in
+<code>alert_title</code> / <code>summary</code>.</li>
+<li>Value templating: <code>{{ printf "%.2f" $values.&#x3C;refId>.Value }}</code> for percentages and ms;
+<code>{{ mulf $values.&#x3C;refId>.Value 100 | printf "%.1f" }}</code> for ratio→percent.</li>
+<li>The refId in <code>$values.&#x3C;refId></code> must match a query node in the rule (not the SSE refId in
+<code>condition</code>).</li>
+</ul>
+<h2 id="10-labels--routing">10. Labels &#x26; routing</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td><code>labels.environment</code></td><td><code>aca-dgeg-mdixai-&#x3C;env></code></td></tr><tr><td><code>notification_settings.receiver</code> (prod)</td><td><code>BigPanda webhook</code></td></tr><tr><td><code>notification_settings.receiver</code> (non-prod)</td><td><code>Teams_MDIxAI_NonProd</code></td></tr></tbody></table>
+<p>Only one user-defined label is set today (<code>environment</code>). Severity, team, and service tier exist
+only in the title — see gaps.</p>
+<h2 id="11-gaps-to-refine">11. Gaps to refine</h2>
+<p>Ordered by impact.</p>
+<h3 id="critical--correctness">Critical / correctness</h3>
+<ol>
+<li><strong>Synthetic rules drop the BigPanda annotation set.</strong> Rules 15–24 are missing <code>assigned_to</code>,
+<code>category</code>, <code>sub_category</code>, <code>service_tag</code> — they emit <code>service_name</code> instead. If BigPanda routing
+for non-synthetic alerts keys on <code>assigned_to</code> (<code>DIA - AMS MDIxAI</code>), synthetic-driven pages will
+fall through to the default route. Fix: either backfill the standard set on the synthetics or
+change BigPanda correlation to key on the title regex.</li>
+<li><del><strong>Stale title tag — KV.</strong></del> <em>Resolved 2026-05-06: title now reads <code>[lt_99_5pct_15m]</code> across all
+4 envs.</em></li>
+<li><del><strong>Stale annotation text — synthetic availability.</strong></del> <em>Resolved 2026-05-06: <code>alert_title</code> on
+rules 15–19 now reads “over the last 15 minutes.” across all 4 envs (was “3 hours” in prod, “6
+hours” in dev/qa/train).</em></li>
+<li><strong><code>noDataState</code> drift on rule 01.</strong> Only Prometheus rule using <code>NoData</code> (every other Prom rule is
+<code>KeepLast</code>). Either intentional and worth documenting in the README, or accidental drift from a
+re-edit. Decide and align.</li>
+<li><strong>KV cross-env naming inconsistency</strong> (already flagged in README §“Key Vault availability
+threshold”). Verify <code>MF-DM-CC-PROD-KV</code> vs <code>MF-DM-CC-CORE-&#x3C;env>-KV</code> against Azure — if prod’s KV
+is genuinely named differently this is correct; otherwise prod silently misses.</li>
+</ol>
+<h3 id="schema--tooling">Schema / tooling</h3>
+<ol start="6">
+<li><strong>No <code>severity</code> label.</strong> Severity is encoded only in the title (<code>[p2]</code>, <code>[p3]</code>). Anything that
+filters or routes by severity programmatically (silences, AM tree, BigPanda correlation) has to
+regex the title — fragile. Add <code>labels.severity: "p2" | "p3"</code>.</li>
+<li><strong>No <code>team</code> / <code>owner</code> label.</strong> Same problem as severity. Add <code>labels.team: "sre_team"</code>.</li>
+<li><strong>No <code>runbook_url</code> annotation.</strong> Standard Grafana annotation, missing on every rule. On-call has
+nothing to click on a 02:00 page. Add <code>annotations.runbook_url</code> per rule.</li>
+<li><strong>No dashboard panel link.</strong> No <code>grafana_dashboard_url</code> / <code>panel_id</code> to deep-link from the
+notification to the panel showing the offending series. Add per rule.</li>
+<li><strong><code>legendFormat: "__auto"</code> on Prometheus queries.</strong> <code>$labels.service_name</code> only resolves
+correctly if Prom returns a series with that label. Set <code>legendFormat: "{{service_name}}"</code>
+explicitly to make the contract obvious and immune to future label-set changes.</li>
+<li><strong><code>service_tag</code> annotation values inconsistent</strong> — rule 01 uses <code>service_name</code>, rule 03 uses
+<code>Resource</code>, rule 11 uses <code>resourceName</code>. Decide a single contract: lowercase label name only,
+e.g. <code>service_name</code> for OTel, <code>resource_name</code> for Azure. Currently a downstream consumer can’t
+trust the value.</li>
+</ol>
+<h3 id="operational">Operational</h3>
+<ol start="12">
+<li><strong>Container App rules (03/04/05) hard-code 6 resources by refId.</strong> If MDIxAI adds a new
+container app, the alert silently misses it. Two paths: (a) move to a Prometheus-based rule
+grouped by <code>service_name</code> (we already do this for some signals), or (b) use Azure Monitor’s
+<code>dimensionFilters</code> / Resource-Graph query to enumerate apps dynamically. Either beats
+hand-maintaining A/B/C/E/F/G.</li>
+<li><strong><code>classic_conditions</code> <code>or</code> chain loses per-resource attribution.</strong> Rule 03/04/05 fires once
+with the SSE expression’s output; the notification can’t say <em>which</em> container app crossed 90%.
+Annotation summary uses <code>{{ $labels.service_name }}</code> but classic_conditions doesn’t propagate
+the source labels — verify the page actually carries the offending resource name. If not, switch
+to one rule per resource (more rules, cleaner pages) or use SSE math + reduce per-A/B/C.</li>
+<li><strong>No inhibition / silencing relationships.</strong> <code>[restarts] gt_5_15m</code> (rule 05) almost always
+co-fires with <code>[mem] gt_90pct_15m</code> (rule 01) on OOM scenarios — both page. Configure inhibition
+in the notification policy / BigPanda so the symptom (restarts) is suppressed when the cause
+(mem) is firing.</li>
+<li><strong>Single global priority (<code>[sre_team]</code>, all <code>p2</code>/<code>p3</code>)</strong> ignores service tier. Auth is
+gate-of-everything; DDH may be best-effort. Consider a <code>service_tier</code> label (gold / silver /
+bronze) and let priority follow tier.</li>
+<li><strong>Threshold values are hand-coded magic numbers.</strong> <code>90</code>, <code>5</code>, <code>0.8</code>, <code>5000</code>, <code>500</code> appear in
+both <code>threshold_tag</code> (title) and SSE <code>evaluator.params</code>. Drift between them is silent (see gap
+2). Either generate the title from the threshold at provisioning time, or add a CI check that
+parses both and asserts equality.</li>
+<li><strong>No SLO / FinOps note for the rule group.</strong> 24 rules × 1m eval × multi-source queries = a
+non-trivial query load on Prom/Loki/Azure Monitor. Document the budget; add an alert on
+rule-group eval latency once we have one.</li>
+<li><strong><code>for: 15m</code> uniform</strong> even on probe-missing — effective MTTD is up to 75m on probe outage (1h
+LogQL window + 15m hot). Probably fine; document on the runbook so on-call doesn’t think the
+rule is broken.</li>
+</ol>
+<h3 id="provisioning">Provisioning</h3>
+<ol start="19">
+<li><strong>No CI validation on the JSON.</strong> A typo in <code>datasourceUid</code>, <code>condition</code>, or <code>refId</code> deploys
+silently and the rule goes green. Add a pre-commit / CI step that runs <code>gutil.py --validate</code> (or
+equivalent) and asserts: (a) every <code>condition</code> refId exists in <code>data[]</code>, (b) every refId
+referenced in <code>$values.X</code> in annotations exists, (c) all 4 env files diff cleanly except for
+env-scoped fields.</li>
+<li><strong>No drift detector.</strong> Manual edits to a deployed rule via the UI are blocked by
+<code>provenance: file</code> — but only after provisioning honors the field. Until then, run a periodic
+diff (Grafana API → repo) to flag drift.</li>
+</ol>
+<hr>
+<h2 id="12-suggested-next-steps-refinement-order">12. Suggested next steps (refinement order)</h2>
+<ol>
+<li><strong>Fix the obvious drift</strong> — gaps 2, 3, 4, 5 (stale tags / states / naming).</li>
+<li><strong>Add the missing labels and annotations</strong> — gaps 6, 7, 8, 9 (<code>severity</code>, <code>team</code>, <code>runbook_url</code>,
+dashboard link). One-time backfill, then enforce in a template.</li>
+<li><strong>Backfill BigPanda annotations on synthetic rules</strong> — gap 1.</li>
+<li><strong>Add CI validation</strong> — gap 19. Cheap, prevents whole class of silent failures.</li>
+<li><strong>Refactor multi-resource Container App rules</strong> — gap 12. Bigger change, do after the rest is
+stable.</li>
+<li><strong>Inhibition rules</strong> — gap 14. Lives in notification policy / BigPanda config, not the rule JSON,
+but should be tracked as a paired artifact.</li>
+</ol>
+<hr>
+<h2 id="13-out-of-scope-already-covered-elsewhere">13. Out of scope (already covered elsewhere)</h2>
+<ul>
+<li>Alert inventory, status matrix, per-rule details — see
+<a href="/notes/projects/platform-shipsolid/05-platform-configuration/platform-configuration/">platform-configuration.md</a>.</li>
+<li>Dashboard schema — see README §Dashboards.</li>
+<li>Auto-deploy workflow — see README §Auto-deploy.</li>
+<li>Cardinality budget for new metrics/labels — use the <strong>cardinality-budget-calculator</strong> skill before
+adding labels in production-bound configs.</li>
+</ul>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:#0b1220"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"observability/12-alert-engineering/1-alert-philosophy/alerting-and-routing","title":"1 — Alerting & Alert Routing","topic":"observability","noteType":"note"},{"slug":"projects/platform-shipsolid/02-service-onboarding/naming-and-label-schema","title":"Naming & Label Schema","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/aks-helm-impl-guidelines","title":"AKS Helm Implementation Guidelines","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/alerting","title":"Alerting Contract","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","title":"MDIxAI Alerts — Standards (extracted from current state)","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to","title":"grafana_tf — How-To Guides","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/platform-configuration","title":"05 — Platform Configuration","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/security-access-compliance","title":"Security, Access & Compliance","topic":"projects","noteType":"note"},{"slug":"projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud","title":"Grafana Cloud Usage Guide","topic":"projects","noteType":"note"},{"slug":"tech/prometheus","title":"What is Prometheus","topic":"tech","noteType":"note"}];
+const edges = [{"source":"projects/platform-shipsolid/05-platform-configuration/aks-helm-impl-guidelines","target":"projects/platform-shipsolid/05-platform-configuration/alerting","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/aks-helm-impl-guidelines","target":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerting","target":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerting","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","target":"projects/platform-shipsolid/05-platform-configuration/platform-configuration","kind":"depends_on"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","target":"projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerting","target":"projects/platform-shipsolid/05-platform-configuration/security-access-compliance","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","target":"projects/platform-shipsolid/05-platform-configuration/security-access-compliance","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerting","target":"projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","target":"projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud","kind":"related"},{"source":"observability/12-alert-engineering/1-alert-philosophy/alerting-and-routing","target":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","kind":"related"},{"source":"projects/platform-shipsolid/02-service-onboarding/naming-and-label-schema","target":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/alerts-standards","target":"tech/prometheus","kind":"related"},{"source":"projects/platform-shipsolid/05-platform-configuration/platform-configuration","target":"projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud","kind":"related"}];
+const topicColors = {"agentic-ai":"#009563","aptitude":"#00ab92","ci-cd":"#009494","data-engineering":"#00a6bf","data-structures-algorithms":"#008bba","dbms":"#009ade","grafana-cloud":"#267dcf","infrastructure-platform-engineering":"#638aea","internal-developer-platforms":"#6b6cd0","kubernetes":"#967ae0","kubernetes-platform-engineering":"#945dbd","low-level-design":"#ba6cc3","networks":"#b05299","object-oriented-programming":"#d26498","observability":"#c04d6c","operating-system":"#db6466","patterns":"#c25336","philosophy":"#d66f2c","platform-engineering-fundamentals":"#b56200","productivity":"#c08100","projects":"#997600","prometheus":"#9a9400","sre":"#6c8700","system-design":"#62a33f","tech":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/platform-shipsolid/05-platform-configuration/alerts-standards";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', '#1e293b');
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', '#00d9a6');
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', '#f1f5f9');
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? '#00d9a6' : '#1e293b');
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', '#1e293b');
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link graph --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 9 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/aks-helm-impl-guidelines" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> AKS Helm Implementation Guidelines </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>**Applies to:** Services deploying to Azure Kubernetes Service (AKS) via Helm charts on the ShipSolid</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/alerting" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Alerting Contract </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>**Applies to:** All teams authoring or requesting Grafana alert rules on the ShipSolid SRE</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> grafana_tf — How-To Guides </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Dashboards are auto-discovered from the `grafana_tf/dashboards/` directory — no changes to any `.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/security-access-compliance" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Security, Access &amp; Compliance </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Observability data often contains sensitive operational, business, or user-level insights.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Grafana Cloud Usage Guide </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>1.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/observability/12-alert-engineering/1-alert-philosophy/alerting-and-routing" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1 — Alerting &amp; Alert Routing </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Symptom-based vs. cause-based alerting, the noise-reduction problem (dedup, grouping, correlation), and routing/escalation — the design discipline standing between a real page and a bad one.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/02-service-onboarding/naming-and-label-schema" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Naming &amp; Label Schema </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The canonical label and resource-attribute schema every signal must follow.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/security-access-compliance" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Security, Access &amp; Compliance </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Observability data often contains sensitive operational, business, or user-level insights.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Grafana Cloud Usage Guide </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>1.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/alert-rules-catalog" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Alert Rules Catalog </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Catalog of alert rules managed by the platform (Terraform/config-driven).</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/collector-config-templates/collector-config-templates" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Collector Config Templates </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Reusable Alloy / OTel collector configuration templates by workload class.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/dashboard-catalog" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Dashboard Catalog </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Catalog of shared dashboards and the golden-signal starter pack.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/feature-flags-and-config-management" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Feature Flags &amp; Config Management </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How platform feature flags and configuration are managed and rolled out.</p> </div> <svg class="w-4 h-4 text-slate-600 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/platform-shipsolid/05-platform-configuration/alerts-standards.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/alerting" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Alerting Contract </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/platform-shipsolid/05-platform-configuration/dashboard-catalog" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Dashboard Catalog </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#mdixai-alerts--standards-extracted-from-current-state" data-slug="mdixai-alerts--standards-extracted-from-current-state" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>MDIxAI Alerts — Standards (extracted from current state)</a></li><li data-astro-cid-xvrfupwn><a href="#1-file-shape" data-slug="1-file-shape" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>1. File shape</a></li><li data-astro-cid-xvrfupwn><a href="#2-folder--group-naming" data-slug="2-folder--group-naming" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>2. Folder &amp; group naming</a></li><li data-astro-cid-xvrfupwn><a href="#3-rule-uid" data-slug="3-rule-uid" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>3. Rule UID</a></li><li data-astro-cid-xvrfupwn><a href="#4-rule-title-schema" data-slug="4-rule-title-schema" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>4. Rule title schema</a></li><li data-astro-cid-xvrfupwn><a href="#5-evaluation-timing" data-slug="5-evaluation-timing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>5. Evaluation timing</a></li><li data-astro-cid-xvrfupwn><a href="#6-state-handling" data-slug="6-state-handling" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>6. State handling</a></li><li data-astro-cid-xvrfupwn><a href="#7-data-source-standards" data-slug="7-data-source-standards" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>7. Data-source standards</a></li><li data-astro-cid-xvrfupwn><a href="#8-query-patterns" data-slug="8-query-patterns" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>8. Query patterns</a></li><li data-astro-cid-xvrfupwn><a href="#8a-prometheus-process-level-otel-metrics" data-slug="8a-prometheus-process-level-otel-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8a. Prometheus (process-level OTel metrics)</a></li><li data-astro-cid-xvrfupwn><a href="#8b-loki-synthetics" data-slug="8b-loki-synthetics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8b. Loki (synthetics)</a></li><li data-astro-cid-xvrfupwn><a href="#8c-azure-monitor" data-slug="8c-azure-monitor" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8c. Azure Monitor</a></li><li data-astro-cid-xvrfupwn><a href="#8d-sse-expression-node" data-slug="8d-sse-expression-node" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>8d. SSE expression node</a></li><li data-astro-cid-xvrfupwn><a href="#9-annotations-contract" data-slug="9-annotations-contract" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>9. Annotations contract</a></li><li data-astro-cid-xvrfupwn><a href="#templating-rules" data-slug="templating-rules" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Templating rules</a></li><li data-astro-cid-xvrfupwn><a href="#10-labels--routing" data-slug="10-labels--routing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>10. Labels &amp; routing</a></li><li data-astro-cid-xvrfupwn><a href="#11-gaps-to-refine" data-slug="11-gaps-to-refine" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>11. Gaps to refine</a></li><li data-astro-cid-xvrfupwn><a href="#critical--correctness" data-slug="critical--correctness" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Critical / correctness</a></li><li data-astro-cid-xvrfupwn><a href="#schema--tooling" data-slug="schema--tooling" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Schema / tooling</a></li><li data-astro-cid-xvrfupwn><a href="#operational" data-slug="operational" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Operational</a></li><li data-astro-cid-xvrfupwn><a href="#provisioning" data-slug="provisioning" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 hover:text-slate-400" data-astro-cid-xvrfupwn>Provisioning</a></li><li data-astro-cid-xvrfupwn><a href="#12-suggested-next-steps-refinement-order" data-slug="12-suggested-next-steps-refinement-order" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>12. Suggested next steps (refinement order)</a></li><li data-astro-cid-xvrfupwn><a href="#13-out-of-scope-already-covered-elsewhere" data-slug="13-out-of-scope-already-covered-elsewhere" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300" data-astro-cid-xvrfupwn>13. Out of scope (already covered elsewhere)</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 mb-1">Depends On</p><a href="/notes/projects/platform-shipsolid/05-platform-configuration/platform-configuration" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">05 — Platform Configuration</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/alerting" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Alerting Contract</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Related</p><a href="/notes/projects/platform-shipsolid/05-platform-configuration/aks-helm-impl-guidelines" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">AKS Helm Implementation Guidelines</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — How-To Guides</span></a></div><div><p class="text-[11px] text-slate-600 mb-1">Referenced By</p><a href="/notes/projects/platform-shipsolid/05-platform-configuration/aks-helm-impl-guidelines" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">AKS Helm Implementation Guidelines</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/alerting" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Alerting Contract</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/grafana-tf-how-to" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">grafana_tf — How-To Guides</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/security-access-compliance" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Security, Access &amp; Compliance</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Grafana Cloud Usage Guide</span></a><a href="/notes/observability/12-alert-engineering/1-alert-philosophy/alerting-and-routing" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">1 — Alerting &amp; Alert Routing</span></a><a href="/notes/projects/platform-shipsolid/02-service-onboarding/naming-and-label-schema" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Naming &amp; Label Schema</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/security-access-compliance" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Security, Access &amp; Compliance</span></a><a href="/notes/projects/platform-shipsolid/05-platform-configuration/using-grafana-cloud" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700">└</span><span class="truncate">Grafana Cloud Usage Guide</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 bg-slate-950"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600">&lt;</span>amit.singh<span class="text-slate-600">/&gt;</span> </a> <p class="text-xs text-slate-600 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#1e293b',
+            primaryTextColor: '#cbd5e1',
+            primaryBorderColor: '#334155',
+            lineColor: '#00d9a6',
+            secondaryColor: '#0f172a',
+            tertiaryColor: '#1e293b',
+            background: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#334155',
+            clusterBkg: '#0f172a',
+            titleColor: '#f1f5f9',
+            edgeLabelBackground: '#1e293b',
+            // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+            // via hue rotation, which can land on light/saturated fills that wash out
+            // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+            cScale0: '#1e3a5f',
+            cScale1: '#14532d',
+            cScale2: '#581c87',
+            cScale3: '#7c2d12',
+            cScale4: '#831843',
+            cScale5: '#713f12',
+            cScale6: '#164e63',
+            cScale7: '#3730a3',
+            cScaleLabel0: '#e2e8f0',
+            cScaleLabel1: '#e2e8f0',
+            cScaleLabel2: '#e2e8f0',
+            cScaleLabel3: '#e2e8f0',
+            cScaleLabel4: '#e2e8f0',
+            cScaleLabel5: '#e2e8f0',
+            cScaleLabel6: '#e2e8f0',
+            cScaleLabel7: '#e2e8f0',
+          },
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      div.textContent = pre.querySelector('code')?.textContent ?? '';
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  renderMermaid(document);
+</script>  </body></html>  
