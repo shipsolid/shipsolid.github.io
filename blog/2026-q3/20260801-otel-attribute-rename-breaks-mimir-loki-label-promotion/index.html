@@ -1,0 +1,793 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>How a &#39;Consistency Fix&#39; in Program.cs Silently Broke Label Promotion Across Mimir and Loki — Amit Singh</title><meta name="description" content="Renaming an OTel resource attribute from deployment.environment to deployment_environment in application code looked like the fix for inconsistent labels across Grafana Cloud's three signals. It's backwards: Mimir and Loki both promote and convert dotted attribute names on ingestion, so a pre-converted attribute silently fails to match and drops out of both label sets. The real fix belongs in the Alloy pipeline, scoped to traces only."><link rel="canonical" href="https://shipsolid.github.io/blog/2026-q3/20260801-otel-attribute-rename-breaks-mimir-loki-label-promotion/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="How a 'Consistency Fix' in Program.cs Silently Broke Label Promotion Across Mimir and Loki — Amit Singh"><meta property="og:description" content="Renaming an OTel resource attribute from deployment.environment to deployment_environment in application code looked like the fix for inconsistent labels across Grafana Cloud's three signals. It's backwards: Mimir and Loki both promote and convert dotted attribute names on ingestion, so a pre-converted attribute silently fails to match and drops out of both label sets. The real fix belongs in the Alloy pipeline, scoped to traces only."><meta property="og:url" content="https://shipsolid.github.io/blog/2026-q3/20260801-otel-attribute-rename-breaks-mimir-loki-label-promotion/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="How a 'Consistency Fix' in Program.cs Silently Broke Label Promotion Across Mimir and Loki — Amit Singh"><meta name="twitter:description" content="Renaming an OTel resource attribute from deployment.environment to deployment_environment in application code looked like the fix for inconsistent labels across Grafana Cloud's three signals. It's backwards: Mimir and Loki both promote and convert dotted attribute names on ingestion, so a pre-converted attribute silently fails to match and drops out of both label sets. The real fix belongs in the Alloy pipeline, scoped to traces only."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.B_XCLsxQ.css">
+<link rel="stylesheet" href="/_astro/_slug_.BlocQIcp.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb))}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.copy-btn[data-astro-cid-bvzihdzo]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:var(--color-text-faint);background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-bvzihdzo]:hover .copy-btn[data-astro-cid-bvzihdzo],.copy-btn[data-astro-cid-bvzihdzo]:focus-visible{opacity:1}.copy-btn[data-astro-cid-bvzihdzo]:hover{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb) / .3);background:rgb(var(--color-accent-rgb) / .05)}
+</style><script type="module" src="/_astro/hoisted.BGg3wCW_.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-bvzihdzo></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a>  <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a>  <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-bvzihdzo> <!-- Article header --> <header class="max-w-6xl mx-auto px-6 mb-12" data-astro-cid-bvzihdzo> <div class="flex flex-wrap gap-2 mb-4" data-astro-cid-bvzihdzo> <a href="/blog/tag/opentelemetry" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> OpenTelemetry </a><a href="/blog/tag/grafana" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Grafana </a><a href="/blog/tag/mimir" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Mimir </a><a href="/blog/tag/loki" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Loki </a><a href="/blog/tag/tempo" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Tempo </a><a href="/blog/tag/alloy" class="tag hover:bg-accent/20 transition-colors" data-astro-cid-bvzihdzo> Alloy </a> </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight mb-4" data-astro-cid-bvzihdzo> How a &#39;Consistency Fix&#39; in Program.cs Silently Broke Label Promotion Across Mimir and Loki </h1> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-bvzihdzo>Renaming an OTel resource attribute from deployment.environment to deployment_environment in application code looked like the fix for inconsistent labels across Grafana Cloud&#39;s three signals. It&#39;s backwards: Mimir and Loki both promote and convert dotted attribute names on ingestion, so a pre-converted attribute silently fails to match and drops out of both label sets. The real fix belongs in the Alloy pipeline, scoped to traces only.</p> <div class="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-mono border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-bvzihdzo> <time datetime="2026-08-01T00:00:00.000Z" data-astro-cid-bvzihdzo>August 1, 2026</time> <span data-astro-cid-bvzihdzo>·</span> <span data-astro-cid-bvzihdzo>15 min read</span>  <div class="ml-auto flex items-center gap-4" data-astro-cid-bvzihdzo> <img src="https://hits.sh/shipsolid.github.io/blog/2026-q3/20260801-otel-attribute-rename-breaks-mimir-loki-label-promotion.svg?style=flat-square&color=00d9a6&labelColor=1e293b&label=views" alt="view count" class="h-5 rounded" loading="eager" data-astro-cid-bvzihdzo> <a href="/rss.xml" class="flex items-center gap-1.5 text-slate-600 light:text-slate-400 hover:text-accent transition-colors" title="RSS feed" data-astro-cid-bvzihdzo> <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20 4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z" data-astro-cid-bvzihdzo></path> </svg>
+RSS
+</a> </div> </div> </header> <!-- Two-column: content + TOC --> <div class="max-w-6xl mx-auto px-6" data-astro-cid-bvzihdzo> <div class="grid grid-cols-1 xl:grid-cols-[1fr_240px] gap-12" data-astro-cid-bvzihdzo> <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Post" data-astro-cid-bvzihdzo> <span hidden data-pagefind-meta="title:How a 'Consistency Fix' in Program.cs Silently Broke Label Promotion Across Mimir and Loki" data-astro-cid-bvzihdzo></span> <span hidden data-pagefind-meta="date:2026-08-01T00:00:00.000Z" data-astro-cid-bvzihdzo></span> <span hidden data-pagefind-filter="tag:OpenTelemetry" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Grafana" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Mimir" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Loki" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Tempo" data-astro-cid-bvzihdzo></span><span hidden data-pagefind-filter="tag:Alloy" data-astro-cid-bvzihdzo></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+
+            prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+            prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 light:prose-blockquote:text-slate-600 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 light:prose-blockquote:bg-slate-100/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+            prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+
+            prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+          " data-astro-cid-bvzihdzo>  <p><img  src="/_astro/2026.08.01-otel-attribute-rename-breaks-mimir-loki-label-promotion.5-TU0Sny_1Ablju.webp" alt="How a &#38;#x27;Consistency Fix&#38;#x27; in Program.cs Silently Broke Label Promotion Across Mimir and Loki" width="1024" height="1536" loading="lazy" decoding="async"></p>
+<p>An engineer noticed <code>deployment.environment</code> showing up as a dotted key on trace resource attributes
+in Tempo, while the equivalent Prometheus label on the same service’s metrics was
+<code>deployment_environment</code>. The instinct was reasonable: pick one spelling, standardize it in the OTel
+SDK, ship it everywhere. So the fix went into <code>Program.cs</code> — the resource attribute was renamed to
+the underscore form at the source, on the theory that Prometheus can’t have dots in label names
+anyway, so why not just emit the form every backend supposedly wants.</p>
+<p>That fix made things worse, and not in a way that throws an error. It fails silently, which is the
+dangerous kind of failure. Mimir and Loki both already do dot-to-underscore conversion on ingest —
+but the promotion logic in both systems is keyed on matching the <em>dotted</em> form against a static
+list. Feed it the underscore form directly and it doesn’t match, doesn’t promote, and quietly falls
+out of the label set it was supposed to join. The mechanism that was supposed to guarantee
+consistency across signals is exactly what the fix broke.</p>
+<hr>
+<h2 id="tldr">TL;DR</h2>
+<p>Mimir and Loki both convert dotted OTel resource attribute names to underscore form on ingestion —
+but the promotion/matching logic in both is keyed on the literal <em>dotted</em> attribute key being
+present in the incoming OTLP payload. Pre-converting to underscore in application code doesn’t give
+you consistency; it gives you an attribute that matches neither promotion list and likely gets
+dropped as an unindexed field. Tempo has no such conversion mechanism at all — it passes resource
+attribute keys through exactly as received, so it’s the only one of the three signals that actually
+needs intervention. The fix: keep <code>deployment.environment</code> (dotted, OTel semantic-convention
+correct) at the SDK, and add a single targeted rename in the Alloy pipeline, scoped to the traces
+path only. Mimir and Loki keep working exactly as they already do; Tempo gets brought into line
+without touching a single line of application code.</p>
+<hr>
+<h2 id="the-problem">The Problem</h2>
+<p>Grafana Cloud’s three signal backends handle OTel resource attribute naming in three genuinely
+different ways, and none of the three docs pages that describe this individually tell you the
+combined story.</p>
+<p>Here’s the mechanism worth walking through step by step, since it’s the detail the rest of this
+section builds on.</p>
+<p><strong>Stage 1 — match.</strong> Both Mimir and Loki hold a static, hardcoded list of attribute names each is
+willing to promote, written in the dotted OTel semantic-convention spelling —
+<code>deployment.environment</code>, <code>service.name</code>, <code>k8s.cluster.name</code>, and so on. When a payload arrives, the
+promotion logic runs a literal string comparison against that list: is <code>deployment.environment</code>
+present in this resource’s attributes, spelled exactly that way?</p>
+<p><strong>Stage 2 — convert.</strong> Only after an attribute survives stage 1’s match does <code>mimir-otlptranslator</code>
+(or Loki’s equivalent) rewrite it from dots to underscores for storage as a label or index field.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Stage 1: MATCH             Stage 2: CONVERT</span></span>
+<span class="line"><span>(literal string compare)   (dot → underscore substitution)</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>The SDK rename breaks stage 1, not stage 2. Emitting <code>deployment_environment</code> directly looks like
+it’s producing the output stage 2 would have produced anyway — but it never passes through stage 1
+to get there. The match check is doing <code>"deployment_environment" == "deployment.environment"</code>, which
+is false: the list has one entry, spelled with a dot, and the incoming key no longer has one. Since
+the match fails, the attribute is never even considered for promotion. Stage 2 doesn’t fail to
+convert it — stage 2 never runs at all, because stage 1 gates access to it.</p>
+<p>This is also why the failure is worse than an ordinary error. An unmatched resource attribute isn’t
+an error condition to Mimir or Loki — it’s just an ordinary, non-promoted resource attribute.
+There’s no rejected-sample counter, no ingestion warning, nothing written to a log. From the
+system’s point of view nothing went wrong; it simply didn’t recognize this attribute as one of the
+special ones to lift into the label or index set. The data isn’t lost — it’s still ingested and
+stored, as unindexed structured metadata in Loki’s case, or simply absent from the label set in
+Mimir’s case — only its promotion status is. A query like
+<code>count by (deployment_environment) (up{...})</code> in Mimir, or a Loki stream selector
+<code>{deployment_environment="production"}</code>, just quietly returns nothing for that service, while every
+other correctly-spelled attribute keeps working — which is what makes it look like a per-service
+instrumentation gap rather than a spelling mismatch against a list most application engineers don’t
+know exists, since it’s a platform-team-owned distributor flag, not something visible from
+application code.</p>
+<p><strong>Mimir</strong> promotes selected OTLP resource attributes to Prometheus labels via
+<code>-distributor.otel-promote-resource-attributes</code> (YAML: <code>promote_otel_resource_attributes</code>), a
+distributor-level flag holding a static list of attribute names. Once an attribute is on that list
+and present in the incoming resource attributes, it’s handed to <code>mimir-otlptranslator</code>, which
+performs the dot-to-underscore substitution — <code>deployment.environment</code> becomes the label
+<code>deployment_environment</code>. The promotion step and the character-substitution step are two separate
+stages, and the first stage is a literal string match against the list.</p>
+<p>The default promotion list and the label each entry becomes after <code>mimir-otlptranslator</code> runs:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>OpenTelemetry resource attribute (dotted)</th><th>Prometheus label after normalization</th></tr></thead><tbody><tr><td><code>service.instance.id</code></td><td><code>service_instance_id</code> (also mapped to <code>instance</code>)</td></tr><tr><td><code>service.name</code></td><td><code>service_name</code> (also contributes to <code>job</code>)</td></tr><tr><td><code>service.namespace</code></td><td><code>service_namespace</code></td></tr><tr><td><code>service.version</code></td><td><code>service_version</code></td></tr><tr><td><code>cloud.availability_zone</code></td><td><code>cloud_availability_zone</code></td></tr><tr><td><code>cloud.region</code></td><td><code>cloud_region</code></td></tr><tr><td><code>container.name</code></td><td><code>container_name</code></td></tr><tr><td><code>deployment.environment</code></td><td><code>deployment_environment</code></td></tr><tr><td><code>deployment.environment.name</code></td><td><code>deployment_environment_name</code></td></tr><tr><td><code>k8s.cluster.name</code></td><td><code>k8s_cluster_name</code></td></tr><tr><td><code>k8s.container.name</code></td><td><code>k8s_container_name</code></td></tr><tr><td><code>k8s.cronjob.name</code></td><td><code>k8s_cronjob_name</code></td></tr><tr><td><code>k8s.daemonset.name</code></td><td><code>k8s_daemonset_name</code></td></tr><tr><td><code>k8s.deployment.name</code></td><td><code>k8s_deployment_name</code></td></tr><tr><td><code>k8s.job.name</code></td><td><code>k8s_job_name</code></td></tr><tr><td><code>k8s.namespace.name</code></td><td><code>k8s_namespace_name</code></td></tr><tr><td><code>k8s.pod.name</code></td><td><code>k8s_pod_name</code></td></tr><tr><td><code>k8s.replicaset.name</code></td><td><code>k8s_replicaset_name</code></td></tr><tr><td><code>k8s.statefulset.name</code></td><td><code>k8s_statefulset_name</code></td></tr></tbody></table>
+<p>Note that <code>deployment.environment</code> and <code>deployment.environment.name</code> are both on the list — Mimir
+matches whichever spelling your SDK actually emits, but each is a distinct list entry, not
+interchangeable aliases of each other.</p>
+<p><strong>Loki</strong> does the identical shape of conversion for logs, which surprises people who’ve internalized
+“labels are a metrics thing.” <code>default_resource_attributes_as_index_labels</code> ships with an explicit
+list of dotted semantic-convention names — <code>service.name</code>, <code>deployment.environment</code>,
+<code>deployment.environment.name</code>, <code>k8s.cluster.name</code>, and others — and converts each to its underscore
+index-label form automatically, the same two-stage shape as Mimir: match the dotted key, then
+convert.</p>
+<p><strong>Tempo</strong> has no comparable mechanism. There’s no label storage model in Tempo the way there is in
+Mimir or Loki’s index — resource and span attributes are stored and queried as-is. Whatever key
+arrives in the OTLP payload is the key TraceQL sees.</p>
+<p>The failure mode only appears when you look at all three at once. Both Mimir’s and Loki’s promotion
+lists are matched against the literal incoming key, and every entry on both lists is written in the
+dotted form because that’s the OTel semantic-convention spelling. If the resource attribute arrives
+pre-converted to <code>deployment_environment</code>, it fails the match on both lists. It doesn’t error. It
+doesn’t warn. It falls through as an unindexed resource attribute in Loki (present in the log line’s
+structured metadata but absent from the stream selector), and in Mimir it’s simply absent from the
+metric’s label set entirely, because there’s no unindexed fallback for a distributor-promoted label
+— it just isn’t promoted.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Correct["Correct: SDK emits the dotted, semconv form"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        direction TB</span></span>
+<span class="line"><span style="color:#E1E4E8">        A1["Resource attribute&#x3C;br/>deployment.environment"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A2{"Promotion list match?&#x3C;br/>list entry: deployment.environment"}</span></span>
+<span class="line"><span style="color:#E1E4E8">        A3["MATCH"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A4["mimir-otlptranslator /&#x3C;br/>Loki index-label converter runs&#x3C;br/>dot-to-underscore substitution"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A5["Promoted&#x3C;br/>deployment_environment&#x3C;br/>(Prometheus label / Loki index label)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A1 --> A2</span></span>
+<span class="line"><span style="color:#E1E4E8">        A2 -->|dotted key present| A3</span></span>
+<span class="line"><span style="color:#E1E4E8">        A3 --> A4</span></span>
+<span class="line"><span style="color:#E1E4E8">        A4 --> A5</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Wrong["Anti-pattern: SDK pre-converts to underscore"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        direction TB</span></span>
+<span class="line"><span style="color:#E1E4E8">        B1["Resource attribute&#x3C;br/>deployment_environment"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        B2{"Promotion list match?&#x3C;br/>list entry: deployment.environment"}</span></span>
+<span class="line"><span style="color:#E1E4E8">        B3["NO MATCH&#x3C;br/>underscore key isn't on the list"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        B4["Falls through as an ordinary,&#x3C;br/>non-promoted resource attribute"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        B5["Silently absent from the&#x3C;br/>label set / stream selector —&#x3C;br/>no error, no warning"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        B1 --> B2</span></span>
+<span class="line"><span style="color:#E1E4E8">        B2 -->|underscore key present| B3</span></span>
+<span class="line"><span style="color:#E1E4E8">        B3 --> B4</span></span>
+<span class="line"><span style="color:#E1E4E8">        B4 --> B5</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    classDef good fill:#C7F0DB,stroke:#4C9A78,stroke-width:1px,color:#1B3B2C</span></span>
+<span class="line"><span style="color:#E1E4E8">    classDef bad fill:#FFC9C9,stroke:#C4514F,stroke-width:1px,color:#4A1414</span></span>
+<span class="line"><span style="color:#E1E4E8">    classDef decision fill:#FFF3B0,stroke:#C9A227,stroke-width:1px,color:#4A3B00</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    class A1,A4,A5,A3 good</span></span>
+<span class="line"><span style="color:#E1E4E8">    class B1,B4,B5,B3 bad</span></span>
+<span class="line"><span style="color:#E1E4E8">    class A2,B2 decision</span></span>
+<span class="line"></span></code></pre>
+<p>The two paths diverge at exactly one point — the promotion-list match — and that point produces no
+observable signal either way. A match promotes silently; a miss drops silently. Nothing short of
+explicitly checking for the label’s presence distinguishes the two at runtime.</p>
+<hr>
+<h2 id="failure-chain">Failure Chain</h2>
+<p><strong>Phase 1: SDK emits the “consistent” form.</strong> The OTel resource builder is configured to set
+<code>deployment_environment</code> (underscore) instead of the semantic-convention <code>deployment.environment</code>
+(dotted). This looks correct in isolation — the attribute shows up fine in any tool that reads
+resource attributes verbatim, including a local OTel Collector debug exporter or a raw trace payload
+inspector.</p>
+<p><strong>Phase 2: Mimir’s and Loki’s promotion lists silently fail to match.</strong> Both systems check the
+incoming resource attributes against their respective static, dotted-form lists during ingestion.
+<code>deployment_environment</code> (already underscored) is not a member of either list — the entry on the
+list is <code>deployment.environment</code>. The match fails. Neither system treats this as an error condition;
+there’s no rejected-sample counter incrementing, no ingestion warning logged. The attribute is
+processed as an ordinary, non-promoted resource attribute.</p>
+<p><strong>Phase 3: The label disappears from queries, but the data doesn’t.</strong> In Mimir, the attribute never
+becomes a label, so any PromQL query filtering or grouping by <code>deployment_environment</code> returns
+nothing for series from this service — while every other resource attribute on the promotion list
+keeps working normally, making the gap look like a per-service instrumentation bug rather than a
+naming-format mismatch. In Loki, the attribute is present as structured metadata on the log line but
+absent from the indexed label set, so <code>{deployment_environment="production"}</code> as a stream selector
+returns zero results even though the log line exists and can be found by full-text search.</p>
+<p><strong>Phase 4: Tempo shows a technically-present but non-standard key.</strong> Tempo takes whatever it’s given
+— in this case, <code>deployment_environment</code> — and stores it verbatim. No cross-check happens against
+OTel semantic conventions, no rejection, nothing else observes the discrepancy. The result after all
+four phases: traces carry a non-standard resource-attribute key, and metrics/logs have silently lost
+a label they previously had. Three signals now disagree with each other in the exact place the fix
+was meant to make them agree.</p>
+<hr>
+<h2 id="why-it-persists">Why It Persists</h2>
+<p>The half-truth that drives this fix is nearly always the same sentence: “Prometheus doesn’t allow
+dots in label names, so I should just emit the underscore form everywhere.” That’s true as a
+statement about Prometheus’s own label syntax — but it’s not a reason to pre-convert upstream of a
+system whose entire job is to perform that conversion for you. The translation step exists precisely
+so the SDK doesn’t have to guess a per-backend spelling; short-circuiting it doesn’t save the
+translation, it just breaks the lookup that triggers it.</p>
+<p>The second reason this keeps happening: when an engineer notices <code>deployment_environment</code> missing
+from a Mimir label set or a Loki stream selector, the fix they reach for is the layer they control —
+application code — because that’s the layer that’s visible in their own repo, in their own PR
+review, in their own CI pipeline. The Mimir distributor flag and the Loki index-label config live in
+platform-team-owned Terraform or Helm values, one or two repos away, and checking them first
+requires knowing they exist. Ownership boundaries route the fix to the wrong layer even when the
+wrong layer is the one that’s easiest to change.</p>
+<hr>
+<h2 id="anti-pattern-code">Anti-Pattern Code</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="csharp"><code><span class="line"><span style="color:#6A737D">// Context: OpenTelemetry .NET SDK resource configuration — the "consistency fix" attempt</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// [WRONG] pre-converts a semconv-correct dotted key to underscore before it ever</span></span>
+<span class="line"><span style="color:#6A737D">// reaches Mimir or Loki, whose promotion lists match on the dotted form</span></span>
+<span class="line"><span style="color:#F97583">var</span><span style="color:#B392F0"> resourceBuilder</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> ResourceBuilder.</span><span style="color:#B392F0">CreateDefault</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">AddService</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">serviceName</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"checkout-api"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">AddAttributes</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> Dictionary</span><span style="color:#E1E4E8">&#x3C;</span><span style="color:#F97583">string</span><span style="color:#E1E4E8">, </span><span style="color:#F97583">object</span><span style="color:#E1E4E8">></span></span>
+<span class="line"><span style="color:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#6A737D">        // Looks reasonable in isolation: "Prometheus can't have dots in labels,</span></span>
+<span class="line"><span style="color:#6A737D">        // so ship the underscore form and be done with it." This is the line that</span></span>
+<span class="line"><span style="color:#6A737D">        // silently drops the label from both Mimir's and Loki's promotion lists —</span></span>
+<span class="line"><span style="color:#6A737D">        // neither list has an entry spelled "deployment_environment".</span></span>
+<span class="line"><span style="color:#E1E4E8">        [</span><span style="color:#9ECBFF">"deployment_environment"</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "production"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">var</span><span style="color:#B392F0"> tracerProvider</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> Sdk.</span><span style="color:#B392F0">CreateTracerProviderBuilder</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">SetResourceBuilder</span><span style="color:#E1E4E8">(resourceBuilder)</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">AddAspNetCoreInstrumentation</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">AddOtlpExporter</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">    .</span><span style="color:#B392F0">Build</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"></span></code></pre>
+<p>The danger here is specifically that this code compiles, runs, exports spans successfully, and looks
+correct under a debug exporter that prints raw resource attributes verbatim. Nothing about the local
+development loop surfaces the problem — it only appears once the payload reaches Mimir’s distributor
+and Loki’s ingester and fails a list match neither system reports as an error.</p>
+<hr>
+<h2 id="correct-design">Correct Design</h2>
+<p><strong>Principle:</strong> own the OTel semantic-convention-correct dotted attribute name at the SDK boundary.
+Let each backend’s own ingestion-time translator do the job it was built for. Intervene only at the
+one layer that has no translator of its own — Tempo, via the collector.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Option</th><th>SDK attribute form</th><th>Tempo</th><th>Mimir</th><th>Loki</th><th>Verdict</th></tr></thead><tbody><tr><td>A: dotted in SDK, no pipeline change</td><td><code>deployment.environment</code></td><td>Shows the dotted key — no other signal uses this spelling</td><td>Promotes correctly</td><td>Promotes correctly</td><td>Two of three consistent; Tempo is the outlier</td></tr><tr><td>B: dotted in SDK + Alloy transform on traces only (chosen)</td><td><code>deployment.environment</code></td><td>Renamed to <code>deployment_environment</code> by Alloy</td><td>Unaffected, already correct</td><td>Unaffected, already correct</td><td>All three consistent; zero application code changes</td></tr><tr><td>C: dotted in SDK + Alloy transform on all three signal paths</td><td><code>deployment.environment</code></td><td>Renamed</td><td>Redundant — Mimir’s own translator would do this anyway</td><td>Redundant — Loki’s own translator would do this anyway</td><td>Works, but doubles the maintenance surface for no additional consistency</td></tr></tbody></table>
+<p>Option B is the minimum-surface-area fix: it touches exactly the one signal path that has no
+built-in translation, and leaves the two paths that already work untouched.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    OTLP["otelcol.receiver.otlp&#x3C;br/>'default'"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    OTLP -->|metrics| Batch["otelcol.processor.batch&#x3C;br/>'default'"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    OTLP -->|logs| Batch</span></span>
+<span class="line"><span style="color:#E1E4E8">    OTLP -->|traces| Transform["otelcol.processor.transform&#x3C;br/>'rename_resource_attrs'&#x3C;br/>(traces only)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Transform --> Batch</span></span>
+<span class="line"><span style="color:#E1E4E8">    Batch --> Exporter["otelcol.exporter.otlphttp&#x3C;br/>'grafana_cloud'"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Exporter --> Mimir["Mimir&#x3C;br/>own dot-to-underscore translator&#x3C;br/>(deployment.environment untouched, unaffected)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Exporter --> Loki["Loki&#x3C;br/>own dot-to-underscore translator&#x3C;br/>(deployment.environment untouched, unaffected)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Exporter --> Tempo["Tempo&#x3C;br/>no translator&#x3C;br/>(receives deployment_environment,&#x3C;br/>renamed by Alloy)"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    classDef pipeline fill:#FFD6E8,stroke:#C77DA3,stroke-width:1px,color:#3D1A2B</span></span>
+<span class="line"><span style="color:#E1E4E8">    classDef highlight fill:#FFF3B0,stroke:#C9A227,stroke-width:2px,color:#4A3B00</span></span>
+<span class="line"><span style="color:#E1E4E8">    classDef backend fill:#C7F0DB,stroke:#4C9A78,stroke-width:1px,color:#1B3B2C</span></span>
+<span class="line"><span style="color:#E1E4E8">    classDef needsfix fill:#D8CFF7,stroke:#8B72C7,stroke-width:2px,color:#2E2150</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    class OTLP,Batch,Exporter pipeline</span></span>
+<span class="line"><span style="color:#E1E4E8">    class Transform highlight</span></span>
+<span class="line"><span style="color:#E1E4E8">    class Mimir,Loki backend</span></span>
+<span class="line"><span style="color:#E1E4E8">    class Tempo needsfix</span></span>
+<span class="line"></span></code></pre>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="hcl"><code><span class="line"><span style="color:#6A737D"># Context: Grafana Alloy River config — rename applied only on the traces path</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">otelcol</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">receiver</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">otlp </span><span style="color:#9ECBFF">"default"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  http { }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">  output {</span></span>
+<span class="line"><span style="color:#E1E4E8">    metrics </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [otelcol.processor.batch.default.input]</span></span>
+<span class="line"><span style="color:#E1E4E8">    logs    </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [otelcol.processor.batch.default.input]</span></span>
+<span class="line"><span style="color:#6A737D">    // [CORRECT] traces are the only signal routed through the rename —</span></span>
+<span class="line"><span style="color:#6A737D">    // metrics and logs go straight to batch because Mimir and Loki already</span></span>
+<span class="line"><span style="color:#6A737D">    // handle the dotted form correctly on their own ingestion path</span></span>
+<span class="line"><span style="color:#E1E4E8">    traces  </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [otelcol.processor.transform.rename_resource_attrs.input]</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">otelcol</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">processor</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">transform </span><span style="color:#9ECBFF">"rename_resource_attrs"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#6A737D">  // error_mode = "ignore" means a missing or malformed attribute drops through</span></span>
+<span class="line"><span style="color:#6A737D">  // without failing the pipeline — acceptable here because the statements are</span></span>
+<span class="line"><span style="color:#6A737D">  // idempotent no-ops when the dotted key isn't present, not a silent data-loss risk</span></span>
+<span class="line"><span style="color:#E1E4E8">  error_mode </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "ignore"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">  trace_statements {</span></span>
+<span class="line"><span style="color:#E1E4E8">    context    </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "resource"</span></span>
+<span class="line"><span style="color:#E1E4E8">    statements </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [</span></span>
+<span class="line"><span style="color:#E1E4E8">      `</span><span style="color:#F97583">set</span><span style="color:#E1E4E8">(attributes[</span><span style="color:#9ECBFF">"deployment_environment"</span><span style="color:#E1E4E8">], attributes[</span><span style="color:#9ECBFF">"deployment.environment"</span><span style="color:#E1E4E8">])`,</span></span>
+<span class="line"><span style="color:#E1E4E8">      `</span><span style="color:#79B8FF">delete_key</span><span style="color:#E1E4E8">(attributes, </span><span style="color:#9ECBFF">"deployment.environment"</span><span style="color:#E1E4E8">)`,</span></span>
+<span class="line"><span style="color:#E1E4E8">    ]</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">  output {</span></span>
+<span class="line"><span style="color:#E1E4E8">    traces </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [otelcol.processor.batch.default.input]</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">otelcol</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">processor</span><span style="color:#F97583">.</span><span style="color:#E1E4E8">batch </span><span style="color:#9ECBFF">"default"</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  output {</span></span>
+<span class="line"><span style="color:#E1E4E8">    metrics </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [otelcol.exporter.otlphttp.grafana_cloud.input]</span></span>
+<span class="line"><span style="color:#E1E4E8">    logs    </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [otelcol.exporter.otlphttp.grafana_cloud.input]</span></span>
+<span class="line"><span style="color:#E1E4E8">    traces  </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [otelcol.exporter.otlphttp.grafana_cloud.input]</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>The <code>set</code> / <code>delete_key</code> pair matters: <code>set</code> copies the value under the new key without touching the
+original, and <code>delete_key</code> removes the dotted key afterward so Tempo doesn’t end up with both
+spellings sitting side by side as separate resource attributes. Skipping the <code>delete_key</code> step is a
+common half-fix that leaves Tempo technically correct but doubled up.</p>
+<hr>
+<h2 id="validation-test">Validation Test</h2>
+<p>This was confirmed against real ingested data during POC rollout, not just inferred from docs. Five
+checks, run directly against Grafana Cloud — each isolating one stage of the pipeline so a pass on
+one signal can’t hide a failure on another.</p>
+<p>Loki — confirms <code>deployment_environment</code> is present as an index label (a stream selector), not
+merely as unindexed structured metadata. Returns zero results if promotion failed:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>{deployment_environment="production", service_name="checkout-api"}</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Mimir — confirms the label was promoted onto a metric series for this service. An empty result set
+means the attribute never matched Mimir’s promotion list:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>count by (deployment_environment) (up{service_name="checkout-api"})</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Tempo — confirms the Alloy rename applied before export:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>{ resource.deployment_environment = "production" &#x26;&#x26; resource.service.name = "checkout-api" }</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>And confirms the original dotted key was actually removed by <code>delete_key</code>, not left behind alongside
+the renamed one. TraceQL requires quoting an attribute name that contains a literal dot, since an
+unquoted dot is parsed as a path separator — this should return zero traces once the Alloy transform
+is applied:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>{ resource."deployment.environment" = "production" }</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Alloy — an end-to-end bookend confirming the transform stage under <code>error_mode = "ignore"</code> isn’t
+silently dropping spans. The OTel Collector’s documented per-processor accepted/refused span
+counters are specific to the <code>memory_limiter</code> processor, not universal across every processor type —
+so rather than assume an equivalent counter exists for the <code>transform</code> component, compare the
+pipeline’s own receiver and exporter bookends directly. A sustained non-zero gap means spans are
+being lost somewhere between receipt and export, and the transform stage is the first place to
+check:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>sum(rate(otelcol_receiver_accepted_spans{receiver="otlp/default"}[5m]))</span></span>
+<span class="line"><span>  -</span></span>
+<span class="line"><span>sum(rate(otelcol_exporter_sent_spans{exporter="otlphttp/grafana_cloud"}[5m]))</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Run all five together, not just the one that matches the signal you think is broken — the whole
+point of this failure mode is that it looks fine on any single signal checked in isolation.</p>
+<hr>
+<h2 id="key-metrics">Key Metrics</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Signal</th><th>Exact name</th><th>What it tells you</th></tr></thead><tbody><tr><td>Mimir promotion config</td><td><code>-distributor.otel-promote-resource-attributes</code></td><td>Static, distributor-level list of dotted attribute names Mimir matches before invoking <code>mimir-otlptranslator</code>’s dot-to-underscore substitution</td></tr><tr><td>Loki promotion config</td><td><code>default_resource_attributes_as_index_labels</code></td><td>Same two-stage shape — dotted-name list, then underscore conversion — documented per Loki’s OTel ingestion config</td></tr><tr><td>Alloy pipeline health (end-to-end)</td><td><code>otelcol_receiver_accepted_spans</code> vs. <code>otelcol_exporter_sent_spans</code></td><td>A sustained gap between receiver-accepted and exporter-sent trace counts means the transform stage (or something else downstream) is dropping spans under <code>error_mode = "ignore"</code></td></tr><tr><td>Tempo resource attribute presence</td><td>TraceQL <code>resource.deployment_environment</code> vs. <code>resource."deployment.environment"</code></td><td>Confirms which spelling actually reached Tempo — the dotted form present here means the Alloy rename isn’t applying</td></tr></tbody></table>
+<p>If the exact list contents for a given Grafana Cloud stack aren’t visible from the tenant side,
+that’s a real limitation, not an approximation — the promotion list is provisioned at the
+distributor/Loki config layer, which is not always exposed per-tenant in the Grafana Cloud console.</p>
+<hr>
+<h2 id="pattern-generalization">Pattern Generalization</h2>
+<p>The underlying shape: multiple independent consumers each apply their own normalization step, keyed
+on a specific, documented input format. Pre-normalizing upstream of all of them doesn’t buy
+consistency — it produces a shape none of the consumers recognize as the one they know how to
+convert, because their matching logic was written against the original spec form, not against
+whatever normalized form you picked.</p>
+<p>The same failure shape shows up in Kafka topic-naming conventions when producer teams pre-sanitize
+topic names to match what they assume a downstream consumer’s routing rules expect, breaking the
+consumer’s actual pattern-match rules in the process. It shows up in DNS and HTTP header handling,
+where case-folding is supposed to happen at the resolver or server layer — a client that
+pre-lowercases a header name it assumes needs it can break a downstream system that matches on the
+original case for an unrelated reason. And it shows up in Kubernetes label versus annotation key
+rules, where a value normalized to fit label syntax constraints upstream of a controller that
+expects the annotation’s original, unconstrained form will fail that controller’s selector match
+silently.</p>
+<p>The generalizable rule: normalize at the layer that owns the matching logic, not at the layer that
+merely produces the data. If you don’t control every consumer’s matching rules, you can’t safely
+guess a single upstream normalization that satisfies all of them.</p>
+<hr>
+<h2 id="production-incident">Production Incident</h2>
+<p>This surfaced during a Grafana Cloud Application Observability rollout, not as a dashboard outage
+but as a quieter kind of drift: a query that filtered by <code>deployment_environment</code> worked for some
+services and returned nothing for others, with no error anywhere in the pipeline. The debugging path
+went from “is this an instrumentation gap” to “is this a query problem” before landing on the actual
+cause — the promotion-list mechanism in Mimir and Loki, and the fact that both are keyed on the
+dotted attribute form specifically. Reading the actual ingestion-time translation logic (rather than
+assuming “Prometheus doesn’t like dots” was the whole story) is what reframed the fix from
+application code to the collector layer. The fix has since been validated against live Loki and
+Mimir data in a proof-of-concept environment using the exact queries in the Validation Test section
+above. No blast-radius or MTTR figures are cited here deliberately — the mechanism is the
+load-bearing part of this story, not a manufactured timeline.</p>
+<hr>
+<h2 id="maang-scale-considerations">MAANG-Scale Considerations</h2>
+<p>At the scale of a handful of services, this is a one-time fix in one Alloy config. At hyperscale —
+hundreds or thousands of services, heterogeneous OTel SDK versions, multiple teams shipping
+instrumentation independently — two things change.</p>
+<p>First, Mimir’s resource-attribute promotion list is a limit that can be overridden per-tenant via
+runtime configuration — but “tenant” in Grafana Cloud maps to an org/stack, not to an individual
+team or service. A fleet of hundreds of services across dozens of teams sharing one Grafana Cloud
+stack still shares one promotion list. SDKs on different semantic-convention versions — some still
+emitting <code>deployment.environment</code>, others migrated to the newer <code>deployment.environment.name</code> —
+can’t diverge on promotion policy within that shared tenant; the list has to be a superset that
+satisfies every team on the stack, which pushes attribute-naming governance toward a centralized
+schema-registry model rather than ad hoc fixes. This is the same problem Avro and Protobuf schema
+registries solve for Kafka producers and consumers, applied to resource-attribute naming instead of
+message schemas — and OTel already has the primitive for it in <code>schema_url</code>, which most collector
+pipelines at this scale under-use.</p>
+<p>Second, every attribute added to a promotion list is a new label — and a new label on a
+high-cardinality resource attribute is a cardinality budget decision, not a free consistency win. At
+MAANG scale, promoting an attribute without first estimating its cardinality contribution across
+every service and environment combination is how a well-intentioned naming fix turns into an
+ingest-cost regression that isn’t attributed back to this change until someone audits the next
+billing cycle.</p>
+<hr>
+<h2 id="summary-table">Summary Table</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>Anti-pattern (SDK rename)</th><th>Correct design (Alloy rename, traces only)</th></tr></thead><tbody><tr><td>Approach</td><td>Rename attribute to underscore form in application code</td><td>Keep dotted form in SDK; rename only on the traces path in Alloy</td></tr><tr><td>Failure mode</td><td>Silently fails Mimir’s and Loki’s promotion-list match</td><td>None — Mimir/Loki untouched, Tempo receives the renamed key</td></tr><tr><td>Detection signal</td><td>Missing label in PromQL/LogQL queries, no error logged anywhere</td><td>Confirmed present via LogQL/PromQL/TraceQL checks in Validation Test</td></tr><tr><td>Operational cost</td><td>Requires an application redeploy per service to fix or revert</td><td>Single Alloy config change, applies fleet-wide with no app changes</td></tr><tr><td>Fix complexity</td><td>Low effort, high blast radius (touches every service’s code)</td><td>Low effort, zero blast radius on application code</td></tr><tr><td>Stack-specific note</td><td>Breaks two working ingestion paths to “fix” a third</td><td>Touches exactly the one signal (Tempo) with no built-in translator</td></tr></tbody></table>
+<hr>
+<h2 id="conclusion">Conclusion</h2>
+<p>Audit any OTel resource-attribute renames currently living in application code today. If any exist
+purely to “match what Prometheus expects,” revert them to the OTel semantic-convention dotted form
+and push the translation into the collector layer — scoped only to the signal path that actually
+lacks a built-in translator. Don’t guess a single upstream spelling to satisfy multiple
+independently-normalizing downstream consumers; check what each one actually matches on first.</p>  </div> <!-- Related posts --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200"><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-6">Related posts</p><div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><a href="/blog/2026-q2/20260610-grafana-azure-monitor-plugin-limitations-push-exporter" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">Observability</span></div><h3 class="text-sm font-semibold text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug mb-2">Unbounded Cardinality, Zero Alerts, and 14-Second Dashboard Loads: The Structural Limits of the Grafana Azure Monitor Plugin</h3><p class="text-xs font-mono text-slate-600 light:text-slate-400">Jun 10, 2026</p></a><a href="/blog/2026-q2/20260526-alloy-max-shards-monitoring-blackout" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">SRE</span><span class="tag text-xs">Observability</span></div><h3 class="text-sm font-semibold text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug mb-2">How Alloy&#39;s Default max_shards Turned a Mimir Blip Into a Production Monitoring Blackout</h3><p class="text-xs font-mono text-slate-600 light:text-slate-400">May 26, 2026</p></a><a href="/blog/2026-q2/20260415-why-cardinality-kills-observability-platforms" class="card group block hover:-translate-y-0.5 no-underline"><div class="flex flex-wrap gap-1.5 mb-2"><span class="tag text-xs">Observability</span><span class="tag text-xs">Prometheus</span></div><h3 class="text-sm font-semibold text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug mb-2">Why Cardinality Kills Observability Platforms (and How to Stop It)</h3><p class="text-xs font-mono text-slate-600 light:text-slate-400">Apr 15, 2026</p></a></div></div> <!-- Prev / Next navigation --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200 grid grid-cols-2 gap-4" data-astro-cid-bvzihdzo> <a href="/blog/2026-q3/20260706-productivity-trap" class="card group block hover:-translate-y-0.5 no-underline" data-astro-cid-bvzihdzo> <p class="text-xs font-mono text-slate-600 light:text-slate-400 mb-1.5 flex items-center gap-1" data-astro-cid-bvzihdzo> <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-bvzihdzo> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" data-astro-cid-bvzihdzo></path> </svg>
+Older
+</p> <p class="text-sm text-slate-300 light:text-slate-700 group-hover:text-accent transition-colors leading-snug" data-astro-cid-bvzihdzo> The Productivity Trap Nobody Talks About: When &quot;Productive&quot; Work Becomes Procrastination </p> </a> <div data-astro-cid-bvzihdzo></div> </div> <!-- Back / Home links --> <div class="mt-8 flex items-center justify-between" data-astro-cid-bvzihdzo> <a href="/blog" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-bvzihdzo>
+← All posts
+</a> <a href="/" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-bvzihdzo>Home</a> </div> <!-- Comments --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200"> <p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-6">Discussion</p> <script src="https://giscus.app/client.js" data-repo="shipsolid/shipsolid.github.io" data-repo-id="R_kgDOOr14lw" data-category="General" data-category-id="DIC_kwDOOr14l84C9sb9" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="bottom" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async></script> </div> <script>
+  (function () {
+    // The giscus iframe is injected asynchronously by client.js above and
+    // reads data-theme only at mount time — the page is statically generated
+    // so it can't know the visitor's theme up front. Correct it client-side
+    // once the iframe exists, and again on every toggle, via giscus's
+    // documented postMessage config API rather than re-mounting the widget.
+    function giscusTheme() {
+      return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark_dimmed';
+    }
+    function sendGiscusTheme() {
+      const iframe = document.querySelector('iframe.giscus-frame');
+      if (!iframe) return;
+      iframe.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, 'https://giscus.app');
+    }
+    const observer = new MutationObserver(() => {
+      const iframe = document.querySelector('iframe.giscus-frame');
+      if (iframe) {
+        iframe.addEventListener('load', sendGiscusTheme, { once: true });
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('themechange', sendGiscusTheme);
+  })();
+</script> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-bvzihdzo> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-bvzihdzo> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#tldr" data-slug="tldr" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>TL;DR</a></li><li data-astro-cid-xvrfupwn><a href="#the-problem" data-slug="the-problem" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>The Problem</a></li><li data-astro-cid-xvrfupwn><a href="#failure-chain" data-slug="failure-chain" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Failure Chain</a></li><li data-astro-cid-xvrfupwn><a href="#why-it-persists" data-slug="why-it-persists" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Why It Persists</a></li><li data-astro-cid-xvrfupwn><a href="#anti-pattern-code" data-slug="anti-pattern-code" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Anti-Pattern Code</a></li><li data-astro-cid-xvrfupwn><a href="#correct-design" data-slug="correct-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Correct Design</a></li><li data-astro-cid-xvrfupwn><a href="#validation-test" data-slug="validation-test" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Validation Test</a></li><li data-astro-cid-xvrfupwn><a href="#key-metrics" data-slug="key-metrics" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Key Metrics</a></li><li data-astro-cid-xvrfupwn><a href="#pattern-generalization" data-slug="pattern-generalization" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Pattern Generalization</a></li><li data-astro-cid-xvrfupwn><a href="#production-incident" data-slug="production-incident" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Production Incident</a></li><li data-astro-cid-xvrfupwn><a href="#maang-scale-considerations" data-slug="maang-scale-considerations" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>MAANG-Scale Considerations</a></li><li data-astro-cid-xvrfupwn><a href="#summary-table" data-slug="summary-table" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Summary Table</a></li><li data-astro-cid-xvrfupwn><a href="#conclusion" data-slug="conclusion" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Conclusion</a></li></ul></nav> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  // Mermaid bakes its theme into the rendered SVG at run() time, so a theme
+  // toggle needs a full re-render, not just a CSS flip. Two full palettes,
+  // not "dark + light overrides," since mermaid's dark theme already covers
+  // every variable used below and a partial override would leave stray
+  // dark-preset defaults showing through on light backgrounds.
+  const THEME_VARS = {
+    dark: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#cbd5e1',
+      primaryBorderColor: '#334155',
+      lineColor: '#00d9a6',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#1e293b',
+      background: '#0f172a',
+      mainBkg: '#1e293b',
+      nodeBorder: '#334155',
+      clusterBkg: '#0f172a',
+      titleColor: '#f1f5f9',
+      edgeLabelBackground: '#1e293b',
+      // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+      // via hue rotation, which can land on light/saturated fills that wash out
+      // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+      cScale0: '#1e3a5f',
+      cScale1: '#14532d',
+      cScale2: '#581c87',
+      cScale3: '#7c2d12',
+      cScale4: '#831843',
+      cScale5: '#713f12',
+      cScale6: '#164e63',
+      cScale7: '#3730a3',
+      cScaleLabel0: '#e2e8f0',
+      cScaleLabel1: '#e2e8f0',
+      cScaleLabel2: '#e2e8f0',
+      cScaleLabel3: '#e2e8f0',
+      cScaleLabel4: '#e2e8f0',
+      cScaleLabel5: '#e2e8f0',
+      cScaleLabel6: '#e2e8f0',
+      cScaleLabel7: '#e2e8f0',
+    },
+    light: {
+      primaryColor: '#f1f5f9',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#cbd5e1',
+      lineColor: '#0f766e',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#e2e8f0',
+      background: '#ffffff',
+      mainBkg: '#f1f5f9',
+      nodeBorder: '#cbd5e1',
+      clusterBkg: '#f8fafc',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#f1f5f9',
+      // Light-pastel fills (inverse of the dark palette's dark fills), one
+      // consistent dark label color across sections — same structure as dark.
+      cScale0: '#dbeafe',
+      cScale1: '#dcfce7',
+      cScale2: '#f3e8ff',
+      cScale3: '#ffedd5',
+      cScale4: '#fce7f3',
+      cScale5: '#fef3c7',
+      cScale6: '#cffafe',
+      cScale7: '#e0e7ff',
+      cScaleLabel0: '#1e293b',
+      cScaleLabel1: '#1e293b',
+      cScaleLabel2: '#1e293b',
+      cScaleLabel3: '#1e293b',
+      cScaleLabel4: '#1e293b',
+      cScaleLabel5: '#1e293b',
+      cScaleLabel6: '#1e293b',
+      cScaleLabel7: '#1e293b',
+    },
+  };
+
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        const theme = currentTheme();
+        mermaid.initialize({
+          startOnLoad: false,
+          // 'base' for light: an unstyled canvas driven entirely by
+          // themeVariables, so no dark-preset default shows through anywhere
+          // not explicitly covered above. 'dark' stays as-is for dark mode —
+          // it's the existing, already-tested path.
+          theme: theme === 'light' ? 'base' : 'dark',
+          themeVariables: THEME_VARS[theme],
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      const source = pre.querySelector('code')?.textContent ?? '';
+      // Preserved so a theme toggle can re-render from source — mermaid.run()
+      // replaces this div's content with rendered SVG, destroying the original.
+      div.dataset.mermaidSource = source;
+      div.textContent = source;
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  async function rerenderAllMermaid() {
+    const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+    if (!rendered.length) return;
+    mermaidPromise = null; // force re-init with the new theme's themeVariables
+    const mermaid = await getMermaid();
+    const nodes = [...rendered];
+    nodes.forEach((div) => {
+      div.removeAttribute('data-processed');
+      div.textContent = div.dataset.mermaidSource;
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  window.addEventListener('themechange', rerenderAllMermaid);
+  renderMermaid(document);
+</script>  </body></html>  

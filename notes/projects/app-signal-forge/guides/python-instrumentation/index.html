@@ -1,0 +1,825 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>Guide: Python Instrumentation — Notes — Amit Singh</title><meta name="description" content="Step-by-step: instrument a Python FastAPI service with OpenTelemetry — SDK wiring, custom metrics, and RabbitMQ consumer-side async trace propagation via manual context extraction and SpanLink."><link rel="canonical" href="https://shipsolid.github.io/notes/projects/app-signal-forge/guides/python-instrumentation/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="Guide: Python Instrumentation — Notes — Amit Singh"><meta property="og:description" content="Step-by-step: instrument a Python FastAPI service with OpenTelemetry — SDK wiring, custom metrics, and RabbitMQ consumer-side async trace propagation via manual context extraction and SpanLink."><meta property="og:url" content="https://shipsolid.github.io/notes/projects/app-signal-forge/guides/python-instrumentation/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Guide: Python Instrumentation — Notes — Amit Singh"><meta name="twitter:description" content="Step-by-step: instrument a Python FastAPI service with OpenTelemetry — SDK wiring, custom metrics, and RabbitMQ consumer-side async trace propagation via manual context extraction and SpanLink."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><link rel="stylesheet" href="/_astro/_slug_.B_XCLsxQ.css">
+<link rel="stylesheet" href="/_astro/_slug_.BlocQIcp.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb))}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:.5rem;font-size:.75rem;color:var(--color-text);box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:var(--color-text-faint);background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb) / .3);background:rgb(var(--color-accent-rgb) / .05)}
+</style><script type="module" src="/_astro/hoisted.C2xl0kde.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a> <a href="/search" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Search" title="Search" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" data-astro-cid-3ef6ksr2></path> </svg> </a> <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div> <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a> <a href="/search" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+Search
+</a> <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 light:text-slate-400 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Projects</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-app-signal-forge" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>App Signal Forge</a>  <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/projects#subtopic-app-signal-forge-guides" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Guides</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> Guide: Python Instrumentation  </h1> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-v5yihett>Step-by-step: instrument a Python FastAPI service with OpenTelemetry — SDK wiring, custom metrics, and RabbitMQ consumer-side async trace propagation via manual context extraction and SpanLink.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated July 30, 2026</span>  <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <span class="text-slate-600 light:text-slate-400" title="Permanent note identifier" data-astro-cid-v5yihett>§202607301400-04</span>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/shipsolid" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ShipSolid</a><a href="/notes/tag/signal-forge" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Signal Forge</a><a href="/notes/tag/observability" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Observability</a><a href="/notes/tag/guides" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Guides</a><a href="/notes/tag/python" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>Python</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[260px_1fr_260px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Projects</p> <div id="chapter-nav-source" data-astro-cid-v5yihett> <div class="space-y-1">  <div><a href="/notes/topic/projects#subtopic-app-signal-forge" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">App Signal Forge</span><span class="text-xs font-mono text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors">47</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-api" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Api</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Architecture</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">11</span></a><div><a href="/notes/topic/projects#subtopic-app-signal-forge-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">10</span></a></div></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-deployment" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Deployment</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">3</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-guides" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Guides</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Infrastructure</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Observability</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Operations</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-app-signal-forge-services" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Services</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">4</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all group no-underline"><span class="group-hover:text-accent transition-colors">Platform Shipsolid</span><span class="text-xs font-mono text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors">139</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-00-start-here" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>00 Start Here</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>01 Platform Architecture</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">24</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-adrs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Adrs</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">6</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-designs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Designs</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">7</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-01-platform-architecture-rfcs" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Rfcs</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-02-service-onboarding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>02 Service Onboarding</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">14</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>03 Reliability Engineering</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-03-reliability-engineering-reliability-review-archive" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Reliability Review Archive</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>04 Operations Incident Response</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">16</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-alert-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Alert Runbooks</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">2</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-04-operations-incident-response-post-mortems" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Post Mortems</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">2</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>05 Platform Configuration</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">21</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-collector-config-templates" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Collector Config Templates</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-05-platform-configuration-grafana-tf" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Grafana Tf</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">7</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>06 Build Release</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">14</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-deployment-runbooks" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Deployment Runbooks</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">1</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-06-build-release-release-notes" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Release Notes</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>07 Cost Governance</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">9</span></a><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-07-cost-governance-monthly-cost-reports" style="padding-left: 2.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>Monthly Cost Reports</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">1</span></a></div></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-08-strategy-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>08 Strategy Planning</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">11</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-09-archive" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>09 Archive</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">5</span></a></div><div><a href="/notes/topic/projects#subtopic-platform-shipsolid-10-templates" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub"><span class="flex items-center gap-1.5"><span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500">└</span>10 Templates</span><span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600">8</span></a></div></div> <div> <a href="/notes/topic/projects#subtopic-other" class="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all group no-underline"> <span class="group-hover:text-accent transition-colors">Other</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors">1</span> </a> </div> </div> </div> </div> </aside> <!-- Mobile/tablet nav: same content as the two xl:+ asides, collapsed
+             by default so a reader lands on the article first, not a wall of
+             chapter links. The chapter tree itself isn't re-rendered here —
+             it's cloned client-side from #chapter-nav-source (below), which
+             stays in the DOM on mobile too (`hidden xl:block` only affects
+             what's *shown*, not what's downloaded) — a topic's full nav tree
+             would otherwise ship twice on every note page. --> <div class="xl:hidden space-y-3" data-astro-cid-v5yihett> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+Chapter Navigation
+</summary> <div id="chapter-nav-mobile" class="mt-4" data-astro-cid-v5yihett></div> </details> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+On This Page
+</summary> <div class="mt-4" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#guide-python-instrumentation" data-slug="guide-python-instrumentation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Guide: Python Instrumentation</a></li><li data-astro-cid-xvrfupwn><a href="#step-1--pin-compatible-package-versions" data-slug="step-1--pin-compatible-package-versions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 1 — Pin compatible package versions</a></li><li data-astro-cid-xvrfupwn><a href="#step-2--one-telemetrypy-module-one-entrypoint-called-first" data-slug="step-2--one-telemetrypy-module-one-entrypoint-called-first" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 2 — One telemetry.py module, one entrypoint, called first</a></li><li data-astro-cid-xvrfupwn><a href="#step-3--the-gotcha-to-get-right-the-first-time-resource-attributes" data-slug="step-3--the-gotcha-to-get-right-the-first-time-resource-attributes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 3 — The gotcha to get right the first time: resource attributes</a></li><li data-astro-cid-xvrfupwn><a href="#step-4--environment-variables" data-slug="step-4--environment-variables" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 4 — Environment variables</a></li><li data-astro-cid-xvrfupwn><a href="#step-5--fastapi-auto-instrumentation-applied-after-the-provider-is-live" data-slug="step-5--fastapi-auto-instrumentation-applied-after-the-provider-is-live" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 5 — FastAPI auto-instrumentation, applied after the provider is live</a></li><li data-astro-cid-xvrfupwn><a href="#step-6--custom-metric-instruments-created-lazily" data-slug="step-6--custom-metric-instruments-created-lazily" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 6 — Custom metric instruments, created lazily</a></li><li data-astro-cid-xvrfupwn><a href="#step-7--custom-spans" data-slug="step-7--custom-spans" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 7 — Custom spans</a></li><li data-astro-cid-xvrfupwn><a href="#step-8--rabbitmq-consumer-manual-propagation" data-slug="step-8--rabbitmq-consumer-manual-propagation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 8 — RabbitMQ consumer: manual propagation</a></li><li data-astro-cid-xvrfupwn><a href="#step-9--test-span-content-assertions-without-a-real-collector" data-slug="step-9--test-span-content-assertions-without-a-real-collector" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 9 — Test span-content assertions without a real collector</a></li><li data-astro-cid-xvrfupwn><a href="#step-10--verify" data-slug="step-10--verify" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 10 — Verify</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: Collector &amp; Pipeline Setup</span></a><a href="/notes/projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Signal Forge ADR-002: SpanLink for async RabbitMQ propagation (not parent-child)</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Related</p><a href="/notes/projects/app-signal-forge/guides/dotnet-instrumentation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: .NET Instrumentation</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/projects/app-signal-forge/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">SignalForge Documentation</span></a><a href="/notes/projects/app-signal-forge/guides/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Replication Guides: Instrumenting Your Own Project</span></a><a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: Collector &amp; Pipeline Setup</span></a><a href="/notes/projects/app-signal-forge/guides/dotnet-instrumentation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: .NET Instrumentation</span></a></div></div></nav> </div> </div> </details> </div>  <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:Guide: Python Instrumentation" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:projects/app-signal-forge/guides/python-instrumentation" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-07-30T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Projects" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ShipSolid" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Signal Forge" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Observability" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Guides" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:Python" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+
+            prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+            prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 light:prose-blockquote:text-slate-600 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 light:prose-blockquote:bg-slate-100/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+            prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+
+            prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="guide-python-instrumentation">Guide: Python Instrumentation</h2>
+<p>Prerequisite: <a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup/">Collector &#x26; Pipeline Setup</a> — you need a live OTLP
+endpoint before any of this produces visible output.</p>
+<p>This guide covers the pattern used for this project’s Python service: a FastAPI HTTP server plus a
+background RabbitMQ consumer thread. The RabbitMQ consumer side is the most involved part — it’s the
+receiving end of the
+<a href="/notes/projects/app-signal-forge/guides/dotnet-instrumentation/#step-8--async-propagation-across-rabbitmq-producer-side-outbox-pattern">.NET producer pattern</a>
+covered in the .NET guide. For exact signal names, see <a href="/notes/projects/app-signal-forge/observability/otel-contracts/">OTel Signal Contracts</a>.</p>
+<h3 id="step-1--pin-compatible-package-versions">Step 1 — Pin compatible package versions</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>opentelemetry-api==1.25.0</span></span>
+<span class="line"><span>opentelemetry-sdk==1.25.0</span></span>
+<span class="line"><span>opentelemetry-exporter-otlp-proto-grpc==1.25.0</span></span>
+<span class="line"><span>opentelemetry-instrumentation-fastapi==0.46b0</span></span>
+<span class="line"><span>opentelemetry-instrumentation-redis==0.46b0</span></span>
+<span class="line"><span>opentelemetry-instrumentation-logging==0.46b0</span></span>
+<span class="line"><span>python-json-logger==2.0.7</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Pin <code>opentelemetry-api</code>/<code>opentelemetry-sdk</code> together first, then pin every
+<code>opentelemetry-instrumentation-*</code> contrib package to the matching <code>0.4Xb0</code> release train — contrib
+instrumentation packages are versioned on their own schedule and must track whatever release train
+lines up with your pinned API/SDK version, not just “latest.”</p>
+<p><code>opentelemetry-exporter-otlp-proto-grpc</code> is a single package providing <strong>both</strong> the trace and metric
+OTLP exporters over gRPC — use it if your collector’s receiver speaks gRPC (this project’s does; see
+<a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup/#step-3--configure-the-otlp-receiver">Collector Setup Step 3</a>). Swap in
+<code>opentelemetry-exporter-otlp-proto-http</code> only if your collector is HTTP-only.</p>
+<p>Swap <code>opentelemetry-instrumentation-redis</code>/<code>-fastapi</code> for whatever your service’s actual
+framework/client libraries are — the
+<a href="https://opentelemetry.io/ecosystem/registry/?component=instrumentation&#x26;language=python">OpenTelemetry registry</a>
+lists the available auto-instrumentation packages per library.</p>
+<p>Deliberately <strong>not</strong> included: <code>opentelemetry-instrumentation-pika</code> for the RabbitMQ consumer — see
+Step 8 for why.</p>
+<h3 id="step-2--one-telemetrypy-module-one-entrypoint-called-first">Step 2 — One <code>telemetry.py</code> module, one entrypoint, called first</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># app/telemetry.py</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> os</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> trace, metrics</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.resources </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Resource, </span><span style="color:#79B8FF">SERVICE_NAME</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.trace </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> TracerProvider</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.trace.export </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> BatchSpanProcessor</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.metrics </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> MeterProvider</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.metrics.export </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> PeriodicExportingMetricReader</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.exporter.otlp.proto.grpc.trace_exporter </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> OTLPSpanExporter</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.exporter.otlp.proto.grpc.metric_exporter </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> OTLPMetricExporter</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.instrumentation.logging </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> LoggingInstrumentor</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.instrumentation.redis </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> RedisInstrumentor</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF">SERVICE</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "notification-svc"</span></span>
+<span class="line"><span style="color:#79B8FF">OTLP_ENDPOINT</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> os.getenv(</span><span style="color:#9ECBFF">"OTEL_EXPORTER_OTLP_ENDPOINT"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"http://localhost:4317"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> setup_telemetry</span><span style="color:#E1E4E8">() -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    resource </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> Resource.create({</span><span style="color:#79B8FF">SERVICE_NAME</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">SERVICE</span><span style="color:#E1E4E8">})   </span><span style="color:#6A737D"># only service.name here — see Step 3</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    tracer_provider </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> TracerProvider(</span><span style="color:#FFAB70">resource</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">resource)</span></span>
+<span class="line"><span style="color:#E1E4E8">    tracer_provider.add_span_processor(</span></span>
+<span class="line"><span style="color:#E1E4E8">        BatchSpanProcessor(OTLPSpanExporter(</span><span style="color:#FFAB70">endpoint</span><span style="color:#F97583">=</span><span style="color:#79B8FF">OTLP_ENDPOINT</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">insecure</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">))</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"><span style="color:#E1E4E8">    trace.set_tracer_provider(tracer_provider)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    reader </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> PeriodicExportingMetricReader(</span></span>
+<span class="line"><span style="color:#E1E4E8">        OTLPMetricExporter(</span><span style="color:#FFAB70">endpoint</span><span style="color:#F97583">=</span><span style="color:#79B8FF">OTLP_ENDPOINT</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">insecure</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#FFAB70">        export_interval_millis</span><span style="color:#F97583">=</span><span style="color:#79B8FF">15_000</span><span style="color:#E1E4E8">,   </span><span style="color:#6A737D"># match your Prometheus scrape interval</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"><span style="color:#E1E4E8">    metrics.set_meter_provider(MeterProvider(</span><span style="color:#FFAB70">resource</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">resource, </span><span style="color:#FFAB70">metric_readers</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[reader]))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    LoggingInstrumentor().instrument()</span></span>
+<span class="line"><span style="color:#E1E4E8">    RedisInstrumentor().instrument()</span></span>
+<span class="line"></span></code></pre>
+<p>Call <code>setup_telemetry()</code> as the <strong>very first thing</strong> in your application’s main module — before
+<code>FastAPI()</code> is constructed, before any client (Redis, a DB driver) is instantiated:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># main.py</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> logging</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> pythonjsonlogger </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> jsonlogger</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> app.telemetry </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> setup_telemetry</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">handler </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> logging.StreamHandler()</span></span>
+<span class="line"><span style="color:#E1E4E8">handler.setFormatter(jsonlogger.JsonFormatter(</span></span>
+<span class="line"><span style="color:#9ECBFF">    "</span><span style="color:#79B8FF">%(asctime)s</span><span style="color:#79B8FF"> %(name)s</span><span style="color:#79B8FF"> %(levelname)s</span><span style="color:#79B8FF"> %(message)s</span><span style="color:#79B8FF"> %(otelTraceID)s</span><span style="color:#79B8FF"> %(otelSpanID)s</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">))</span></span>
+<span class="line"><span style="color:#E1E4E8">logging.basicConfig(</span><span style="color:#FFAB70">level</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">logging.</span><span style="color:#79B8FF">INFO</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">handlers</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[handler])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">setup_telemetry()   </span><span style="color:#6A737D"># must run before FastAPI() app is created, and before any instrumented client</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> fastapi </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> FastAPI</span></span>
+<span class="line"><span style="color:#E1E4E8">app </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> FastAPI()</span></span>
+<span class="line"></span></code></pre>
+<p>The ordering is load-bearing, in this exact sequence: (1) configure your log handler/formatter so
+<code>LoggingInstrumentor</code> has something to patch, (2) call <code>setup_telemetry()</code>, which sets the global
+providers and instruments logging + any auto-instrumented client, (3) <em>then</em> construct your app
+object and any instrumented clients.</p>
+<h3 id="step-3--the-gotcha-to-get-right-the-first-time-resource-attributes">Step 3 — The gotcha to get right the first time: resource attributes</h3>
+<p><strong>Hardcode only <code>service.name</code> in <code>Resource.create()</code>.</strong> Do not put
+<code>service.namespace</code>/<code>service.version</code>/<code>deployment.environment</code> there, even though it’s tempting to
+set them all in one place. This project’s own code hit this bug: an earlier version hardcoded all
+four in <code>Resource.create()</code>’s dict, and because <strong>explicit values passed to <code>Resource.create()</code> take
+precedence over the SDK’s environment-variable resource detector</strong>, it silently shadowed whatever
+<code>OTEL_RESOURCE_ATTRIBUTES</code> said at deploy time — <code>deployment.environment</code> always read the function’s
+own hardcoded default, regardless of which real environment the pod was actually running in, with no
+error or warning anywhere.</p>
+<p>The fix, shown in Step 2: <code>Resource.create({SERVICE_NAME: SERVICE})</code> — name only. Let
+<code>OTEL_RESOURCE_ATTRIBUTES</code> (read automatically by the SDK’s env-var resource detector, no code
+required) supply everything else:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>OTEL_RESOURCE_ATTRIBUTES=service.namespace=my-app,service.version=1.0.0,deployment.environment=production</span></span>
+<span class="line"><span></span></span></code></pre>
+<h3 id="step-4--environment-variables">Step 4 — Environment variables</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>OTEL_SERVICE_NAME=notification-svc</span></span>
+<span class="line"><span>OTEL_EXPORTER_OTLP_ENDPOINT=http://grafana-k8s-alloy-receiver.monitoring.svc.cluster.local:4317</span></span>
+<span class="line"><span>OTEL_EXPORTER_OTLP_PROTOCOL=grpc</span></span>
+<span class="line"><span>OTEL_LOGS_EXPORTER=none</span></span>
+<span class="line"><span>OTEL_METRICS_EXEMPLAR_FILTER=trace_based</span></span>
+<span class="line"><span>OTEL_RESOURCE_ATTRIBUTES=service.namespace=my-app,service.version=1.0.0,deployment.environment=production</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Source <code>deployment.environment</code> from the same single value you use for every other service. See
+<a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup/#step-7--keep-deployment_environment-consistent-across-signals">Collector Setup Step 7</a>
+— the collector re-derives this independently per signal type (traces, metrics, and logs each go
+through a different mechanism), and on Grafana Cloud destinations that mechanism overrides whatever
+this service sets, so drift between this env var and the collector’s config surfaces as a service
+that Application Observability files under the wrong environment, not as an error here.</p>
+<p>Note the code in Step 2 hardcodes the gRPC OTLP exporter classes directly (<code>OTLPSpanExporter</code>,
+<code>OTLPMetricExporter</code> from the <code>proto.grpc</code> package) rather than branching on
+<code>OTEL_EXPORTER_OTLP_PROTOCOL</code> at runtime — so that env var is really documentation/consistency with
+your other services rather than something this code reads and acts on. If you need to support both
+gRPC and HTTP collectors from the same codebase, you’d need to select the exporter class based on
+that env var yourself; this project’s Python service doesn’t need to, since it only ever talks to a
+gRPC-speaking collector.</p>
+<h3 id="step-5--fastapi-auto-instrumentation-applied-after-the-provider-is-live">Step 5 — FastAPI auto-instrumentation, applied after the provider is live</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.instrumentation.fastapi </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> FastAPIInstrumentor</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># after setup_telemetry() has already run</span></span>
+<span class="line"><span style="color:#E1E4E8">FastAPIInstrumentor().instrument_app(app, </span><span style="color:#FFAB70">excluded_urls</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"/healthz"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<p><code>excluded_urls</code> prevents a span from being created at all for health-check traffic — zero overhead,
+not just a filtered-out span. Apply the same instrument-after-provider-is-set rule to every
+<code>*Instrumentor().instrument()</code> call in your service, not just this one.</p>
+<h3 id="step-6--custom-metric-instruments-created-lazily">Step 6 — Custom metric instruments, created lazily</h3>
+<p>Don’t create metric instruments at module import time — the global <code>MeterProvider</code> may not be set
+yet, and importing this module before <code>setup_telemetry()</code> runs elsewhere in your app would silently
+produce a no-op meter. Create them lazily on first use instead:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> threading</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">_meter </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#E1E4E8">_meter_lock </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> threading.Lock()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> _lazy_meter</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#F97583">    global</span><span style="color:#E1E4E8"> _meter</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> _meter </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        with</span><span style="color:#E1E4E8"> _meter_lock:</span></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> _meter </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">                _meter </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> metrics.get_meter(</span><span style="color:#79B8FF">SERVICE</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> _meter</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> notifications_processed_counter</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> _lazy_meter().create_counter(</span></span>
+<span class="line"><span style="color:#9ECBFF">        "notifications.processed.total"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">unit</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">{notification}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        description</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"Total notifications processed, labeled by processing status"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> processing_duration_histogram</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> _lazy_meter().create_histogram(</span></span>
+<span class="line"><span style="color:#9ECBFF">        "notifications.processing.duration"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">unit</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"ms"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        description</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"End-to-end consumer processing latency"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<p>Guard the lazy-init with a lock if more than one thread might race to create the meter first (a
+FastAPI request thread and a background consumer thread, for instance).</p>
+<h3 id="step-7--custom-spans">Step 7 — Custom spans</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">with</span><span style="color:#E1E4E8"> tracer.start_as_current_span(</span><span style="color:#9ECBFF">"notification.send_email"</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">as</span><span style="color:#E1E4E8"> span:</span></span>
+<span class="line"><span style="color:#E1E4E8">    span.set_attribute(</span><span style="color:#9ECBFF">"email.order_id"</span><span style="color:#E1E4E8">, event.order_id)</span></span>
+<span class="line"><span style="color:#E1E4E8">    span.set_attribute(</span><span style="color:#9ECBFF">"email.delay_ms"</span><span style="color:#E1E4E8">, delay_ms)</span></span>
+<span class="line"><span style="color:#E1E4E8">    send_mock_email()</span></span>
+<span class="line"></span></code></pre>
+<p>Same rule as the .NET guide: avoid unbounded values as <strong>metric</strong> labels; put per-entity IDs on
+<strong>span attributes</strong> instead, and use the counter’s <code>status</code> dimension (bounded: <code>success</code> /
+<code>duplicate</code> / <code>failed</code>) rather than the entity ID itself.</p>
+<h3 id="step-8--rabbitmq-consumer-manual-propagation">Step 8 — RabbitMQ consumer: manual propagation</h3>
+<p><strong>Don’t use <code>opentelemetry-instrumentation-pika</code>.</strong> As of the versions pinned in Step 1, this
+project found it does not reliably extract incoming trace context from message headers across pika
+versions — it creates its own span but doesn’t correctly link back to the producer’s context in
+every case. Manual extraction is more code but is explicit, version-independent, and gives you full
+control over the span kind and relationship (which matters a lot here — see below).</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> trace</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.propagate </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> extract</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.trace </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Link, SpanKind</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.context </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> attach, detach</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> HeadersGetter</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """pika delivers header values as bytes — decode before extraction."""</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get</span><span style="color:#E1E4E8">(self, carrier: </span><span style="color:#79B8FF">dict</span><span style="color:#E1E4E8">, key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> list[</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">]:</span></span>
+<span class="line"><span style="color:#E1E4E8">        val </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> carrier.get(key)</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> val </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> [val.decode(</span><span style="color:#9ECBFF">"utf-8"</span><span style="color:#E1E4E8">)] </span><span style="color:#F97583">if</span><span style="color:#79B8FF"> isinstance</span><span style="color:#E1E4E8">(val, </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">else</span><span style="color:#E1E4E8"> [</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">(val)]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> keys</span><span style="color:#E1E4E8">(self, carrier: </span><span style="color:#79B8FF">dict</span><span style="color:#E1E4E8">) -> list[</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> list</span><span style="color:#E1E4E8">(carrier.keys()) </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> carrier </span><span style="color:#F97583">else</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">_getter </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> HeadersGetter()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> handle_order_created</span><span style="color:#E1E4E8">(ch, method, properties, body: </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#E1E4E8">    headers </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> properties.headers </span><span style="color:#F97583">or</span><span style="color:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#E1E4E8">    ctx </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> extract(headers, </span><span style="color:#FFAB70">getter</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">_getter)</span></span>
+<span class="line"><span style="color:#E1E4E8">    token </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> attach(ctx)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        parent_span_ctx </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> trace.get_current_span(ctx).get_span_context()</span></span>
+<span class="line"><span style="color:#E1E4E8">        links </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [Link(parent_span_ctx)] </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> parent_span_ctx.is_valid </span><span style="color:#F97583">else</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        with</span><span style="color:#E1E4E8"> tracer.start_as_current_span(</span></span>
+<span class="line"><span style="color:#9ECBFF">            "notification.process"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">            kind</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">SpanKind.</span><span style="color:#79B8FF">CONSUMER</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">            links</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">links,   </span><span style="color:#6A737D"># Link, not parent — see below</span></span>
+<span class="line"><span style="color:#E1E4E8">        ) </span><span style="color:#F97583">as</span><span style="color:#E1E4E8"> span:</span></span>
+<span class="line"><span style="color:#E1E4E8">            span.set_attribute(</span><span style="color:#9ECBFF">"messaging.system"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"rabbitmq"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">            span.set_attribute(</span><span style="color:#9ECBFF">"messaging.operation"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"receive"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">            span.set_attribute(</span><span style="color:#9ECBFF">"messaging.rabbitmq.routing_key"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"order.created"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6A737D">            # ... process the message, ack/nack ...</span></span>
+<span class="line"><span style="color:#F97583">    finally</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        detach(token)   </span><span style="color:#6A737D"># always — prevents context leaking across message deliveries on a shared thread</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Why a <code>Link</code>, not a parent-child relationship.</strong> OTel’s messaging semantic conventions distinguish
+two relationships for a consumer span relative to its producer:</p>
+<ul>
+<li><strong>Parent-child</strong> — appropriate when the consumer processes the message synchronously, as part of
+the same logical operation, with no meaningful time gap.</li>
+<li><strong><code>Link</code></strong> — appropriate for genuinely asynchronous processing: the consumer runs in a separate
+process, possibly much later, and the message might be <strong>redelivered</strong> (e.g. after a NACK),
+producing multiple consumer spans that all relate back to one producer span. A parent-child
+relationship can’t represent “one producer span, several independent consumer attempts” cleanly; a
+link can. See <a href="/notes/projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq/">ADR-002</a> for the full reasoning. In your trace
+UI, a linked span typically renders as a dashed reference rather than a solid parent-child line —
+this is expected and correct, not a bug in your propagation code.</li>
+</ul>
+<p><strong>Always <code>detach()</code> in a <code>finally</code> block.</strong> If extraction or span creation raises before you reach
+<code>detach()</code>, the context leaks onto whatever thread handles the next message — on a pooled/reused
+thread (which pika’s consumer thread is), that means the next unrelated message could inherit the
+wrong trace context.</p>
+<h3 id="step-9--test-span-content-assertions-without-a-real-collector">Step 9 — Test span-content assertions without a real collector</h3>
+<p>Two levels of test double, matched to what you’re actually verifying:</p>
+<p>For tests that don’t care about span content, stub the whole telemetry module out before anything
+else imports it:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># conftest.py</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> sys, types</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> unittest.mock </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> MagicMock</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> trace</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">_telemetry_stub </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> types.ModuleType(</span><span style="color:#9ECBFF">"app.telemetry"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">_telemetry_stub.get_tracer </span><span style="color:#F97583">=</span><span style="color:#F97583"> lambda</span><span style="color:#E1E4E8"> name</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">""</span><span style="color:#E1E4E8">: trace.get_tracer(name)   </span><span style="color:#6A737D"># real no-op tracer</span></span>
+<span class="line"><span style="color:#E1E4E8">_telemetry_stub.setup_telemetry </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> MagicMock()</span></span>
+<span class="line"><span style="color:#E1E4E8">sys.modules.setdefault(</span><span style="color:#9ECBFF">"app.telemetry"</span><span style="color:#E1E4E8">, _telemetry_stub)</span></span>
+<span class="line"></span></code></pre>
+<p>Use the <strong>real</strong> <code>trace.get_tracer(name)</code> here, not a <code>MagicMock()</code> — if any code path formats a
+trace/span ID (e.g. <code>format(span.get_span_context().trace_id, "032x")</code>), calling that on a
+<code>MagicMock()</code> raises <code>TypeError</code> instead of producing a harmless zero-value ID.</p>
+<p>When a test needs to assert on actual span attributes (e.g. “does the duplicate-message path set
+<code>notification.duplicate=True</code>?”), use an isolated in-memory exporter instead of mocking the tracer
+away entirely:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.trace </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> TracerProvider</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.trace.export </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> SimpleSpanProcessor</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> opentelemetry.sdk.trace.export.in_memory_span_exporter </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> InMemorySpanExporter</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> test_duplicate_message_sets_span_attribute</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#E1E4E8">    exporter </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> InMemorySpanExporter()</span></span>
+<span class="line"><span style="color:#E1E4E8">    provider </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> TracerProvider()</span></span>
+<span class="line"><span style="color:#E1E4E8">    provider.add_span_processor(SimpleSpanProcessor(exporter))   </span><span style="color:#6A737D"># synchronous — spans available immediately</span></span>
+<span class="line"><span style="color:#E1E4E8">    tracer </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> provider.get_tracer(</span><span style="color:#9ECBFF">"test"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    with</span><span style="color:#E1E4E8"> patch(</span><span style="color:#9ECBFF">"app.consumer.get_tracer"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">return_value</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">tracer):</span></span>
+<span class="line"><span style="color:#E1E4E8">        handle_order_created(mock_channel, mock_method, mock_properties, duplicate_message_body)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    spans </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> exporter.get_finished_spans()</span></span>
+<span class="line"><span style="color:#F97583">    assert</span><span style="color:#E1E4E8"> spans[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">].attributes[</span><span style="color:#9ECBFF">"notification.duplicate"</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"></span></code></pre>
+<p>Use <code>SimpleSpanProcessor</code> (synchronous export), not <code>BatchSpanProcessor</code>, in tests — you need the
+span available for assertion the moment the <code>with</code> block exits, not after a batch timer fires.</p>
+<h3 id="step-10--verify">Step 10 — Verify</h3>
+<ol>
+<li>Publish an order-creation event from your producer service and confirm <code>notification.process</code>
+appears in your trace backend as a <code>CONSUMER</code> span <strong>linked</strong> (dashed line) to the producer’s
+<code>PRODUCER</code> span, both carrying the same <code>traceId</code>.</li>
+<li>Confirm log correlation: check that a log line emitted inside the span carries
+<code>otelTraceID</code>/<code>otelSpanID</code> matching the trace you just found.</li>
+<li>Confirm the resource-attribute gotcha from Step 3 didn’t recur — check <code>deployment.environment</code>
+on an actual exported span/metric matches the real environment, not a hardcoded default.</li>
+</ol>
+<p>Next: back to <a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup/">Collector &#x26; Pipeline Setup</a> if you haven’t wired the
+receiver yet, or on to <a href="/notes/projects/app-signal-forge/guides/frontend-rum-instrumentation/">Frontend RUM Instrumentation</a>.</p>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:var(--color-surface)"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"projects/app-signal-forge/readme","title":"SignalForge Documentation","topic":"projects","noteType":"moc"},{"slug":"projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq","title":"Signal Forge ADR-002: SpanLink for async RabbitMQ propagation (not parent-child)","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/guides/readme","title":"Replication Guides: Instrumenting Your Own Project","topic":"projects","noteType":"moc"},{"slug":"projects/app-signal-forge/guides/collector-pipeline-setup","title":"Guide: Collector & Pipeline Setup","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/guides/dotnet-instrumentation","title":"Guide: .NET Instrumentation","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/guides/frontend-rum-instrumentation","title":"Guide: Frontend RUM Instrumentation","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/guides/python-instrumentation","title":"Guide: Python Instrumentation","topic":"projects","noteType":"note"},{"slug":"projects/app-signal-forge/observability/otel-contracts","title":"OTel Signal Contracts","topic":"projects","noteType":"note"}];
+const edges = [{"source":"projects/app-signal-forge/guides/readme","target":"projects/app-signal-forge/observability/otel-contracts","kind":"depends_on"},{"source":"projects/app-signal-forge/guides/readme","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/collector-pipeline-setup","target":"projects/app-signal-forge/guides/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/dotnet-instrumentation","target":"projects/app-signal-forge/guides/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/collector-pipeline-setup","target":"projects/app-signal-forge/guides/dotnet-instrumentation","kind":"depends_on"},{"source":"projects/app-signal-forge/guides/dotnet-instrumentation","target":"projects/app-signal-forge/observability/otel-contracts","kind":"depends_on"},{"source":"projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq","target":"projects/app-signal-forge/guides/dotnet-instrumentation","kind":"depends_on"},{"source":"projects/app-signal-forge/guides/frontend-rum-instrumentation","target":"projects/app-signal-forge/guides/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/collector-pipeline-setup","target":"projects/app-signal-forge/guides/frontend-rum-instrumentation","kind":"depends_on"},{"source":"projects/app-signal-forge/guides/frontend-rum-instrumentation","target":"projects/app-signal-forge/observability/otel-contracts","kind":"depends_on"},{"source":"projects/app-signal-forge/guides/python-instrumentation","target":"projects/app-signal-forge/guides/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/collector-pipeline-setup","target":"projects/app-signal-forge/guides/python-instrumentation","kind":"depends_on"},{"source":"projects/app-signal-forge/guides/dotnet-instrumentation","target":"projects/app-signal-forge/guides/python-instrumentation","kind":"related"},{"source":"projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq","target":"projects/app-signal-forge/guides/python-instrumentation","kind":"depends_on"},{"source":"projects/app-signal-forge/observability/otel-contracts","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/collector-pipeline-setup","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/dotnet-instrumentation","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/python-instrumentation","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/frontend-rum-instrumentation","target":"projects/app-signal-forge/readme","kind":"related"},{"source":"projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq","target":"projects/app-signal-forge/guides/readme","kind":"related"},{"source":"projects/app-signal-forge/guides/dotnet-instrumentation","target":"projects/app-signal-forge/guides/frontend-rum-instrumentation","kind":"related"},{"source":"projects/app-signal-forge/guides/python-instrumentation","target":"projects/app-signal-forge/observability/otel-contracts","kind":"related"},{"source":"projects/app-signal-forge/guides/frontend-rum-instrumentation","target":"projects/app-signal-forge/guides/python-instrumentation","kind":"related"}];
+const topicColors = {"README.md":"#009563","agentic-ai":"#00ab92","aptitude":"#009494","ci-cd":"#00a6bf","data-engineering":"#008bba","data-structures-algorithms":"#009ade","dbms":"#267dcf","grafana-cloud":"#638aea","infrastructure-platform-engineering":"#6b6cd0","internal-developer-platforms":"#967ae0","kubernetes":"#945dbd","kubernetes-platform-engineering":"#ba6cc3","low-level-design":"#b05299","networks":"#d26498","object-oriented-programming":"#c04d6c","observability":"#db6466","operating-system":"#c25336","patterns":"#d66f2c","philosophy":"#b56200","platform-engineering-fundamentals":"#c08100","productivity":"#997600","projects":"#9a9400","prometheus":"#6c8700","sre":"#62a33f","system-design":"#179248"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "projects/app-signal-forge/guides/python-instrumentation";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  // Edge/ring colors aren't reachable by the `light:` Tailwind variant (set
+  // via raw SVG attribute, not a class) — theme-keyed lookup instead,
+  // re-applied on `themechange` by applyThemeColors() below.
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+  const GRAPH_COLORS = {
+    dark: { edge: '#1e293b', edgeActive: '#00d9a6', currentStroke: '#00d9a6', mocStroke: '#f1f5f9' },
+    light: { edge: '#cbd5e1', edgeActive: '#0f766e', currentStroke: '#0f766e', mocStroke: '#0f172a' },
+  };
+  let colors = GRAPH_COLORS[currentTheme()];
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', colors.edge);
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', colors.currentStroke);
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', colors.mocStroke);
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? colors.edgeActive : colors.edge);
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', colors.edge);
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // Re-applies the current theme's palette to already-built elements — the
+  // colors above are set once at element-creation time, so a toggle needs
+  // this to actually repaint anything already on screen.
+  function applyThemeColors() {
+    colors = GRAPH_COLORS[currentTheme()];
+    lineEls.forEach((line) => line.setAttribute('stroke', colors.edge));
+    nodeEls.forEach((g, i) => {
+      const n = sim[i];
+      const circle = g.querySelector('circle');
+      if (!circle) return;
+      const isCurrent = currentSlug && n.slug === currentSlug;
+      if (isCurrent) circle.setAttribute('stroke', colors.currentStroke);
+      else if (n.noteType === 'moc') circle.setAttribute('stroke', colors.mocStroke);
+    });
+  }
+  window.addEventListener('themechange', applyThemeColors);
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 light:border-slate-200 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link
+               graph. Kept flat (not grouped by kind, unlike the sidebar's KnowledgeGraphTree) —
+               on hub notes the untyped 'related' kind dominates almost all entries, so grouping
+               here would produce one giant bucket and a couple stragglers for no real scannability
+               gain. Capped at BACKLINKS_PREVIEW_LIMIT with a "show all" toggle instead, since hub
+               notes can have 100+ backlinks. --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" id="linked-from" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 4 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> SignalForge Documentation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Documentation hub for the SignalForge OTel Microservices Validation Lab — architecture, services, API, deployment, observability, and operations.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/guides/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Replication Guides: Instrumenting Your Own Project </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step, copy-paste guides for replicating SignalForge&#39;s OpenTelemetry instrumentation pattern in a new .NET/Python/Angular/RabbitMQ/K8s project.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Guide: Collector &amp; Pipeline Setup </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step: stand up a Grafana Alloy + grafana/k8s-monitoring Helm chart pipeline that receives OTLP traces/metrics/logs from your services and exports to Grafana Cloud or a self-hosted backend.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/guides/dotnet-instrumentation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Guide: .NET Instrumentation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step: instrument an ASP.NET Core / gRPC .NET 8 service with OpenTelemetry — SDK wiring, custom spans and metrics, and RabbitMQ producer-side async trace propagation via the outbox pattern.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div>  </div> <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/guides/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Replication Guides: Instrumenting Your Own Project </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step, copy-paste guides for replicating SignalForge&#39;s OpenTelemetry instrumentation pattern in a new .NET/Python/Angular/RabbitMQ/K8s project.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Guide: Collector &amp; Pipeline Setup </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step: stand up a Grafana Alloy + grafana/k8s-monitoring Helm chart pipeline that receives OTLP traces/metrics/logs from your services and exports to Grafana Cloud or a self-hosted backend.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/guides/dotnet-instrumentation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Guide: .NET Instrumentation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step: instrument an ASP.NET Core / gRPC .NET 8 service with OpenTelemetry — SDK wiring, custom spans and metrics, and RabbitMQ producer-side async trace propagation via the outbox pattern.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/projects/app-signal-forge/guides/frontend-rum-instrumentation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Guide: Frontend RUM Instrumentation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Step-by-step: instrument an Angular frontend with Grafana Faro for browser RUM — SDK setup, runtime config injection, source-map upload, and browser-to-backend trace linkage.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/projects" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett> Projects notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/projects/app-signal-forge/guides/python-instrumentation.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 light:border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/guides/frontend-rum-instrumentation" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Guide: Frontend RUM Instrumentation </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/projects/app-signal-forge/infrastructure/datastore-ha" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Datastore HA — production migration notes </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#guide-python-instrumentation" data-slug="guide-python-instrumentation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Guide: Python Instrumentation</a></li><li data-astro-cid-xvrfupwn><a href="#step-1--pin-compatible-package-versions" data-slug="step-1--pin-compatible-package-versions" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 1 — Pin compatible package versions</a></li><li data-astro-cid-xvrfupwn><a href="#step-2--one-telemetrypy-module-one-entrypoint-called-first" data-slug="step-2--one-telemetrypy-module-one-entrypoint-called-first" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 2 — One telemetry.py module, one entrypoint, called first</a></li><li data-astro-cid-xvrfupwn><a href="#step-3--the-gotcha-to-get-right-the-first-time-resource-attributes" data-slug="step-3--the-gotcha-to-get-right-the-first-time-resource-attributes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 3 — The gotcha to get right the first time: resource attributes</a></li><li data-astro-cid-xvrfupwn><a href="#step-4--environment-variables" data-slug="step-4--environment-variables" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 4 — Environment variables</a></li><li data-astro-cid-xvrfupwn><a href="#step-5--fastapi-auto-instrumentation-applied-after-the-provider-is-live" data-slug="step-5--fastapi-auto-instrumentation-applied-after-the-provider-is-live" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 5 — FastAPI auto-instrumentation, applied after the provider is live</a></li><li data-astro-cid-xvrfupwn><a href="#step-6--custom-metric-instruments-created-lazily" data-slug="step-6--custom-metric-instruments-created-lazily" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 6 — Custom metric instruments, created lazily</a></li><li data-astro-cid-xvrfupwn><a href="#step-7--custom-spans" data-slug="step-7--custom-spans" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 7 — Custom spans</a></li><li data-astro-cid-xvrfupwn><a href="#step-8--rabbitmq-consumer-manual-propagation" data-slug="step-8--rabbitmq-consumer-manual-propagation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 8 — RabbitMQ consumer: manual propagation</a></li><li data-astro-cid-xvrfupwn><a href="#step-9--test-span-content-assertions-without-a-real-collector" data-slug="step-9--test-span-content-assertions-without-a-real-collector" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 9 — Test span-content assertions without a real collector</a></li><li data-astro-cid-xvrfupwn><a href="#step-10--verify" data-slug="step-10--verify" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Step 10 — Verify</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: Collector &amp; Pipeline Setup</span></a><a href="/notes/projects/app-signal-forge/architecture/adrs/adr-spanlink-for-async-rabbitmq" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Signal Forge ADR-002: SpanLink for async RabbitMQ propagation (not parent-child)</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Related</p><a href="/notes/projects/app-signal-forge/guides/dotnet-instrumentation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: .NET Instrumentation</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/projects/app-signal-forge/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">SignalForge Documentation</span></a><a href="/notes/projects/app-signal-forge/guides/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Replication Guides: Instrumenting Your Own Project</span></a><a href="/notes/projects/app-signal-forge/guides/collector-pipeline-setup" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: Collector &amp; Pipeline Setup</span></a><a href="/notes/projects/app-signal-forge/guides/dotnet-instrumentation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Guide: .NET Instrumentation</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  // Mermaid bakes its theme into the rendered SVG at run() time, so a theme
+  // toggle needs a full re-render, not just a CSS flip. Two full palettes,
+  // not "dark + light overrides," since mermaid's dark theme already covers
+  // every variable used below and a partial override would leave stray
+  // dark-preset defaults showing through on light backgrounds.
+  const THEME_VARS = {
+    dark: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#cbd5e1',
+      primaryBorderColor: '#334155',
+      lineColor: '#00d9a6',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#1e293b',
+      background: '#0f172a',
+      mainBkg: '#1e293b',
+      nodeBorder: '#334155',
+      clusterBkg: '#0f172a',
+      titleColor: '#f1f5f9',
+      edgeLabelBackground: '#1e293b',
+      // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+      // via hue rotation, which can land on light/saturated fills that wash out
+      // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+      cScale0: '#1e3a5f',
+      cScale1: '#14532d',
+      cScale2: '#581c87',
+      cScale3: '#7c2d12',
+      cScale4: '#831843',
+      cScale5: '#713f12',
+      cScale6: '#164e63',
+      cScale7: '#3730a3',
+      cScaleLabel0: '#e2e8f0',
+      cScaleLabel1: '#e2e8f0',
+      cScaleLabel2: '#e2e8f0',
+      cScaleLabel3: '#e2e8f0',
+      cScaleLabel4: '#e2e8f0',
+      cScaleLabel5: '#e2e8f0',
+      cScaleLabel6: '#e2e8f0',
+      cScaleLabel7: '#e2e8f0',
+    },
+    light: {
+      primaryColor: '#f1f5f9',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#cbd5e1',
+      lineColor: '#0f766e',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#e2e8f0',
+      background: '#ffffff',
+      mainBkg: '#f1f5f9',
+      nodeBorder: '#cbd5e1',
+      clusterBkg: '#f8fafc',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#f1f5f9',
+      // Light-pastel fills (inverse of the dark palette's dark fills), one
+      // consistent dark label color across sections — same structure as dark.
+      cScale0: '#dbeafe',
+      cScale1: '#dcfce7',
+      cScale2: '#f3e8ff',
+      cScale3: '#ffedd5',
+      cScale4: '#fce7f3',
+      cScale5: '#fef3c7',
+      cScale6: '#cffafe',
+      cScale7: '#e0e7ff',
+      cScaleLabel0: '#1e293b',
+      cScaleLabel1: '#1e293b',
+      cScaleLabel2: '#1e293b',
+      cScaleLabel3: '#1e293b',
+      cScaleLabel4: '#1e293b',
+      cScaleLabel5: '#1e293b',
+      cScaleLabel6: '#1e293b',
+      cScaleLabel7: '#1e293b',
+    },
+  };
+
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        const theme = currentTheme();
+        mermaid.initialize({
+          startOnLoad: false,
+          // 'base' for light: an unstyled canvas driven entirely by
+          // themeVariables, so no dark-preset default shows through anywhere
+          // not explicitly covered above. 'dark' stays as-is for dark mode —
+          // it's the existing, already-tested path.
+          theme: theme === 'light' ? 'base' : 'dark',
+          themeVariables: THEME_VARS[theme],
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      const source = pre.querySelector('code')?.textContent ?? '';
+      // Preserved so a theme toggle can re-render from source — mermaid.run()
+      // replaces this div's content with rendered SVG, destroying the original.
+      div.dataset.mermaidSource = source;
+      div.textContent = source;
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  async function rerenderAllMermaid() {
+    const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+    if (!rendered.length) return;
+    mermaidPromise = null; // force re-init with the new theme's themeVariables
+    const mermaid = await getMermaid();
+    const nodes = [...rendered];
+    nodes.forEach((div) => {
+      div.removeAttribute('data-processed');
+      div.textContent = div.dataset.mermaidSource;
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  window.addEventListener('themechange', rerenderAllMermaid);
+  renderMermaid(document);
+</script>  </body></html>  
