@@ -1,0 +1,993 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>5. Retrieval Policies — Notes — Amit Singh</title><meta name="description" content="The decision layer that sits in front of Part 05's retrieval mechanics — whether to retrieve at all, how much to pull for a given query, and from which knowledge source, what over- and under-retrieving each cost you, and how Agentic RAG relocates the whole policy into the model's own reasoning loop."><link rel="canonical" href="https://shipsolid.github.io/notes/agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="5. Retrieval Policies — Notes — Amit Singh"><meta property="og:description" content="The decision layer that sits in front of Part 05's retrieval mechanics — whether to retrieve at all, how much to pull for a given query, and from which knowledge source, what over- and under-retrieving each cost you, and how Agentic RAG relocates the whole policy into the model's own reasoning loop."><meta property="og:url" content="https://shipsolid.github.io/notes/agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="5. Retrieval Policies — Notes — Amit Singh"><meta name="twitter:description" content="The decision layer that sits in front of Part 05's retrieval mechanics — whether to retrieve at all, how much to pull for a given query, and from which knowledge source, what over- and under-retrieving each cost you, and how Agentic RAG relocates the whole policy into the model's own reasoning loop."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><!-- Grafana Cloud Frontend Observability (Faro). Script tag must stay
+         unconditional in the template — wrapping it in {faroUrl && <script>}
+         stopped Astro from bundling the npm import at all (shipped as raw,
+         unprocessed source, which throws in the browser). The env check
+         below runs client-side instead, and is a no-op when unset (local dev). --><link rel="stylesheet" href="/_astro/_slug_.DJLsCJIh.css">
+<link rel="stylesheet" href="/_astro/_slug_.BXBXtc4O.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb))}
+summary[data-astro-cid-l7mxuoaf]{list-style:none}summary[data-astro-cid-l7mxuoaf]::-webkit-details-marker{display:none}details[data-astro-cid-l7mxuoaf][open]>summary[data-astro-cid-l7mxuoaf] .tree-chevron[data-astro-cid-l7mxuoaf]{transform:rotate(90deg)}summary[data-astro-cid-xd55becy]{list-style:none}summary[data-astro-cid-xd55becy]::-webkit-details-marker{display:none}details[data-astro-cid-xd55becy][open]>summary[data-astro-cid-xd55becy] .tree-chevron[data-astro-cid-xd55becy]{transform:rotate(90deg)}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:.5rem;font-size:.75rem;color:var(--color-text);box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:var(--color-text-faint);background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb) / .3);background:rgb(var(--color-accent-rgb) / .05)}
+</style><script type="module" src="/_astro/hoisted.BlnzIfoi.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Search" title="Search" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" data-astro-cid-3ef6ksr2></path> </svg> </a> <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <div class="relative" data-astro-cid-3ef6ksr2> <button id="more-menu-btn" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="More" aria-haspopup="menu" aria-expanded="false" title="More" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="5" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="12" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="19" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle> </svg> </button> <div id="more-menu" role="menu" class="hidden absolute right-0 top-full mt-2 min-w-[170px] rounded-lg border border-slate-800 light:border-slate-200 bg-slate-950/95 light:bg-white/95 backdrop-blur-md shadow-lg py-1" data-astro-cid-3ef6ksr2> <a href="/pomo" role="menuitem" class="block px-4 py-2 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> </div> </div> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div>  <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+Search
+</a> <a href="/pomo" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 light:text-slate-400 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/agentic-ai-engineering" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Agentic Ai Engineering</a>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>06 Context Engineering</span>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>05 Retrieval Policies</span>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> 5. Retrieval Policies  </h1> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-v5yihett>The decision layer that sits in front of Part 05&#39;s retrieval mechanics — whether to retrieve at all, how much to pull for a given query, and from which knowledge source, what over- and under-retrieving each cost you, and how Agentic RAG relocates the whole policy into the model&#39;s own reasoning loop.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <span class="text-slate-600 light:text-slate-400" title="Permanent note identifier" data-astro-cid-v5yihett>§202608101824-09</span>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/agentic-ai-engineering" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>agentic-ai-engineering</a><a href="/notes/tag/context-engineering" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>context-engineering</a><a href="/notes/tag/book" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>book</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[260px_1fr_260px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div data-notes-tree-scroll class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Agentic Ai Engineering</p> <div id="chapter-nav-source" data-astro-cid-v5yihett> <div class="space-y-1.5">  <div data-topic-id="agentic-ai-engineering" class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <details data-node-path="00-introduction-to-agentic-ai" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>00 Introduction To Agentic Ai</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>9</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/01-what-is-agentic-ai/01-what-is-agentic-ai" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 What Is Agentic Ai </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/02-agent-vs-workflow-vs-automation/02-agent-vs-workflow-vs-automation" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Agent Vs Workflow Vs Automation </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/03-characteristics-of-intelligent-agents/03-characteristics-of-intelligent-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Characteristics Of Intelligent Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/04-agent-lifecycle/04-agent-lifecycle" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Agent Lifecycle </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/05-agent-taxonomy/05-agent-taxonomy" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Agent Taxonomy </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/06-agent-design-principles/06-agent-design-principles" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Agent Design Principles </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/07-when-not-to-build-an-agent/07-when-not-to-build-an-agent" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 When Not To Build An Agent </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/08-ai-agent-use-cases/08-ai-agent-use-cases" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Ai Agent Use Cases </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/09-enterprise-adoption-patterns/09-enterprise-adoption-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Enterprise Adoption Patterns </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="01-agent-cognition" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>01 Agent Cognition</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>10</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/01-agent-cognition/01-perception/01-perception" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Perception </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/02-decision-making/02-decision-making" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Decision Making </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/03-planning/03-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Planning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/04-reasoning/04-reasoning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Reasoning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/05-reflection/05-reflection" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Reflection </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Self Correction </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/07-learning-loops/07-learning-loops" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Learning Loops </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/08-agent-state-machines/08-agent-state-machines" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Agent State Machines </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/09-goal-oriented-behavior/09-goal-oriented-behavior" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Goal Oriented Behavior </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/10-autonomous-execution/10-autonomous-execution" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Autonomous Execution </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="02-memory-systems" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>02 Memory Systems</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>13</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/02-memory-systems/01-why-agents-need-memory/01-why-agents-need-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Why Agents Need Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/02-context-windows/02-context-windows" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Context Windows </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/03-working-memory/03-working-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Working Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/04-short-term-memory/04-short-term-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Short Term Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/05-long-term-memory/05-long-term-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Long Term Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/06-semantic-memory/06-semantic-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Semantic Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/07-episodic-memory/07-episodic-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Episodic Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/08-memory-storage-architectures/08-memory-storage-architectures" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Memory Storage Architectures </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/09-vector-databases/09-vector-databases" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Vector Databases </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/10-knowledge-graphs/10-knowledge-graphs" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Knowledge Graphs </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/11-memory-retrieval/11-memory-retrieval" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Memory Retrieval </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/12-memory-compression/12-memory-compression" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Memory Compression </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/13-memory-versioning/13-memory-versioning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 13 Memory Versioning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="03-planning-and-reasoning-algorithms" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>03 Planning And Reasoning Algorithms</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>11</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/01-chain-of-thought/01-chain-of-thought" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Chain Of Thought </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/02-react/02-react" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 React </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/03-self-consistency/03-self-consistency" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Self Consistency </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/04-tree-of-thoughts/04-tree-of-thoughts" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Tree Of Thoughts </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/05-graph-of-thoughts/05-graph-of-thoughts" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Graph Of Thoughts </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/06-reflexion/06-reflexion" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Reflexion </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/07-plan-and-execute/07-plan-and-execute" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Plan And Execute </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/08-program-aided-language-models/08-program-aided-language-models" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Program Aided Language Models </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Llm Compiler </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/10-debate-and-critic-agents/10-debate-and-critic-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Debate And Critic Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/11-hierarchical-planning/11-hierarchical-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Hierarchical Planning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="04-tools-and-environment-interaction" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>04 Tools And Environment Interaction</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>14</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/01-tool-calling-architecture/01-tool-calling-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Tool Calling Architecture </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/02-apis-as-tools/02-apis-as-tools" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Apis As Tools </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/03-rest-and-graphql-integration/03-rest-and-graphql-integration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Rest And Graphql Integration </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/04-database-tools/04-database-tools" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Database Tools </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/05-search-tools/05-search-tools" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Search Tools </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/06-browser-automation/06-browser-automation" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Browser Automation </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/07-computer-use-agents/07-computer-use-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Computer Use Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/08-code-execution/08-code-execution" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Code Execution </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/09-model-context-protocol-mcp/09-model-context-protocol-mcp" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Model Context Protocol Mcp </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/10-tool-discovery/10-tool-discovery" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Tool Discovery </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/11-tool-selection-strategies/11-tool-selection-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Tool Selection Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/12-tool-security/12-tool-security" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Tool Security </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/13-agents-in-ci-cd-and-sdlc-workflows/13-agents-in-ci-cd-and-sdlc-workflows" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 13 Agents In Ci Cd And Sdlc Workflows </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 14 Safe Execution Paths And Error Handling </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="05-retrieval-and-knowledge-systems" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>05 Retrieval And Knowledge Systems</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>9</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/01-retrieval-augmented-generation-rag/01-retrieval-augmented-generation-rag" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Retrieval Augmented Generation Rag </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/02-embeddings/02-embeddings" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Embeddings </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/03-chunking-strategies/03-chunking-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Chunking Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/04-vector-search/04-vector-search" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Vector Search </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/05-hybrid-search/05-hybrid-search" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Hybrid Search </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/06-reranking/06-reranking" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Reranking </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Agentic Rag </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/08-graphrag/08-graphrag" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Graphrag </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/09-multi-stage-retrieval/09-multi-stage-retrieval" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Multi Stage Retrieval </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="06-context-engineering" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>06 Context Engineering</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>7</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Context Assembly </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Context Ranking </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Memory Selection </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Prompt Budgets </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Retrieval Policies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Context Compression </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Prompt Compilers </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details> </div>   <a href="/notes/agentic-ai-engineering/readme" class="flex items-start justify-between gap-2 px-3 py-2 rounded-lg text-xs font-mono text-slate-500 hover:text-slate-200 light:hover:text-slate-800 hover:bg-slate-800/60 light:hover:bg-slate-200/60 transition-colors no-underline" data-astro-cid-xd55becy><span class="leading-snug" data-astro-cid-xd55becy>Other</span></a> </div> </div> </div> </aside> <!-- Mobile/tablet nav: same content as the two xl:+ asides, collapsed
+             by default so a reader lands on the article first, not a wall of
+             chapter links. The chapter tree itself isn't re-rendered here —
+             it's cloned client-side from #chapter-nav-source (below), which
+             stays in the DOM on mobile too (`hidden xl:block` only affects
+             what's *shown*, not what's downloaded) — a topic's full nav tree
+             would otherwise ship twice on every note page. --> <div class="xl:hidden space-y-3" data-astro-cid-v5yihett> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+Chapter Navigation
+</summary> <div id="chapter-nav-mobile" class="mt-4" data-astro-cid-v5yihett></div> </details> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+On This Page
+</summary> <div class="mt-4" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#retrieval-policies" data-slug="retrieval-policies" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Retrieval Policies</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#the-mental-model" data-slug="the-mental-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>The mental model</a></li><li data-astro-cid-xvrfupwn><a href="#1-whether-to-retrieve-at-all" data-slug="1-whether-to-retrieve-at-all" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>1. Whether to retrieve at all</a></li><li data-astro-cid-xvrfupwn><a href="#signals-that-predict-retrieve-vs-skip" data-slug="signals-that-predict-retrieve-vs-skip" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Signals that predict retrieve vs. skip</a></li><li data-astro-cid-xvrfupwn><a href="#mechanisms-for-the-gate" data-slug="mechanisms-for-the-gate" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Mechanisms for the gate</a></li><li data-astro-cid-xvrfupwn><a href="#the-cost-of-skipping-the-gate" data-slug="the-cost-of-skipping-the-gate" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>The cost of skipping the gate</a></li><li data-astro-cid-xvrfupwn><a href="#2-how-much-to-retrieve--fixed-k-vs-adaptive" data-slug="2-how-much-to-retrieve--fixed-k-vs-adaptive" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>2. How much to retrieve — fixed-k vs. adaptive</a></li><li data-astro-cid-xvrfupwn><a href="#3-the-two-failure-directions-and-why-theyre-not-symmetric" data-slug="3-the-two-failure-directions-and-why-theyre-not-symmetric" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>3. The two failure directions, and why they’re not symmetric</a></li><li data-astro-cid-xvrfupwn><a href="#4-from-which-source--routing-across-knowledge-sources" data-slug="4-from-which-source--routing-across-knowledge-sources" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>4. From which source — routing across knowledge sources</a></li><li data-astro-cid-xvrfupwn><a href="#5-where-agentic-rag-pushes-this-policy-into-the-model" data-slug="5-where-agentic-rag-pushes-this-policy-into-the-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>5. Where Agentic RAG pushes this policy into the model</a></li><li data-astro-cid-xvrfupwn><a href="#concept-check" data-slug="concept-check" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Concept check</a></li><li data-astro-cid-xvrfupwn><a href="#vocabulary-glossary" data-slug="vocabulary-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Vocabulary glossary</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Context Assembly</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Related</p><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">5. Router Pattern</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Memory Selection</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Compared To</p><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">8. Agentic RAG</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">10. Cursor: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">13. Perplexity: Architecture Case Study</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Context Assembly</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Context Compression</span></a><a href="/notes/agentic-ai-engineering/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Agentic AI Engineering</span></a></div></div></nav> </div> </div> </details> </div>  <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:5. Retrieval Policies" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies" data-astro-cid-v5yihett></span>  <span hidden data-pagefind-filter="domain:Agentic Ai Engineering" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:agentic-ai-engineering" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:context-engineering" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:book" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+
+            prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+            prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 light:prose-blockquote:text-slate-600 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 light:prose-blockquote:bg-slate-100/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+            prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+
+            prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="retrieval-policies">Retrieval Policies</h2>
+<blockquote>
+<p>Chapter of <a href="/notes/agentic-ai-engineering/readme/#06--context-engineering">Context Engineering</a>, part of
+<a href="/notes/agentic-ai-engineering/readme/">Agentic AI Engineering</a>.</p>
+</blockquote>
+<h2 id="what-you-will-understand-at-the-end">What you will understand at the end</h2>
+<ul>
+<li>Why “when to retrieve” is a separate decision from “how retrieval works,” and why collapsing them
+produces an agent that fires a retrieval pipeline on every turn regardless of whether the turn
+needs one</li>
+<li>The fixed-k vs. adaptive-k tradeoff, and how “how much to retrieve” is really a special case of
+the token-budget allocation problem, not an independent hyperparameter tuned once in a notebook</li>
+<li>The asymmetric cost of getting this wrong in either direction — noise diluting the context budget
+on one side, a confidently wrong, ungrounded answer on the other</li>
+<li>How choosing <em>which</em> corpus to retrieve from is the <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern/">Router Pattern</a> applied
+one layer upstream of context assembly, including when a router’s single dispatch isn’t enough and
+you need a supervisor-style fan-out across corpora instead</li>
+<li>How Agentic RAG doesn’t eliminate this policy — it relocates all three decisions (whether, how
+much, from where) from a fixed pipeline choice made at design time into the model’s own iterative
+reasoning loop, and what that relocation costs in exchange for what it buys</li>
+</ul>
+<hr>
+<h2 id="the-mental-model">The mental model</h2>
+<p>Part 05 answers <em>how</em> retrieval works once you’ve decided to do it: how text becomes a vector
+(<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/02-embeddings/02-embeddings/">Embeddings</a>), how a corpus gets split into retrievable units
+(<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/03-chunking-strategies/03-chunking-strategies/">Chunking Strategies</a>), how a query finds nearby vectors
+(<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/04-vector-search/04-vector-search/">Vector Search</a>), how dense and sparse signals combine
+(<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/05-hybrid-search/05-hybrid-search/">Hybrid Search</a>), and how a candidate set gets reordered for precision
+(<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/06-reranking/06-reranking/">Reranking</a>). None of those chapters ask whether retrieval should run this turn, how
+many results are worth pulling, or which of several corpora the query even belongs to. Those are
+policy questions, decided <em>before</em> any of that machinery activates, and they’re this chapter’s job.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TB</span></span>
+<span class="line"><span style="color:#E1E4E8">    Q(["Incoming turn"]) --> P{"Retrieval Policy\n(this chapter)"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    P -->|"1. whether"| W{"Retrieve at all?"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    W -->|"no — answerable from\nhistory, memory, or the\nmodel's own knowledge"| Skip(["Skip retrieval\nanswer directly"])</span></span>
+<span class="line"><span style="color:#E1E4E8">    W -->|"yes"| H{"2. how much?\nfixed-k vs. adaptive"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    H --> S{"3. from where?\nsingle corpus vs. routed"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    S --> Mech["Part 05 retrieval mechanics\nembeddings · chunking · vector/hybrid search ·\nreranking · multi-stage retrieval"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Mech --> Ctx(["Result set handed to\nContext Assembly — Ch.1"])</span></span>
+<span class="line"><span style="color:#E1E4E8">    Skip --> Ctx</span></span>
+<span class="line"></span></code></pre>
+<p>Three decisions, one per section below, each with a fixed-upfront-policy version (Sections 1–4) and
+a model-decides-at-runtime alternative (Section 5). The fixed version is a pipeline classifier or a
+static rule, applied the same way regardless of how the conversation is actually unfolding. The
+runtime version — Agentic RAG — is the same three questions, asked and answered by the model itself,
+turn by turn, as part of its own execution loop. Neither is strictly better; Section 5 works through
+what each buys and costs.</p>
+<hr>
+<h2 id="1-whether-to-retrieve-at-all">1. Whether to retrieve at all</h2>
+<p><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly/">Context Assembly</a>‘s worked example built an SRE investigation copilot
+handling a checkout-service latency alert. The first turn — <em>“why is checkout p99 spiking again?”</em> —
+triggered a RAG pull that returned a runbook section and a postmortem excerpt, both correctly
+grounding the investigation. That chapter closed by naming a question it deliberately left open: the
+session’s final turn is a near-identical repeat of the same question — <em>“why is checkout p99 spiking
+again?”</em> — and nothing in that example says whether retrieval should fire a second time. This
+chapter picks up exactly there.</p>
+<p>The naive policy — retrieve on every turn, unconditionally — treats retrieval as free. It isn’t.
+Each call is a real round trip (embed the query, search the index, often rerank the candidates)
+added to the turn’s latency, and a real set of tokens competing for the context budget whether or
+not they earn their place. On the repeated question, the runbook and postmortem chunks the first
+pull already surfaced are still sitting in conversation history from the earlier turn — a second
+identical retrieval either returns the same chunks again (pure waste: latency and tokens spent to
+re-derive something already in context) or, worse, returns a <em>slightly different</em> top-k due to index
+or ranking nondeterminism, handing the model two near-duplicate-but-not-identical framings of the
+same fact to reconcile.</p>
+<h3 id="signals-that-predict-retrieve-vs-skip">Signals that predict retrieve vs. skip</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Signal</th><th>Points toward retrieving</th><th>Points toward skipping</th></tr></thead><tbody><tr><td><strong>Self-containment</strong></td><td>The query needs a fact, procedure, or document not present anywhere in the current context</td><td>The query is answerable purely from conversation history, working memory, or the model’s own reasoning over what’s already present</td></tr><tr><td><strong>Coverage</strong></td><td>This specific information need hasn’t been grounded yet this session</td><td>The same need was already retrieved and grounded earlier in this session — the answer is reuse, not re-fetch</td></tr><tr><td><strong>Freshness requirement</strong></td><td>The answer depends on state that may have changed since the last retrieval (a live metric, a ticket status, “check the <em>current</em> value”)</td><td>The underlying fact is stable enough that an earlier retrieval is still valid</td></tr><tr><td><strong>Query type</strong></td><td>A lookup, factual, or procedural question</td><td>A conversational, summarization, or reasoning-only request over what the agent has already gathered (“summarize what we found so far”)</td></tr></tbody></table>
+<p>Notice the parallel to, and the difference from, <a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection/">Memory Selection</a>‘s Turn A /
+Turn B contrast. That chapter asks a <em>post</em>-retrieval question — of what memory retrieval already
+surfaced, what’s worth admitting this turn. This section asks the <em>pre</em>-retrieval question — should
+a retrieval call happen at all. They compound: even a turn that correctly triggers retrieval can
+still over-admit what comes back, which is exactly why both policy layers exist as separate
+decisions instead of one merged “just grab everything plausibly relevant” step.</p>
+<h3 id="mechanisms-for-the-gate">Mechanisms for the gate</h3>
+<p>Structurally, this is the same three-way menu <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern/">Router Pattern</a> §2 builds for
+N-way dispatch, collapsed to a binary decision instead of a category choice — worth reusing rather
+than re-deriving:</p>
+<ul>
+<li><strong>A cheap heuristic or embedding-similarity floor.</strong> Embed the query, compare against a “this
+needs grounding” reference set (or simply check whether anything in the existing context already
+scores above a similarity floor against the query) — no LLM call, fast, but inherits the same
+vocabulary-mismatch weakness Router Pattern §2a names for embedding-based classification.</li>
+<li><strong>A trained gate classifier.</strong> A small model predicting retrieve/skip from the query and a
+representation of current context — cheap at inference time, needs a labeled training set and a
+retraining cycle as query patterns drift, same tradeoff profile as Router Pattern §2b.</li>
+<li><strong>An LLM self-assessment.</strong> Ask the model to attempt an answer, or explicitly emit a
+retrieve/no-retrieve judgment, before committing to a retrieval call — the general shape the
+Self-RAG line of work formalizes with explicit “retrieve” reflection tokens the model emits as
+part of its own decoding. I’m deliberately not attaching a specific accuracy or latency number to
+that technique here — the mechanism (the model decides, inline, whether it needs external
+grounding) is well established; the precise numbers are benchmark- and implementation-specific
+enough that citing one without the source in front of me would be false precision. Section 5
+returns to this mechanism in more depth, because it’s the seed of the fully agentic version of
+this whole chapter.</li>
+</ul>
+<h3 id="the-cost-of-skipping-the-gate">The cost of skipping the gate</h3>
+<p>An agent that retrieves unconditionally on every turn pays three costs whether or not the turn
+needed grounding: latency (a round trip added to the critical path of every response, including ones
+that didn’t need it), token spend competing for the same budget <a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets/">Prompt Budgets</a>
+allocates across every other source, and — the sharper failure — a fresh,
+correctly-retrieved-but-task-irrelevant chunk can still drag the model’s framing off course, the
+same way <a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection/">Memory Selection</a> §2 describes stale memory doing it. “Correctly
+retrieved” and “correctly relevant to <em>this</em> turn’s task” are not the same property, and a policy
+that never asks whether to retrieve at all has no mechanism for telling them apart.</p>
+<hr>
+<h2 id="2-how-much-to-retrieve--fixed-k-vs-adaptive">2. How much to retrieve — fixed-k vs. adaptive</h2>
+<p>Deciding to retrieve doesn’t settle how much. A fixed <code>top_k = 5</code> (or any constant) is the default
+in most RAG tutorials, and it’s wrong in both directions for a nontrivial fraction of real queries:
+a trivial single-fact lookup (“what’s the timeout value in this config?”) wastes budget pulling five
+chunks when one answers it completely, while a genuinely multi-hop question (“did yesterday’s spike
+correlate the same way the one three weeks ago did?”) may need evidence from more than five chunks
+to answer correctly at all — no amount of reranking quality fixes a <code>k</code> that’s structurally too
+small for the question.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th>Fixed-k</th><th>Adaptive-k</th></tr></thead><tbody><tr><td>Predictability</td><td>High — cost and latency per retrieval call are constant and known at design time</td><td>Lower — cost varies per query, harder to budget for at the p99</td></tr><tr><td>Engineering overhead</td><td>Low — one constant, tuned once</td><td>Higher — needs a complexity signal and a policy for turning it into a count or a cutoff</td></tr><tr><td>Quality on simple queries</td><td>Wastes budget — pulls more than needed, diluting context for no benefit</td><td>Right-sized — a self-contained factoid query gets a small k</td></tr><tr><td>Quality on complex queries</td><td>Under-serves — caps evidence below what a multi-hop question needs</td><td>Right-sized — a complex query can pull more without a hardcoded ceiling stopping it short</td></tr><tr><td>Failure mode</td><td>Silent and constant — the same wrong-sized k on every query, invisible until someone audits a bad answer</td><td>The complexity estimator itself can misjudge — same class of error as the retrieve/skip gate in Section 1</td></tr></tbody></table>
+<p>Three real ways to make <code>k</code> adaptive, none requiring new retrieval infrastructure — they’re a policy
+layered on top of what Part 05 already builds:</p>
+<ol>
+<li><strong>Query-complexity estimation upfront.</strong> A cheap heuristic (question length, number of distinct
+entities, presence of comparison/temporal language like “compared to,” “before/after”), a trained
+regressor predicting evidence count from historical query→answer-length pairs, or an LLM call
+estimating “how many independent facts does answering this require” — again the same
+heuristic/classifier/LLM menu as Section 1’s gate and Router Pattern §2, now predicting a count
+instead of a binary.</li>
+<li><strong>A relevance-score cutoff instead of a fixed count.</strong> Keep pulling ranked candidates until the
+<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/06-reranking/06-reranking/">Reranking</a> stage’s marginal relevance score drops below a floor, rather than
+stopping at a hardcoded position in the ranked list. This reframes “how much” as a quality
+threshold the retrieval pipeline enforces on itself, and it’s the mechanism
+<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/09-multi-stage-retrieval/09-multi-stage-retrieval/">Multi-Stage Retrieval</a>‘s coarse-to-fine pipelines use to decide when
+a later, more expensive stage has stopped earning its cost.</li>
+<li><strong>Budget-driven allocation.</strong> Don’t give retrieval a chunk count at all — give it a token
+allowance carved out of <a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets/">Prompt Budgets</a>‘s overall split, and let it fill
+that allowance with the highest-ranked candidates up to the cutoff. This makes “how much” an
+<em>output</em> of the budget chapter’s allocation decision rather than an independent knob retrieval
+owns on its own, which is the more honest framing once retrieval is competing with memory, tool
+schemas, and conversation history for the same finite space.</li>
+</ol>
+<p>None of these three is a replacement for the others — a production pipeline commonly stacks a cheap
+complexity estimate (mechanism 1) to set an upper bound, then a relevance cutoff (mechanism 2) to
+stop early when the upper bound is more than the query actually needs, inside a hard ceiling
+mechanism 3 enforces regardless of what the first two decide.</p>
+<hr>
+<h2 id="3-the-two-failure-directions-and-why-theyre-not-symmetric">3. The two failure directions, and why they’re not symmetric</h2>
+<p>Sections 1 and 2 matter because getting either wrong has a real, distinct failure signature — not a
+vague “quality degrades” but two separate, recognizable mechanisms.</p>
+<p>|                      | Over-retrieving                                                                                                                                                    | Under-retrieving                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| <strong>Mechanism</strong>        | More chunks admitted than the task needs, competing for the same middle-of-prompt real estate <a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly/">Context Assembly</a> already flags as attention-degraded                                                                                    | Retrieval returns too little, the wrong chunks, or nothing — the model has a gap where grounding should be |
+| <strong>Concrete symptom</strong> | The genuinely relevant chunk is present but diluted among noise, or two marginally-relevant chunks quietly contradict each other with no signal for which one wins | The model fills the gap with parametric knowledge — plausible-sounding, fluently stated, and not sourced from anything actually retrieved |
+| <strong>Cost profile</strong>     | Extra latency and token spend on every affected turn — visible in a cost dashboard if anyone looks                                                                 | No extra spend at all — the failure is free to produce and expensive to trace                                                             |
+| <strong>Detectability</strong>    | Comparatively easy — the noisy chunks are sitting right there in the assembled context, inspectable                                                                | Hard — the output reads exactly like a grounded answer; nothing in the response itself flags that the grounding was thin or absent        |
+| <strong>Typical fix</strong>      | Tighten k, add a relevance cutoff, deduplicate near-identical chunks                                                                                               | Widen k, add a second retrieval pass, or force the model to abstain/flag low confidence when evidence is thin                             |</p>
+<p>The asymmetry is the point worth carrying into design reviews: over-retrieval is a quality-and-cost
+tax that leaves a trace — a human or an eval harness can look at the assembled prompt and see the
+noise. Under-retrieval produces a <em>confidently wrong</em> answer with no visible seam between “this came
+from the runbook” and “this is the model’s best guess” — unless the system is explicit about
+provenance (citing which chunk supported which claim), the two are indistinguishable from the output
+alone. That’s a stronger claim than “both are bad” — it argues that for anything audit-sensitive (an
+incident report, a compliance answer, anything a human will act on without re-verifying), the
+default should lean toward retrieving <em>more</em> than the confidence interval strictly requires, because
+the cost of that lean is visible and cheap to correct, while the cost of the opposite lean is
+invisible until someone downstream acts on a wrong answer that looked exactly like a right one.</p>
+<hr>
+<h2 id="4-from-which-source--routing-across-knowledge-sources">4. From which source — routing across knowledge sources</h2>
+<p>The third policy question assumes there’s more than one place to look. A production agent’s
+grounding material rarely lives in one homogeneous corpus. The SRE copilot from Sections 1–2
+plausibly draws on at least: a runbook corpus (prose, operational procedures), a ticket-history
+corpus (structured, timestamped, incident-specific), and an API/service documentation corpus
+(structured, schema-heavy, a completely different chunk shape than runbook prose). Embedding all
+three into one shared vector index doesn’t just under-perform — it actively degrades retrieval,
+because a chunk’s nearest neighbors in that shared space are no longer guaranteed to be topically
+comparable, and a chunking strategy tuned for prose (<a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/03-chunking-strategies/03-chunking-strategies/">Chunking Strategies</a>)
+is the wrong shape for structured API docs even when both happen to embed into the same space.</p>
+<p>This is the <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern/">Router Pattern</a>, applied one layer upstream of context assembly:
+classify the query, dispatch to the corpus (or corpora) whose retriever actually owns that kind of
+question, and only then run Part 05’s retrieval mechanics against the chosen source.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    Q(["Query"]) --> R{"Source router\nsame 3 mechanisms as\nRouter Pattern §2"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    R -->|"operational procedure"| Runbooks[("Runbook corpus")]</span></span>
+<span class="line"><span style="color:#E1E4E8">    R -->|"past incident lookup"| Tickets[("Ticket-history corpus")]</span></span>
+<span class="line"><span style="color:#E1E4E8">    R -->|"API/schema question"| Docs[("API doc corpus")]</span></span>
+<span class="line"><span style="color:#E1E4E8">    R -->|"structured relationship\nquestion"| Graph[("Knowledge graph — GraphRAG")]</span></span>
+<span class="line"><span style="color:#E1E4E8">    R -->|"ambiguous — no single\ncorpus owns it"| Fanout["Query 2+ corpora in parallel,\nmerge + rerank results\n(supervisor-style, not router-style)"]</span></span>
+<span class="line"></span></code></pre>
+<p>The reuse is direct: the same embedding-similarity / trained-classifier / LLM-with-structured-output
+menu from <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern/">Router Pattern</a> §2 decides which corpus a query belongs to, and the
+same confidence-and-fallback logic from that chapter’s §3 applies when the classification is
+ambiguous. Misrouting here has the identical <em>structurally silent</em> failure shape that chapter’s §6
+names: if the query gets sent to the wrong corpus, the right corpus is never queried at all for that
+turn — there’s no in-context recovery, only a retrieval that returns confidently-ranked, entirely
+wrong-domain results. That failure composes with Section 3 above in the worst possible way: a
+misrouted query doesn’t fail loudly with an empty result set, it fails by handing the model
+well-formed, well-ranked chunks from the <em>wrong</em> corpus, which reads exactly like a legitimate
+under-retrieval failure from the model’s side.</p>
+<p><strong>Router-style dispatch isn’t always the right shape here, though — and this is where the retrieval
+case is a genuine extension of the Router Pattern chapter’s own reasoning, not just a copy of it.</strong>
+<a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern/">Router Pattern</a> §4 draws the line between a router’s terminal, single-handler
+dispatch and a supervisor’s fan-out-and-reconcile shape. Retrieval-source selection routinely needs
+the fan-out version: a genuinely ambiguous query — “what’s changed about checkout’s retry behavior
+since the last incident” — plausibly needs <em>both</em> the runbook corpus (current retry policy) and the
+ticket-history corpus (what the last incident actually found), queried in parallel with results
+merged and reranked together, not dispatched to whichever single corpus wins the classification.
+Treating every retrieval-source decision as router-style forced-single-choice is a real design
+mistake in the same shape that chapter warns against for handler dispatch generally — some queries
+are supervisor questions wearing a retrieval hat.</p>
+<hr>
+<h2 id="5-where-agentic-rag-pushes-this-policy-into-the-model">5. Where Agentic RAG pushes this policy into the model</h2>
+<p>Everything in Sections 1–4 is a <strong>fixed, upfront policy</strong> — a classifier, a heuristic, or a static
+rule, evaluated once per turn by the pipeline, before the model ever starts generating. That’s a
+legitimate and common architecture. <a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag/">Agentic RAG</a> is the alternative stance:
+instead of a pipeline deciding whether/how much/where to retrieve on the model’s behalf, the model
+makes all three decisions itself, iteratively, as part of its own reasoning — the same
+execution-loop shape <a href="/notes/building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture/">Agent Architecture</a> describes generally (read context,
+decide, act, observe, repeat), specialized to retrieval as the action being decided on each
+iteration.</p>
+<p>Concretely, the loop looks like this: the model issues its own retrieval query — often a
+reformulation of the user’s original question shaped by what it’s already learned from an earlier
+retrieval round, not a verbatim pass-through — evaluates whether what came back is sufficient to
+answer (a self-critique or reflection step; the Self-RAG line of work formalizes this with explicit
+reflection tokens the model emits alongside its generation, deciding to retrieve, to critique
+retrieved evidence as relevant/irrelevant, or to proceed), and either retrieves again — a different
+source, a refined query, a deeper k — or stops and answers. Every question this chapter asks as a
+fixed pipeline decision is being asked <em>again</em>, per iteration, by the model itself: should I
+retrieve at all this round (maybe the last round already answered it), how much do I need this
+round, and does the evidence I have suggest a different source entirely (the ticket history instead
+of the runbook I just checked).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th>Fixed upfront policy (Sections 1–4)</th><th>Agentic RAG (iterative, model-decided)</th></tr></thead><tbody><tr><td>Decided when</td><td>Design time — a classifier or rule, same for every query of that shape</td><td>Runtime — per iteration, adapted to what the model has already learned this turn</td></tr><tr><td>Adapts to</td><td>Whatever signal the classifier was built to read (query complexity, corpus category)</td><td>The actual, unfolding state of the investigation — including evidence the pipeline couldn’t have anticipated</td></tr><tr><td>Cost profile</td><td>Bounded and known at design time — one retrieval call (or a fixed few), predictable latency</td><td>Variable per request — cost and latency scale with however many iterations the query actually needs</td></tr><tr><td>Auditability</td><td>High — the policy is a fixed, inspectable rule, easy to test against a labeled eval set</td><td>Lower — the trajectory of queries and stop/continue decisions is per-request and has to be logged to reconstruct after the fact</td></tr><tr><td>Failure mode</td><td>The same mistake, consistently, for every query the classifier misjudges</td><td>A per-iteration version of Sections 1–3’s mistakes (bad retrieve/skip call, bad source pick) compounding across iterations if unchecked</td></tr></tbody></table>
+<p><strong>The relocation doesn’t eliminate the policy — it just moves who’s accountable for it, and that
+shift has a real cost this book has already priced once, at the run level.</strong>
+<a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery/">Failure Recovery</a> §2’s math on nested retry budgets applies here almost
+unchanged: swap “step retry” for “retrieval iteration” and the same worked arithmetic holds. An
+agentic retrieval loop with no absolute ceiling — only “keep iterating until the model decides it
+has enough” — is functionally an unbounded retry budget wearing a retrieval-quality justification,
+and it needs the same fix that chapter argues for: a hard, absolute cap (iteration count, wall-clock
+time, or token spend) the loop cannot exceed regardless of how confident the model’s own stopping
+judgment seems, plus a fallback that surfaces the unresolved query to a human rather than looping
+silently — the same escalate exit <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern/">Router Pattern</a> §3 and Failure Recovery §3
+both name for their respective domains.</p>
+<p>The honest framing for an interview answer: a fixed retrieval policy trades adaptability for
+predictability — it makes the same mistake consistently on queries its classifier misjudges, but its
+worst-case cost is known before a single request ships. Agentic RAG trades predictability for
+adaptability — it can recover mid-turn from a bad first retrieval the way no fixed policy can, but
+its worst-case cost is bounded only by whatever iteration ceiling you set, and a generous ceiling is
+a cost incident waiting to be discovered on a billing dashboard, not a free upgrade. Neither one is
+the “more agentic, therefore better” default; the choice is a real engineering tradeoff between a
+bounded, auditable mistake and an adaptive, harder-to-bound one.</p>
+<hr>
+<h2 id="concept-check">Concept check</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Question</th><th>Answer hint</th></tr></thead><tbody><tr><td>Why is “whether to retrieve” a separate decision from “how retrieval works”?</td><td>Part 05’s mechanics assume retrieval should happen; this chapter decides whether it should happen at all, before any of that machinery runs</td></tr><tr><td>What’s the risk of retrieving unconditionally on every turn?</td><td>Latency and token cost on turns that didn’t need grounding, plus the risk that a fresh-but-irrelevant chunk drags the model’s framing off course</td></tr><tr><td>Why is a fixed <code>top_k</code> wrong for both simple and complex queries?</td><td>It wastes budget on simple factoid queries and under-serves genuinely multi-hop ones — the right k depends on the query, not a constant</td></tr><tr><td>Why is under-retrieval a worse failure than over-retrieval, even though both are bad?</td><td>Over-retrieval leaves a visible trace (noisy chunks sitting in the assembled context); under-retrieval produces a confidently wrong answer indistinguishable from a correctly grounded one</td></tr><tr><td>How does retrieval-source selection map onto the Router Pattern?</td><td>Classify the query, dispatch to the corpus whose retriever owns that kind of question — same classification menu, same confidence/fallback logic, same silent-misrouting failure</td></tr><tr><td>When does retrieval-source selection need supervisor-style fan-out instead of router-style single dispatch?</td><td>When a query genuinely needs evidence from more than one corpus at once — forcing a single-corpus choice on a multi-corpus question is the same mistake Router Pattern §4 warns against for handler dispatch</td></tr><tr><td>What does Agentic RAG change about this chapter’s three policy questions, and what does it leave unchanged?</td><td>It moves whether/how-much/from-where from a fixed pipeline decision to a per-iteration model decision — but the loop still needs a hard iteration/cost ceiling, or it becomes the same unbounded-retry-budget problem Failure Recovery names at the run level</td></tr></tbody></table>
+<hr>
+<h2 id="vocabulary-glossary">Vocabulary glossary</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody><tr><td>Retrieval policy</td><td>The decision layer — whether to retrieve, how much, from which source — that sits upstream of Part 05’s retrieval mechanics</td></tr><tr><td>Retrieval gate</td><td>The whether-to-retrieve-at-all decision, built with the same heuristic/classifier/LLM menu as router classification, collapsed to a binary</td></tr><tr><td>Fixed-k</td><td>A constant number of retrieved candidates admitted regardless of query complexity</td></tr><tr><td>Adaptive-k</td><td>The admitted count set per query, via a complexity estimate, a relevance-score cutoff, or a token-budget allocation</td></tr><tr><td>Over-retrieval</td><td>Admitting more retrieved content than the task needs, diluting the context budget and risking chunk-to-chunk contradiction</td></tr><tr><td>Under-retrieval</td><td>Retrieving too little or the wrong material, producing a confidently stated answer grounded in the model’s parametric knowledge instead of what was actually retrieved</td></tr><tr><td>Retrieval-source routing</td><td>Classifying a query and dispatching it to the specific corpus (or corpora) whose retriever owns that kind of question, rather than querying one undifferentiated index</td></tr><tr><td>Corpus fan-out</td><td>Querying more than one knowledge source in parallel and merging/reranking the combined results, used when a query doesn’t cleanly belong to a single corpus</td></tr><tr><td>Agentic RAG</td><td>Retrieval architecture where the model itself decides, iteratively and per-turn, whether/how much/where to retrieve, instead of a fixed upfront pipeline policy</td></tr><tr><td>Reflection token</td><td>A Self-RAG-style mechanism where the model emits an explicit retrieve/critique decision as part of its own output, rather than an external classifier making that call</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:var(--color-surface)"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/02-embeddings/02-embeddings","title":"2. Embeddings","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/03-chunking-strategies/03-chunking-strategies","title":"3. Chunking Strategies","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/04-vector-search/04-vector-search","title":"4. Vector Search","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/05-hybrid-search/05-hybrid-search","title":"5. Hybrid Search","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/06-reranking/06-reranking","title":"6. Reranking","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag","title":"8. Agentic RAG","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/09-multi-stage-retrieval/09-multi-stage-retrieval","title":"10. Multi-Stage Retrieval","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","title":"1. Context Assembly","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","title":"3. Memory Selection","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","title":"4. Prompt Budgets","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","title":"5. Retrieval Policies","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","title":"6. Context Compression","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/readme","title":"Agentic AI Engineering","topic":"agentic-ai-engineering","noteType":"moc"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","title":"5. Router Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","title":"10. Cursor: Architecture Case Study","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","title":"13. Perplexity: Architecture Case Study","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture","title":"1. Agent Architecture","topic":"building-agentic-systems","noteType":"note"},{"slug":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","title":"11. Failure Recovery","topic":"production-agent-systems","noteType":"note"}];
+const edges = [{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"depends_on"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"compared_to"},{"source":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","target":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"depends_on"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/09-multi-stage-retrieval/09-multi-stage-retrieval","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/02-embeddings/02-embeddings","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/03-chunking-strategies/03-chunking-strategies","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/04-vector-search/04-vector-search","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/05-hybrid-search/05-hybrid-search","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/06-reranking/06-reranking","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/09-multi-stage-retrieval/09-multi-stage-retrieval","target":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","target":"building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"related"},{"source":"agentic-ai-engineering/readme","target":"building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/02-embeddings/02-embeddings","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/03-chunking-strategies/03-chunking-strategies","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/04-vector-search/04-vector-search","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/05-hybrid-search/05-hybrid-search","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/06-reranking/06-reranking","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/09-multi-stage-retrieval/09-multi-stage-retrieval","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/02-embeddings/02-embeddings","target":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","target":"building-agentic-systems/00-building-single-agent-systems/01-agent-architecture/01-agent-architecture","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"agentic-ai-engineering/05-retrieval-and-knowledge-systems/05-hybrid-search/05-hybrid-search","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"}];
+const topicColors = {"README.md":"#009563","agentic-ai-engineering":"#00ab8d","agentic-ai-projects-and-mastery":"#00958b","ai-architecture-and-system-design":"#00a9b3","ai-foundations":"#008fad","aptitude":"#00a1d1","building-agentic-systems":"#0085c5","ci-cd":"#2c95e4","data-engineering":"#3c79d1","data-structures-algorithms":"#6b88ea","dbms":"#6d6cd0","gita":"#937be2","grafana-cloud":"#8f60c1","infrastructure-platform-engineering":"#b26fcc","internal-developer-platforms":"#a856a7","kubernetes":"#c967ad","kubernetes-platform-engineering":"#b94f85","low-level-design":"#d76387","networks":"#c24d5f","object-oriented-programming":"#dc655e","observability":"#c25332","operating-system":"#d66f2f","patterns":"#b86000","philosophy":"#c67d00","platform-engineering-fundamentals":"#a46f00","production-agent-systems":"#ac8d00","productivity":"#867e00","projects":"#879b09","prometheus":"#5b8b12","sre":"#54a54b","system-design":"#00934d"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  // Edge/ring colors aren't reachable by the `light:` Tailwind variant (set
+  // via raw SVG attribute, not a class) — theme-keyed lookup instead,
+  // re-applied on `themechange` by applyThemeColors() below.
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+  const GRAPH_COLORS = {
+    dark: { edge: '#1e293b', edgeActive: '#00d9a6', currentStroke: '#00d9a6', mocStroke: '#f1f5f9' },
+    light: { edge: '#cbd5e1', edgeActive: '#0f766e', currentStroke: '#0f766e', mocStroke: '#0f172a' },
+  };
+  let colors = GRAPH_COLORS[currentTheme()];
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', colors.edge);
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', colors.currentStroke);
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', colors.mocStroke);
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = n.href || `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? colors.edgeActive : colors.edge);
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', colors.edge);
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // Re-applies the current theme's palette to already-built elements — the
+  // colors above are set once at element-creation time, so a toggle needs
+  // this to actually repaint anything already on screen.
+  function applyThemeColors() {
+    colors = GRAPH_COLORS[currentTheme()];
+    lineEls.forEach((line) => line.setAttribute('stroke', colors.edge));
+    nodeEls.forEach((g, i) => {
+      const n = sim[i];
+      const circle = g.querySelector('circle');
+      if (!circle) return;
+      const isCurrent = currentSlug && n.slug === currentSlug;
+      if (isCurrent) circle.setAttribute('stroke', colors.currentStroke);
+      else if (n.noteType === 'moc') circle.setAttribute('stroke', colors.mocStroke);
+    });
+  }
+  window.addEventListener('themechange', applyThemeColors);
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 light:border-slate-200 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link
+               graph. Kept flat (not grouped by kind, unlike the sidebar's KnowledgeGraphTree) —
+               on hub notes the untyped 'related' kind dominates almost all entries, so grouping
+               here would produce one giant bucket and a couple stragglers for no real scannability
+               gain. Capped at BACKLINKS_PREVIEW_LIMIT with a "show all" toggle instead, since hub
+               notes can have 100+ backlinks. --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" id="linked-from" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 5 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 10. Cursor: Architecture Case Study </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>An external, engineering-blog-grounded analysis of Cursor&#39;s likely architecture — Merkle-tree-synced codebase indexing, the Tab fast path for inline edit prediction, and the agent-mode tool-calling loop for multi-file changes — read as public inference, not disclosed internals.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 13. Perplexity: Architecture Case Study </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>An external, engineering-blog-grounded analysis of Perplexity&#39;s real-time research-agent architecture -- live web retrieval instead of a static corpus, citation grounding as a hard output constraint, and answer synthesis under a tight latency budget.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1. Context Assembly </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How the final prompt an agent actually sends gets built from disparate sources — system instructions, retrieved chunks, memory, tool schemas, and conversation history — and why where a piece sits changes how much the model attends to it.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 6. Context Compression </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Summarization, extractive pruning, and structured compression for fitting more signal into less context — and the risk every one of them shares: silently dropping the one detail the model actually needed this turn.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Agentic AI Engineering </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for Agentic AI Engineering: where &#39;LLM application&#39; becomes &#39;agent&#39; — introduction to agentic AI, agent cognition, memory systems, planning &amp; reasoning algorithms, tools &amp; environment interaction, retrieval &amp; knowledge systems, and context engineering. Book 2 of the AI Systems Engineering series.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div>  </div> <!-- Referenced in Bhagavad Gita: reverse lookup from the gita verse
+               collection's own `concepts[]` field — see getVersesReferencingConcept
+               in src/lib/gita.ts. Computed unconditionally for every note, so any
+               note anywhere in the corpus that a verse happens to reference gets
+               this section, not just notes under notes/gita/concepts/. -->  <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1. Context Assembly </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How the final prompt an agent actually sends gets built from disparate sources — system instructions, retrieved chunks, memory, tool schemas, and conversation history — and why where a piece sits changes how much the model attends to it.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2. Context Ranking </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers scoring and ordering already-selected context fragments -- retrieved chunks, memory items, tool output, and prior turns -- by semantic similarity, recency, source authority, and prior usefulness before they compete for a fixed token budget, and the near-duplicate crowding failure mode that ranking by similarity alone produces.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 3. Memory Selection </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The policy layer between memory retrieval and context assembly -- deciding which of the memories retrieval surfaced are actually worth spending tokens on for this specific turn, and why over-including memory is its own failure mode, not just a cost line item.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4. Prompt Budgets </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Allocating a fixed token budget across system prompt, tool schemas, conversation history, retrieved context, and memory -- concrete allocation math, what happens when the budget is exceeded, and why percentage-based budgets break the moment you swap context-window sizes.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/agentic-ai-engineering" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett> Agentic Ai Engineering notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 light:border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4. Prompt Budgets </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 6. Context Compression </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#retrieval-policies" data-slug="retrieval-policies" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Retrieval Policies</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#the-mental-model" data-slug="the-mental-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>The mental model</a></li><li data-astro-cid-xvrfupwn><a href="#1-whether-to-retrieve-at-all" data-slug="1-whether-to-retrieve-at-all" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>1. Whether to retrieve at all</a></li><li data-astro-cid-xvrfupwn><a href="#signals-that-predict-retrieve-vs-skip" data-slug="signals-that-predict-retrieve-vs-skip" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Signals that predict retrieve vs. skip</a></li><li data-astro-cid-xvrfupwn><a href="#mechanisms-for-the-gate" data-slug="mechanisms-for-the-gate" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>Mechanisms for the gate</a></li><li data-astro-cid-xvrfupwn><a href="#the-cost-of-skipping-the-gate" data-slug="the-cost-of-skipping-the-gate" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>The cost of skipping the gate</a></li><li data-astro-cid-xvrfupwn><a href="#2-how-much-to-retrieve--fixed-k-vs-adaptive" data-slug="2-how-much-to-retrieve--fixed-k-vs-adaptive" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>2. How much to retrieve — fixed-k vs. adaptive</a></li><li data-astro-cid-xvrfupwn><a href="#3-the-two-failure-directions-and-why-theyre-not-symmetric" data-slug="3-the-two-failure-directions-and-why-theyre-not-symmetric" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>3. The two failure directions, and why they’re not symmetric</a></li><li data-astro-cid-xvrfupwn><a href="#4-from-which-source--routing-across-knowledge-sources" data-slug="4-from-which-source--routing-across-knowledge-sources" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>4. From which source — routing across knowledge sources</a></li><li data-astro-cid-xvrfupwn><a href="#5-where-agentic-rag-pushes-this-policy-into-the-model" data-slug="5-where-agentic-rag-pushes-this-policy-into-the-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>5. Where Agentic RAG pushes this policy into the model</a></li><li data-astro-cid-xvrfupwn><a href="#concept-check" data-slug="concept-check" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Concept check</a></li><li data-astro-cid-xvrfupwn><a href="#vocabulary-glossary" data-slug="vocabulary-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Vocabulary glossary</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Context Assembly</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Related</p><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">5. Router Pattern</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Memory Selection</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Compared To</p><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">8. Agentic RAG</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">10. Cursor: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">13. Perplexity: Architecture Case Study</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Context Assembly</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Context Compression</span></a><a href="/notes/agentic-ai-engineering/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Agentic AI Engineering</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  // Mermaid bakes its theme into the rendered SVG at run() time, so a theme
+  // toggle needs a full re-render, not just a CSS flip. Two full palettes,
+  // not "dark + light overrides," since mermaid's dark theme already covers
+  // every variable used below and a partial override would leave stray
+  // dark-preset defaults showing through on light backgrounds.
+  const THEME_VARS = {
+    dark: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#cbd5e1',
+      primaryBorderColor: '#334155',
+      lineColor: '#00d9a6',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#1e293b',
+      background: '#0f172a',
+      mainBkg: '#1e293b',
+      nodeBorder: '#334155',
+      clusterBkg: '#0f172a',
+      titleColor: '#f1f5f9',
+      edgeLabelBackground: '#1e293b',
+      // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+      // via hue rotation, which can land on light/saturated fills that wash out
+      // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+      cScale0: '#1e3a5f',
+      cScale1: '#14532d',
+      cScale2: '#581c87',
+      cScale3: '#7c2d12',
+      cScale4: '#831843',
+      cScale5: '#713f12',
+      cScale6: '#164e63',
+      cScale7: '#3730a3',
+      cScaleLabel0: '#e2e8f0',
+      cScaleLabel1: '#e2e8f0',
+      cScaleLabel2: '#e2e8f0',
+      cScaleLabel3: '#e2e8f0',
+      cScaleLabel4: '#e2e8f0',
+      cScaleLabel5: '#e2e8f0',
+      cScaleLabel6: '#e2e8f0',
+      cScaleLabel7: '#e2e8f0',
+    },
+    light: {
+      primaryColor: '#f1f5f9',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#cbd5e1',
+      lineColor: '#0f766e',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#e2e8f0',
+      background: '#ffffff',
+      mainBkg: '#f1f5f9',
+      nodeBorder: '#cbd5e1',
+      clusterBkg: '#f8fafc',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#f1f5f9',
+      // Light-pastel fills (inverse of the dark palette's dark fills), one
+      // consistent dark label color across sections — same structure as dark.
+      cScale0: '#dbeafe',
+      cScale1: '#dcfce7',
+      cScale2: '#f3e8ff',
+      cScale3: '#ffedd5',
+      cScale4: '#fce7f3',
+      cScale5: '#fef3c7',
+      cScale6: '#cffafe',
+      cScale7: '#e0e7ff',
+      cScaleLabel0: '#1e293b',
+      cScaleLabel1: '#1e293b',
+      cScaleLabel2: '#1e293b',
+      cScaleLabel3: '#1e293b',
+      cScaleLabel4: '#1e293b',
+      cScaleLabel5: '#1e293b',
+      cScaleLabel6: '#1e293b',
+      cScaleLabel7: '#1e293b',
+    },
+  };
+
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        const theme = currentTheme();
+        mermaid.initialize({
+          startOnLoad: false,
+          // 'base' for light: an unstyled canvas driven entirely by
+          // themeVariables, so no dark-preset default shows through anywhere
+          // not explicitly covered above. 'dark' stays as-is for dark mode —
+          // it's the existing, already-tested path.
+          theme: theme === 'light' ? 'base' : 'dark',
+          themeVariables: THEME_VARS[theme],
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      const source = pre.querySelector('code')?.textContent ?? '';
+      // Preserved so a theme toggle can re-render from source — mermaid.run()
+      // replaces this div's content with rendered SVG, destroying the original.
+      div.dataset.mermaidSource = source;
+      div.textContent = source;
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  async function rerenderAllMermaid() {
+    const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+    if (!rendered.length) return;
+    mermaidPromise = null; // force re-init with the new theme's themeVariables
+    const mermaid = await getMermaid();
+    const nodes = [...rendered];
+    nodes.forEach((div) => {
+      div.removeAttribute('data-processed');
+      div.textContent = div.dataset.mermaidSource;
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  window.addEventListener('themechange', rerenderAllMermaid);
+  renderMermaid(document);
+</script>  </body></html>  

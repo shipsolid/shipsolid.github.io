@@ -1,0 +1,989 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>7. Prompt Compilers — Notes — Amit Singh</title><meta name="description" content="Covers the emerging, deliberately-not-yet-standardized idea of treating context assembly as a compilation step -- a declarative spec of what a turn needs compiled through a coherent pass of ranking, budgeting, and compression -- instead of hand-assembled string concatenation that degrades as context sources multiply."><link rel="canonical" href="https://shipsolid.github.io/notes/agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="7. Prompt Compilers — Notes — Amit Singh"><meta property="og:description" content="Covers the emerging, deliberately-not-yet-standardized idea of treating context assembly as a compilation step -- a declarative spec of what a turn needs compiled through a coherent pass of ranking, budgeting, and compression -- instead of hand-assembled string concatenation that degrades as context sources multiply."><meta property="og:url" content="https://shipsolid.github.io/notes/agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="7. Prompt Compilers — Notes — Amit Singh"><meta name="twitter:description" content="Covers the emerging, deliberately-not-yet-standardized idea of treating context assembly as a compilation step -- a declarative spec of what a turn needs compiled through a coherent pass of ranking, budgeting, and compression -- instead of hand-assembled string concatenation that degrades as context sources multiply."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><!-- Grafana Cloud Frontend Observability (Faro). Script tag must stay
+         unconditional in the template — wrapping it in {faroUrl && <script>}
+         stopped Astro from bundling the npm import at all (shipped as raw,
+         unprocessed source, which throws in the browser). The env check
+         below runs client-side instead, and is a no-op when unset (local dev). --><link rel="stylesheet" href="/_astro/_slug_.DJLsCJIh.css">
+<link rel="stylesheet" href="/_astro/_slug_.BXBXtc4O.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb))}
+summary[data-astro-cid-l7mxuoaf]{list-style:none}summary[data-astro-cid-l7mxuoaf]::-webkit-details-marker{display:none}details[data-astro-cid-l7mxuoaf][open]>summary[data-astro-cid-l7mxuoaf] .tree-chevron[data-astro-cid-l7mxuoaf]{transform:rotate(90deg)}summary[data-astro-cid-xd55becy]{list-style:none}summary[data-astro-cid-xd55becy]::-webkit-details-marker{display:none}details[data-astro-cid-xd55becy][open]>summary[data-astro-cid-xd55becy] .tree-chevron[data-astro-cid-xd55becy]{transform:rotate(90deg)}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:.5rem;font-size:.75rem;color:var(--color-text);box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:var(--color-text-faint);background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb) / .3);background:rgb(var(--color-accent-rgb) / .05)}
+</style><script type="module" src="/_astro/hoisted.BlnzIfoi.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Search" title="Search" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" data-astro-cid-3ef6ksr2></path> </svg> </a> <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <div class="relative" data-astro-cid-3ef6ksr2> <button id="more-menu-btn" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="More" aria-haspopup="menu" aria-expanded="false" title="More" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="5" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="12" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="19" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle> </svg> </button> <div id="more-menu" role="menu" class="hidden absolute right-0 top-full mt-2 min-w-[170px] rounded-lg border border-slate-800 light:border-slate-200 bg-slate-950/95 light:bg-white/95 backdrop-blur-md shadow-lg py-1" data-astro-cid-3ef6ksr2> <a href="/pomo" role="menuitem" class="block px-4 py-2 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> </div> </div> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div>  <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+Search
+</a> <a href="/pomo" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 light:text-slate-400 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/agentic-ai-engineering" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Agentic Ai Engineering</a>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>06 Context Engineering</span>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>07 Prompt Compilers</span>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> 7. Prompt Compilers  </h1> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-v5yihett>Covers the emerging, deliberately-not-yet-standardized idea of treating context assembly as a compilation step -- a declarative spec of what a turn needs compiled through a coherent pass of ranking, budgeting, and compression -- instead of hand-assembled string concatenation that degrades as context sources multiply.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <span class="text-slate-600 light:text-slate-400" title="Permanent note identifier" data-astro-cid-v5yihett>§202608101824-11</span>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/agentic-ai-engineering" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>agentic-ai-engineering</a><a href="/notes/tag/context-engineering" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>context-engineering</a><a href="/notes/tag/book" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>book</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[260px_1fr_260px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div data-notes-tree-scroll class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Agentic Ai Engineering</p> <div id="chapter-nav-source" data-astro-cid-v5yihett> <div class="space-y-1.5">  <div data-topic-id="agentic-ai-engineering" class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <details data-node-path="00-introduction-to-agentic-ai" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>00 Introduction To Agentic Ai</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>9</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/01-what-is-agentic-ai/01-what-is-agentic-ai" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 What Is Agentic Ai </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/02-agent-vs-workflow-vs-automation/02-agent-vs-workflow-vs-automation" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Agent Vs Workflow Vs Automation </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/03-characteristics-of-intelligent-agents/03-characteristics-of-intelligent-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Characteristics Of Intelligent Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/04-agent-lifecycle/04-agent-lifecycle" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Agent Lifecycle </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/05-agent-taxonomy/05-agent-taxonomy" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Agent Taxonomy </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/06-agent-design-principles/06-agent-design-principles" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Agent Design Principles </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/07-when-not-to-build-an-agent/07-when-not-to-build-an-agent" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 When Not To Build An Agent </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/08-ai-agent-use-cases/08-ai-agent-use-cases" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Ai Agent Use Cases </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/09-enterprise-adoption-patterns/09-enterprise-adoption-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Enterprise Adoption Patterns </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="01-agent-cognition" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>01 Agent Cognition</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>10</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/01-agent-cognition/01-perception/01-perception" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Perception </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/02-decision-making/02-decision-making" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Decision Making </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/03-planning/03-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Planning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/04-reasoning/04-reasoning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Reasoning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/05-reflection/05-reflection" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Reflection </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Self Correction </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/07-learning-loops/07-learning-loops" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Learning Loops </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/08-agent-state-machines/08-agent-state-machines" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Agent State Machines </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/09-goal-oriented-behavior/09-goal-oriented-behavior" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Goal Oriented Behavior </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/10-autonomous-execution/10-autonomous-execution" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Autonomous Execution </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="02-memory-systems" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>02 Memory Systems</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>13</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/02-memory-systems/01-why-agents-need-memory/01-why-agents-need-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Why Agents Need Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/02-context-windows/02-context-windows" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Context Windows </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/03-working-memory/03-working-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Working Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/04-short-term-memory/04-short-term-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Short Term Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/05-long-term-memory/05-long-term-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Long Term Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/06-semantic-memory/06-semantic-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Semantic Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/07-episodic-memory/07-episodic-memory" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Episodic Memory </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/08-memory-storage-architectures/08-memory-storage-architectures" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Memory Storage Architectures </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/09-vector-databases/09-vector-databases" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Vector Databases </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/10-knowledge-graphs/10-knowledge-graphs" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Knowledge Graphs </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/11-memory-retrieval/11-memory-retrieval" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Memory Retrieval </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/12-memory-compression/12-memory-compression" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Memory Compression </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/02-memory-systems/13-memory-versioning/13-memory-versioning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 13 Memory Versioning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="03-planning-and-reasoning-algorithms" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>03 Planning And Reasoning Algorithms</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>11</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/01-chain-of-thought/01-chain-of-thought" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Chain Of Thought </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/02-react/02-react" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 React </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/03-self-consistency/03-self-consistency" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Self Consistency </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/04-tree-of-thoughts/04-tree-of-thoughts" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Tree Of Thoughts </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/05-graph-of-thoughts/05-graph-of-thoughts" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Graph Of Thoughts </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/06-reflexion/06-reflexion" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Reflexion </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/07-plan-and-execute/07-plan-and-execute" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Plan And Execute </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/08-program-aided-language-models/08-program-aided-language-models" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Program Aided Language Models </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Llm Compiler </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/10-debate-and-critic-agents/10-debate-and-critic-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Debate And Critic Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/11-hierarchical-planning/11-hierarchical-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Hierarchical Planning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="04-tools-and-environment-interaction" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>04 Tools And Environment Interaction</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>14</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/01-tool-calling-architecture/01-tool-calling-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Tool Calling Architecture </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/02-apis-as-tools/02-apis-as-tools" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Apis As Tools </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/03-rest-and-graphql-integration/03-rest-and-graphql-integration" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Rest And Graphql Integration </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/04-database-tools/04-database-tools" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Database Tools </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/05-search-tools/05-search-tools" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Search Tools </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/06-browser-automation/06-browser-automation" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Browser Automation </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/07-computer-use-agents/07-computer-use-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Computer Use Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/08-code-execution/08-code-execution" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Code Execution </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/09-model-context-protocol-mcp/09-model-context-protocol-mcp" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Model Context Protocol Mcp </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/10-tool-discovery/10-tool-discovery" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Tool Discovery </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/11-tool-selection-strategies/11-tool-selection-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Tool Selection Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/12-tool-security/12-tool-security" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Tool Security </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/13-agents-in-ci-cd-and-sdlc-workflows/13-agents-in-ci-cd-and-sdlc-workflows" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 13 Agents In Ci Cd And Sdlc Workflows </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 14 Safe Execution Paths And Error Handling </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="05-retrieval-and-knowledge-systems" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>05 Retrieval And Knowledge Systems</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>9</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/01-retrieval-augmented-generation-rag/01-retrieval-augmented-generation-rag" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Retrieval Augmented Generation Rag </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/02-embeddings/02-embeddings" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Embeddings </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/03-chunking-strategies/03-chunking-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Chunking Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/04-vector-search/04-vector-search" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Vector Search </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/05-hybrid-search/05-hybrid-search" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Hybrid Search </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/06-reranking/06-reranking" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Reranking </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/07-agentic-rag/07-agentic-rag" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Agentic Rag </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/08-graphrag/08-graphrag" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Graphrag </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/05-retrieval-and-knowledge-systems/09-multi-stage-retrieval/09-multi-stage-retrieval" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Multi Stage Retrieval </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="06-context-engineering" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>06 Context Engineering</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>7</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Context Assembly </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Context Ranking </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Memory Selection </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Prompt Budgets </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/05-retrieval-policies/05-retrieval-policies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Retrieval Policies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Context Compression </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Prompt Compilers </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details> </div>   <a href="/notes/agentic-ai-engineering/readme" class="flex items-start justify-between gap-2 px-3 py-2 rounded-lg text-xs font-mono text-slate-500 hover:text-slate-200 light:hover:text-slate-800 hover:bg-slate-800/60 light:hover:bg-slate-200/60 transition-colors no-underline" data-astro-cid-xd55becy><span class="leading-snug" data-astro-cid-xd55becy>Other</span></a> </div> </div> </div> </aside> <!-- Mobile/tablet nav: same content as the two xl:+ asides, collapsed
+             by default so a reader lands on the article first, not a wall of
+             chapter links. The chapter tree itself isn't re-rendered here —
+             it's cloned client-side from #chapter-nav-source (below), which
+             stays in the DOM on mobile too (`hidden xl:block` only affects
+             what's *shown*, not what's downloaded) — a topic's full nav tree
+             would otherwise ship twice on every note page. --> <div class="xl:hidden space-y-3" data-astro-cid-v5yihett> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+Chapter Navigation
+</summary> <div id="chapter-nav-mobile" class="mt-4" data-astro-cid-v5yihett></div> </details> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+On This Page
+</summary> <div class="mt-4" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#prompt-compilers" data-slug="prompt-compilers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Prompt Compilers</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#the-mental-model" data-slug="the-mental-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>The mental model</a></li><li data-astro-cid-xvrfupwn><a href="#1-the-hand-assembled-pile-concretely" data-slug="1-the-hand-assembled-pile-concretely" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>1. The hand-assembled pile, concretely</a></li><li data-astro-cid-xvrfupwn><a href="#2-what-compiling-a-prompt-would-actually-mean" data-slug="2-what-compiling-a-prompt-would-actually-mean" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>2. What “compiling” a prompt would actually mean</a></li><li data-astro-cid-xvrfupwn><a href="#3-why-this-matters-at-scale--the-platform-framing" data-slug="3-why-this-matters-at-scale--the-platform-framing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>3. Why this matters at scale — the platform framing</a></li><li data-astro-cid-xvrfupwn><a href="#4-where-the-analogy-holds-and-where-it-genuinely-breaks" data-slug="4-where-the-analogy-holds-and-where-it-genuinely-breaks" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>4. Where the analogy holds, and where it genuinely breaks</a></li><li data-astro-cid-xvrfupwn><a href="#5-honest-state-of-the-art-directional-not-established" data-slug="5-honest-state-of-the-art-directional-not-established" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>5. Honest state of the art: directional, not established</a></li><li data-astro-cid-xvrfupwn><a href="#a-naming-collision-worth-flagging-explicitly" data-slug="a-naming-collision-worth-flagging-explicitly" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>A naming collision worth flagging explicitly</a></li><li data-astro-cid-xvrfupwn><a href="#concept-check" data-slug="concept-check" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Concept check</a></li><li data-astro-cid-xvrfupwn><a href="#vocabulary-glossary" data-slug="vocabulary-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Vocabulary glossary</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">2. Context Ranking</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">4. Prompt Budgets</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Context Compression</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Compared To</p><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. LLM Compiler</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Context Assembly</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Context Compression</span></a><a href="/notes/agentic-ai-engineering/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Agentic AI Engineering</span></a></div></div></nav> </div> </div> </details> </div>  <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:7. Prompt Compilers" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers" data-astro-cid-v5yihett></span>  <span hidden data-pagefind-filter="domain:Agentic Ai Engineering" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:agentic-ai-engineering" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:context-engineering" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:book" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+
+            prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+            prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 light:prose-blockquote:text-slate-600 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 light:prose-blockquote:bg-slate-100/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+            prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+
+            prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="prompt-compilers">Prompt Compilers</h2>
+<blockquote>
+<p>Chapter of <a href="/notes/agentic-ai-engineering/readme/#06--context-engineering">Context Engineering</a>, part of
+<a href="/notes/agentic-ai-engineering/readme/">Agentic AI Engineering</a>. Closing chapter of the Part.</p>
+</blockquote>
+<h2 id="what-you-will-understand-at-the-end">What you will understand at the end</h2>
+<ul>
+<li>Why <code>assemble_context()</code> — the function
+<a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly/">Chapter 1</a>
+introduced as a clean signature — degrades into an unmaintainable pile of string concatenation and
+conditionals once you have more than a handful of context sources and call sites, and the concrete
+shape that degradation takes</li>
+<li>The reframing a “prompt compiler” proposes: context assembly as a declarative spec compiled
+through a coherent set of passes, instead of an imperative sequence of source-specific special
+cases</li>
+<li>How the passes such a compiler would need — rank, select, allocate budget, compress, position —
+map directly onto
+<a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking/">Chapter 2</a>,
+<a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets/">Chapter 4</a>,
+and
+<a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression/">Chapter 6</a>
+— this is a synthesis chapter, not a new policy layer</li>
+<li>Where the compiler analogy is genuinely load-bearing, and where it breaks — no settled
+optimization theory, no compile-time correctness proof, and a “target” (a model’s attention
+behavior) that shifts under you in a way a real compiler’s instruction set architecture doesn’t</li>
+<li>Why this is directional, not established practice — no canonical implementation exists yet, and
+what to actually do about that this week rather than waiting for one to arrive</li>
+</ul>
+<hr>
+<h2 id="the-mental-model">The mental model</h2>
+<p>Six chapters into this Part, you have six independent policy layers:
+<a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly/">assembly and positioning</a>
+(Ch 1),
+<a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking/">ranking</a> (Ch
+2),
+<a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection/">memory selection</a>
+(Ch 3),
+<a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets/">budget allocation</a>
+(Ch 4), retrieval policy (Ch 5), and
+<a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression/">compression</a>
+(Ch 6). Each one, read on its own, is a well-scoped decision with a clear owner. The question this
+chapter exists to ask is what happens when you actually have to <em>wire them together</em> — not in a
+diagram, in a real codebase, called on every turn, by more than one agent.</p>
+<p>The unexamined assumption is that wiring is trivial: call retrieval, call ranking, call the budget
+enforcer, call compression, call the assembler, return the prompt. In a codebase with one agent and
+three context sources, that assumption holds and the imperative version is the <em>correct</em> engineering
+choice — building an abstraction layer for three sources and one call site is over-engineering, full
+stop. The assumption stops holding at a specific, recognizable threshold: more context sources than
+you can hold in your head at once, more than one agent (or more than one call site within an agent)
+needing the same policies, and enough elapsed time for “just add a special case here” to have
+happened a dozen times without anyone revisiting the whole function.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TB</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Today["What actually happens past the threshold — policy reimplemented per call site"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        direction TB</span></span>
+<span class="line"><span style="color:#E1E4E8">        A1["SRE-copilot's assemble_context()\nhand-rolled ranking + budget + compression,\nwritten first, drifts slowly"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A2["Support-agent's assemble_context()\nreimplements similar policy,\nslightly different budget split"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        A3["Code-review-agent's assemble_context()\na third variant, its own compression\nshortcut nobody else knows about"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Spec["A declarative spec of what a turn needs\n(sources, priority tiers, compression tolerance)"] -.->|"the idea this chapter names"| Compiler{{"Prompt Compiler\n(hypothetical — directional, not built)"}}</span></span>
+<span class="line"><span style="color:#E1E4E8">    Compiler --> Rank["Rank\n(Ch 2)"] --> Select["Select / dedupe\n(Ch 2–3)"] --> Budget["Allocate budget\n(Ch 4)"] --> Compress["Compress\n(Ch 6)"] --> Layout["Position\n(Ch 1)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Layout --> Out(["One optimized, budget-respecting prompt"])</span></span>
+<span class="line"></span></code></pre>
+<p>Two things to notice before going section by section:</p>
+<ol>
+<li><strong>The left side of the diagram is not a strawman — it’s the default outcome of building agents
+the way this Part’s own Chapter 1 signature invites you to.</strong> <code>assemble_context()</code> is a perfectly
+honest function signature for one agent. It says nothing about what happens when a second, third,
+and eighth agent each need a slightly different version of the same policy decisions.</li>
+<li><strong>The right side is not a product that exists.</strong> No framework in this book’s ecosystem ships a
+general-purpose “declarative spec in, optimized prompt out” compiler today. This chapter names
+the idea and is explicit, in Section 4, about exactly how far the analogy and the current tooling
+actually go.</li>
+</ol>
+<hr>
+<h2 id="1-the-hand-assembled-pile-concretely">1. The hand-assembled pile, concretely</h2>
+<p>Take Chapter 1’s clean signature and watch it evolve the way real call sites do — not through one
+bad decision, but through a sequence of individually reasonable ones:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> assemble_context</span><span style="color:#E1E4E8">(agent_type, user_tier, retrieved_chunks, memories,</span></span>
+<span class="line"><span style="color:#E1E4E8">                      tool_schemas, history, turn):</span></span>
+<span class="line"><span style="color:#6A737D">    # v1 — two sources, no conditionals. This is fine. Ship it.</span></span>
+<span class="line"><span style="color:#E1E4E8">    context </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> system_prompt() </span><span style="color:#F97583">+</span><span style="color:#79B8FF"> format</span><span style="color:#E1E4E8">(tool_schemas) </span><span style="color:#F97583">+</span><span style="color:#79B8FF"> format</span><span style="color:#E1E4E8">(history) </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> turn</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # v2 — memory arrives. Someone adds a cap because token pressure showed</span></span>
+<span class="line"><span style="color:#6A737D">    # up in an incident, not because this is memory selection's real policy</span></span>
+<span class="line"><span style="color:#6A737D">    # (Ch 3) — it's a truncation, not a selection.</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(memories) </span><span style="color:#F97583">></span><span style="color:#79B8FF"> MEMORY_CAP</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        memories </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> memories[:</span><span style="color:#79B8FF">MEMORY_CAP</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # v3 — a second agent type starts calling this function. Its tool</span></span>
+<span class="line"><span style="color:#6A737D">    # catalog is bigger, so it needs more of the budget. The fix lands as</span></span>
+<span class="line"><span style="color:#6A737D">    # a branch, not a parameter the budget policy (Ch 4) actually owns.</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> agent_type </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> "sre-copilot"</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        tool_budget </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 600</span></span>
+<span class="line"><span style="color:#F97583">    elif</span><span style="color:#E1E4E8"> agent_type </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> "support-agent"</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        tool_budget </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 200</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # v4 — an enterprise-tier customer complains about slow responses on</span></span>
+<span class="line"><span style="color:#6A737D">    # long retrieval sets. Someone adds an inline summarization call —</span></span>
+<span class="line"><span style="color:#6A737D">    # not the compression policy from Ch 6, a bespoke one, untested</span></span>
+<span class="line"><span style="color:#6A737D">    # against the rest of the pipeline.</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> user_tier </span><span style="color:#F97583">==</span><span style="color:#9ECBFF"> "enterprise"</span><span style="color:#F97583"> and</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(retrieved_chunks) </span><span style="color:#F97583">></span><span style="color:#79B8FF"> 5</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        retrieved_chunks </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [summarize(c) </span><span style="color:#F97583">for</span><span style="color:#E1E4E8"> c </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> retrieved_chunks]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # v5 — a postmortem finds retrieval firing redundantly when a tool</span></span>
+<span class="line"><span style="color:#6A737D">    # result is already cached. The fix is another branch, discovered and</span></span>
+<span class="line"><span style="color:#6A737D">    # patched in isolation from every other retrieval-skip decision this</span></span>
+<span class="line"><span style="color:#6A737D">    # or any other agent has ever needed.</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> history </span><span style="color:#F97583">and</span><span style="color:#E1E4E8"> history[</span><span style="color:#F97583">-</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">].get(</span><span style="color:#9ECBFF">"tool_result_cache_hit"</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#E1E4E8">        retrieved_chunks </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # ... 300 lines later, this function is half agent-specific carve-outs.</span></span>
+<span class="line"><span style="color:#6A737D">    # Every branch above IS a policy decision — ranking, budget, compression,</span></span>
+<span class="line"><span style="color:#6A737D">    # retrieval-skip — that Ch 2/4/5/6 already have a real, reusable answer</span></span>
+<span class="line"><span style="color:#6A737D">    # for. None of those answers got reused here. Each was reinvented,</span></span>
+<span class="line"><span style="color:#6A737D">    # locally, under incident pressure, with no test coverage of its own.</span></span>
+<span class="line"></span></code></pre>
+<p>Nothing in that evolution is a bad individual decision. Each diff shipped to fix a real problem,
+under real time pressure, and each one was small. The failure is not in any single commit — it’s
+that <strong>every branch is a duplicate of a policy this Part already gives a name and an owner to</strong>,
+reinvented inline instead of called as a shared function. Three concrete costs compound from this
+pattern, and they’re the reason this stops being a style complaint and becomes an
+engineering-management problem:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Cost</th><th>What it looks like in practice</th></tr></thead><tbody><tr><td><strong>Policy drift across call sites</strong></td><td>Agent A’s inline MMR-flavored dedup and Agent B’s inline dedup started identical and diverged over eighteen months of independent patches — nobody can now say with confidence whether they behave the same on a shared edge case</td></tr><tr><td><strong>Untestable coupling</strong></td><td>Budget logic is entangled with formatting logic inside one function body — you cannot unit-test “does this respect the token budget” without also exercising every branch’s string formatting</td></tr><tr><td><strong>New-source cost scales with call-site count, not with the source itself</strong></td><td>Adding one new memory type means finding and patching every agent’s <code>assemble_context()</code> that should honor it — the cost is <code>O(call sites)</code>, not <code>O(1)</code></td></tr></tbody></table>
+<p>That third row is the one worth sitting with. A real compiler exists precisely so that adding a new
+language feature, or retargeting a new CPU, doesn’t require patching every program ever written in
+that language — the compiler absorbs the change once, at the compiler layer, and every program that
+compiles against it benefits without being touched. Hand-assembled context-building code has no
+equivalent absorption point. Every improvement to ranking, budgeting, or compression policy has to
+be manually propagated to every place that duplicated it.</p>
+<hr>
+<h2 id="2-what-compiling-a-prompt-would-actually-mean">2. What “compiling” a prompt would actually mean</h2>
+<p>The core reframing: stop writing the <em>sequence of steps</em> that builds a prompt, and instead write a
+<em>declarative spec of what the turn needs</em>, then hand that spec to a dedicated layer that knows how
+to turn it into an optimized prompt. The shift is the same one that separates writing hand-tuned
+assembly from writing C and trusting a compiler’s optimization passes to produce comparable — often
+better — machine code, consistently, across every program that compiles against it.</p>
+<p>Contrast the two input shapes directly:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Imperative — what assemble_context() asks for today: a sequence of</span></span>
+<span class="line"><span style="color:#6A737D"># concrete objects, with no room to express priority or tolerance.</span></span>
+<span class="line"><span style="color:#E1E4E8">assemble_context(system_prompt, tool_schemas, retrieved_chunks,</span></span>
+<span class="line"><span style="color:#E1E4E8">                  retrieved_memories, conversation_history, current_turn,</span></span>
+<span class="line"><span style="color:#E1E4E8">                  token_budget)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Declarative — what a compiled context spec would ask for instead:</span></span>
+<span class="line"><span style="color:#6A737D"># intent and constraint, not the already-resolved objects.</span></span>
+<span class="line"><span style="color:#E1E4E8">ContextSpec(</span></span>
+<span class="line"><span style="color:#FFAB70">    sources</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[</span></span>
+<span class="line"><span style="color:#E1E4E8">        Source(</span><span style="color:#9ECBFF">"system"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">required</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">position</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"primacy"</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">        Source(</span><span style="color:#9ECBFF">"tool_schemas"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">scope</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"dynamic"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">position</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"primacy"</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">        Source(</span><span style="color:#9ECBFF">"retrieval"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">corpus</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"runbooks"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">priority_tier</span><span style="color:#F97583">=</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">               compression_tolerance</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"lossy_ok"</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">        Source(</span><span style="color:#9ECBFF">"memory"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">namespace</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"episodic"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">priority_tier</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">               compression_tolerance</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"lossless_only"</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">        Source(</span><span style="color:#9ECBFF">"history"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">window</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"session"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">position</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"recency"</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    ],</span></span>
+<span class="line"><span style="color:#FFAB70">    token_budget</span><span style="color:#F97583">=</span><span style="color:#79B8FF">8000</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">    target_model</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"claude-sonnet-4-6"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<p>The declarative version says nothing about <em>how</em> ranking runs, <em>how much</em> budget each source
+actually gets, or <em>whether</em> something gets compressed — it says what matters, at what priority, with
+what tolerance for lossy treatment. Everything about <em>how</em> is the compiler’s job, and it’s exactly
+this Part’s own chapters, run as passes instead of hand-copied logic:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Compiler concept</th><th>Context-engineering equivalent</th><th>Owned by</th></tr></thead><tbody><tr><td>Source / AST parsing</td><td>Gathering raw candidate fragments from retrieval, memory, tools, history</td><td><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly/">Ch 1 — Context Assembly</a></td></tr><tr><td>Dependency / priority analysis</td><td>Scoring candidate fragments on one common yardstick across heterogeneous sources</td><td><a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking/">Ch 2 — Context Ranking</a></td></tr><tr><td>Dead-code elimination</td><td>Dropping near-duplicate fragments (MMR) and non-actionable memories</td><td>Ch 2, <a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection/">Ch 3 — Memory Selection</a></td></tr><tr><td>Register allocation</td><td>Allocating a fixed, scarce resource (tokens, not registers) across competing demands, deciding what spills</td><td><a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets/">Ch 4 — Prompt Budgets</a></td></tr><tr><td>Code-size optimization</td><td>Compressing the admitted set to fit without silently dropping needed signal</td><td><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression/">Ch 6 — Context Compression</a></td></tr><tr><td>Instruction scheduling / codegen</td><td>Positioning the admitted, compressed fragments — primacy and recency zones matter for attention the way instruction order matters for pipeline stalls</td><td>Ch 1</td></tr></tbody></table>
+<p>Read the table as the actual claim of this chapter: <strong>a prompt compiler is not a seventh policy
+layer</strong>. It’s a coherent, ordered execution of the six that already exist, run as reusable passes
+against a declared spec instead of copy-pasted per agent. This chapter introduces no new ranking
+signal, no new budget algorithm, no new compression technique — it’s the wiring problem those five
+chapters leave open, named honestly as a wiring problem.</p>
+<hr>
+<h2 id="3-why-this-matters-at-scale--the-platform-framing">3. Why this matters at scale — the platform framing</h2>
+<p>The single-agent version of this problem is a maintenance annoyance. It becomes a
+platform-engineering problem the moment a second team starts building agents on top of the same
+context sources. Picture what
+<a href="/notes/production-agent-systems/04-ai-platform-engineering/01-designing-internal-ai-platforms/01-designing-internal-ai-platforms/">an internal AI platform team</a>
+actually faces at, say, eight agents deep: an SRE copilot, a support agent, a code-review agent, a
+few more — each with its own hand-rolled <code>assemble_context()</code>, each independently reimplementing
+MMR-flavored dedup, its own budget carve-outs, its own inline compression shortcut.</p>
+<p>Two ordinary platform events turn that duplication from an annoyance into an incident:</p>
+<ul>
+<li><strong>A pricing or context-window change on the provider side.</strong> The budget math baked into eight
+separate functions all needs to change, roughly simultaneously, and there is no single place to
+verify all eight got updated correctly — because there’s no single place the policy lived in the
+first place.</li>
+<li><strong>A compression technique gets found that measurably improves recall at the same token cost.</strong>
+Rolling it out means finding and patching every agent’s bespoke compression branch, several of
+which — like the <code>v4</code> carve-out in Section 1 — were written under incident pressure by whoever was
+on call that week, with no test coverage guaranteeing the patch behaves the same way twice.</li>
+</ul>
+<p>This is precisely the argument
+<a href="/notes/production-agent-systems/04-ai-platform-engineering/01-designing-internal-ai-platforms/01-designing-internal-ai-platforms/">Part 04 of Production Agent Systems</a>
+makes for a shared inference layer and paved-road SDKs generally, applied here to one specific slice
+of agent behavior: context assembly is exactly the kind of cross-cutting policy a platform team
+should own once, centrally, rather than let drift across every team building on top of it. A prompt
+compiler, in this framing, isn’t a novel AI capability — it’s the same “centralize the thing every
+consumer would otherwise reimplement” argument that justifies an internal platform team’s existence
+at all, aimed at Part 06’s specific policy surface.</p>
+<hr>
+<h2 id="4-where-the-analogy-holds-and-where-it-genuinely-breaks">4. Where the analogy holds, and where it genuinely breaks</h2>
+<p>Taking the compiler metaphor seriously means being honest about where it stops paying rent —
+treating it as a slogan past this point would be exactly the kind of unearned precision this book
+avoids.</p>
+<p><strong>Where it holds:</strong></p>
+<ul>
+<li><strong>Separation of intent from execution.</strong> The spec declares what matters; the compiler decides how.
+This is real, valuable decoupling — it’s what makes the ranking/budget/compression logic testable
+in isolation, independent of any one agent’s call site.</li>
+<li><strong>Reusable, ordered passes.</strong> A stable pipeline (rank → select → allocate → compress → position)
+that every consuming agent runs through, instead of each agent inventing its own ordering and
+discovering the hard way that running compression before budget allocation produces different
+results than the reverse.</li>
+<li><strong>A real absorption point for improvement.</strong> Ship a better ranking signal once, at the compiler
+layer, and every agent compiling against it benefits without anyone touching agent-specific code —
+the exact property Section 1 showed hand-assembled code lacks.</li>
+</ul>
+<p><strong>Where it breaks:</strong></p>
+<ul>
+<li><strong>No settled optimization theory.</strong> Register allocation has decades of provably-good algorithms
+behind it. Context ranking’s weights (Ch 2’s <code>w_sim</code>, <code>w_recency</code>, <code>w_authority</code>, <code>w_usefulness</code>)
+are heuristic, tuned per agent, with no equivalent proof of optimality — “good compression” and
+“good ranking” are empirically validated per use case, not derived from first principles the way a
+register allocator’s correctness is.</li>
+<li><strong>No compile-time correctness proof.</strong> A type-checker proves a program is well-typed before it
+ever runs. Nothing in this stack proves a compiled prompt is “correct” before the model sees it —
+the closest available substitute is eval-gated regression testing after the fact
+(<a href="/notes/building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation/">offline evaluation</a>
+against a golden set,
+<a href="/notes/building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation/">online evaluation</a>
+against live traffic), which catches regressions statistically, not a guarantee checked once at
+build time.</li>
+<li><strong>An unstable target.</strong> A real compiler backend targets a stable instruction set architecture —
+x86 behaves like x86 regardless of which compiler produced the binary. A “compiled” prompt’s
+optimal layout is tuned against one model’s positional attention behavior
+(<a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly/">Ch 1’s</a>
+primacy/recency asymmetry), and that behavior is not guaranteed stable across model versions, let
+alone model families. A layout optimized against <code>claude-sonnet-4-6</code>’s attention shape can
+mis-target <code>claude-opus-4-8</code>’s in a way no ISA-abstraction layer protects you from — this is a
+genuinely unsolved asymmetry, not a detail the ecosystem has already worked around.</li>
+</ul>
+<p>That target-instability point is worth sitting with longer than the others, because it’s the one
+most likely to bite a team that takes the analogy too literally: a real compiler’s backend is a
+solved, swappable abstraction over the target; a prompt compiler’s “backend” is closer to a moving
+target that happens to accept the same input format.</p>
+<hr>
+<h2 id="5-honest-state-of-the-art-directional-not-established">5. Honest state of the art: directional, not established</h2>
+<p>Name this plainly: <strong>treating context assembly as compilation is an emerging way of thinking about
+the problem, not a practice with an agreed-on canonical implementation.</strong> No framework in wide use
+today ships a general-purpose “declarative spec in, optimized prompt out” compiler that runs Section
+2’s full pass sequence — ranking, selection, budget allocation, compression, and layout — as one
+coherent, swappable layer across arbitrary context sources.</p>
+<p>The closest widely known reference point is <strong>DSPy</strong>, and it’s worth being precise about exactly how
+close: DSPy compiles a declarative <em>signature and module structure</em> into an optimized prompt (and
+optionally few-shot examples) by running an optimizer against a metric and a training set. That’s
+real compilation, in the sense this chapter means it — a declarative spec going in, an optimized
+prompt coming out through an automated pass rather than hand-tuning. But it’s solving a narrower,
+different-shaped problem than the one this chapter describes: DSPy’s optimization target is prompt
+<em>wording and few-shot selection</em> for a given task signature, tuned offline against a training set —
+not the multi-source, per-turn problem of ranking and budgeting <em>retrieval, memory, tool schemas,
+and history against each other</em> at runtime, which is what Chapters 2, 4, and 6 of this Part are
+actually about. Related idea, adjacent motivation, genuinely not the same compiler. Treat any claim
+that DSPy (or anything else) is <em>the</em> prompt compiler for context assembly as more confident than
+the current state of the field supports.</p>
+<p>Beyond that, what exists is a landscape of frameworks — LangChain, LlamaIndex, various platform
+teams’ internal layers — each with its own configurable-but-bespoke context-building logic, none of
+them exposing the general compiler this chapter describes as a first-class product concept. That may
+change; the pressure described in Section 3 is real and growing as more teams hit the same
+duplication problem independently. But as of this writing, this is a direction worth designing
+toward, not a dependency worth blocking on.</p>
+<p><strong>The practical takeaway that doesn’t require waiting for a standard:</strong> you don’t need someone
+else’s compiler to get most of the value. Extract your own ranking, budget, and compression logic
+out of each agent’s <code>assemble_context()</code> and into small, independently testable, reusable modules
+with a consistent input surface — even if you hand-write the orchestration that calls them in order.
+That gets you Section 1’s real cost fixed (policy drift, untestable coupling, <code>O(call sites)</code> change
+cost) without needing a general-purpose declarative spec language or an external framework. It’s not
+a full compiler. It’s the 80% of the value that doesn’t require solving the target-instability
+problem from Section 4 first.</p>
+<hr>
+<h3 id="a-naming-collision-worth-flagging-explicitly">A naming collision worth flagging explicitly</h3>
+<p><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler/">LLM Compiler</a>
+(Part 03, Chapter 9) borrows the same metaphor for a genuinely different axis of the system: it
+compiles an <em>execution plan</em> — a DAG of tool calls, planned upfront so independent branches can run
+in parallel instead of sequentially the way ReAct does. This chapter’s prompt compiler compiles a
+<em>context spec</em> into an optimized <em>prompt string</em>. Both are real, independent applications of
+“compilation” borrowed from programming-language theory to a different layer of the agent stack —
+one optimizes what the agent <em>does</em>, the other optimizes what the agent <em>sees</em> before it decides
+what to do. Don’t conflate them when the word “compiler” shows up in either context; check which
+layer of the stack is actually being compiled.</p>
+<hr>
+<h2 id="concept-check">Concept check</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Question</th><th>Answer hint</th></tr></thead><tbody><tr><td>Why does <code>assemble_context()</code> degrade specifically as sources multiply, not just get longer over time?</td><td>Every new source or special case is a ranking/budget/compression policy decision reimplemented ad hoc at the call site instead of reused from a shared layer — complexity compounds with each duplicated decision, not just with line count</td></tr><tr><td>What’s the core reframing a prompt compiler proposes?</td><td>Treat context assembly as compiling a declarative spec of what a turn needs through a coherent, reusable set of passes, instead of imperatively concatenating strings with source-specific conditionals at each call site</td></tr><tr><td>Does a prompt compiler introduce any new context-engineering policy this Part hasn’t already covered?</td><td>No — it’s the wiring of Ch 2 (ranking), Ch 3 (selection), Ch 4 (budget), and Ch 6 (compression) into one ordered pass, not a seventh policy layer</td></tr><tr><td>Why does hand-assembled duplication become a platform problem, not just a per-agent maintenance annoyance?</td><td>Past a handful of agents sharing context sources, a provider pricing change or a compression improvement has to be manually propagated to every duplicated call site instead of updated once at a shared layer</td></tr><tr><td>Name one place the compiler analogy genuinely breaks, not just “AI is different.”</td><td>No compile-time correctness proof equivalent to type-checking — the closest substitute is eval-gated regression testing after the fact, which catches regressions statistically, not a guarantee verified once at build time</td></tr><tr><td>Why is a compiled prompt’s “target” less stable than a real compiler’s ISA target?</td><td>Optimal layout is tuned against one model’s positional attention behavior, which isn’t guaranteed stable across model versions or families — unlike x86 behaving like x86 regardless of compiler</td></tr><tr><td>How does DSPy relate to the idea in this chapter, precisely?</td><td>DSPy compiles a declarative task signature into an optimized prompt/few-shot set via an offline optimizer against a metric — real compilation, but of prompt wording for one task, not the runtime multi-source ranking/budget problem this chapter describes</td></tr><tr><td>What should an engineer actually do this week, without waiting for a standard compiler to exist?</td><td>Extract ranking/budget/compression logic into small, independently testable, reusable modules with a consistent input surface — hand-written orchestration still captures most of the value</td></tr><tr><td>How does this chapter’s compiler differ from Part 03’s LLM Compiler?</td><td>LLM Compiler (Part 03) compiles an execution plan — a DAG of tool calls for parallel execution; this chapter’s compiler compiles a context spec into an optimized prompt string. Same metaphor, different layer of the stack</td></tr></tbody></table>
+<hr>
+<h2 id="vocabulary-glossary">Vocabulary glossary</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody><tr><td>Prompt compiler (directional)</td><td>A hypothetical, not-yet-standardized layer that compiles a declarative context spec into an optimized, budget-respecting prompt via reusable passes — ranking, selection, budget allocation, compression, layout</td></tr><tr><td>Declarative context spec</td><td>A description of what a turn needs — sources, priority tiers, compression tolerance — as input to a compiler, rather than the imperative sequence of steps that assembles a prompt today</td></tr><tr><td>Compiler pass</td><td>One coherent transformation stage (rank, select, allocate, compress, position) applied uniformly through a shared layer instead of reimplemented per call site</td></tr><tr><td>Policy duplication</td><td>The failure mode where the same ranking, budget, or compression logic is reimplemented — and drifts — independently at each agent’s own context-assembly call site</td></tr><tr><td>Target instability</td><td>The way a compiled prompt’s optimal layout is tuned against one model’s attention behavior and can mis-target a different model or model version, unlike a real compiler’s stable ISA target</td></tr><tr><td>DSPy</td><td>A framework that compiles a declarative task signature and module structure into an optimized prompt via an offline optimizer against a metric — the closest widely known reference point, but scoped to prompt wording for one task, not this chapter’s multi-source runtime problem</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:var(--color-surface)"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler","title":"9. LLM Compiler","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","title":"1. Context Assembly","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking","title":"2. Context Ranking","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","title":"3. Memory Selection","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","title":"4. Prompt Budgets","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","title":"6. Context Compression","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","title":"7. Prompt Compilers","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/readme","title":"Agentic AI Engineering","topic":"agentic-ai-engineering","noteType":"moc"},{"slug":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","title":"3. Online Evaluation","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","title":"4. Offline Evaluation","topic":"building-agentic-systems","noteType":"note"},{"slug":"production-agent-systems/04-ai-platform-engineering/01-designing-internal-ai-platforms/01-designing-internal-ai-platforms","title":"1. Designing Internal AI Platforms","topic":"production-agent-systems","noteType":"note"}];
+const edges = [{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking","target":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking","target":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"depends_on"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking","target":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","kind":"depends_on"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","kind":"depends_on"},{"source":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","target":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","kind":"depends_on"},{"source":"agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler","target":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","kind":"compared_to"},{"source":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking","target":"agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection","target":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","target":"production-agent-systems/04-ai-platform-engineering/01-designing-internal-ai-platforms/01-designing-internal-ai-platforms","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers","target":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","kind":"related"},{"source":"agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler","target":"agentic-ai-engineering/readme","kind":"related"},{"source":"agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly","target":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","kind":"related"}];
+const topicColors = {"README.md":"#009563","agentic-ai-engineering":"#00ab8d","agentic-ai-projects-and-mastery":"#00958b","ai-architecture-and-system-design":"#00a9b3","ai-foundations":"#008fad","aptitude":"#00a1d1","building-agentic-systems":"#0085c5","ci-cd":"#2c95e4","data-engineering":"#3c79d1","data-structures-algorithms":"#6b88ea","dbms":"#6d6cd0","gita":"#937be2","grafana-cloud":"#8f60c1","infrastructure-platform-engineering":"#b26fcc","internal-developer-platforms":"#a856a7","kubernetes":"#c967ad","kubernetes-platform-engineering":"#b94f85","low-level-design":"#d76387","networks":"#c24d5f","object-oriented-programming":"#dc655e","observability":"#c25332","operating-system":"#d66f2f","patterns":"#b86000","philosophy":"#c67d00","platform-engineering-fundamentals":"#a46f00","production-agent-systems":"#ac8d00","productivity":"#867e00","projects":"#879b09","prometheus":"#5b8b12","sre":"#54a54b","system-design":"#00934d"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  // Edge/ring colors aren't reachable by the `light:` Tailwind variant (set
+  // via raw SVG attribute, not a class) — theme-keyed lookup instead,
+  // re-applied on `themechange` by applyThemeColors() below.
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+  const GRAPH_COLORS = {
+    dark: { edge: '#1e293b', edgeActive: '#00d9a6', currentStroke: '#00d9a6', mocStroke: '#f1f5f9' },
+    light: { edge: '#cbd5e1', edgeActive: '#0f766e', currentStroke: '#0f766e', mocStroke: '#0f172a' },
+  };
+  let colors = GRAPH_COLORS[currentTheme()];
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', colors.edge);
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', colors.currentStroke);
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', colors.mocStroke);
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = n.href || `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? colors.edgeActive : colors.edge);
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', colors.edge);
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // Re-applies the current theme's palette to already-built elements — the
+  // colors above are set once at element-creation time, so a toggle needs
+  // this to actually repaint anything already on screen.
+  function applyThemeColors() {
+    colors = GRAPH_COLORS[currentTheme()];
+    lineEls.forEach((line) => line.setAttribute('stroke', colors.edge));
+    nodeEls.forEach((g, i) => {
+      const n = sim[i];
+      const circle = g.querySelector('circle');
+      if (!circle) return;
+      const isCurrent = currentSlug && n.slug === currentSlug;
+      if (isCurrent) circle.setAttribute('stroke', colors.currentStroke);
+      else if (n.noteType === 'moc') circle.setAttribute('stroke', colors.mocStroke);
+    });
+  }
+  window.addEventListener('themechange', applyThemeColors);
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 light:border-slate-200 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link
+               graph. Kept flat (not grouped by kind, unlike the sidebar's KnowledgeGraphTree) —
+               on hub notes the untyped 'related' kind dominates almost all entries, so grouping
+               here would produce one giant bucket and a couple stragglers for no real scannability
+               gain. Capped at BACKLINKS_PREVIEW_LIMIT with a "show all" toggle instead, since hub
+               notes can have 100+ backlinks. --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" id="linked-from" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 3 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1. Context Assembly </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How the final prompt an agent actually sends gets built from disparate sources — system instructions, retrieved chunks, memory, tool schemas, and conversation history — and why where a piece sits changes how much the model attends to it.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 6. Context Compression </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Summarization, extractive pruning, and structured compression for fitting more signal into less context — and the risk every one of them shares: silently dropping the one detail the model actually needed this turn.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Agentic AI Engineering </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for Agentic AI Engineering: where &#39;LLM application&#39; becomes &#39;agent&#39; — introduction to agentic AI, agent cognition, memory systems, planning &amp; reasoning algorithms, tools &amp; environment interaction, retrieval &amp; knowledge systems, and context engineering. Book 2 of the AI Systems Engineering series.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div>  </div> <!-- Referenced in Bhagavad Gita: reverse lookup from the gita verse
+               collection's own `concepts[]` field — see getVersesReferencingConcept
+               in src/lib/gita.ts. Computed unconditionally for every note, so any
+               note anywhere in the corpus that a verse happens to reference gets
+               this section, not just notes under notes/gita/concepts/. -->  <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1. Context Assembly </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How the final prompt an agent actually sends gets built from disparate sources — system instructions, retrieved chunks, memory, tool schemas, and conversation history — and why where a piece sits changes how much the model attends to it.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2. Context Ranking </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers scoring and ordering already-selected context fragments -- retrieved chunks, memory items, tool output, and prior turns -- by semantic similarity, recency, source authority, and prior usefulness before they compete for a fixed token budget, and the near-duplicate crowding failure mode that ranking by similarity alone produces.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/03-memory-selection/03-memory-selection" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 3. Memory Selection </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The policy layer between memory retrieval and context assembly -- deciding which of the memories retrieval surfaced are actually worth spending tokens on for this specific turn, and why over-including memory is its own failure mode, not just a cost line item.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4. Prompt Budgets </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Allocating a fixed token budget across system prompt, tool schemas, conversation history, retrieved context, and memory -- concrete allocation math, what happens when the budget is exceeded, and why percentage-based budgets break the moment you swap context-window sizes.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/agentic-ai-engineering" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett> Agentic Ai Engineering notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/agentic-ai-engineering/06-context-engineering/07-prompt-compilers/07-prompt-compilers.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 light:border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 6. Context Compression </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/readme" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Agentic AI Engineering </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#prompt-compilers" data-slug="prompt-compilers" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Prompt Compilers</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#the-mental-model" data-slug="the-mental-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>The mental model</a></li><li data-astro-cid-xvrfupwn><a href="#1-the-hand-assembled-pile-concretely" data-slug="1-the-hand-assembled-pile-concretely" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>1. The hand-assembled pile, concretely</a></li><li data-astro-cid-xvrfupwn><a href="#2-what-compiling-a-prompt-would-actually-mean" data-slug="2-what-compiling-a-prompt-would-actually-mean" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>2. What “compiling” a prompt would actually mean</a></li><li data-astro-cid-xvrfupwn><a href="#3-why-this-matters-at-scale--the-platform-framing" data-slug="3-why-this-matters-at-scale--the-platform-framing" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>3. Why this matters at scale — the platform framing</a></li><li data-astro-cid-xvrfupwn><a href="#4-where-the-analogy-holds-and-where-it-genuinely-breaks" data-slug="4-where-the-analogy-holds-and-where-it-genuinely-breaks" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>4. Where the analogy holds, and where it genuinely breaks</a></li><li data-astro-cid-xvrfupwn><a href="#5-honest-state-of-the-art-directional-not-established" data-slug="5-honest-state-of-the-art-directional-not-established" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>5. Honest state of the art: directional, not established</a></li><li data-astro-cid-xvrfupwn><a href="#a-naming-collision-worth-flagging-explicitly" data-slug="a-naming-collision-worth-flagging-explicitly" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>A naming collision worth flagging explicitly</a></li><li data-astro-cid-xvrfupwn><a href="#concept-check" data-slug="concept-check" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Concept check</a></li><li data-astro-cid-xvrfupwn><a href="#vocabulary-glossary" data-slug="vocabulary-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Vocabulary glossary</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/agentic-ai-engineering/06-context-engineering/02-context-ranking/02-context-ranking" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">2. Context Ranking</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/04-prompt-budgets/04-prompt-budgets" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">4. Prompt Budgets</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Context Compression</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Compared To</p><a href="/notes/agentic-ai-engineering/03-planning-and-reasoning-algorithms/09-llm-compiler/09-llm-compiler" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. LLM Compiler</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/agentic-ai-engineering/06-context-engineering/01-context-assembly/01-context-assembly" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Context Assembly</span></a><a href="/notes/agentic-ai-engineering/06-context-engineering/06-context-compression/06-context-compression" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Context Compression</span></a><a href="/notes/agentic-ai-engineering/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Agentic AI Engineering</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  // Mermaid bakes its theme into the rendered SVG at run() time, so a theme
+  // toggle needs a full re-render, not just a CSS flip. Two full palettes,
+  // not "dark + light overrides," since mermaid's dark theme already covers
+  // every variable used below and a partial override would leave stray
+  // dark-preset defaults showing through on light backgrounds.
+  const THEME_VARS = {
+    dark: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#cbd5e1',
+      primaryBorderColor: '#334155',
+      lineColor: '#00d9a6',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#1e293b',
+      background: '#0f172a',
+      mainBkg: '#1e293b',
+      nodeBorder: '#334155',
+      clusterBkg: '#0f172a',
+      titleColor: '#f1f5f9',
+      edgeLabelBackground: '#1e293b',
+      // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+      // via hue rotation, which can land on light/saturated fills that wash out
+      // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+      cScale0: '#1e3a5f',
+      cScale1: '#14532d',
+      cScale2: '#581c87',
+      cScale3: '#7c2d12',
+      cScale4: '#831843',
+      cScale5: '#713f12',
+      cScale6: '#164e63',
+      cScale7: '#3730a3',
+      cScaleLabel0: '#e2e8f0',
+      cScaleLabel1: '#e2e8f0',
+      cScaleLabel2: '#e2e8f0',
+      cScaleLabel3: '#e2e8f0',
+      cScaleLabel4: '#e2e8f0',
+      cScaleLabel5: '#e2e8f0',
+      cScaleLabel6: '#e2e8f0',
+      cScaleLabel7: '#e2e8f0',
+    },
+    light: {
+      primaryColor: '#f1f5f9',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#cbd5e1',
+      lineColor: '#0f766e',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#e2e8f0',
+      background: '#ffffff',
+      mainBkg: '#f1f5f9',
+      nodeBorder: '#cbd5e1',
+      clusterBkg: '#f8fafc',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#f1f5f9',
+      // Light-pastel fills (inverse of the dark palette's dark fills), one
+      // consistent dark label color across sections — same structure as dark.
+      cScale0: '#dbeafe',
+      cScale1: '#dcfce7',
+      cScale2: '#f3e8ff',
+      cScale3: '#ffedd5',
+      cScale4: '#fce7f3',
+      cScale5: '#fef3c7',
+      cScale6: '#cffafe',
+      cScale7: '#e0e7ff',
+      cScaleLabel0: '#1e293b',
+      cScaleLabel1: '#1e293b',
+      cScaleLabel2: '#1e293b',
+      cScaleLabel3: '#1e293b',
+      cScaleLabel4: '#1e293b',
+      cScaleLabel5: '#1e293b',
+      cScaleLabel6: '#1e293b',
+      cScaleLabel7: '#1e293b',
+    },
+  };
+
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        const theme = currentTheme();
+        mermaid.initialize({
+          startOnLoad: false,
+          // 'base' for light: an unstyled canvas driven entirely by
+          // themeVariables, so no dark-preset default shows through anywhere
+          // not explicitly covered above. 'dark' stays as-is for dark mode —
+          // it's the existing, already-tested path.
+          theme: theme === 'light' ? 'base' : 'dark',
+          themeVariables: THEME_VARS[theme],
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      const source = pre.querySelector('code')?.textContent ?? '';
+      // Preserved so a theme toggle can re-render from source — mermaid.run()
+      // replaces this div's content with rendered SVG, destroying the original.
+      div.dataset.mermaidSource = source;
+      div.textContent = source;
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  async function rerenderAllMermaid() {
+    const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+    if (!rendered.length) return;
+    mermaidPromise = null; // force re-init with the new theme's themeVariables
+    const mermaid = await getMermaid();
+    const nodes = [...rendered];
+    nodes.forEach((div) => {
+      div.removeAttribute('data-processed');
+      div.textContent = div.dataset.mermaidSource;
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  window.addEventListener('themechange', rerenderAllMermaid);
+  renderMermaid(document);
+</script>  </body></html>  

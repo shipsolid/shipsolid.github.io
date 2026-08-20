@@ -1,0 +1,1007 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>12. Rollback Strategies — Notes — Amit Singh</title><meta name="description" content="Reverting a bad prompt, model, or tool-schema change quickly — versioned prompt and model artifacts as first-class deploy units, canary and shadow rollout patterns for agent changes, and the rollback trigger thresholds tied to online-evaluation regressions."><link rel="canonical" href="https://shipsolid.github.io/notes/production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="12. Rollback Strategies — Notes — Amit Singh"><meta property="og:description" content="Reverting a bad prompt, model, or tool-schema change quickly — versioned prompt and model artifacts as first-class deploy units, canary and shadow rollout patterns for agent changes, and the rollback trigger thresholds tied to online-evaluation regressions."><meta property="og:url" content="https://shipsolid.github.io/notes/production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="12. Rollback Strategies — Notes — Amit Singh"><meta name="twitter:description" content="Reverting a bad prompt, model, or tool-schema change quickly — versioned prompt and model artifacts as first-class deploy units, canary and shadow rollout patterns for agent changes, and the rollback trigger thresholds tied to online-evaluation regressions."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><!-- Grafana Cloud Frontend Observability (Faro). Script tag must stay
+         unconditional in the template — wrapping it in {faroUrl && <script>}
+         stopped Astro from bundling the npm import at all (shipped as raw,
+         unprocessed source, which throws in the browser). The env check
+         below runs client-side instead, and is a no-op when unset (local dev). --><link rel="stylesheet" href="/_astro/_slug_.DJLsCJIh.css">
+<link rel="stylesheet" href="/_astro/_slug_.BXBXtc4O.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb))}
+summary[data-astro-cid-l7mxuoaf]{list-style:none}summary[data-astro-cid-l7mxuoaf]::-webkit-details-marker{display:none}details[data-astro-cid-l7mxuoaf][open]>summary[data-astro-cid-l7mxuoaf] .tree-chevron[data-astro-cid-l7mxuoaf]{transform:rotate(90deg)}summary[data-astro-cid-xd55becy]{list-style:none}summary[data-astro-cid-xd55becy]::-webkit-details-marker{display:none}details[data-astro-cid-xd55becy][open]>summary[data-astro-cid-xd55becy] .tree-chevron[data-astro-cid-xd55becy]{transform:rotate(90deg)}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:.5rem;font-size:.75rem;color:var(--color-text);box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:var(--color-text-faint);background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb) / .3);background:rgb(var(--color-accent-rgb) / .05)}
+</style><script type="module" src="/_astro/hoisted.BlnzIfoi.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Search" title="Search" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" data-astro-cid-3ef6ksr2></path> </svg> </a> <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <div class="relative" data-astro-cid-3ef6ksr2> <button id="more-menu-btn" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="More" aria-haspopup="menu" aria-expanded="false" title="More" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="5" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="12" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="19" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle> </svg> </button> <div id="more-menu" role="menu" class="hidden absolute right-0 top-full mt-2 min-w-[170px] rounded-lg border border-slate-800 light:border-slate-200 bg-slate-950/95 light:bg-white/95 backdrop-blur-md shadow-lg py-1" data-astro-cid-3ef6ksr2> <a href="/pomo" role="menuitem" class="block px-4 py-2 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> </div> </div> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div>  <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+Search
+</a> <a href="/pomo" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 light:text-slate-400 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/production-agent-systems" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Production Agent Systems</a>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>02 Reliability Security And Governance</span>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>12 Rollback Strategies</span>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> 12. Rollback Strategies  </h1> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-v5yihett>Reverting a bad prompt, model, or tool-schema change quickly — versioned prompt and model artifacts as first-class deploy units, canary and shadow rollout patterns for agent changes, and the rollback trigger thresholds tied to online-evaluation regressions.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated August 8, 2026</span>  <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <span class="text-slate-600 light:text-slate-400" title="Permanent note identifier" data-astro-cid-v5yihett>§202607191037-136</span>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/production-agent-systems" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>production-agent-systems</a><a href="/notes/tag/reliability-security-and-governance" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>reliability-security-and-governance</a><a href="/notes/tag/book" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>book</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[260px_1fr_260px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div data-notes-tree-scroll class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Production Agent Systems</p> <div id="chapter-nav-source" data-astro-cid-v5yihett> <div class="space-y-1.5">  <div data-topic-id="production-agent-systems" class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <details data-node-path="00-production-infrastructure" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>00 Production Infrastructure</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>12</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/production-agent-systems/00-production-infrastructure/01-agent-runtime/01-agent-runtime" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Agent Runtime </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/02-session-management/02-session-management" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Session Management </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/03-state-persistence/03-state-persistence" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 State Persistence </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/04-event-streaming/04-event-streaming" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Event Streaming </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/05-message-queues/05-message-queues" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Message Queues </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/06-workflow-engines/06-workflow-engines" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Workflow Engines </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/07-distributed-execution/07-distributed-execution" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Distributed Execution </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/08-scheduling/08-scheduling" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Scheduling </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/09-scaling-strategies/09-scaling-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Scaling Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/10-multi-tenant-architectures/10-multi-tenant-architectures" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Multi Tenant Architectures </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/11-high-availability/11-high-availability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 High Availability </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/00-production-infrastructure/12-disaster-recovery/12-disaster-recovery" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Disaster Recovery </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="01-observability" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>01 Observability</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>8</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/production-agent-systems/01-observability/01-ai-observability-fundamentals/01-ai-observability-fundamentals" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Ai Observability Fundamentals </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/01-observability/02-agent-tracing/02-agent-tracing" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Agent Tracing </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/01-observability/03-token-metrics/03-token-metrics" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Token Metrics </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/01-observability/04-prompt-observability/04-prompt-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Prompt Observability </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/01-observability/05-memory-observability/05-memory-observability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Memory Observability </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/01-observability/06-tool-invocation-metrics/06-tool-invocation-metrics" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Tool Invocation Metrics </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/01-observability/07-ai-logging/07-ai-logging" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Ai Logging </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/01-observability/08-ai-slos/08-ai-slos" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Ai Slos </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="02-reliability-security-and-governance" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>02 Reliability Security And Governance</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>14</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/production-agent-systems/02-reliability-security-and-governance/01-guardrails/01-guardrails" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Guardrails </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/02-prompt-injection/02-prompt-injection" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Prompt Injection </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/03-jailbreak-prevention/03-jailbreak-prevention" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Jailbreak Prevention </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/04-sandboxing/04-sandboxing" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Sandboxing </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/05-identity-and-authentication/05-identity-and-authentication" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Identity And Authentication </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/06-authorization-and-permissions/06-authorization-and-permissions" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Authorization And Permissions </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/07-secrets-management/07-secrets-management" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Secrets Management </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/08-human-approval-systems/08-human-approval-systems" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Human Approval Systems </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/09-compliance/09-compliance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Compliance </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/10-ai-governance/10-ai-governance" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Ai Governance </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Failure Recovery </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Rollback Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 13 Circuit Breakers And Timeout Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/14-trust-and-explainability/14-trust-and-explainability" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 14 Trust And Explainability </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="03-performance-and-cost-engineering" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>03 Performance And Cost Engineering</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>10</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/production-agent-systems/03-performance-and-cost-engineering/01-latency-optimization/01-latency-optimization" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Latency Optimization </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/02-parallel-execution/02-parallel-execution" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Parallel Execution </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/03-streaming-optimization/03-streaming-optimization" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Streaming Optimization </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/04-token-optimization/04-token-optimization" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Token Optimization </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/05-context-optimization/05-context-optimization" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Context Optimization </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/06-semantic-caching/06-semantic-caching" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Semantic Caching </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/07-response-caching/07-response-caching" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Response Caching </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/08-cost-engineering/08-cost-engineering" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Cost Engineering </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/09-capacity-planning/09-capacity-planning" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Capacity Planning </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/03-performance-and-cost-engineering/10-performance-benchmarking/10-performance-benchmarking" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Performance Benchmarking </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="04-ai-platform-engineering" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>04 Ai Platform Engineering</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>9</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/production-agent-systems/04-ai-platform-engineering/01-designing-internal-ai-platforms/01-designing-internal-ai-platforms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Designing Internal Ai Platforms </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/02-agent-sdks/02-agent-sdks" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Agent Sdks </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/03-agent-apis/03-agent-apis" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Agent Apis </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/04-plugin-ecosystems/04-plugin-ecosystems" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Plugin Ecosystems </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/05-agent-registries/05-agent-registries" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Agent Registries </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/06-ai-gateways/06-ai-gateways" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Ai Gateways </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/07-multi-model-infrastructure/07-multi-model-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Multi Model Infrastructure </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/08-deployment-strategies/08-deployment-strategies" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Deployment Strategies </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/production-agent-systems/04-ai-platform-engineering/09-platform-operations/09-platform-operations" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Platform Operations </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details> </div>   <a href="/notes/production-agent-systems/readme" class="flex items-start justify-between gap-2 px-3 py-2 rounded-lg text-xs font-mono text-slate-500 hover:text-slate-200 light:hover:text-slate-800 hover:bg-slate-800/60 light:hover:bg-slate-200/60 transition-colors no-underline" data-astro-cid-xd55becy><span class="leading-snug" data-astro-cid-xd55becy>Other</span></a> </div> </div> </div> </aside> <!-- Mobile/tablet nav: same content as the two xl:+ asides, collapsed
+             by default so a reader lands on the article first, not a wall of
+             chapter links. The chapter tree itself isn't re-rendered here —
+             it's cloned client-side from #chapter-nav-source (below), which
+             stays in the DOM on mobile too (`hidden xl:block` only affects
+             what's *shown*, not what's downloaded) — a topic's full nav tree
+             would otherwise ship twice on every note page. --> <div class="xl:hidden space-y-3" data-astro-cid-v5yihett> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+Chapter Navigation
+</summary> <div id="chapter-nav-mobile" class="mt-4" data-astro-cid-v5yihett></div> </details> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+On This Page
+</summary> <div class="mt-4" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#rollback-strategies" data-slug="rollback-strategies" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Rollback Strategies</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#the-mental-model" data-slug="the-mental-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>The mental model</a></li><li data-astro-cid-xvrfupwn><a href="#1-the-deploy-unit--prompt--model--tool-config-versioned-together" data-slug="1-the-deploy-unit--prompt--model--tool-config-versioned-together" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>1. The deploy unit — prompt + model + tool config, versioned together</a></li><li data-astro-cid-xvrfupwn><a href="#2-why-in-place-edits-make-rollback-impossible" data-slug="2-why-in-place-edits-make-rollback-impossible" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>2. Why in-place edits make rollback impossible</a></li><li data-astro-cid-xvrfupwn><a href="#3-canary-rollout-for-agent-changes" data-slug="3-canary-rollout-for-agent-changes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>3. Canary rollout for agent changes</a></li><li data-astro-cid-xvrfupwn><a href="#4-shadow-rollout-for-agent-changes" data-slug="4-shadow-rollout-for-agent-changes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>4. Shadow rollout for agent changes</a></li><li data-astro-cid-xvrfupwn><a href="#5-canary-vs-shadow--choosing-between-them" data-slug="5-canary-vs-shadow--choosing-between-them" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>5. Canary vs. shadow — choosing between them</a></li><li data-astro-cid-xvrfupwn><a href="#6-rollback-triggers--closing-the-loop-with-evaluation" data-slug="6-rollback-triggers--closing-the-loop-with-evaluation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>6. Rollback triggers — closing the loop with evaluation</a></li><li data-astro-cid-xvrfupwn><a href="#7-worked-example--a-canary-that-should-have-rolled-back" data-slug="7-worked-example--a-canary-that-should-have-rolled-back" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>7. Worked example — a canary that should have rolled back</a></li><li data-astro-cid-xvrfupwn><a href="#github-copilot-in-practice" data-slug="github-copilot-in-practice" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>GitHub Copilot in practice</a></li><li data-astro-cid-xvrfupwn><a href="#concept-check" data-slug="concept-check" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Concept check</a></li><li data-astro-cid-xvrfupwn><a href="#vocabulary-glossary" data-slug="vocabulary-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Vocabulary glossary</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Online Evaluation</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Related</p><a href="/notes/production-agent-systems/04-ai-platform-engineering/08-deployment-strategies/08-deployment-strategies" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">8. Deployment Strategies</span></a><a href="/notes/agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/09-production-deployment/09-deployment-strategies" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. Production Deployment</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Compared To</p><a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Failure Recovery</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">14. Safe Execution Paths &amp; Error Handling</span></a><a href="/notes/building-agentic-systems/01-multi-agent-systems/11-agent-lifecycle-management/11-agent-lifecycle-management" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Agent Lifecycle Management</span></a><a href="/notes/building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Online Evaluation</span></a><a href="/notes/building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">4. Offline Evaluation</span></a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Failure Recovery</span></a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/09-enterprise-adoption-patterns/09-enterprise-adoption-patterns" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. Enterprise Adoption Patterns</span></a><a href="/notes/agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Self-Correction</span></a><a href="/notes/agentic-ai-engineering/01-agent-cognition/10-autonomous-execution/10-autonomous-execution" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">10. Autonomous Execution</span></a></div><a href="#linked-from" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-600 light:text-slate-400 hover:text-accent transition-colors no-underline">
++4 more →
+</a></div></nav> </div> </div> </details> </div>  <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:12. Rollback Strategies" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-08-08T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Production Agent Systems" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:production-agent-systems" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:reliability-security-and-governance" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:book" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+
+            prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+            prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 light:prose-blockquote:text-slate-600 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 light:prose-blockquote:bg-slate-100/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+            prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+
+            prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="rollback-strategies">Rollback Strategies</h2>
+<blockquote>
+<p>Chapter of
+<a href="/notes/production-agent-systems/readme/#02--reliability-security--governance">Reliability, Security &#x26; Governance</a>,
+part of <a href="/notes/production-agent-systems/readme/">Production Agent Systems</a>.</p>
+</blockquote>
+<h2 id="what-you-will-understand-at-the-end">What you will understand at the end</h2>
+<ul>
+<li>Why a prompt + model + tool-config combination must be treated as a single versioned, deployable
+artifact — never edited in place in a running production agent</li>
+<li>How canary rollout and shadow rollout apply to agent changes specifically, and which one earns its
+extra infrastructure cost for a given kind of change</li>
+<li>How to wire a rollback trigger to an evaluation regression so a bad deploy reverts itself before a
+human notices — closing the loop with this book’s evaluation chapters instead of leaving rollback
+as a manual, vibes-based judgment call</li>
+</ul>
+<hr>
+<h2 id="the-mental-model">The mental model</h2>
+<p>Rollback, in this chapter, means one specific thing: <strong>reverting the agent’s own deployed
+configuration</strong> — the prompt, the model, the tool schema, the sampling parameters — back to a
+previous version, because the current version is producing worse outcomes than the one before it.</p>
+<p>This is a narrower claim than it sounds, and it is worth drawing the boundary precisely, because
+this book uses “rollback” and “recovery” in three different scopes:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Scope</th><th>Question it answers</th><th>Where it’s covered</th></tr></thead><tbody><tr><td>A single agent <strong>run</strong></td><td>”This run hit an error mid-task — retry, checkpoint, or fail fast?”</td><td><a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery/">Failure Recovery</a> (previous chapter)</td></tr><tr><td>A single <strong>action</strong> the agent took</td><td>”The agent wrote a file / sent an email it shouldn’t have — undo it.”</td><td>Autonomous Execution (Part 01 of Agentic AI Engineering) — validation and rollback at the action level</td></tr><tr><td>The agent’s <strong>deploy unit</strong></td><td>”The new prompt/model version is worse than the old one — revert it.”</td><td>This chapter</td></tr></tbody></table>
+<p>Failure Recovery is about a run surviving its own execution. This chapter is about the <em>next</em>
+version of the agent surviving contact with production. A run can fail perfectly gracefully — every
+checkpoint honored, every retry backed off correctly — and the deploy unit it was running can still
+be the wrong one to keep serving traffic. Those are orthogonal failure axes, and conflating them is
+the single most common design mistake in agent release engineering: teams build beautiful
+retry/checkpoint logic and then ship prompt changes straight to 100% of traffic with no gate at all.</p>
+<p>The mechanism that makes deploy-unit rollback possible in the first place is unglamorous: the
+prompt, model, and tool config have to be <strong>versioned artifacts</strong>, not values mutated in place. If
+“rolling back” means someone has to remember what the previous system prompt said and retype it, you
+don’t have a rollback strategy — you have an incident with extra steps.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph New["Deploy Unit v(N+1) — candidate"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        direction TB</span></span>
+<span class="line"><span style="color:#E1E4E8">        P1["System Prompt&#x3C;br/>rev N+1"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        M1["Model&#x3C;br/>e.g. claude-sonnet-4-6"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        T1["Tool Config&#x3C;br/>schemas + permissions, rev N+1"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    subgraph Old["Deploy Unit vN — last known-good"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        direction TB</span></span>
+<span class="line"><span style="color:#E1E4E8">        P0["System Prompt&#x3C;br/>rev N"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        M0["Model N"]</span></span>
+<span class="line"><span style="color:#E1E4E8">        T0["Tool Config rev N"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    New -->|"small % of traffic"| Split{{"Traffic Split"}}</span></span>
+<span class="line"><span style="color:#E1E4E8">    Old -->|"remaining % of traffic"| Split</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Split --> Gate{"Eval Gate&#x3C;br/>online eval score:&#x3C;br/>v(N+1) vs vN baseline"}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Gate -->|"score holds ≥ threshold&#x3C;br/>over min sample size"| Promote["Promote v(N+1)&#x3C;br/>ramp to 100% traffic"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Gate -->|"score regresses&#x3C;br/>below threshold"| Rollback["Auto-Rollback&#x3C;br/>flip pointer back to vN"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Rollback -.->|"becomes new baseline"| Old</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Reading the diagram:</strong> the candidate and baseline deploy units run side by side, a traffic
+splitter routes a controlled slice to the candidate, and an eval gate — not a human staring at a
+dashboard — decides whether to widen that slice toward 100% or snap it back to zero. The rollback
+path is not a separate incident-response process; it’s the same pointer flip that promotion uses,
+just pointed the other direction.</p>
+<hr>
+<h2 id="1-the-deploy-unit--prompt--model--tool-config-versioned-together">1. The deploy unit — prompt + model + tool config, versioned together</h2>
+<p>The temptation is to version these three things independently: a prompt in a prompt-management tool,
+a model string in an env var, a tool schema in a separate repo. Resist it. Version them as <strong>one
+bundle</strong>, because that’s the only unit that was ever actually evaluated together.</p>
+<p>A system prompt tuned against one model’s instruction-following quirks can silently break on a
+different model. A tool schema that assumes a particular prompt phrasing (“always confirm before
+calling <code>delete_record</code>”) stops being safe the moment the prompt that contains that instruction is
+rolled back but the tool schema isn’t. The combination is the thing with behavior — not any single
+piece of it.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#6A737D"># agent-deploy-unit.yaml — a versioned, immutable deploy unit</span></span>
+<span class="line"><span style="color:#85E89D">version</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"v42"</span></span>
+<span class="line"><span style="color:#85E89D">system_prompt_ref</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"prompts/support-agent@sha256:9f2c1a4e..."</span></span>
+<span class="line"><span style="color:#85E89D">model</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"claude-sonnet-4-6"</span></span>
+<span class="line"><span style="color:#85E89D">tool_config_ref</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"tools/support-agent-toolset@v7"</span></span>
+<span class="line"><span style="color:#85E89D">sampling</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  temperature</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">0.3</span></span>
+<span class="line"><span style="color:#85E89D">  max_tokens</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">2048</span></span>
+<span class="line"><span style="color:#85E89D">created_at</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"2026-08-08T09:12:00Z"</span></span>
+<span class="line"><span style="color:#85E89D">promoted_from</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"v41"</span></span>
+<span class="line"><span style="color:#85E89D">status</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"canary"</span><span style="color:#6A737D"> # canary | promoted | rolled_back</span></span>
+<span class="line"><span style="color:#85E89D">canary_traffic_pct</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">5</span></span>
+<span class="line"></span></code></pre>
+<p>Two properties matter more than the exact storage mechanism (a prompt registry service, a tagged
+object-storage bundle, or — see the GitHub Copilot section below — a plain git-tracked file):</p>
+<ol>
+<li><strong>Immutability.</strong> Once <code>v42</code> exists, nothing about it changes. A fix is <code>v43</code>, not an edit to
+<code>v42</code>. This is what makes “rollback” a well-defined operation — you are always reverting <em>to</em>
+something, not trying to reconstruct it from memory.</li>
+<li><strong>A <code>promoted_from</code> pointer.</strong> Every version knows what it superseded. Rollback is then just
+“make <code>promoted_from</code> the active version again,” which is a pointer flip, not a redeploy from
+scratch.</li>
+</ol>
+<hr>
+<h2 id="2-why-in-place-edits-make-rollback-impossible">2. Why in-place edits make rollback impossible</h2>
+<p>This is worth stating bluntly because it’s the failure mode that actually happens: someone opens the
+system prompt in whatever admin console holds it, tweaks a paragraph to fix a complaint, saves, and
+the change is live. No version bump, no baseline to compare against, no way back except retyping
+from memory or grepping Slack for the old wording.</p>
+<p>The cost isn’t hypothetical rollback difficulty — it’s that <strong>you lose the ability to attribute a
+regression to a cause at all.</strong> If the prompt, the model routing, and the tool config all drift
+independently and continuously, and a quality metric drops next Tuesday, you have no artifact
+boundary to bisect against. Contrast this with treating each change as a new immutable version: now
+“what changed between the good period and the bad period” is a diff between two version IDs, not an
+archaeology project.</p>
+<p>This is also why this chapter’s scope — versioned deploy units — is the <em>precondition</em> for
+everything else in it. Canary rollout, shadow rollout, and automated rollback triggers are all
+mechanisms for comparing version N+1 against version N. None of them are meaningful if there is no N
+to compare against, only “whatever is currently in the prompt field.”</p>
+<hr>
+<h2 id="3-canary-rollout-for-agent-changes">3. Canary rollout for agent changes</h2>
+<p>Canary rollout routes a small percentage of <strong>real</strong> traffic to the candidate deploy unit and
+compares outcomes against the baseline, before committing the rest of traffic to it. This is the
+same idea as canarying a service deploy — but what you’re watching is different. A bad HTTP service
+canary shows up as elevated error rates or latency. A bad <em>agent</em> canary can look perfectly healthy
+on infrastructure metrics (200s, normal latency, normal token counts) while quietly giving worse
+answers, calling the wrong tool, or hallucinating a citation — none of which a load balancer’s
+health check will ever see.</p>
+<p>That’s why an agent canary’s gate has to be an <strong>evaluation signal</strong>, not an infra signal:
+task-success rate from an LLM-as-judge, groundedness/hallucination score, tool-call correctness
+rate, or an implicit signal like retry/regeneration rate from real users. Part 02 of Building &#x26;
+Evaluating Agents’s
+<a href="/notes/building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation/">Online Evaluation</a>
+chapter covers how those scores get produced continuously; this chapter is about what you <em>do</em> with
+the score once it exists.</p>
+<p><strong>Practical shape of an agent canary:</strong></p>
+<ol>
+<li>Route 1–5% of live traffic to v(N+1); the rest stays on vN.</li>
+<li>Score both populations with the same evaluators, over a rolling window.</li>
+<li>Require a minimum sample size before trusting any delta (see §6 — small-N deltas are noise, not
+signal).</li>
+<li>Ramp progressively — 5% → 25% → 50% → 100% — re-gating at each step, rather than a single binary
+on/off canary. A regression that only shows up under a specific traffic mix (a heavier-than-usual
+share of a particular intent, a regional load pattern) can hide at 5% and surface at 50%.</li>
+</ol>
+<p>The real cost of canary is that a slice of real users get the candidate’s actual output while it’s
+still unproven. For a pure text-generation agent with no side effects, that’s a low-stakes bet. For
+an agent whose tools mutate state — send an email, charge a card, close a ticket — a regressed
+canary means real mutations happened on bad reasoning, and “roll back the deploy unit” does not undo
+them. That’s the case shadow rollout exists for.</p>
+<hr>
+<h2 id="4-shadow-rollout-for-agent-changes">4. Shadow rollout for agent changes</h2>
+<p>Shadow rollout runs the candidate deploy unit <strong>alongside</strong> the baseline on real production input,
+but the candidate’s output is never actually used — it’s logged and scored, then discarded. The user
+only ever sees the baseline’s response.</p>
+<p>For an agent, this means executing the candidate’s full reasoning loop — including tool calls — in a
+context where its actions don’t take effect: read-only tools can genuinely run twice at no risk;
+mutating tools have to be mocked, sandboxed, or dry-run-flagged so the shadow path exercises the
+agent’s <em>decision</em> to call them without the call actually happening. This is more engineering than
+canary requires, and it costs roughly double the inference spend for whatever traffic you shadow
+(every shadowed request now runs through two full agent loops instead of one).</p>
+<p>What you get in exchange is the thing canary can’t offer: a <strong>paired comparison</strong>. Because both
+versions see the exact same input at the exact same moment, you can attribute a scoring difference
+to the deploy-unit change with much higher confidence than a canary’s two overlapping-but-distinct
+traffic populations ever gives you. Shadow is the right tool when you need that precision before
+you’re willing to let the candidate touch anything real — which is precisely the situation a
+mutating-tool agent is in.</p>
+<hr>
+<h2 id="5-canary-vs-shadow--choosing-between-them">5. Canary vs. shadow — choosing between them</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>Canary rollout</th><th>Shadow rollout</th></tr></thead><tbody><tr><td>What the user sees</td><td>The candidate’s real output, for a % of traffic</td><td>Always the baseline’s output — candidate output is discarded</td></tr><tr><td>Risk if candidate regresses</td><td>A slice of real users get the worse behavior, including any mutating tool calls</td><td>Zero user-facing risk — mutating tool calls must be mocked/dry-run, so nothing real happens</td></tr><tr><td>Inference cost</td><td>~1x — traffic is <em>split</em>, not duplicated</td><td>~2x for shadowed requests — every request runs through both deploy units</td></tr><tr><td>Comparison quality</td><td>Two distinct (if similar) traffic populations — some noise from population drift</td><td>Paired — identical input to both versions, higher-confidence attribution</td></tr><tr><td>Extra engineering required</td><td>Traffic splitter + eval scoring</td><td>Traffic splitter + eval scoring + a way to neutralize side effects on the shadow path</td></tr><tr><td>Best fit</td><td>Text-generation-heavy agents, read-only tool agents, once an eval gate exists</td><td>Agents with mutating tools, or any change you want validated before it can touch anything real</td></tr></tbody></table>
+<p>They’re not mutually exclusive. A common progression: shadow the candidate first to get a paired,
+low-risk read on quality; once it clears that bar, canary it at 5% to validate against real user
+behavior signals shadow can’t produce (does latency hold under real concurrency, do users actually
+stop regenerating responses); then ramp.</p>
+<hr>
+<h2 id="6-rollback-triggers--closing-the-loop-with-evaluation">6. Rollback triggers — closing the loop with evaluation</h2>
+<p>Everything above is plumbing. The part that actually makes this a <em>rollback strategy</em> rather than a
+monitoring dashboard is this: <strong>the decision to revert is automated and tied to a specific,
+pre-committed evaluation threshold — not a human noticing something feels off.</strong></p>
+<p>That distinction matters because “feels off” doesn’t scale and doesn’t page anyone at 2 a.m. A
+concrete trigger does:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> evaluate_canary</span><span style="color:#E1E4E8">(candidate: DeployUnit, baseline: DeployUnit) -> RolloutDecision:</span></span>
+<span class="line"><span style="color:#E1E4E8">    scores </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> eval_gate.score_window(candidate, </span><span style="color:#FFAB70">min_samples</span><span style="color:#F97583">=</span><span style="color:#79B8FF">MIN_SAMPLES</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    baseline_scores </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> eval_gate.rolling_baseline(baseline, </span><span style="color:#FFAB70">window</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"7d"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> scores.sample_count </span><span style="color:#F97583">&#x3C;</span><span style="color:#79B8FF"> MIN_SAMPLES</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> RolloutDecision.</span><span style="color:#79B8FF">HOLD</span><span style="color:#6A737D">  # not enough signal yet — don't flap on noise</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    regression </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> baseline_scores.task_success_rate </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> scores.task_success_rate</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> regression </span><span style="color:#F97583">></span><span style="color:#79B8FF"> REGRESSION_THRESHOLD</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> RolloutDecision.</span><span style="color:#79B8FF">ROLLBACK</span><span style="color:#6A737D">  # flip the pointer back to `promoted_from`</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> RolloutDecision.</span><span style="color:#79B8FF">PROMOTE</span></span>
+<span class="line"></span></code></pre>
+<p>A few design decisions in that gate are load-bearing, and each maps to a lesson SRE practice already
+teaches about noisy signals:</p>
+<ul>
+<li><strong>Minimum sample size before trusting a delta.</strong> An LLM-as-judge score on 12 canary requests is
+not a signal, it’s noise wearing a signal’s clothes. Set <code>MIN_SAMPLES</code> from the eval’s own
+observed variance, the same way you’d size a burn-rate alert window — too small and you roll back
+on chance, too large and a real regression runs against users for hours before the gate fires.</li>
+<li><strong>A threshold, not a vibe.</strong> <code>REGRESSION_THRESHOLD</code> is a number someone committed to in advance,
+ideally derived from the offline eval baseline in
+<a href="/notes/building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation/">Offline Evaluation</a>‘s
+regression gate — this is the same regression-gate idea, just moved from pre-merge CI to
+post-deploy production traffic.</li>
+<li><strong>The rollback target is <code>promoted_from</code>, not “some earlier version.”</strong> This is why §1’s
+immutable-artifact discipline matters: the gate doesn’t need judgment about <em>which</em> earlier
+version is safe, because every version already carries a pointer to the one it superseded, and
+that one was — by definition — the last version that cleared this same gate.</li>
+<li><strong>Rollback becomes the new baseline immediately, not eventually.</strong> The moment the pointer flips
+back to vN, vN is what the <em>next</em> candidate gets compared against. This prevents a subtle trap:
+treating a rolled-back version’s score as still “the bar,” which would let a second bad candidate
+sneak through by only being slightly less bad than the first one.</li>
+</ul>
+<p>The loop this closes: Part 02 of Building &#x26; Evaluating Agents builds the scoring machinery (online
+eval, offline eval, eval frameworks); this chapter is where that scoring becomes a release-blocking,
+and release-reverting, control — not a chart someone checks on a cadence.</p>
+<hr>
+<h2 id="7-worked-example--a-canary-that-should-have-rolled-back">7. Worked example — a canary that should have rolled back</h2>
+<p>A support agent is on deploy unit v41. A prompt change to shorten responses ships as v42 —
+<code>promoted_from: v41</code>. Canary starts at 5%.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Metric (rolling window, LLM-judge scored)</th><th>v41 baseline</th><th>v42 canary (first 400 samples)</th></tr></thead><tbody><tr><td>Task success rate</td><td>94.1%</td><td>87.3%</td></tr><tr><td>Groundedness score</td><td>0.91</td><td>0.79</td></tr><tr><td>Avg response length</td><td>210 tokens</td><td>96 tokens</td></tr></tbody></table>
+<p>The response-length change is the <em>intended</em> effect of the prompt edit — it worked. But the eval
+gate isn’t scoring length, it’s scoring task success and groundedness, and both dropped well past
+<code>REGRESSION_THRESHOLD</code>. The shorter prompt trimmed exactly the sentences that were carrying
+citations and caveats — a plausible, easy-to-miss side effect of a change that looked purely
+stylistic in review.</p>
+<p><code>MIN_SAMPLES</code> (say, 300) is already cleared at 400 samples, so the gate doesn’t hold-and-wait — it
+fires: the pointer flips back to v41, v42 is marked <code>rolled_back</code>, and an alert links the regression
+delta straight to the diff between v41 and v42’s system prompt. Nobody had to notice degraded
+answers in a support queue three days later and trace it backward. The version boundary from §1 is
+what makes “the diff between v41 and v42” a well-formed, one-hop question instead of an
+investigation.</p>
+<hr>
+<h3 id="github-copilot-in-practice">GitHub Copilot in practice</h3>
+<p>GitHub Copilot’s custom agents — defined as markdown files with YAML frontmatter under
+<code>.github/agents/*.md</code>, specifying an agent’s name, description, and tool access — are, by virtue of
+living in the repo, already version-controlled deploy units in the sense this chapter cares about.
+Every commit that touches one of those files is a new version; git history <em>is</em> the version history;
+<code>git blame</code> and <code>git log</code> already answer “what changed and when” for free, without a bespoke
+prompt-registry service.</p>
+<p>That gives you the rollback mechanism this chapter has been building toward, for free: a regression
+in a custom agent’s behavior after an instruction change is reverted <strong>the same way any other code
+regression is</strong> — revert the commit or the PR. There’s no separate “agent rollback” tooling to
+learn; it’s the same <code>git revert</code> your team already runs for a bad application deploy.</p>
+<p>What it does <em>not</em> give you for free is the eval gate from §6. As far as documented behavior goes,
+merging a change to <code>.github/agents/*.md</code> does not trigger any canary or shadow traffic split on
+GitHub’s side — the file simply takes effect for subsequent invocations of that agent. If you want
+the “auto-revert on regression” half of this chapter rather than just the “revert is cheap” half,
+you have to build it the same way you’d build it for any config file: a required CI status check
+that runs your eval suite (this book’s Offline Evaluation regression gate) against the changed agent
+definition before the PR merges, using branch protection to make that check mandatory rather than
+advisory. That turns a plain git revert into the same regression-gated release process this chapter
+describes — pre-merge instead of post-deploy, since there’s no live traffic-splitting primitive to
+gate against in production the way an LLM API deploy unit would.</p>
+<p>One more connection worth flagging explicitly, since it’s an inference rather than something GitHub
+documents: if a custom agent is mid-session — partway through a multi-step task — when its
+definition file gets reverted, how gracefully that lands depends entirely on the runtime’s own
+checkpoint and resumption discipline, which is exactly the previous chapter’s territory
+(<a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery/">Failure Recovery</a>).
+A revert that takes effect cleanly between sessions is a non-event. A revert that lands mid-task,
+against a runtime with no checkpointing, is indistinguishable from an unannounced mid-flight config
+change — the in-progress reasoning was built against instructions and tool permissions that no
+longer exist. This isn’t a documented Copilot behavior so much as the general principle: rollback
+safety at the deploy-unit level and failure-recovery discipline at the run level are two different
+investments, and skipping the second one doesn’t make the first one free.</p>
+<hr>
+<h2 id="concept-check">Concept check</h2>
+<p>Before moving to the next chapter, you should be able to answer these questions without notes:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Question</th><th>Answer hint</th></tr></thead><tbody><tr><td>Why must prompt, model, and tool config be versioned as one bundle?</td><td>Only the combination was ever actually evaluated together — versioning them separately creates untested combinations.</td></tr><tr><td>What’s the difference between this chapter’s “rollback” and Chapter 11’s “recovery”?</td><td>Recovery is a single run surviving its own execution; rollback is the <em>next deploy version</em> surviving contact with production.</td></tr><tr><td>Why does canary risk more than shadow?</td><td>Canary exposes real users (and real mutating tool calls) to the candidate’s actual output; shadow never lets the candidate’s output take effect.</td></tr><tr><td>What decides a rollback — a person or a threshold?</td><td>A pre-committed evaluation threshold, checked against a minimum sample size, not a human judgment call.</td></tr><tr><td>Why is <code>promoted_from</code> on every deploy unit important?</td><td>It makes rollback a pointer flip to a known-good target instead of a judgment call about which earlier version is safe.</td></tr></tbody></table>
+<hr>
+<h2 id="vocabulary-glossary">Vocabulary glossary</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody><tr><td>Deploy unit</td><td>The versioned bundle of prompt + model + tool config that was evaluated and released together</td></tr><tr><td>Canary rollout</td><td>Routing a small % of real traffic to a candidate version while comparing outcomes to the baseline</td></tr><tr><td>Shadow rollout</td><td>Running a candidate alongside the baseline on real input without its output ever being used</td></tr><tr><td>Eval gate</td><td>The automated check that scores a candidate against a threshold before promoting or rolling it back</td></tr><tr><td>Rollback trigger</td><td>The pre-committed condition (score below threshold, over a minimum sample size) that fires a revert</td></tr><tr><td><code>promoted_from</code></td><td>The pointer on a deploy unit recording which prior version it superseded — the rollback target</td></tr><tr><td>Progressive ramp</td><td>Widening a canary’s traffic share in gated steps (5% → 25% → 50% → 100%) instead of a single cutover</td></tr><tr><td>Paired comparison</td><td>Scoring two versions against the exact same input, as shadow rollout enables, for higher-confidence attribution</td></tr></tbody></table>
+<h2 id="metadata">Metadata</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Author</td><td>Amit Singh</td></tr><tr><td>Scope</td><td>production-agent-systems</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:var(--color-surface)"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"agentic-ai-engineering/00-introduction-to-agentic-ai/09-enterprise-adoption-patterns/09-enterprise-adoption-patterns","title":"9. Enterprise Adoption Patterns","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction","title":"6. Self-Correction","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/01-agent-cognition/10-autonomous-execution/10-autonomous-execution","title":"10. Autonomous Execution","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling","title":"14. Safe Execution Paths & Error Handling","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/09-production-deployment/09-deployment-strategies","title":"9. Production Deployment","topic":"agentic-ai-projects-and-mastery","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","title":"10. Building Reliable LLM Applications","topic":"ai-foundations","noteType":"note"},{"slug":"building-agentic-systems/01-multi-agent-systems/11-agent-lifecycle-management/11-agent-lifecycle-management","title":"11. Agent Lifecycle Management","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","title":"1. AI Evaluation Frameworks","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","title":"3. Online Evaluation","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","title":"4. Offline Evaluation","topic":"building-agentic-systems","noteType":"note"},{"slug":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","title":"11. Failure Recovery","topic":"production-agent-systems","noteType":"note"},{"slug":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","title":"12. Rollback Strategies","topic":"production-agent-systems","noteType":"note"},{"slug":"production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies","title":"13. Circuit Breakers & Timeout Strategies","topic":"production-agent-systems","noteType":"note"},{"slug":"production-agent-systems/04-ai-platform-engineering/08-deployment-strategies/08-deployment-strategies","title":"8. Deployment Strategies","topic":"production-agent-systems","noteType":"note"},{"slug":"production-agent-systems/readme","title":"Production Agent Systems","topic":"production-agent-systems","noteType":"moc"}];
+const edges = [{"source":"agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"building-agentic-systems/01-multi-agent-systems/11-agent-lifecycle-management/11-agent-lifecycle-management","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","target":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","kind":"depends_on"},{"source":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"related"},{"source":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"depends_on"},{"source":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","target":"production-agent-systems/04-ai-platform-engineering/08-deployment-strategies/08-deployment-strategies","kind":"related"},{"source":"agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/09-production-deployment/09-deployment-strategies","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","target":"production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies","kind":"depends_on"},{"source":"agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling","target":"production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies","kind":"related"},{"source":"agentic-ai-engineering/00-introduction-to-agentic-ai/09-enterprise-adoption-patterns/09-enterprise-adoption-patterns","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"agentic-ai-engineering/01-agent-cognition/10-autonomous-execution/10-autonomous-execution","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"production-agent-systems/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","target":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","kind":"related"},{"source":"building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation","target":"production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery","target":"production-agent-systems/readme","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","target":"production-agent-systems/readme","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies","target":"production-agent-systems/readme","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","target":"production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies","kind":"related"},{"source":"production-agent-systems/04-ai-platform-engineering/08-deployment-strategies/08-deployment-strategies","target":"production-agent-systems/readme","kind":"related"}];
+const topicColors = {"README.md":"#009563","agentic-ai-engineering":"#00ab8d","agentic-ai-projects-and-mastery":"#00958b","ai-architecture-and-system-design":"#00a9b3","ai-foundations":"#008fad","aptitude":"#00a1d1","building-agentic-systems":"#0085c5","ci-cd":"#2c95e4","data-engineering":"#3c79d1","data-structures-algorithms":"#6b88ea","dbms":"#6d6cd0","gita":"#937be2","grafana-cloud":"#8f60c1","infrastructure-platform-engineering":"#b26fcc","internal-developer-platforms":"#a856a7","kubernetes":"#c967ad","kubernetes-platform-engineering":"#b94f85","low-level-design":"#d76387","networks":"#c24d5f","object-oriented-programming":"#dc655e","observability":"#c25332","operating-system":"#d66f2f","patterns":"#b86000","philosophy":"#c67d00","platform-engineering-fundamentals":"#a46f00","production-agent-systems":"#ac8d00","productivity":"#867e00","projects":"#879b09","prometheus":"#5b8b12","sre":"#54a54b","system-design":"#00934d"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  // Edge/ring colors aren't reachable by the `light:` Tailwind variant (set
+  // via raw SVG attribute, not a class) — theme-keyed lookup instead,
+  // re-applied on `themechange` by applyThemeColors() below.
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+  const GRAPH_COLORS = {
+    dark: { edge: '#1e293b', edgeActive: '#00d9a6', currentStroke: '#00d9a6', mocStroke: '#f1f5f9' },
+    light: { edge: '#cbd5e1', edgeActive: '#0f766e', currentStroke: '#0f766e', mocStroke: '#0f172a' },
+  };
+  let colors = GRAPH_COLORS[currentTheme()];
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', colors.edge);
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', colors.currentStroke);
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', colors.mocStroke);
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = n.href || `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? colors.edgeActive : colors.edge);
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', colors.edge);
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // Re-applies the current theme's palette to already-built elements — the
+  // colors above are set once at element-creation time, so a toggle needs
+  // this to actually repaint anything already on screen.
+  function applyThemeColors() {
+    colors = GRAPH_COLORS[currentTheme()];
+    lineEls.forEach((line) => line.setAttribute('stroke', colors.edge));
+    nodeEls.forEach((g, i) => {
+      const n = sim[i];
+      const circle = g.querySelector('circle');
+      if (!circle) return;
+      const isCurrent = currentSlug && n.slug === currentSlug;
+      if (isCurrent) circle.setAttribute('stroke', colors.currentStroke);
+      else if (n.noteType === 'moc') circle.setAttribute('stroke', colors.mocStroke);
+    });
+  }
+  window.addEventListener('themechange', applyThemeColors);
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 light:border-slate-200 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link
+               graph. Kept flat (not grouped by kind, unlike the sidebar's KnowledgeGraphTree) —
+               on hub notes the untyped 'related' kind dominates almost all entries, so grouping
+               here would produce one giant bucket and a couple stragglers for no real scannability
+               gain. Capped at BACKLINKS_PREVIEW_LIMIT with a "show all" toggle instead, since hub
+               notes can have 100+ backlinks. --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" id="linked-from" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 12 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 14. Safe Execution Paths &amp; Error Handling </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers the error-handling taxonomy, retry design, rollback mechanics, escalation paths, and traceability record that let an agent operate safely when a tool call fails -- grounded in GitHub Copilot coding agent&#39;s CI-driven retry loop and git-native audit trail.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/building-agentic-systems/01-multi-agent-systems/11-agent-lifecycle-management/11-agent-lifecycle-management" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 11. Agent Lifecycle Management </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers how agents are added to, updated or reconfigured within, and retired from an already-running multi-agent workflow -- versioning agent definitions, draining vs. hard-cutting over in-flight runs, and preserving auditability without breaking workflow continuity, using GitHub Copilot&#39;s custom agent files as the reference implementation.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 3. Online Evaluation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Continuously scoring live production traffic — LLM-as-judge scoring applied to real conversations, implicit feedback signals as cheaper proxies, shadow-mode comparison, and the sampling strategy that makes any of this affordable at production scale.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4. Offline Evaluation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Running a held-out golden dataset through a candidate agent version before deploy as a CI regression gate — golden dataset construction and versioning, hard-threshold versus regression-from-baseline pass criteria, and the coverage limit that makes online evaluation a necessary complement, not a redundant check.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 11. Failure Recovery </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>How an agent detects and recovers from failure mid-task — partial-completion checkpointing, retry-with-backoff versus fail-fast policy per failure class, and distinguishing a transient provider error from a genuine task failure that needs human escalation.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/09-enterprise-adoption-patterns/09-enterprise-adoption-patterns" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 9. Enterprise Adoption Patterns </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers how enterprises roll out agentic systems safely — human-in-the-loop gating, phased autonomy levels, audit logging, and the org-level governance structures that precede a full-autonomy deployment.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 6. Self-Correction </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers how an agent detects and repairs its own errors mid-task — retry-with-feedback loops, validator-driven correction, and the failure boundary where self-correction should hand off to a human instead of looping indefinitely.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-engineering/01-agent-cognition/10-autonomous-execution/10-autonomous-execution" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 10. Autonomous Execution </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers the execution layer that carries a planned action through to completion without human intervention — action validation, rollback and compensation on failure, and the autonomy-level gating that determines how much an agent is trusted to do unsupervised.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 10. Building Reliable LLM Applications </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers the engineering practices that turn a probabilistic model call into a reliable system component — retries with validation, evals as CI gates, circuit breakers, and observability for non-deterministic outputs.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1. AI Evaluation Frameworks </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The metrics that actually define a good agent -- task success rate, cost per successful task, groundedness, and tool-call correctness -- why generic LLM benchmarks don&#39;t transfer to agent evaluation, and the LLM-as-judge pattern&#39;s known failure modes.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 13. Circuit Breakers &amp; Timeout Strategies </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The containment mechanics one level below failure-recovery policy: circuit breakers that stop one failing tool or sub-agent call from cascading through a run, timeout budgets allocated across a multi-hop tool chain, deadlock/oscillation detection between cooperating agents, and the runaway-loop breakers that cap a retry-or-replan cycle before it becomes a cost incident.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/production-agent-systems/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Production Agent Systems </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for Production Agent Systems: the runtime substrate, observability, reliability/security/governance, performance/cost engineering, and platform engineering underneath every agent in production. Book 4 of the AI Systems Engineering series.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div>  </div> <!-- Referenced in Bhagavad Gita: reverse lookup from the gita verse
+               collection's own `concepts[]` field — see getVersesReferencingConcept
+               in src/lib/gita.ts. Computed unconditionally for every note, so any
+               note anywhere in the corpus that a verse happens to reference gets
+               this section, not just notes under notes/gita/concepts/. -->  <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/production-agent-systems/02-reliability-security-and-governance/02-prompt-injection/02-prompt-injection" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2. Prompt Injection </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Authentication, authorization, and secrets management for an agent, plus the genuinely agent-specific threat: prompt injection defense and data privacy in a tool-calling loop.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/10-ai-governance/10-ai-governance" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 10. AI Governance </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Organizational policy for what agents are allowed to be built, what models they may use, and who signs off before an agent goes to production — model risk review, an internal registry of approved agents and tools, and escalation paths when a team wants an exception.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/06-authorization-and-permissions/06-authorization-and-permissions" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 6. Authorization &amp; Permissions </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Scoping what actions an agent is allowed to take on a user&#39;s or tenant&#39;s behalf — least-privilege tool permissions, per-tool RBAC/ABAC policy, and the distinction between what the LLM is capable of requesting versus what the runtime will actually authorize.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/09-compliance/09-compliance" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 9. Compliance </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Mapping agent behavior to regulatory obligations — data residency for prompts and logs, retention and deletion policy for conversation history, and the audit evidence a compliance review will actually ask for (GDPR, SOC 2, industry-specific rules).</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/production-agent-systems" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett> Production Agent Systems notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 light:border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 11. Failure Recovery </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/production-agent-systems/02-reliability-security-and-governance/13-circuit-breakers-and-timeout-strategies/13-circuit-breakers-and-timeout-strategies" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 13. Circuit Breakers &amp; Timeout Strategies </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#rollback-strategies" data-slug="rollback-strategies" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Rollback Strategies</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#the-mental-model" data-slug="the-mental-model" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>The mental model</a></li><li data-astro-cid-xvrfupwn><a href="#1-the-deploy-unit--prompt--model--tool-config-versioned-together" data-slug="1-the-deploy-unit--prompt--model--tool-config-versioned-together" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>1. The deploy unit — prompt + model + tool config, versioned together</a></li><li data-astro-cid-xvrfupwn><a href="#2-why-in-place-edits-make-rollback-impossible" data-slug="2-why-in-place-edits-make-rollback-impossible" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>2. Why in-place edits make rollback impossible</a></li><li data-astro-cid-xvrfupwn><a href="#3-canary-rollout-for-agent-changes" data-slug="3-canary-rollout-for-agent-changes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>3. Canary rollout for agent changes</a></li><li data-astro-cid-xvrfupwn><a href="#4-shadow-rollout-for-agent-changes" data-slug="4-shadow-rollout-for-agent-changes" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>4. Shadow rollout for agent changes</a></li><li data-astro-cid-xvrfupwn><a href="#5-canary-vs-shadow--choosing-between-them" data-slug="5-canary-vs-shadow--choosing-between-them" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>5. Canary vs. shadow — choosing between them</a></li><li data-astro-cid-xvrfupwn><a href="#6-rollback-triggers--closing-the-loop-with-evaluation" data-slug="6-rollback-triggers--closing-the-loop-with-evaluation" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>6. Rollback triggers — closing the loop with evaluation</a></li><li data-astro-cid-xvrfupwn><a href="#7-worked-example--a-canary-that-should-have-rolled-back" data-slug="7-worked-example--a-canary-that-should-have-rolled-back" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>7. Worked example — a canary that should have rolled back</a></li><li data-astro-cid-xvrfupwn><a href="#github-copilot-in-practice" data-slug="github-copilot-in-practice" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>GitHub Copilot in practice</a></li><li data-astro-cid-xvrfupwn><a href="#concept-check" data-slug="concept-check" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Concept check</a></li><li data-astro-cid-xvrfupwn><a href="#vocabulary-glossary" data-slug="vocabulary-glossary" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Vocabulary glossary</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Depends On</p><a href="/notes/building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Online Evaluation</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Related</p><a href="/notes/production-agent-systems/04-ai-platform-engineering/08-deployment-strategies/08-deployment-strategies" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">8. Deployment Strategies</span></a><a href="/notes/agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/09-production-deployment/09-deployment-strategies" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. Production Deployment</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Compared To</p><a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Failure Recovery</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/agentic-ai-engineering/04-tools-and-environment-interaction/14-safe-execution-paths-and-error-handling/14-safe-execution-paths-and-error-handling" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">14. Safe Execution Paths &amp; Error Handling</span></a><a href="/notes/building-agentic-systems/01-multi-agent-systems/11-agent-lifecycle-management/11-agent-lifecycle-management" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Agent Lifecycle Management</span></a><a href="/notes/building-agentic-systems/02-evaluation/03-online-evaluation/03-online-evaluation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Online Evaluation</span></a><a href="/notes/building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">4. Offline Evaluation</span></a><a href="/notes/production-agent-systems/02-reliability-security-and-governance/11-failure-recovery/11-failure-recovery" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Failure Recovery</span></a><a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/09-enterprise-adoption-patterns/09-enterprise-adoption-patterns" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. Enterprise Adoption Patterns</span></a><a href="/notes/agentic-ai-engineering/01-agent-cognition/06-self-correction/06-self-correction" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">6. Self-Correction</span></a><a href="/notes/agentic-ai-engineering/01-agent-cognition/10-autonomous-execution/10-autonomous-execution" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">10. Autonomous Execution</span></a></div><a href="#linked-from" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-600 light:text-slate-400 hover:text-accent transition-colors no-underline">
++4 more →
+</a></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  // Mermaid bakes its theme into the rendered SVG at run() time, so a theme
+  // toggle needs a full re-render, not just a CSS flip. Two full palettes,
+  // not "dark + light overrides," since mermaid's dark theme already covers
+  // every variable used below and a partial override would leave stray
+  // dark-preset defaults showing through on light backgrounds.
+  const THEME_VARS = {
+    dark: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#cbd5e1',
+      primaryBorderColor: '#334155',
+      lineColor: '#00d9a6',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#1e293b',
+      background: '#0f172a',
+      mainBkg: '#1e293b',
+      nodeBorder: '#334155',
+      clusterBkg: '#0f172a',
+      titleColor: '#f1f5f9',
+      edgeLabelBackground: '#1e293b',
+      // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+      // via hue rotation, which can land on light/saturated fills that wash out
+      // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+      cScale0: '#1e3a5f',
+      cScale1: '#14532d',
+      cScale2: '#581c87',
+      cScale3: '#7c2d12',
+      cScale4: '#831843',
+      cScale5: '#713f12',
+      cScale6: '#164e63',
+      cScale7: '#3730a3',
+      cScaleLabel0: '#e2e8f0',
+      cScaleLabel1: '#e2e8f0',
+      cScaleLabel2: '#e2e8f0',
+      cScaleLabel3: '#e2e8f0',
+      cScaleLabel4: '#e2e8f0',
+      cScaleLabel5: '#e2e8f0',
+      cScaleLabel6: '#e2e8f0',
+      cScaleLabel7: '#e2e8f0',
+    },
+    light: {
+      primaryColor: '#f1f5f9',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#cbd5e1',
+      lineColor: '#0f766e',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#e2e8f0',
+      background: '#ffffff',
+      mainBkg: '#f1f5f9',
+      nodeBorder: '#cbd5e1',
+      clusterBkg: '#f8fafc',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#f1f5f9',
+      // Light-pastel fills (inverse of the dark palette's dark fills), one
+      // consistent dark label color across sections — same structure as dark.
+      cScale0: '#dbeafe',
+      cScale1: '#dcfce7',
+      cScale2: '#f3e8ff',
+      cScale3: '#ffedd5',
+      cScale4: '#fce7f3',
+      cScale5: '#fef3c7',
+      cScale6: '#cffafe',
+      cScale7: '#e0e7ff',
+      cScaleLabel0: '#1e293b',
+      cScaleLabel1: '#1e293b',
+      cScaleLabel2: '#1e293b',
+      cScaleLabel3: '#1e293b',
+      cScaleLabel4: '#1e293b',
+      cScaleLabel5: '#1e293b',
+      cScaleLabel6: '#1e293b',
+      cScaleLabel7: '#1e293b',
+    },
+  };
+
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        const theme = currentTheme();
+        mermaid.initialize({
+          startOnLoad: false,
+          // 'base' for light: an unstyled canvas driven entirely by
+          // themeVariables, so no dark-preset default shows through anywhere
+          // not explicitly covered above. 'dark' stays as-is for dark mode —
+          // it's the existing, already-tested path.
+          theme: theme === 'light' ? 'base' : 'dark',
+          themeVariables: THEME_VARS[theme],
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      const source = pre.querySelector('code')?.textContent ?? '';
+      // Preserved so a theme toggle can re-render from source — mermaid.run()
+      // replaces this div's content with rendered SVG, destroying the original.
+      div.dataset.mermaidSource = source;
+      div.textContent = source;
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  async function rerenderAllMermaid() {
+    const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+    if (!rendered.length) return;
+    mermaidPromise = null; // force re-init with the new theme's themeVariables
+    const mermaid = await getMermaid();
+    const nodes = [...rendered];
+    nodes.forEach((div) => {
+      div.removeAttribute('data-processed');
+      div.textContent = div.dataset.mermaidSource;
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  window.addEventListener('themechange', rerenderAllMermaid);
+  renderMermaid(document);
+</script>  </body></html>  

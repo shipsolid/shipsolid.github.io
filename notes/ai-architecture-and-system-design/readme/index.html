@@ -1,0 +1,682 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>AI Architecture &amp; System Design — Notes — Amit Singh</title><meta name="description" content="A book-shaped table of contents for AI Architecture &#38; System Design: the cross-cutting agent pattern catalog and full enterprise system-design case studies at L6/L7 interview depth. Book 5 of the AI Systems Engineering series."><link rel="canonical" href="https://shipsolid.github.io/notes/ai-architecture-and-system-design/readme/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="AI Architecture &#38; System Design — Notes — Amit Singh"><meta property="og:description" content="A book-shaped table of contents for AI Architecture &#38; System Design: the cross-cutting agent pattern catalog and full enterprise system-design case studies at L6/L7 interview depth. Book 5 of the AI Systems Engineering series."><meta property="og:url" content="https://shipsolid.github.io/notes/ai-architecture-and-system-design/readme/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="AI Architecture &#38; System Design — Notes — Amit Singh"><meta name="twitter:description" content="A book-shaped table of contents for AI Architecture &#38; System Design: the cross-cutting agent pattern catalog and full enterprise system-design case studies at L6/L7 interview depth. Book 5 of the AI Systems Engineering series."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><!-- Grafana Cloud Frontend Observability (Faro). Script tag must stay
+         unconditional in the template — wrapping it in {faroUrl && <script>}
+         stopped Astro from bundling the npm import at all (shipped as raw,
+         unprocessed source, which throws in the browser). The env check
+         below runs client-side instead, and is a no-op when unset (local dev). --><link rel="stylesheet" href="/_astro/_slug_.DJLsCJIh.css">
+<link rel="stylesheet" href="/_astro/_slug_.BXBXtc4O.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb))}
+summary[data-astro-cid-l7mxuoaf]{list-style:none}summary[data-astro-cid-l7mxuoaf]::-webkit-details-marker{display:none}details[data-astro-cid-l7mxuoaf][open]>summary[data-astro-cid-l7mxuoaf] .tree-chevron[data-astro-cid-l7mxuoaf]{transform:rotate(90deg)}summary[data-astro-cid-xd55becy]{list-style:none}summary[data-astro-cid-xd55becy]::-webkit-details-marker{display:none}details[data-astro-cid-xd55becy][open]>summary[data-astro-cid-xd55becy] .tree-chevron[data-astro-cid-xd55becy]{transform:rotate(90deg)}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:.5rem;font-size:.75rem;color:var(--color-text);box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:var(--color-text-faint);background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb) / .3);background:rgb(var(--color-accent-rgb) / .05)}
+</style><script type="module" src="/_astro/hoisted.BlnzIfoi.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Search" title="Search" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" data-astro-cid-3ef6ksr2></path> </svg> </a> <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <div class="relative" data-astro-cid-3ef6ksr2> <button id="more-menu-btn" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="More" aria-haspopup="menu" aria-expanded="false" title="More" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="5" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="12" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="19" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle> </svg> </button> <div id="more-menu" role="menu" class="hidden absolute right-0 top-full mt-2 min-w-[170px] rounded-lg border border-slate-800 light:border-slate-200 bg-slate-950/95 light:bg-white/95 backdrop-blur-md shadow-lg py-1" data-astro-cid-3ef6ksr2> <a href="/pomo" role="menuitem" class="block px-4 py-2 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> </div> </div> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div>  <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+Search
+</a> <a href="/pomo" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 light:text-slate-400 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/ai-architecture-and-system-design" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Ai Architecture And System Design</a>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> AI Architecture &amp; System Design <span class="tag text-[11px] py-0.5 text-accent border-accent/40 bg-accent/10" title="Map of Content — a hub note that curates links to related notes" data-astro-cid-v5yihett>
+MOC
+</span> </h1> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-v5yihett>A book-shaped table of contents for AI Architecture &amp; System Design: the cross-cutting agent pattern catalog and full enterprise system-design case studies at L6/L7 interview depth. Book 5 of the AI Systems Engineering series.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-v5yihett>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <span class="text-slate-600 light:text-slate-400" title="Permanent note identifier" data-astro-cid-v5yihett>§202608101902-3</span>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/ai-architecture-and-system-design" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ai-architecture-and-system-design</a><a href="/notes/tag/book" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>book</a><a href="/notes/tag/reference" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>reference</a><a href="/notes/tag/maang-prep" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>maang-prep</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[260px_1fr_260px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div data-notes-tree-scroll class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Ai Architecture And System Design</p> <div id="chapter-nav-source" data-astro-cid-v5yihett> <div class="space-y-1.5">  <div data-topic-id="ai-architecture-and-system-design" class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <details data-node-path="00-ai-architecture-patterns" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>00 Ai Architecture Patterns</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>11</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/01-architectural-thinking/01-architectural-thinking" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Architectural Thinking </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Planner Executor Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/03-supervisor-pattern/03-supervisor-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Supervisor Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/04-orchestrator-worker-pattern/04-orchestrator-worker-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Orchestrator Worker Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Router Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/06-blackboard-pattern/06-blackboard-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Blackboard Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/07-event-driven-pattern/07-event-driven-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Event Driven Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/08-memory-centric-pattern/08-memory-centric-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Memory Centric Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/09-human-approval-pattern/09-human-approval-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Human Approval Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/10-agent-mesh-pattern/10-agent-mesh-pattern" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Agent Mesh Pattern </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/11-pattern-selection-framework/11-pattern-selection-framework" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Pattern Selection Framework </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="01-enterprise-ai-system-design" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>01 Enterprise Ai System Design</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>13</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/01-ai-copilot-architecture/01-ai-copilot-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Ai Copilot Architecture </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/02-coding-agent-platforms/02-coding-agent-platforms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Coding Agent Platforms </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/03-research-agents/03-research-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Research Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/04-customer-support-agents/04-customer-support-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Customer Support Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/05-enterprise-knowledge-assistants/05-enterprise-knowledge-assistants" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Enterprise Knowledge Assistants </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/06-autonomous-operations-agents/06-autonomous-operations-agents" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Autonomous Operations Agents </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/07-ai-sre-platforms/07-ai-sre-platforms" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Ai Sre Platforms </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/08-ai-platform-architecture/08-ai-platform-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Ai Platform Architecture </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/09-global-ai-infrastructure/09-global-ai-infrastructure" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Global Ai Infrastructure </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Cursor Architecture Case Study </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Claude Code Architecture Case Study </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Github Copilot Architecture Case Study </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 13 Perplexity Architecture Case Study </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details> </div>   <a href="/notes/ai-architecture-and-system-design/readme" class="flex items-start justify-between gap-2 px-3 py-2 rounded-lg text-xs font-mono text-slate-500 hover:text-slate-200 light:hover:text-slate-800 hover:bg-slate-800/60 light:hover:bg-slate-200/60 transition-colors no-underline" data-astro-cid-xd55becy><span class="leading-snug" data-astro-cid-xd55becy>Other</span></a> </div> </div> </div> </aside> <!-- Mobile/tablet nav: same content as the two xl:+ asides, collapsed
+             by default so a reader lands on the article first, not a wall of
+             chapter links. The chapter tree itself isn't re-rendered here —
+             it's cloned client-side from #chapter-nav-source (below), which
+             stays in the DOM on mobile too (`hidden xl:block` only affects
+             what's *shown*, not what's downloaded) — a topic's full nav tree
+             would otherwise ship twice on every note page. --> <div class="xl:hidden space-y-3" data-astro-cid-v5yihett> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+Chapter Navigation
+</summary> <div id="chapter-nav-mobile" class="mt-4" data-astro-cid-v5yihett></div> </details> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+On This Page
+</summary> <div class="mt-4" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#ai-architecture--system-design" data-slug="ai-architecture--system-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>AI Architecture &amp; System Design</a></li><li data-astro-cid-xvrfupwn><a href="#parts" data-slug="parts" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Parts</a></li><li data-astro-cid-xvrfupwn><a href="#00--ai-architecture-patterns" data-slug="00--ai-architecture-patterns" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>00 — AI Architecture Patterns</a></li><li data-astro-cid-xvrfupwn><a href="#01--enterprise-ai-system-design" data-slug="01--enterprise-ai-system-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>01 — Enterprise AI System Design</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Notes — Library Index</span></a><a href="/notes/agentic-ai-projects-and-mastery/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Agentic AI: Projects &amp; Engineering Mastery</span></a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">2. Planner–Executor Pattern</span></a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">5. Router Pattern</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">10. Cursor: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Claude Code: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">12. GitHub Copilot: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">13. Perplexity: Architecture Case Study</span></a></div><a href="#linked-from" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-600 light:text-slate-400 hover:text-accent transition-colors no-underline">
++2 more →
+</a></div></nav> </div> </div> </details> </div>  <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:AI Architecture &#38; System Design" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:ai-architecture-and-system-design/readme" data-astro-cid-v5yihett></span>  <span hidden data-pagefind-filter="domain:Ai Architecture And System Design" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ai-architecture-and-system-design" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:book" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:reference" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:maang-prep" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+
+            prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+            prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 light:prose-blockquote:text-slate-600 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 light:prose-blockquote:bg-slate-100/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+            prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+
+            prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="ai-architecture--system-design">AI Architecture &#x26; System Design</h2>
+<blockquote>
+<p><em>Cross-cutting patterns and system design, for Principal &#x26; Staff Engineers (L6/L7)</em></p>
+<p>This book assumes you can already build, evaluate, and run an agent — see
+<a href="/notes/production-agent-systems/readme/">Production Agent Systems</a> first. If this were a book, this page
+is the table of contents. It is organized as a learning journey — from the pattern catalog that
+formalizes what earlier books introduced in passing, through full system-design case studies
+grounded in real production agent products. Each chapter links out to the framework, platform, and
+SRE notes that already exist elsewhere in this wiki instead of duplicating them. Unwritten
+chapters are listed as <strong>stub</strong> rows, not empty files.</p>
+</blockquote>
+<h2 id="parts">Parts</h2>
+<h3 id="00--ai-architecture-patterns">00 — AI Architecture Patterns</h3>
+<p>The cross-cutting pattern catalog. Two of these chapters formalize patterns already introduced in
+context in <a href="/notes/building-agentic-systems/readme/">Building &#x26; Evaluating Agents</a>’ Parts 00–01 — they
+cross-reference back rather than re-teaching from scratch, and are the single canonical source for
+each pattern’s full treatment; every other chapter that mentions Router Pattern or Planner–Executor
+Pattern in passing links back here.</p>
+<ul>
+<li><strong>Chapter 1.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/01-architectural-thinking/01-architectural-thinking/">Architectural Thinking</a> — <em>(stub)</em> — How to evaluate
+an agentic architecture pattern against determinism, cost, latency, and blast-radius tradeoffs
+rather than picking the newest framework default.</li>
+<li><strong>Chapter 2.</strong>
+<a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern/">Planner–Executor Pattern</a>
+— The canonical treatment. Formalizes the planner–executor pattern introduced in
+<a href="/notes/building-agentic-systems/00-building-single-agent-systems/02-planner-executor-pattern/02-planner-executor-pattern/">Building Single-Agent Systems</a>
+as a reusable pattern, with applicability criteria and trade-offs against the rest of this
+catalog.</li>
+<li><strong>Chapter 3.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/03-supervisor-pattern/03-supervisor-pattern/">Supervisor Pattern</a> — <em>(stub)</em> — Formalizes the supervisor
+pattern introduced in
+<a href="/notes/building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures/">Multi-Agent Systems</a>,
+covering when a central supervisor outperforms peer-to-peer coordination and where it bottlenecks.</li>
+<li><strong>Chapter 4.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/04-orchestrator-worker-pattern/04-orchestrator-worker-pattern/">Orchestrator–Worker Pattern</a> — <em>(stub)</em> —
+Fan-out/fan-in task decomposition, worker failure isolation, partial-result aggregation, and when
+it beats a supervisor-style hierarchy.</li>
+<li><strong>Chapter 5.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern/">Router Pattern</a> — The canonical treatment. Formalizes the
+router pattern introduced in
+<a href="/notes/building-agentic-systems/00-building-single-agent-systems/03-router-pattern/03-router-pattern/">Building Single-Agent Systems</a>,
+covering intent classification and confidence-based fallback.</li>
+<li><strong>Chapter 6.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/06-blackboard-pattern/06-blackboard-pattern/">Blackboard Pattern</a> — <em>(stub)</em> — A shared, structured
+workspace multiple specialist agents read and write to opportunistically, versus explicit
+message-passing.</li>
+<li><strong>Chapter 7.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/07-event-driven-pattern/07-event-driven-pattern/">Event-Driven Pattern</a> — <em>(stub)</em> — Building agent
+systems on an event bus — event schema design, at-least-once delivery, idempotent reactions to
+replayed events.</li>
+<li><strong>Chapter 8.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/08-memory-centric-pattern/08-memory-centric-pattern/">Memory-Centric Pattern</a> — <em>(stub)</em> — Architectures
+where long-term/episodic memory, not the planner, is the primary coordination substrate.</li>
+<li><strong>Chapter 9.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/09-human-approval-pattern/09-human-approval-pattern/">Human Approval Pattern</a> — <em>(stub)</em> — Designing
+human-in-the-loop checkpoints for high-risk actions without becoming a rubber-stamp bottleneck.</li>
+<li><strong>Chapter 10.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/10-agent-mesh-pattern/10-agent-mesh-pattern/">Agent Mesh Pattern</a> — <em>(stub)</em> — A decentralized mesh of
+peer agents that discover and negotiate directly, contrasted with centralized
+orchestrator/supervisor patterns.</li>
+<li><strong>Chapter 11.</strong> <a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/11-pattern-selection-framework/11-pattern-selection-framework/">Pattern Selection Framework</a> — <em>(stub)</em> — A
+scorecard across coordination overhead, failure isolation, latency, and observability for choosing
+among the patterns in this catalog.</li>
+</ul>
+<h3 id="01--enterprise-ai-system-design">01 — Enterprise AI System Design</h3>
+<p>Full system-design case studies at the depth an L6/L7 loop expects, closing with architectural
+walkthroughs of real production agent products — grounded in their public engineering writing, not
+speculation about internals no one has disclosed.</p>
+<ul>
+<li><strong>Chapter 1.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/01-ai-copilot-architecture/01-ai-copilot-architecture/">AI Copilot Architecture</a> — <em>(stub)</em> — Reference
+design for an in-product AI copilot — context assembly, streaming responses, scoped guardrails.</li>
+<li><strong>Chapter 2.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/02-coding-agent-platforms/02-coding-agent-platforms/">Coding Agent Platforms</a> — <em>(stub)</em> — Codebase
+indexing, sandboxed execution, and diff review workflow, at L6/L7 interview depth.</li>
+<li><strong>Chapter 3.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/03-research-agents/03-research-agents/">Research Agents</a> — <em>(stub)</em> — An agent that plans multi-step
+web/document retrieval, cites sources, and self-critiques for completeness.</li>
+<li><strong>Chapter 4.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/04-customer-support-agents/04-customer-support-agents/">Customer Support Agents</a> — <em>(stub)</em> — Ticket triage,
+knowledge-base grounding, human escalation, and the metrics (deflection rate, CSAT) that define
+success.</li>
+<li><strong>Chapter 5.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/05-enterprise-knowledge-assistants/05-enterprise-knowledge-assistants/">Enterprise Knowledge Assistants</a> — <em>(stub)</em> —
+An enterprise-wide knowledge assistant over heterogeneous internal sources, with
+access-control-aware retrieval.</li>
+<li><strong>Chapter 6.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/06-autonomous-operations-agents/06-autonomous-operations-agents/">Autonomous Operations Agents</a> — <em>(stub)</em> —
+Agents that take autonomous remediation actions, and the safety envelope (dry-run, blast-radius
+limits, auto-rollback) required before granting write access.</li>
+<li><strong>Chapter 7.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/07-ai-sre-platforms/07-ai-sre-platforms/">AI SRE Platforms</a> — <em>(stub)</em> — Alert ingestion, correlation,
+root-cause hypothesis generation, and runbook execution — the natural extension of
+<a href="/notes/agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/07-build-an-ai-sre-assistant/07-4-automated-root-cause-analysis/">Build an AI SRE Assistant</a>
+(Part 00 of Agentic AI: Projects &#x26; Engineering Mastery) to platform scale.</li>
+<li><strong>Chapter 8.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/08-ai-platform-architecture/08-ai-platform-architecture/">AI Platform Architecture</a> — <em>(stub)</em> — Ties together
+the gateway, registry, and multi-model infrastructure from
+<a href="/notes/production-agent-systems/readme/#04--ai-platform-engineering">Part 04 of Production Agent Systems</a>
+into a single architecture-review-ready diagram.</li>
+<li><strong>Chapter 9.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/09-global-ai-infrastructure/09-global-ai-infrastructure/">Global AI Infrastructure</a> — <em>(stub)</em> — Multi-region
+deployment — data residency, cross-region model failover, latency budgets.</li>
+<li><strong>Chapter 10.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study/">Cursor: Architecture Case Study</a> — An
+external, engineering-blog-grounded analysis of Cursor’s likely architecture — codebase indexing,
+inline edit prediction, and agent-mode tool use.</li>
+<li><strong>Chapter 11.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study/">Claude Code: Architecture Case Study</a> —
+An external, documentation-grounded analysis of Claude Code’s architecture — the agentic coding
+loop, tool permissions model, and subagent/orchestration design.</li>
+<li><strong>Chapter 12.</strong>
+<a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study/">GitHub Copilot: Architecture Case Study</a> — An
+external, engineering-blog-grounded analysis of GitHub Copilot’s evolution from inline completion
+to an agentic coding platform, including its CI/CD-triggered coding agent (see
+<a href="/notes/agentic-ai-engineering/readme/">Agentic AI Engineering</a>, Part 04, Chapter 13).</li>
+<li><strong>Chapter 13.</strong> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study/">Perplexity: Architecture Case Study</a> — An
+external, engineering-blog-grounded analysis of Perplexity’s real-time research-agent architecture
+— retrieval, citation grounding, and answer synthesis at low latency.</li>
+</ul>
+<h2 id="metadata">Metadata</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Author</td><td>Amit Singh</td></tr><tr><td>Scope</td><td>ai-architecture-and-system-design</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:var(--color-surface)"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"readme","title":"Notes — Library Index","topic":"README.md","noteType":"moc"},{"slug":"agentic-ai-engineering/readme","title":"Agentic AI Engineering","topic":"agentic-ai-engineering","noteType":"moc"},{"slug":"agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/07-build-an-ai-sre-assistant/07-4-automated-root-cause-analysis","title":"7.4 Automated Root Cause Analysis","topic":"agentic-ai-projects-and-mastery","noteType":"note"},{"slug":"agentic-ai-projects-and-mastery/readme","title":"Agentic AI: Projects & Engineering Mastery","topic":"agentic-ai-projects-and-mastery","noteType":"moc"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/01-architectural-thinking/01-architectural-thinking","title":"1. Architectural Thinking","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","title":"2. Planner–Executor Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/03-supervisor-pattern/03-supervisor-pattern","title":"3. Supervisor Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/04-orchestrator-worker-pattern/04-orchestrator-worker-pattern","title":"4. Orchestrator–Worker Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","title":"5. Router Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/06-blackboard-pattern/06-blackboard-pattern","title":"6. Blackboard Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/07-event-driven-pattern/07-event-driven-pattern","title":"7. Event-Driven Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/08-memory-centric-pattern/08-memory-centric-pattern","title":"8. Memory-Centric Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/09-human-approval-pattern/09-human-approval-pattern","title":"9. Human Approval Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/10-agent-mesh-pattern/10-agent-mesh-pattern","title":"10. Agent Mesh Pattern","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/00-ai-architecture-patterns/11-pattern-selection-framework/11-pattern-selection-framework","title":"11. Pattern Selection Framework","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/01-ai-copilot-architecture/01-ai-copilot-architecture","title":"1. AI Copilot Architecture","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/02-coding-agent-platforms/02-coding-agent-platforms","title":"2. Coding Agent Platforms","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/03-research-agents/03-research-agents","title":"3. Research Agents","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/04-customer-support-agents/04-customer-support-agents","title":"4. Customer Support Agents","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/05-enterprise-knowledge-assistants/05-enterprise-knowledge-assistants","title":"5. Enterprise Knowledge Assistants","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/06-autonomous-operations-agents/06-autonomous-operations-agents","title":"6. Autonomous Operations Agents","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/07-ai-sre-platforms/07-ai-sre-platforms","title":"7. AI SRE Platforms","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/08-ai-platform-architecture/08-ai-platform-architecture","title":"8. AI Platform Architecture","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/09-global-ai-infrastructure/09-global-ai-infrastructure","title":"9. Global AI Infrastructure","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","title":"10. Cursor: Architecture Case Study","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study","title":"11. Claude Code: Architecture Case Study","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","title":"12. GitHub Copilot: Architecture Case Study","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","title":"13. Perplexity: Architecture Case Study","topic":"ai-architecture-and-system-design","noteType":"note"},{"slug":"ai-architecture-and-system-design/readme","title":"AI Architecture & System Design","topic":"ai-architecture-and-system-design","noteType":"moc"},{"slug":"ai-foundations/readme","title":"AI & LLM Foundations","topic":"ai-foundations","noteType":"moc"},{"slug":"building-agentic-systems/00-building-single-agent-systems/02-planner-executor-pattern/02-planner-executor-pattern","title":"2. Planner–Executor Pattern","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/00-building-single-agent-systems/03-router-pattern/03-router-pattern","title":"3. Router Pattern","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/01-multi-agent-systems/05-agent-negotiation/05-agent-negotiation","title":"5. Agent Negotiation","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","title":"9. Supervisor Architectures","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/readme","title":"Building & Evaluating Agents","topic":"building-agentic-systems","noteType":"moc"},{"slug":"production-agent-systems/readme","title":"Production Agent Systems","topic":"production-agent-systems","noteType":"moc"}];
+const edges = [{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","target":"building-agentic-systems/00-building-single-agent-systems/02-planner-executor-pattern/02-planner-executor-pattern","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","target":"ai-architecture-and-system-design/00-ai-architecture-patterns/04-orchestrator-worker-pattern/04-orchestrator-worker-pattern","kind":"compared_to"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","target":"ai-architecture-and-system-design/00-ai-architecture-patterns/03-supervisor-pattern/03-supervisor-pattern","kind":"compared_to"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","target":"building-agentic-systems/00-building-single-agent-systems/03-router-pattern/03-router-pattern","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","target":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","kind":"compared_to"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/02-coding-agent-platforms/02-coding-agent-platforms","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","kind":"depends_on"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/09-human-approval-pattern/09-human-approval-pattern","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","kind":"related"},{"source":"building-agentic-systems/00-building-single-agent-systems/02-planner-executor-pattern/02-planner-executor-pattern","target":"building-agentic-systems/00-building-single-agent-systems/03-router-pattern/03-router-pattern","kind":"related"},{"source":"building-agentic-systems/01-multi-agent-systems/05-agent-negotiation/05-agent-negotiation","target":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/03-supervisor-pattern/03-supervisor-pattern","target":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/04-orchestrator-worker-pattern/04-orchestrator-worker-pattern","target":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","kind":"compared_to"},{"source":"ai-foundations/readme","target":"readme","kind":"related"},{"source":"agentic-ai-engineering/readme","target":"readme","kind":"related"},{"source":"building-agentic-systems/readme","target":"readme","kind":"related"},{"source":"production-agent-systems/readme","target":"readme","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"readme","kind":"related"},{"source":"agentic-ai-projects-and-mastery/readme","target":"readme","kind":"related"},{"source":"agentic-ai-engineering/readme","target":"ai-foundations/readme","kind":"related"},{"source":"agentic-ai-engineering/readme","target":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","kind":"related"},{"source":"agentic-ai-projects-and-mastery/readme","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"agentic-ai-projects-and-mastery/readme","target":"ai-foundations/readme","kind":"related"},{"source":"agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/07-build-an-ai-sre-assistant/07-4-automated-root-cause-analysis","target":"agentic-ai-projects-and-mastery/readme","kind":"related"},{"source":"agentic-ai-projects-and-mastery/readme","target":"building-agentic-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","target":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"agentic-ai-engineering/readme","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/04-orchestrator-worker-pattern/04-orchestrator-worker-pattern","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","target":"production-agent-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/03-research-agents/03-research-agents","target":"ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"production-agent-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"building-agentic-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/01-architectural-thinking/01-architectural-thinking","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"building-agentic-systems/00-building-single-agent-systems/02-planner-executor-pattern/02-planner-executor-pattern","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/03-supervisor-pattern/03-supervisor-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/04-orchestrator-worker-pattern/04-orchestrator-worker-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"building-agentic-systems/00-building-single-agent-systems/03-router-pattern/03-router-pattern","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/06-blackboard-pattern/06-blackboard-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/07-event-driven-pattern/07-event-driven-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/08-memory-centric-pattern/08-memory-centric-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/09-human-approval-pattern/09-human-approval-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/10-agent-mesh-pattern/10-agent-mesh-pattern","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/11-pattern-selection-framework/11-pattern-selection-framework","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/01-ai-copilot-architecture/01-ai-copilot-architecture","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/02-coding-agent-platforms/02-coding-agent-platforms","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/03-research-agents/03-research-agents","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/04-customer-support-agents/04-customer-support-agents","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/05-enterprise-knowledge-assistants/05-enterprise-knowledge-assistants","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/06-autonomous-operations-agents/06-autonomous-operations-agents","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/07-ai-sre-platforms/07-ai-sre-platforms","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"agentic-ai-projects-and-mastery/00-hands-on-engineering-projects/07-build-an-ai-sre-assistant/07-4-automated-root-cause-analysis","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/08-ai-platform-architecture/08-ai-platform-architecture","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-architecture-and-system-design/01-enterprise-ai-system-design/09-global-ai-infrastructure/09-global-ai-infrastructure","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"agentic-ai-engineering/readme","target":"ai-architecture-and-system-design/readme","kind":"related"},{"source":"ai-foundations/readme","target":"building-agentic-systems/readme","kind":"related"},{"source":"ai-foundations/readme","target":"production-agent-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"ai-foundations/readme","kind":"related"},{"source":"building-agentic-systems/00-building-single-agent-systems/02-planner-executor-pattern/02-planner-executor-pattern","target":"building-agentic-systems/readme","kind":"related"},{"source":"building-agentic-systems/00-building-single-agent-systems/03-router-pattern/03-router-pattern","target":"building-agentic-systems/readme","kind":"related"},{"source":"building-agentic-systems/01-multi-agent-systems/05-agent-negotiation/05-agent-negotiation","target":"building-agentic-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/readme","target":"building-agentic-systems/01-multi-agent-systems/05-agent-negotiation/05-agent-negotiation","kind":"related"},{"source":"building-agentic-systems/01-multi-agent-systems/09-supervisor-architectures/09-supervisor-architectures","target":"building-agentic-systems/readme","kind":"related"},{"source":"agentic-ai-engineering/readme","target":"building-agentic-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern","target":"building-agentic-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern","target":"building-agentic-systems/readme","kind":"related"},{"source":"ai-architecture-and-system-design/00-ai-architecture-patterns/03-supervisor-pattern/03-supervisor-pattern","target":"building-agentic-systems/readme","kind":"related"},{"source":"building-agentic-systems/readme","target":"production-agent-systems/readme","kind":"related"}];
+const topicColors = {"README.md":"#009563","agentic-ai-engineering":"#00ab8d","agentic-ai-projects-and-mastery":"#00958b","ai-architecture-and-system-design":"#00a9b3","ai-foundations":"#008fad","aptitude":"#00a1d1","building-agentic-systems":"#0085c5","ci-cd":"#2c95e4","data-engineering":"#3c79d1","data-structures-algorithms":"#6b88ea","dbms":"#6d6cd0","gita":"#937be2","grafana-cloud":"#8f60c1","infrastructure-platform-engineering":"#b26fcc","internal-developer-platforms":"#a856a7","kubernetes":"#c967ad","kubernetes-platform-engineering":"#b94f85","low-level-design":"#d76387","networks":"#c24d5f","object-oriented-programming":"#dc655e","observability":"#c25332","operating-system":"#d66f2f","patterns":"#b86000","philosophy":"#c67d00","platform-engineering-fundamentals":"#a46f00","production-agent-systems":"#ac8d00","productivity":"#867e00","projects":"#879b09","prometheus":"#5b8b12","sre":"#54a54b","system-design":"#00934d"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "ai-architecture-and-system-design/readme";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  // Edge/ring colors aren't reachable by the `light:` Tailwind variant (set
+  // via raw SVG attribute, not a class) — theme-keyed lookup instead,
+  // re-applied on `themechange` by applyThemeColors() below.
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+  const GRAPH_COLORS = {
+    dark: { edge: '#1e293b', edgeActive: '#00d9a6', currentStroke: '#00d9a6', mocStroke: '#f1f5f9' },
+    light: { edge: '#cbd5e1', edgeActive: '#0f766e', currentStroke: '#0f766e', mocStroke: '#0f172a' },
+  };
+  let colors = GRAPH_COLORS[currentTheme()];
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', colors.edge);
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', colors.currentStroke);
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', colors.mocStroke);
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = n.href || `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? colors.edgeActive : colors.edge);
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', colors.edge);
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // Re-applies the current theme's palette to already-built elements — the
+  // colors above are set once at element-creation time, so a toggle needs
+  // this to actually repaint anything already on screen.
+  function applyThemeColors() {
+    colors = GRAPH_COLORS[currentTheme()];
+    lineEls.forEach((line) => line.setAttribute('stroke', colors.edge));
+    nodeEls.forEach((g, i) => {
+      const n = sim[i];
+      const circle = g.querySelector('circle');
+      if (!circle) return;
+      const isCurrent = currentSlug && n.slug === currentSlug;
+      if (isCurrent) circle.setAttribute('stroke', colors.currentStroke);
+      else if (n.noteType === 'moc') circle.setAttribute('stroke', colors.mocStroke);
+    });
+  }
+  window.addEventListener('themechange', applyThemeColors);
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 light:border-slate-200 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link
+               graph. Kept flat (not grouped by kind, unlike the sidebar's KnowledgeGraphTree) —
+               on hub notes the untyped 'related' kind dominates almost all entries, so grouping
+               here would produce one giant bucket and a couple stragglers for no real scannability
+               gain. Capped at BACKLINKS_PREVIEW_LIMIT with a "show all" toggle instead, since hub
+               notes can have 100+ backlinks. --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" id="linked-from" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 10 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Notes — Library Index </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The front page of the notebook — every book-shaped domain, the applied Projects and flat Inbox folders, and how they cross-link into one wiki instead of duplicating content across each other.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/agentic-ai-projects-and-mastery/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Agentic AI: Projects &amp; Engineering Mastery </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for Agentic AI: Projects &amp; Engineering Mastery: hands-on practitioner builds, Principal/Staff-level technical leadership, and the lookup appendices and vendor/framework reference notes for the whole series. Book 6 of the AI Systems Engineering series.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2. Planner–Executor Pattern </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Formalizes the planner–executor pattern — a planning component that decomposes a goal into a full upfront plan, and a separate executor that carries out each step — with applicability criteria, concrete failure modes, and how it composes with the rest of the pattern catalog.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 5. Router Pattern </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The canonical treatment of the router pattern -- classifying an incoming request and dispatching it to exactly one specialized handler, tool, or sub-agent -- covering the three real ways to build the classification step, confidence-based fallback, and the structural line that separates a router from a supervisor.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 10. Cursor: Architecture Case Study </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>An external, engineering-blog-grounded analysis of Cursor&#39;s likely architecture — Merkle-tree-synced codebase indexing, the Tab fast path for inline edit prediction, and the agent-mode tool-calling loop for multi-file changes — read as public inference, not disclosed internals.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 11. Claude Code: Architecture Case Study </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A documentation-grounded analysis of Claude Code&#39;s architecture — the gather/act/verify agentic loop against a real filesystem and shell, the allow/deny/ask tool-permission model, and subagent delegation with isolated context — distinguishing Anthropic&#39;s own documented mechanics from reasonable architectural inference.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 12. GitHub Copilot: Architecture Case Study </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>An external, engineering-blog-grounded analysis of GitHub Copilot&#39;s evolution from a low-latency inline completion service into an asynchronous, multi-model coding agent platform — and why the safety envelope changes shape along with it.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 13. Perplexity: Architecture Case Study </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>An external, engineering-blog-grounded analysis of Perplexity&#39;s real-time research-agent architecture -- live web retrieval instead of a static corpus, citation grounding as a hard output constraint, and answer synthesis under a tight latency budget.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> AI &amp; LLM Foundations </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for AI &amp; LLM Foundations: the pre-agentic substrate — symbolic AI through transformers, tokens, embeddings, attention, foundation models, and turning a raw LLM API into a dependable application component. Book 1 of the AI Systems Engineering series.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/building-agentic-systems/01-multi-agent-systems/05-agent-negotiation/05-agent-negotiation" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 5. Agent Negotiation </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers how agents with different objectives or partial information reach agreement on a shared action, including bidding and argumentation-based negotiation protocols.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div>  </div> <!-- Referenced in Bhagavad Gita: reverse lookup from the gita verse
+               collection's own `concepts[]` field — see getVersesReferencingConcept
+               in src/lib/gita.ts. Computed unconditionally for every note, so any
+               note anywhere in the corpus that a verse happens to reference gets
+               this section, not just notes under notes/gita/concepts/. -->  <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/observability/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Observability Engineering </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for observability engineering: foundations through architecture, metrics, logging, tracing, profiling, OpenTelemetry, instrumentation, Kubernetes/cloud, data platforms, visualization, alerting, SRE integration, cost, security, platform engineering, AI-driven operations, and MAANG interview preparation — cross-linking existing prometheus/grafana-cloud/kubernetes/sre/platform-engineering notes instead of duplicating them.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/kubernetes/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Kubernetes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for Kubernetes: cloud-native foundations, the CKAD/CKA/CKS certification tracks, control-plane internals, platform tooling, multi-cluster architecture, and MAANG-level system design and interview prep — cross-linking the existing Prometheus, Observability, and Platform Engineering chapters instead of duplicating them.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/sre/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Site Reliability Engineering: From Foundations to Internet-Scale Systems </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>The complete 184-chapter, 15-part Site Reliability Engineering curriculum — from Linux internals and distributed-systems theory through reliability engineering, observability, incident response, platform engineering, and Staff/Principal-level MAANG interview preparation, ordered the way SRE expertise actually develops rather than as a topic index.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/aptitude/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> Aptitude </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for aptitude test prep: quantitative aptitude, logical reasoning, verbal ability, and mock-test strategy for the aptitude rounds that still gate MAANG-adjacent hiring pipelines.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/ai-architecture-and-system-design" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett> Ai Architecture And System Design notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/ai-architecture-and-system-design/README.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 light:border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 13. Perplexity: Architecture Case Study </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett>  </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#ai-architecture--system-design" data-slug="ai-architecture--system-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>AI Architecture &amp; System Design</a></li><li data-astro-cid-xvrfupwn><a href="#parts" data-slug="parts" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Parts</a></li><li data-astro-cid-xvrfupwn><a href="#00--ai-architecture-patterns" data-slug="00--ai-architecture-patterns" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>00 — AI Architecture Patterns</a></li><li data-astro-cid-xvrfupwn><a href="#01--enterprise-ai-system-design" data-slug="01--enterprise-ai-system-design" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-5 text-xs text-slate-600 light:text-slate-400 hover:text-slate-400 light:hover:text-slate-600" data-astro-cid-xvrfupwn>01 — Enterprise AI System Design</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Notes — Library Index</span></a><a href="/notes/agentic-ai-projects-and-mastery/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">Agentic AI: Projects &amp; Engineering Mastery</span></a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/02-planner-executor-pattern/02-planner-executor-pattern" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">2. Planner–Executor Pattern</span></a><a href="/notes/ai-architecture-and-system-design/00-ai-architecture-patterns/05-router-pattern/05-router-pattern" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">5. Router Pattern</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/10-cursor-architecture-case-study/10-cursor-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">10. Cursor: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/11-claude-code-architecture-case-study/11-claude-code-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">11. Claude Code: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/12-github-copilot-architecture-case-study/12-github-copilot-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">12. GitHub Copilot: Architecture Case Study</span></a><a href="/notes/ai-architecture-and-system-design/01-enterprise-ai-system-design/13-perplexity-architecture-case-study/13-perplexity-architecture-case-study" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">13. Perplexity: Architecture Case Study</span></a></div><a href="#linked-from" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-600 light:text-slate-400 hover:text-accent transition-colors no-underline">
++2 more →
+</a></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  // Mermaid bakes its theme into the rendered SVG at run() time, so a theme
+  // toggle needs a full re-render, not just a CSS flip. Two full palettes,
+  // not "dark + light overrides," since mermaid's dark theme already covers
+  // every variable used below and a partial override would leave stray
+  // dark-preset defaults showing through on light backgrounds.
+  const THEME_VARS = {
+    dark: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#cbd5e1',
+      primaryBorderColor: '#334155',
+      lineColor: '#00d9a6',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#1e293b',
+      background: '#0f172a',
+      mainBkg: '#1e293b',
+      nodeBorder: '#334155',
+      clusterBkg: '#0f172a',
+      titleColor: '#f1f5f9',
+      edgeLabelBackground: '#1e293b',
+      // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+      // via hue rotation, which can land on light/saturated fills that wash out
+      // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+      cScale0: '#1e3a5f',
+      cScale1: '#14532d',
+      cScale2: '#581c87',
+      cScale3: '#7c2d12',
+      cScale4: '#831843',
+      cScale5: '#713f12',
+      cScale6: '#164e63',
+      cScale7: '#3730a3',
+      cScaleLabel0: '#e2e8f0',
+      cScaleLabel1: '#e2e8f0',
+      cScaleLabel2: '#e2e8f0',
+      cScaleLabel3: '#e2e8f0',
+      cScaleLabel4: '#e2e8f0',
+      cScaleLabel5: '#e2e8f0',
+      cScaleLabel6: '#e2e8f0',
+      cScaleLabel7: '#e2e8f0',
+    },
+    light: {
+      primaryColor: '#f1f5f9',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#cbd5e1',
+      lineColor: '#0f766e',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#e2e8f0',
+      background: '#ffffff',
+      mainBkg: '#f1f5f9',
+      nodeBorder: '#cbd5e1',
+      clusterBkg: '#f8fafc',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#f1f5f9',
+      // Light-pastel fills (inverse of the dark palette's dark fills), one
+      // consistent dark label color across sections — same structure as dark.
+      cScale0: '#dbeafe',
+      cScale1: '#dcfce7',
+      cScale2: '#f3e8ff',
+      cScale3: '#ffedd5',
+      cScale4: '#fce7f3',
+      cScale5: '#fef3c7',
+      cScale6: '#cffafe',
+      cScale7: '#e0e7ff',
+      cScaleLabel0: '#1e293b',
+      cScaleLabel1: '#1e293b',
+      cScaleLabel2: '#1e293b',
+      cScaleLabel3: '#1e293b',
+      cScaleLabel4: '#1e293b',
+      cScaleLabel5: '#1e293b',
+      cScaleLabel6: '#1e293b',
+      cScaleLabel7: '#1e293b',
+    },
+  };
+
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        const theme = currentTheme();
+        mermaid.initialize({
+          startOnLoad: false,
+          // 'base' for light: an unstyled canvas driven entirely by
+          // themeVariables, so no dark-preset default shows through anywhere
+          // not explicitly covered above. 'dark' stays as-is for dark mode —
+          // it's the existing, already-tested path.
+          theme: theme === 'light' ? 'base' : 'dark',
+          themeVariables: THEME_VARS[theme],
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      const source = pre.querySelector('code')?.textContent ?? '';
+      // Preserved so a theme toggle can re-render from source — mermaid.run()
+      // replaces this div's content with rendered SVG, destroying the original.
+      div.dataset.mermaidSource = source;
+      div.textContent = source;
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  async function rerenderAllMermaid() {
+    const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+    if (!rendered.length) return;
+    mermaidPromise = null; // force re-init with the new theme's themeVariables
+    const mermaid = await getMermaid();
+    const nodes = [...rendered];
+    nodes.forEach((div) => {
+      div.removeAttribute('data-processed');
+      div.textContent = div.dataset.mermaidSource;
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  window.addEventListener('themechange', rerenderAllMermaid);
+  renderMermaid(document);
+</script>  </body></html>  

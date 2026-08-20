@@ -1,0 +1,735 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>10. Building Reliable LLM Applications — Notes — Amit Singh</title><meta name="description" content="Covers the engineering practices that turn a probabilistic model call into a reliable system component — retries with validation, evals as CI gates, circuit breakers, and observability for non-deterministic outputs."><link rel="canonical" href="https://shipsolid.github.io/notes/ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications/"><!-- Open Graph --><meta property="og:type" content="article"><meta property="og:title" content="10. Building Reliable LLM Applications — Notes — Amit Singh"><meta property="og:description" content="Covers the engineering practices that turn a probabilistic model call into a reliable system component — retries with validation, evals as CI gates, circuit breakers, and observability for non-deterministic outputs."><meta property="og:url" content="https://shipsolid.github.io/notes/ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="10. Building Reliable LLM Applications — Notes — Amit Singh"><meta name="twitter:description" content="Covers the engineering practices that turn a probabilistic model call into a reliable system component — retries with validation, evals as CI gates, circuit breakers, and observability for non-deterministic outputs."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><!-- Grafana Cloud Frontend Observability (Faro). Script tag must stay
+         unconditional in the template — wrapping it in {faroUrl && <script>}
+         stopped Astro from bundling the npm import at all (shipped as raw,
+         unprocessed source, which throws in the browser). The env check
+         below runs client-side instead, and is a no-op when unset (local dev). --><link rel="stylesheet" href="/_astro/_slug_.DJLsCJIh.css">
+<link rel="stylesheet" href="/_astro/_slug_.BXBXtc4O.css">
+<style>.toc-link[data-astro-cid-xvrfupwn][data-active=true]{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb))}
+summary[data-astro-cid-l7mxuoaf]{list-style:none}summary[data-astro-cid-l7mxuoaf]::-webkit-details-marker{display:none}details[data-astro-cid-l7mxuoaf][open]>summary[data-astro-cid-l7mxuoaf] .tree-chevron[data-astro-cid-l7mxuoaf]{transform:rotate(90deg)}summary[data-astro-cid-xd55becy]{list-style:none}summary[data-astro-cid-xd55becy]::-webkit-details-marker{display:none}details[data-astro-cid-xd55becy][open]>summary[data-astro-cid-xd55becy] .tree-chevron[data-astro-cid-xd55becy]{transform:rotate(90deg)}
+.graph-tooltip{position:fixed;z-index:50;pointer-events:none;display:none;max-width:220px;padding:.4rem .65rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:.5rem;font-size:.75rem;color:var(--color-text);box-shadow:0 4px 12px #0006}.graph-tooltip .tt-topic{color:#64748b;font-family:ui-monospace,monospace;font-size:.65rem;margin-top:.15rem}.graph-node circle{transition:opacity .15s}svg[id^=graph-svg] line{transition:opacity .15s,stroke .15s}
+.mermaid{display:flex;justify-content:center;padding:1.5rem 0}.mermaid svg{max-width:100%;height:auto;border-radius:.75rem}
+.wiki-link-unresolved[data-astro-cid-v5yihett]{color:#64748b;-webkit-text-decoration:underline dotted;text-decoration:underline dotted;text-underline-offset:3px;cursor:help}.copy-btn[data-astro-cid-v5yihett]{position:absolute;top:.75rem;right:.75rem;padding:.3rem;border-radius:.375rem;color:var(--color-text-faint);background:transparent;border:1px solid transparent;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s,color .15s,border-color .15s,background .15s}pre[data-astro-cid-v5yihett]:hover .copy-btn[data-astro-cid-v5yihett],.copy-btn[data-astro-cid-v5yihett]:focus-visible{opacity:1}.copy-btn[data-astro-cid-v5yihett]:hover{color:rgb(var(--color-accent-rgb));border-color:rgb(var(--color-accent-rgb) / .3);background:rgb(var(--color-accent-rgb) / .05)}
+</style><script type="module" src="/_astro/hoisted.BlnzIfoi.js"></script></head> <body>   <div id="progress-bar" class="fixed top-0 left-0 z-[100] h-0.5 bg-accent" style="width:0%;transition:width 0.1s linear" data-astro-cid-v5yihett></div> <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Search" title="Search" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" data-astro-cid-3ef6ksr2></path> </svg> </a> <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <div class="relative" data-astro-cid-3ef6ksr2> <button id="more-menu-btn" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="More" aria-haspopup="menu" aria-expanded="false" title="More" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="5" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="12" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="19" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle> </svg> </button> <div id="more-menu" role="menu" class="hidden absolute right-0 top-full mt-2 min-w-[170px] rounded-lg border border-slate-800 light:border-slate-200 bg-slate-950/95 light:bg-white/95 backdrop-blur-md shadow-lg py-1" data-astro-cid-3ef6ksr2> <a href="/pomo" role="menuitem" class="block px-4 py-2 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> </div> </div> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div>  <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Bhagavad Gita </a> <a href="/search" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+Search
+</a> <a href="/pomo" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-v5yihett> <!-- Article header --> <header class="max-w-9xl mx-auto px-6 mb-12" data-astro-cid-v5yihett> <!-- Breadcrumb --> <div class="flex items-center gap-2 text-xs font-mono text-slate-600 light:text-slate-400 mb-4 flex-wrap" data-astro-cid-v5yihett> <a href="/notes" class="hover:text-accent transition-colors" data-astro-cid-v5yihett>Notes</a> <span data-astro-cid-v5yihett>/</span> <a href="/notes/topic/ai-foundations" class="text-accent hover:text-accent-hover transition-colors" data-astro-cid-v5yihett>Ai Foundations</a>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>01 Language Models In Practice</span>  <span data-astro-cid-v5yihett>/</span> <span data-astro-cid-v5yihett>10 Building Reliable Llm Applications</span>  </div> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight mb-4 flex items-center gap-3" data-astro-cid-v5yihett> 10. Building Reliable LLM Applications  </h1> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-v5yihett>Covers the engineering practices that turn a probabilistic model call into a reliable system component — retries with validation, evals as CI gates, circuit breakers, and observability for non-deterministic outputs.</p> <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-mono border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-v5yihett> <span data-astro-cid-v5yihett>Updated July 25, 2026</span>  <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <span class="text-slate-600 light:text-slate-400" title="Permanent note identifier" data-astro-cid-v5yihett>§202607191037-12</span>   <span class="text-slate-700 light:text-slate-300" data-astro-cid-v5yihett>·</span> <div class="flex flex-wrap gap-2" data-astro-cid-v5yihett> <a href="/notes/tag/ai-foundations" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>ai-foundations</a><a href="/notes/tag/language-models-in-practice" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>language-models-in-practice</a><a href="/notes/tag/book" class="tag no-underline hover:bg-accent/20 hover:border-accent/40 transition-colors" data-astro-cid-v5yihett>book</a> </div>  </div> </header> <!-- Three-column: left nav + content + TOC --> <div class="max-w-9xl mx-auto px-6" data-astro-cid-v5yihett> <div class="grid grid-cols-1 xl:grid-cols-[260px_1fr_260px] gap-12" data-astro-cid-v5yihett> <!-- Left nav --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div data-notes-tree-scroll class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Ai Foundations</p> <div id="chapter-nav-source" data-astro-cid-v5yihett> <div class="space-y-1.5">  <div data-topic-id="ai-foundations" class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <details data-node-path="00-foundations-of-modern-ai" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>00 Foundations Of Modern Ai</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>12</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/ai-foundations/00-foundations-of-modern-ai/01-the-evolution-of-artificial-intelligence/01-the-evolution-of-artificial-intelligence" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 The Evolution Of Artificial Intelligence </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/02-machine-learning-fundamentals/02-machine-learning-fundamentals" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Machine Learning Fundamentals </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/03-deep-learning-essentials/03-deep-learning-essentials" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Deep Learning Essentials </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/04-transformer-architecture/04-transformer-architecture" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Transformer Architecture </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/05-tokens-embeddings-and-attention/05-tokens-embeddings-and-attention" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Tokens Embeddings And Attention </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/06-context-windows-and-tokenization/06-context-windows-and-tokenization" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Context Windows And Tokenization </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/07-foundation-models/07-foundation-models" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Foundation Models </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/08-large-language-models/08-large-language-models" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Large Language Models </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/09-reasoning-models/09-reasoning-models" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Reasoning Models </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/10-the-ai-ecosystem/10-the-ai-ecosystem" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 The Ai Ecosystem </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/11-probability-sampling-and-decoding/11-probability-sampling-and-decoding" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 11 Probability Sampling And Decoding </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/00-foundations-of-modern-ai/12-vector-geometry-and-similarity/12-vector-geometry-and-similarity" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 12 Vector Geometry And Similarity </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details><details data-node-path="01-language-models-in-practice" data-astro-cid-l7mxuoaf> <summary class="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all cursor-pointer" data-astro-cid-l7mxuoaf> <span class="tree-chevron shrink-0 text-slate-600 light:text-slate-400 transition-transform duration-150" aria-hidden="true" data-astro-cid-l7mxuoaf>▸</span>  <span class="flex-1 min-w-0 truncate" data-astro-cid-l7mxuoaf>01 Language Models In Practice</span> <span class="text-xs font-mono text-slate-600 light:text-slate-400 shrink-0" data-astro-cid-l7mxuoaf>10</span> </summary> <div class="mt-1 flex flex-col gap-1" data-astro-cid-l7mxuoaf>  <div class="flex flex-col gap-1" data-astro-cid-l7mxuoaf> <a href="/notes/ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 01 Prompt Engineering Fundamentals </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/02-prompt-design-patterns/02-prompt-design-patterns" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 02 Prompt Design Patterns </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 03 Structured Outputs </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 04 Function Calling </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/05-tool-calling/05-tool-calling" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 05 Tool Calling </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/06-streaming-responses/06-streaming-responses" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 06 Streaming Responses </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 07 Model Selection And Routing </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 08 Hallucination Management </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 09 Ai Failure Modes </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a><a href="/notes/ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications" style="padding-left: 1.5rem" class="flex items-center justify-between pr-3 py-1.5 rounded-lg text-xs text-slate-600 light:text-slate-400 hover:text-slate-300 light:hover:text-slate-700 hover:bg-slate-800/30 light:hover:bg-slate-100/40 transition-all no-underline group/sub" data-astro-cid-l7mxuoaf> <span class="flex items-center gap-1.5" data-astro-cid-l7mxuoaf> <span class="text-slate-700 light:text-slate-300 group-hover/sub:text-slate-500" data-astro-cid-l7mxuoaf>└</span> 10 Building Reliable Llm Applications </span> <span class="font-mono text-slate-700 light:text-slate-300 group-hover/sub:text-slate-600" data-astro-cid-l7mxuoaf>1</span> </a> </div>   </div> </details> </div>   <a href="/notes/ai-foundations/readme" class="flex items-start justify-between gap-2 px-3 py-2 rounded-lg text-xs font-mono text-slate-500 hover:text-slate-200 light:hover:text-slate-800 hover:bg-slate-800/60 light:hover:bg-slate-200/60 transition-colors no-underline" data-astro-cid-xd55becy><span class="leading-snug" data-astro-cid-xd55becy>Other</span></a> </div> </div> </div> </aside> <!-- Mobile/tablet nav: same content as the two xl:+ asides, collapsed
+             by default so a reader lands on the article first, not a wall of
+             chapter links. The chapter tree itself isn't re-rendered here —
+             it's cloned client-side from #chapter-nav-source (below), which
+             stays in the DOM on mobile too (`hidden xl:block` only affects
+             what's *shown*, not what's downloaded) — a topic's full nav tree
+             would otherwise ship twice on every note page. --> <div class="xl:hidden space-y-3" data-astro-cid-v5yihett> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+Chapter Navigation
+</summary> <div id="chapter-nav-mobile" class="mt-4" data-astro-cid-v5yihett></div> </details> <details class="card" data-astro-cid-v5yihett> <summary class="cursor-pointer text-xs font-mono text-slate-500 uppercase tracking-widest" data-astro-cid-v5yihett>
+On This Page
+</summary> <div class="mt-4" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#building-reliable-llm-applications" data-slug="building-reliable-llm-applications" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Building Reliable LLM Applications</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#an-llm-call-is-a-dependency-not-a-function" data-slug="an-llm-call-is-a-dependency-not-a-function" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>An LLM call is a dependency, not a function</a></li><li data-astro-cid-xvrfupwn><a href="#validation-and-retry-not-retry-and-hope" data-slug="validation-and-retry-not-retry-and-hope" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Validation-and-retry, not retry-and-hope</a></li><li data-astro-cid-xvrfupwn><a href="#timeouts-and-backoff--inherited-not-reinvented" data-slug="timeouts-and-backoff--inherited-not-reinvented" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Timeouts and backoff — inherited, not reinvented</a></li><li data-astro-cid-xvrfupwn><a href="#circuit-breakers-for-a-probabilistic-dependency" data-slug="circuit-breakers-for-a-probabilistic-dependency" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Circuit breakers for a probabilistic dependency</a></li><li data-astro-cid-xvrfupwn><a href="#evals-as-the-ci-gate-for-a-probabilistic-component" data-slug="evals-as-the-ci-gate-for-a-probabilistic-component" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Evals as the CI gate for a probabilistic component</a></li><li data-astro-cid-xvrfupwn><a href="#prompt-and-schema-versioning" data-slug="prompt-and-schema-versioning" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Prompt and schema versioning</a></li><li data-astro-cid-xvrfupwn><a href="#observability-for-non-deterministic-output" data-slug="observability-for-non-deterministic-output" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Observability for non-deterministic output</a></li><li data-astro-cid-xvrfupwn><a href="#closing-the-part-from-raw-api-to-dependable-component" data-slug="closing-the-part-from-raw-api-to-dependable-component" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Closing the Part: from raw API to dependable component</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Depends On</p><a href="/notes/building-agentic-systems/02-evaluation/02-benchmarks/02-benchmarks" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">2. Benchmarks</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Prompt Engineering Fundamentals</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Structured Outputs</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">7. Model Selection &amp; Routing</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">8. Hallucination Management</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. AI Failure Modes</span></a><a href="/notes/ai-foundations/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">AI &amp; LLM Foundations</span></a></div></div></nav> </div> </div> </details> </div>  <!-- Article --> <article class="min-w-0" data-pagefind-body data-pagefind-filter="type:Note" data-astro-cid-v5yihett> <span hidden data-pagefind-meta="title:10. Building Reliable LLM Applications" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="slug:ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications" data-astro-cid-v5yihett></span> <span hidden data-pagefind-meta="date:2026-07-25T00:00:00.000Z" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="domain:Ai Foundations" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="kind:topic" data-astro-cid-v5yihett></span> <span hidden data-pagefind-filter="tag:ai-foundations" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:language-models-in-practice" data-astro-cid-v5yihett></span><span hidden data-pagefind-filter="tag:book" data-astro-cid-v5yihett></span> <div class="
+            prose prose-invert max-w-none
+            prose-base leading-relaxed
+
+            prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+
+            prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+
+            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+
+            prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+
+            prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+
+            prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+            prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+            prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+
+            prose-blockquote:border-l-accent prose-blockquote:border-l-4 prose-blockquote:pl-5
+            prose-blockquote:text-slate-400 light:prose-blockquote:text-slate-600 prose-blockquote:not-italic
+            prose-blockquote:bg-slate-900/50 light:prose-blockquote:bg-slate-100/50 prose-blockquote:rounded-r-lg prose-blockquote:py-3 prose-blockquote:my-6
+
+            prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+            prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+
+            prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+            prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+
+            prose-table:my-6 prose-table:w-full prose-table:text-sm
+            prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+            prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+            prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+
+            prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+          " data-astro-cid-v5yihett>  <h2 id="building-reliable-llm-applications">Building Reliable LLM Applications</h2>
+<blockquote>
+<p>Chapter of <a href="/notes/ai-foundations/readme/#01--language-models-in-practice">Language Models in Practice</a>,
+part of <a href="/notes/ai-foundations/readme/">AI &#x26; LLM Foundations</a>.</p>
+</blockquote>
+<h2 id="what-you-will-understand-at-the-end">What you will understand at the end</h2>
+<ul>
+<li>Why an LLM call is a <strong>non-deterministic dependency</strong>, and why every SRE discipline built for
+flaky, latent, partially-reliable dependencies applies here largely unmodified</li>
+<li>The five concrete practices — validation-and-retry, timeouts, circuit breakers, evals-as-CI-gates,
+and prompt versioning — that convert a probabilistic model call into a component you can put an
+SLO on</li>
+<li>How this chapter’s practices are the connective tissue between everything else in this Part and
+the production-infrastructure and observability treatment early in
+<a href="/notes/production-agent-systems/readme/">Production Agent Systems</a> (Parts 00–01)</li>
+</ul>
+<hr>
+<h2 id="an-llm-call-is-a-dependency-not-a-function">An LLM call is a dependency, not a function</h2>
+<p>Everything in this Part so far has treated the model call as the unit of work — write a good prompt,
+enforce a schema, choose the right tool, pick the right tier. This closing chapter reframes the
+model call itself: from an SRE’s vantage point, <code>client.messages.create(...)</code> is not a pure
+function. It has latency variance, a nonzero error rate, occasional partial failures (a schema
+violation that’s <em>structurally</em> valid JSON but <em>semantically</em> wrong), and a cost per call that
+scales with input and output size. That is exactly the shape of a flaky external dependency — a
+third-party API, a distributed database, a network call — and the reliability engineering that makes
+those tractable transfers here with almost no modification:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    A["LLM call"] --> B{"Succeeded &#x26;\nvalidated?"}</span></span>
+<span class="line"><span style="color:#E1E4E8">    B -->|"Yes"| C["Return result"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    B -->|"No — retryable\n(schema fail, timeout, 5xx)"| D["Retry with\nbackoff + feedback"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    D --> A</span></span>
+<span class="line"><span style="color:#E1E4E8">    B -->|"No — repeatedly\nfailing"| E["Circuit breaker:\nstop calling, degrade"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    E --> F["Fallback: cached answer,\nsmaller model, human handoff"]</span></span>
+<span class="line"></span></code></pre>
+<p>The single biggest mindset shift this chapter asks for: stop treating a bad LLM response as a bug to
+be prompt-engineered away, and start treating it as an <strong>expected failure mode</strong> to be engineered
+around — the same way a well-run service treats a downstream 500 as expected, not exceptional.</p>
+<h2 id="validation-and-retry-not-retry-and-hope">Validation-and-retry, not retry-and-hope</h2>
+<p>A plain retry — resend the identical request and hope for a different, better outcome — is weak
+because it gives the model no new information about <em>why</em> the previous attempt was wrong. The
+pattern that actually improves outcomes on retry is: validate the response against an explicit
+contract, and if it fails, <strong>feed the specific failure back</strong> into the next attempt rather than
+retrying blind:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> call_with_validated_retry</span><span style="color:#E1E4E8">(client, prompt: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, validator, max_retries: </span><span style="color:#79B8FF">int</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 2</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#E1E4E8">    context </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> prompt</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> attempt </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> range</span><span style="color:#E1E4E8">(max_retries </span><span style="color:#F97583">+</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#E1E4E8">        response </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> client.messages.create(</span></span>
+<span class="line"><span style="color:#FFAB70">            model</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"claude-opus-4-8"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">max_tokens</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1024</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">            messages</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[{</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"user"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: context}],</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"><span style="color:#E1E4E8">        text </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> response.content[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">].text</span></span>
+<span class="line"><span style="color:#E1E4E8">        ok, error </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> validator(text)</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> ok:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#E1E4E8"> text</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> attempt </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> max_retries:</span></span>
+<span class="line"><span style="color:#F97583">            raise</span><span style="color:#79B8FF"> RuntimeError</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"validation failed after </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">max_retries</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> retries: </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">error</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">        context </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">prompt</span><span style="color:#79B8FF">}\n\n</span><span style="color:#9ECBFF">Your previous response failed validation: </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">error</span><span style="color:#79B8FF">}\n</span><span style="color:#9ECBFF">Try again."</span></span>
+<span class="line"><span style="color:#F97583">    raise</span><span style="color:#79B8FF"> RuntimeError</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"unreachable"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span></code></pre>
+<p>This is the same principle introduced in <a href="/notes/ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs/">Structured Outputs</a>‘s
+validate-then-retry example and in <a href="/notes/ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling/">Function Calling</a>‘s <code>is_error</code> tool-result
+guidance, generalized: <strong>every LLM call in a production path should have an explicit definition of
+“succeeded” that’s checked in code, not assumed from a 200 status.</strong> A response that parses, matches
+the schema, and passes every downstream business-logic check is “succeeded”; anything else is a
+retryable failure, a degrade-and-continue case, or a hard error — and deciding which, deliberately,
+is part of the design, not an afterthought discovered in an incident review.</p>
+<h2 id="timeouts-and-backoff--inherited-not-reinvented">Timeouts and backoff — inherited, not reinvented</h2>
+<p>LLM API calls fail the same way any HTTP dependency fails: connection errors, 429 rate limits, and
+5xx server errors, all of which are transient and worth retrying with backoff; 400s and other 4xx
+errors, which are not — retrying an identical malformed request against the same or a different
+model tier just reproduces the same error. Every official SDK already implements exponential backoff
+with jitter for the retryable class by default (typically <code>max_retries=2</code> out of the box) — the
+design mistake to avoid is layering a second, uncoordinated retry loop on top of the SDK’s own,
+which multiplies effective retry count and backoff delay in ways that are easy to lose track of. Set
+timeouts deliberately per call rather than accepting a library default that may be tuned for a
+different <code>max_tokens</code> regime than yours — a request with <code>max_tokens=64000</code> and streaming disabled
+needs a materially different timeout budget than a short classification call, and conflating the two
+is a common source of either premature timeouts on legitimate long generations or dangerously long
+hangs on calls that should fail fast.</p>
+<h2 id="circuit-breakers-for-a-probabilistic-dependency">Circuit breakers for a probabilistic dependency</h2>
+<p>A circuit breaker — stop calling a dependency once its failure rate crosses a threshold, and fail
+fast (or fall back) instead of continuing to hammer it — applies to LLM calls with one added
+wrinkle: “failure” here includes validation failures, not just transport errors. A model tier that’s
+returning schema-valid-but-consistently-wrong output under some input distribution shift is failing
+in a way a naive health check (did the HTTP call succeed?) will never catch, but your
+validation-and-retry loop will see it immediately as a rising retry rate. Wire the circuit breaker
+to that signal — retry rate and validation-failure rate, not just transport error rate — and have an
+explicit fallback path: route to a different model tier (see
+<a href="/notes/ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing/">Model Selection &#x26; Routing</a>), serve a cached or templated response,
+or hand off to a human, rather than letting a degraded dependency silently degrade every request
+that depends on it.</p>
+<h2 id="evals-as-the-ci-gate-for-a-probabilistic-component">Evals as the CI gate for a probabilistic component</h2>
+<p>Unit tests assert an exact expected output for an exact input — the wrong mental model for an LLM
+call, where the same prompt can legitimately produce several acceptable phrasings of a correct
+answer. <strong>Evals</strong> are the equivalent gate for probabilistic components: a held-out dataset of
+representative inputs, each with a way to score the output as acceptable or not (an exact match for
+structured extraction, a rubric or LLM-as-judge score for open-ended generation, a pass/fail
+assertion for tool-selection accuracy), run against every prompt change, tool-schema change, or
+model migration before it ships.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> run_eval_suite</span><span style="color:#E1E4E8">(client, model: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, cases: list[</span><span style="color:#79B8FF">dict</span><span style="color:#E1E4E8">]) -> </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    passed </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> case </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> cases:</span></span>
+<span class="line"><span style="color:#E1E4E8">        response </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> client.messages.create(</span></span>
+<span class="line"><span style="color:#FFAB70">            model</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">model, </span><span style="color:#FFAB70">max_tokens</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1024</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">            messages</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">[{</span><span style="color:#9ECBFF">"role"</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">"user"</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"content"</span><span style="color:#E1E4E8">: case[</span><span style="color:#9ECBFF">"input"</span><span style="color:#E1E4E8">]}],</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> case[</span><span style="color:#9ECBFF">"scorer"</span><span style="color:#E1E4E8">](response.content[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">].text, case[</span><span style="color:#9ECBFF">"expected"</span><span style="color:#E1E4E8">]):</span></span>
+<span class="line"><span style="color:#E1E4E8">            passed </span><span style="color:#F97583">+=</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> passed </span><span style="color:#F97583">/</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(cases)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Treat this exactly like a test-coverage gate: block the merge if score regresses</span></span>
+<span class="line"><span style="color:#E1E4E8">score </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> run_eval_suite(client, </span><span style="color:#9ECBFF">"claude-opus-4-8"</span><span style="color:#E1E4E8">, golden_dataset)</span></span>
+<span class="line"><span style="color:#F97583">assert</span><span style="color:#E1E4E8"> score </span><span style="color:#F97583">>=</span><span style="color:#79B8FF"> BASELINE_SCORE</span><span style="color:#F97583"> -</span><span style="color:#79B8FF"> REGRESSION_TOLERANCE</span></span>
+<span class="line"></span></code></pre>
+<p>Without a standing eval suite, a prompt edit, a model migration, or a tool-description tweak ships
+on vibes — it looked better on the three examples someone tried by hand, and nobody finds out it
+regressed a different case class until a user does. This is the direct analog of a regression test
+suite gating a deploy, and it’s covered as a full discipline (offline eval sets, online shadow
+comparison, LLM-as-judge scoring) in
+<a href="/notes/building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks/">Part 02 of Building &#x26; Evaluating Agents, Chapter 1 — AI Evaluation Frameworks</a>
+and <a href="/notes/building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation/">Chapter 11 — Offline Evaluation</a>.</p>
+<h2 id="prompt-and-schema-versioning">Prompt and schema versioning</h2>
+<p>A system prompt, a tool schema, and a model ID together define the contract a downstream consumer
+depends on — exactly the way an API version defines a contract its callers depend on — and treating
+that contract as mutable, untracked prose that changes silently between deploys is how a “small
+prompt tweak” becomes an untraceable production regression. Version prompts and schemas the same way
+you’d version an API: track changes in source control (not a chat UI or a wiki page nobody diffs),
+attach an eval-suite score to each version so a regression is caught before rollout, and roll out
+changes with the same caution as any other production dependency change — canary a new prompt
+version against a subset of traffic before full rollout, and keep the previous version’s exact text
+available for instant rollback.
+<a href="/notes/production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies/">Part 00 of Production Agent Systems, Chapter 12 — Rollback Strategies</a>
+covers this at the deployment-pattern level; the point to internalize here is narrower: <strong>a prompt
+edit is a production change</strong>, not a copy-paste, and it deserves the same change-management rigor
+ShipSolid’s platform engineering standards already apply to a Helm values file or a Terraform
+variable.</p>
+<h2 id="observability-for-non-deterministic-output">Observability for non-deterministic output</h2>
+<p>Standard service observability — latency, error rate, saturation — still matters for an LLM
+dependency, but it’s incomplete: two requests with identical latency and a 200 status can differ
+enormously in output quality, and none of the classic golden signals would show it. The metrics that
+close this gap are specific to LLM workloads: token counts (input/output/cached) as first-class
+SLIs, since a silent prompt-length regression or a runaway agentic loop shows up here before it
+shows up in cost dashboards; validation-failure and retry rate as a proxy for output quality drift;
+and tool-call success/error rate broken out per tool, since an aggregate success rate hides a single
+misbehaving tool. This Part deliberately stayed prompt- and application-level; the full
+instrumentation architecture — tracing spans around LLM and tool calls, dashboards, alerting
+thresholds tuned for probabilistic components — is the subject of
+<a href="/notes/production-agent-systems/01-observability/01-ai-observability-fundamentals/01-ai-observability-fundamentals/">Part 01 of Production Agent Systems — Observability</a> in its
+entirety, which is the natural next stop for anyone building on top of what this chapter introduced.</p>
+<h2 id="closing-the-part-from-raw-api-to-dependable-component">Closing the Part: from raw API to dependable component</h2>
+<p>Trace back across this Part’s ten chapters and a single arc emerges:
+<a href="/notes/ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals/">Chapter 1</a> framed a prompt as an interface contract; every
+chapter since has been about <strong>enforcing that contract mechanically</strong> rather than trusting it to
+hold — schemas instead of hoped-for JSON, forced tool choice instead of hoped-for tool use,
+validation-and-retry instead of hoped-for correctness, evals instead of hoped-for regression safety.
+That arc — turn a probabilistic capability into an engineered, contract-bound system component — is
+also the arc of this entire book: the next Part,
+<a href="/notes/agentic-ai-engineering/00-introduction-to-agentic-ai/01-what-is-agentic-ai/01-what-is-agentic-ai/">Introduction to Agentic AI</a>, starts stacking planning, memory, and
+multi-step autonomy on top of exactly the dependable foundation this Part exists to establish. None
+of what follows is safe to build without it.</p>
+<h2 id="metadata">Metadata</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Author</td><td>Amit Singh</td></tr><tr><td>Scope</td><td>ai-foundations</td></tr></tbody></table>  </div> <!-- Local graph: this note + its direct link neighbors, 1-hop --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Local graph</p> <div class="card p-0 overflow-hidden" data-astro-cid-v5yihett> <svg id="graph-svg-local" viewBox="0 0 700 400" class="w-full h-96 block touch-none" style="background:var(--color-surface)"></svg> <noscript> <p class="p-6 text-sm text-slate-500 font-mono">
+The interactive graph requires JavaScript.
+<a href="/notes" class="text-accent hover:text-accent-hover">Browse all notes →</a> </p> </noscript> <script>(function(){const nodes = [{"slug":"agentic-ai-engineering/00-introduction-to-agentic-ai/01-what-is-agentic-ai/01-what-is-agentic-ai","title":"1. What is Agentic AI?","topic":"agentic-ai-engineering","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals","title":"1. Prompt Engineering Fundamentals","topic":"ai-foundations","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs","title":"3. Structured Outputs","topic":"ai-foundations","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling","title":"4. Function Calling","topic":"ai-foundations","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing","title":"7. Model Selection & Routing","topic":"ai-foundations","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","title":"8. Hallucination Management","topic":"ai-foundations","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes","title":"9. AI Failure Modes","topic":"ai-foundations","noteType":"note"},{"slug":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","title":"10. Building Reliable LLM Applications","topic":"ai-foundations","noteType":"note"},{"slug":"ai-foundations/readme","title":"AI & LLM Foundations","topic":"ai-foundations","noteType":"moc"},{"slug":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","title":"1. AI Evaluation Frameworks","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/02-evaluation/02-benchmarks/02-benchmarks","title":"2. Benchmarks","topic":"building-agentic-systems","noteType":"note"},{"slug":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","title":"4. Offline Evaluation","topic":"building-agentic-systems","noteType":"note"},{"slug":"production-agent-systems/01-observability/01-ai-observability-fundamentals/01-ai-observability-fundamentals","title":"1. AI Observability Fundamentals","topic":"production-agent-systems","noteType":"note"},{"slug":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","title":"12. Rollback Strategies","topic":"production-agent-systems","noteType":"note"},{"slug":"production-agent-systems/readme","title":"Production Agent Systems","topic":"production-agent-systems","noteType":"moc"}];
+const edges = [{"source":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","target":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","kind":"related"},{"source":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","target":"building-agentic-systems/02-evaluation/02-benchmarks/02-benchmarks","kind":"related"},{"source":"building-agentic-systems/02-evaluation/02-benchmarks/02-benchmarks","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"building-agentic-systems/02-evaluation/02-benchmarks/02-benchmarks","kind":"depends_on"},{"source":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"depends_on"},{"source":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"agentic-ai-engineering/00-introduction-to-agentic-ai/01-what-is-agentic-ai/01-what-is-agentic-ai","target":"production-agent-systems/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals","target":"ai-foundations/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals","target":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals","target":"ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals","target":"ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals","target":"ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs","target":"ai-foundations/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs","target":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs","target":"ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs","target":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling","target":"ai-foundations/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling","target":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing","target":"ai-foundations/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing","target":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing","target":"production-agent-systems/01-observability/01-ai-observability-fundamentals/01-ai-observability-fundamentals","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","target":"ai-foundations/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing","target":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","target":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes","target":"ai-foundations/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management","target":"ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling","target":"ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes","target":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"ai-foundations/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"production-agent-systems/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling","target":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"building-agentic-systems/02-evaluation/04-offline-evaluation/04-offline-evaluation","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","target":"production-agent-systems/01-observability/01-ai-observability-fundamentals/01-ai-observability-fundamentals","kind":"related"},{"source":"agentic-ai-engineering/00-introduction-to-agentic-ai/01-what-is-agentic-ai/01-what-is-agentic-ai","target":"ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications","kind":"related"},{"source":"ai-foundations/readme","target":"production-agent-systems/readme","kind":"related"},{"source":"ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes","target":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","kind":"related"},{"source":"building-agentic-systems/02-evaluation/01-ai-evaluation-frameworks/01-ai-evaluation-frameworks","target":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","kind":"related"},{"source":"production-agent-systems/02-reliability-security-and-governance/12-rollback-strategies/12-rollback-strategies","target":"production-agent-systems/readme","kind":"related"},{"source":"production-agent-systems/01-observability/01-ai-observability-fundamentals/01-ai-observability-fundamentals","target":"production-agent-systems/readme","kind":"related"}];
+const topicColors = {"README.md":"#009563","agentic-ai-engineering":"#00ab8d","agentic-ai-projects-and-mastery":"#00958b","ai-architecture-and-system-design":"#00a9b3","ai-foundations":"#008fad","aptitude":"#00a1d1","building-agentic-systems":"#0085c5","ci-cd":"#2c95e4","data-engineering":"#3c79d1","data-structures-algorithms":"#6b88ea","dbms":"#6d6cd0","gita":"#937be2","grafana-cloud":"#8f60c1","infrastructure-platform-engineering":"#b26fcc","internal-developer-platforms":"#a856a7","kubernetes":"#c967ad","kubernetes-platform-engineering":"#b94f85","low-level-design":"#d76387","networks":"#c24d5f","object-oriented-programming":"#dc655e","observability":"#c25332","operating-system":"#d66f2f","patterns":"#b86000","philosophy":"#c67d00","platform-engineering-fundamentals":"#a46f00","production-agent-systems":"#ac8d00","productivity":"#867e00","projects":"#879b09","prometheus":"#5b8b12","sre":"#54a54b","system-design":"#00934d"};
+const defaultColor = "#94a3b8";
+const viewW = 700;
+const viewH = 400;
+const svgId = "graph-svg-local";
+const tooltipId = "graph-tooltip-local";
+const currentSlug = "ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications";
+
+(() => {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const VIEW_W = viewW;
+  const VIEW_H = viewH;
+  const CENTER_X = VIEW_W / 2;
+  const CENTER_Y = VIEW_H / 2;
+
+  // Edge/ring colors aren't reachable by the `light:` Tailwind variant (set
+  // via raw SVG attribute, not a class) — theme-keyed lookup instead,
+  // re-applied on `themechange` by applyThemeColors() below.
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+  const GRAPH_COLORS = {
+    dark: { edge: '#1e293b', edgeActive: '#00d9a6', currentStroke: '#00d9a6', mocStroke: '#f1f5f9' },
+    light: { edge: '#cbd5e1', edgeActive: '#0f766e', currentStroke: '#0f766e', mocStroke: '#0f172a' },
+  };
+  let colors = GRAPH_COLORS[currentTheme()];
+
+  const slugIndex = new Map(nodes.map((n, i) => [n.slug, i]));
+  const sim = nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0 }));
+
+  // Topic-clustered starting positions rather than pure random: one topic
+  // (shipsolid) dominates the corpus, so seeding clusters cuts down the
+  // visual chaos before the sim settles instead of relying on repulsion
+  // alone to sort it out.
+  const topicsList = [...new Set(nodes.map((n) => n.topic))];
+  const clusterRadius = Math.min(VIEW_W, VIEW_H) * 0.28;
+  const clusterCenters = new Map(
+    topicsList.map((topic, i) => {
+      const angle = (i / topicsList.length) * Math.PI * 2;
+      return [topic, {
+        x: CENTER_X + Math.cos(angle) * clusterRadius,
+        y: CENTER_Y + Math.sin(angle) * clusterRadius,
+      }];
+    })
+  );
+  sim.forEach((n) => {
+    const c = clusterCenters.get(n.topic) || { x: CENTER_X, y: CENTER_Y };
+    const spread = 100;
+    n.x = c.x + (Math.random() - 0.5) * spread;
+    n.y = c.y + (Math.random() - 0.5) * spread;
+  });
+
+  const edgeList = edges
+    .map((e) => ({ a: slugIndex.get(e.source), b: slugIndex.get(e.target) }))
+    .filter((e) => e.a !== undefined && e.b !== undefined);
+
+  const neighbors = new Map(nodes.map((n) => [n.slug, new Set()]));
+  edgeList.forEach((e) => {
+    neighbors.get(sim[e.a].slug).add(sim[e.b].slug);
+    neighbors.get(sim[e.b].slug).add(sim[e.a].slug);
+  });
+
+  // --- build SVG elements ---
+  const edgesGroup = document.createElementNS(NS, 'g');
+  const nodesGroup = document.createElementNS(NS, 'g');
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const lineEls = edgeList.map(() => {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('stroke', colors.edge);
+    line.setAttribute('stroke-width', '1');
+    line.style.opacity = '0.5';
+    edgesGroup.appendChild(line);
+    return line;
+  });
+
+  const nodeEls = sim.map((n) => {
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('graph-node');
+    g.dataset.slug = n.slug;
+    g.dataset.topic = n.topic;
+    g.style.cursor = 'pointer';
+
+    const isCurrent = currentSlug && n.slug === currentSlug;
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('r', isCurrent ? '7' : n.noteType === 'moc' ? '7' : '4.5');
+    circle.setAttribute('fill', topicColors[n.topic] || defaultColor);
+    if (isCurrent) {
+      circle.setAttribute('stroke', colors.currentStroke);
+      circle.setAttribute('stroke-width', '2.5');
+    } else if (n.noteType === 'moc') {
+      circle.setAttribute('stroke', colors.mocStroke);
+      circle.setAttribute('stroke-width', '1.5');
+    }
+    g.appendChild(circle);
+
+    const titleEl = document.createElementNS(NS, 'title');
+    titleEl.textContent = isCurrent ? `${n.title} (this note)` : n.title;
+    g.appendChild(titleEl);
+
+    if (!isCurrent) {
+      g.addEventListener('click', () => {
+        window.location.href = n.href || `/notes/${n.slug}/`;
+      });
+    } else {
+      g.style.cursor = 'default';
+    }
+    g.addEventListener('mouseenter', (ev) => showTooltip(n.slug, ev));
+    g.addEventListener('mousemove', (ev) => positionTooltip(ev));
+    g.addEventListener('mouseleave', clearHighlight);
+
+    nodesGroup.appendChild(g);
+    return g;
+  });
+
+  // --- floating tooltip ---
+  const tooltip = document.createElement('div');
+  tooltip.id = tooltipId;
+  tooltip.className = 'graph-tooltip';
+  document.body.appendChild(tooltip);
+
+  function positionTooltip(ev) {
+    tooltip.style.left = `${ev.clientX + 14}px`;
+    tooltip.style.top = `${ev.clientY + 14}px`;
+  }
+
+  function showTooltip(slug, ev) {
+    const active = new Set([slug, ...(neighbors.get(slug) || [])]);
+    nodeEls.forEach((el) => {
+      el.style.opacity = active.has(el.dataset.slug) ? '1' : '0.15';
+    });
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      const touches = sim[e.a].slug === slug || sim[e.b].slug === slug;
+      line.style.opacity = touches ? '0.9' : '0.05';
+      line.setAttribute('stroke', touches ? colors.edgeActive : colors.edge);
+    });
+
+    const n = sim[slugIndex.get(slug)];
+    tooltip.innerHTML = '';
+    const titleEl = document.createElement('div');
+    titleEl.textContent = n.title;
+    const topicEl = document.createElement('div');
+    topicEl.className = 'tt-topic';
+    topicEl.textContent = n.topic;
+    tooltip.appendChild(titleEl);
+    tooltip.appendChild(topicEl);
+    tooltip.style.display = 'block';
+    positionTooltip(ev);
+  }
+
+  function clearHighlight() {
+    nodeEls.forEach((el) => { el.style.opacity = '1'; });
+    lineEls.forEach((line) => {
+      line.style.opacity = '0.5';
+      line.setAttribute('stroke', colors.edge);
+    });
+    tooltip.style.display = 'none';
+  }
+
+  // Re-applies the current theme's palette to already-built elements — the
+  // colors above are set once at element-creation time, so a toggle needs
+  // this to actually repaint anything already on screen.
+  function applyThemeColors() {
+    colors = GRAPH_COLORS[currentTheme()];
+    lineEls.forEach((line) => line.setAttribute('stroke', colors.edge));
+    nodeEls.forEach((g, i) => {
+      const n = sim[i];
+      const circle = g.querySelector('circle');
+      if (!circle) return;
+      const isCurrent = currentSlug && n.slug === currentSlug;
+      if (isCurrent) circle.setAttribute('stroke', colors.currentStroke);
+      else if (n.noteType === 'moc') circle.setAttribute('stroke', colors.mocStroke);
+    });
+  }
+  window.addEventListener('themechange', applyThemeColors);
+
+  // --- pan / zoom (viewBox-based) ---
+  let viewX = 0, viewY = 0, viewWCur = VIEW_W, viewHCur = VIEW_H;
+  function applyView() {
+    svg.setAttribute('viewBox', `${viewX} ${viewY} ${viewWCur} ${viewHCur}`);
+  }
+
+  let panning = false;
+  let panStart = { x: 0, y: 0 };
+  svg.addEventListener('pointerdown', (ev) => {
+    if (ev.target !== svg) return; // don't pan when the pointer starts on a node
+    panning = true;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener('pointermove', (ev) => {
+    if (!panning) return;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = viewWCur / rect.width;
+    const scaleY = viewHCur / rect.height;
+    viewX -= (ev.clientX - panStart.x) * scaleX;
+    viewY -= (ev.clientY - panStart.y) * scaleY;
+    panStart = { x: ev.clientX, y: ev.clientY };
+    applyView();
+  });
+  svg.addEventListener('pointerup', () => { panning = false; });
+  svg.addEventListener('pointercancel', () => { panning = false; });
+  svg.addEventListener('wheel', (ev) => {
+    ev.preventDefault();
+    const zoom = ev.deltaY > 0 ? 1.1 : 0.9;
+    const newW = Math.min(Math.max(viewWCur * zoom, 150), VIEW_W * 3);
+    const newH = newW * (VIEW_H / VIEW_W);
+    const rect = svg.getBoundingClientRect();
+    const cx = viewX + ((ev.clientX - rect.left) / rect.width) * viewWCur;
+    const cy = viewY + ((ev.clientY - rect.top) / rect.height) * viewHCur;
+    viewX = cx - ((cx - viewX) / viewWCur) * newW;
+    viewY = cy - ((cy - viewY) / viewHCur) * newH;
+    viewWCur = newW;
+    viewHCur = newH;
+    applyView();
+  }, { passive: false });
+
+  // --- force simulation ---
+  const REPULSION = 2200;
+  const SPRING_K = 0.02;
+  const IDEAL_LEN = 55;
+  const CENTER_K = 0.002;
+  const DAMPING = 0.85;
+  const MIN_DIST_SQ = 25; // epsilon guard against divide-by-zero for coincident/near-coincident nodes
+  const ENERGY_THRESHOLD = 0.05;
+  const MAX_TICKS = 600;
+  // Caps per-tick displacement. Without this, a high-degree node (many
+  // relations/backlinks landing on one hub note) can accumulate spring pull
+  // from dozens of neighbors in a single tick, faster than DAMPING removes
+  // it — the resulting overshoot feeds back into next tick's repulsion and
+  // compounds exponentially over MAX_TICKS, ending with nodes parked at
+  // coordinates in the trillions, off-canvas and invisible. Bounding max
+  // speed keeps the worst case at MAX_SPEED * MAX_TICKS from center.
+  const MAX_SPEED = 40;
+
+  let tick = 0;
+
+  function step() {
+    for (let i = 0; i < sim.length; i++) {
+      for (let j = i + 1; j < sim.length; j++) {
+        const a = sim[i], b = sim[j];
+        let dx = b.x - a.x, dy = b.y - a.y;
+        let distSq = dx * dx + dy * dy;
+        if (distSq < MIN_DIST_SQ) {
+          dx = (Math.random() - 0.5) * 2;
+          dy = (Math.random() - 0.5) * 2;
+          distSq = MIN_DIST_SQ;
+        }
+        const dist = Math.sqrt(distSq);
+        const force = REPULSION / distSq;
+        const fx = (dx / dist) * force, fy = (dy / dist) * force;
+        a.vx -= fx; a.vy -= fy;
+        b.vx += fx; b.vy += fy;
+      }
+    }
+
+    edgeList.forEach((e) => {
+      const a = sim[e.a], b = sim[e.b];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const force = SPRING_K * (dist - IDEAL_LEN);
+      const fx = (dx / dist) * force, fy = (dy / dist) * force;
+      a.vx += fx; a.vy += fy;
+      b.vx -= fx; b.vy -= fy;
+    });
+
+    let energy = 0;
+    sim.forEach((n) => {
+      n.vx += (CENTER_X - n.x) * CENTER_K;
+      n.vy += (CENTER_Y - n.y) * CENTER_K;
+      n.vx *= DAMPING;
+      n.vy *= DAMPING;
+      const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+      if (speed > MAX_SPEED) {
+        const scale = MAX_SPEED / speed;
+        n.vx *= scale;
+        n.vy *= scale;
+      }
+      n.x += n.vx;
+      n.y += n.vy;
+      energy += n.vx * n.vx + n.vy * n.vy;
+    });
+
+    render();
+
+    tick += 1;
+    if (energy > ENERGY_THRESHOLD && tick < MAX_TICKS) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  function render() {
+    lineEls.forEach((line, i) => {
+      const e = edgeList[i];
+      line.setAttribute('x1', sim[e.a].x);
+      line.setAttribute('y1', sim[e.a].y);
+      line.setAttribute('x2', sim[e.b].x);
+      line.setAttribute('y2', sim[e.b].y);
+    });
+    nodeEls.forEach((el, i) => {
+      el.setAttribute('transform', `translate(${sim[i].x},${sim[i].y})`);
+    });
+  }
+
+  render();
+  requestAnimationFrame(step);
+
+  // Legend toggling lives on the host page (it owns the legend markup), but
+  // it needs access to the node/line elements this script just built — expose
+  // them keyed by svgId so a page with multiple canvases doesn't cross-wire.
+  window.__notesGraphInstances ??= {};
+  window.__notesGraphInstances[svgId] = { nodeEls, lineEls, sim, edgeList };
+})();
+})();</script>  <a href="/notes/graph" class="block px-4 py-2 text-[11px] text-slate-500 hover:text-accent border-t border-slate-800 light:border-slate-200 transition-colors no-underline" data-astro-cid-v5yihett>
+Full graph →
+</a> </div> </div> <!-- Backlinks: notes that link to this one, computed from the wiki-link / markdown-link
+               graph. Kept flat (not grouped by kind, unlike the sidebar's KnowledgeGraphTree) —
+               on hub notes the untyped 'related' kind dominates almost all entries, so grouping
+               here would produce one giant bucket and a couple stragglers for no real scannability
+               gain. Capped at BACKLINKS_PREVIEW_LIMIT with a "show all" toggle instead, since hub
+               notes can have 100+ backlinks. --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" id="linked-from" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>
+Linked from 7 notes </p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/building-agentic-systems/02-evaluation/02-benchmarks/02-benchmarks" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 2. Benchmarks </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Building a standing benchmark suite that runs against every model or prompt change, isolating a provider-side regression from one you introduced with a pinned-model control, and the composition, staleness, and cadence tradeoffs that keep the suite discriminating over time.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 1. Prompt Engineering Fundamentals </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers the core levers of prompt construction — instruction clarity, few-shot exemplars, system vs. user role separation, and sampling controls — as the baseline skill every downstream agentic technique builds on.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 3. Structured Outputs </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers forcing an LLM into a validated schema — JSON mode, function-calling-style schemas, and grammar-constrained decoding — and the failure modes, like schema drift and hallucinated fields, that break naive implementations.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 7. Model Selection &amp; Routing </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers building a model router that picks among providers and tiers by task complexity, latency SLA, and cost — the pattern that replaces always calling the biggest model once traffic reaches production scale.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 8. Hallucination Management </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers the mechanisms behind LLM hallucination — parametric knowledge gaps, exposure bias, overconfident sampling — and mitigation strategies like grounding via RAG, citation requirements, and confidence-calibrated refusal.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 9. AI Failure Modes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Surveys production failure modes beyond hallucination — prompt injection, context poisoning, tool-call loops, silent schema violations, and cascading errors in multi-agent chains — as the taxonomy a staff engineer defends against.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/readme" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> AI &amp; LLM Foundations </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>A book-shaped table of contents for AI &amp; LLM Foundations: the pre-agentic substrate — symbolic AI through transformers, tokens, embeddings, attention, foundation models, and turning a raw LLM API into a dependable application component. Book 1 of the AI Systems Engineering series.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div>  </div> <!-- Referenced in Bhagavad Gita: reverse lookup from the gita verse
+               collection's own `concepts[]` field — see getVersesReferencingConcept
+               in src/lib/gita.ts. Computed unconditionally for every note, so any
+               note anywhere in the corpus that a verse happens to reference gets
+               this section, not just notes under notes/gita/concepts/. -->  <!-- Related notes: tag-overlap scored, same-topic/recency/zettelId as tie-breaks --> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <p class="text-xs font-mono text-slate-500 uppercase tracking-widest mb-4" data-astro-cid-v5yihett>Related notes</p> <div class="grid gap-3" data-astro-cid-v5yihett> <a href="/notes/ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 9. AI Failure Modes </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Surveys production failure modes beyond hallucination — prompt injection, context poisoning, tool-call loops, silent schema violations, and cascading errors in multi-agent chains — as the taxonomy a staff engineer defends against.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/04-function-calling/04-function-calling" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 4. Function Calling </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers how models select and populate function signatures from natural language, the request/response contract between model and application, and common pitfalls like parameter hallucination and ambiguous selection.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 8. Hallucination Management </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers the mechanisms behind LLM hallucination — parametric knowledge gaps, exposure bias, overconfident sampling — and mitigation strategies like grounding via RAG, citation requirements, and confidence-calibrated refusal.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a><a href="/notes/ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing" class="card group flex items-start justify-between gap-4 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <div class="min-w-0" data-astro-cid-v5yihett> <p class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 7. Model Selection &amp; Routing </p> <p class="text-xs text-slate-500 mt-1 line-clamp-1" data-astro-cid-v5yihett>Covers building a model router that picks among providers and tiers by task complexity, latency SLA, and cost — the pattern that replaces always calling the biggest model once traffic reaches production scale.</p> </div> <svg class="w-4 h-4 text-slate-600 light:text-slate-400 group-hover:text-accent transition-colors shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" data-astro-cid-v5yihett> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" data-astro-cid-v5yihett></path> </svg> </a> </div> </div> <!-- Back links --> <div class="mt-10 flex items-center justify-between" data-astro-cid-v5yihett> <a href="/notes" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-v5yihett>
+← All notes
+</a> <div class="flex items-center gap-4" data-astro-cid-v5yihett> <a href="/notes/topic/ai-foundations" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett> Ai Foundations notes
+</a> <a href="https://github.com/shipsolid/architect-learning-lab/edit/main/_shipsolid.github.io/src/content/notes/ai-foundations/01-language-models-in-practice/10-building-reliable-llm-applications/10-building-reliable-llm-applications.md" target="_blank" rel="noopener noreferrer" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-v5yihett>
+Edit on GitHub
+</a> </div> </div> <!-- Prev/Next: sequential navigation in the same order as the left nav tree --> <div class="mt-6 pt-6 border-t border-slate-800 light:border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4" data-astro-cid-v5yihett> <div data-astro-cid-v5yihett> <a href="/notes/ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>← Previous</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> 9. AI Failure Modes </span> </a> </div> <div class="sm:text-right" data-astro-cid-v5yihett> <a href="/notes/ai-foundations/readme" class="card group flex flex-col gap-1 no-underline hover:-translate-y-0.5 sm:items-end" data-astro-cid-v5yihett> <span class="text-xs font-mono text-slate-600 light:text-slate-400" data-astro-cid-v5yihett>Next →</span> <span class="text-sm font-medium text-slate-200 light:text-slate-800 group-hover:text-accent transition-colors leading-snug" data-astro-cid-v5yihett> AI &amp; LLM Foundations </span> </a> </div> </div> </article> <!-- TOC sidebar --> <aside class="hidden xl:block" data-astro-cid-v5yihett> <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto" data-astro-cid-v5yihett> <nav data-astro-cid-xvrfupwn><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3" data-astro-cid-xvrfupwn>On this page</p><ul class="space-y-0.5 border-l border-slate-800 light:border-slate-200" data-astro-cid-xvrfupwn><li data-astro-cid-xvrfupwn><a href="#building-reliable-llm-applications" data-slug="building-reliable-llm-applications" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Building Reliable LLM Applications</a></li><li data-astro-cid-xvrfupwn><a href="#what-you-will-understand-at-the-end" data-slug="what-you-will-understand-at-the-end" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>What you will understand at the end</a></li><li data-astro-cid-xvrfupwn><a href="#an-llm-call-is-a-dependency-not-a-function" data-slug="an-llm-call-is-a-dependency-not-a-function" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>An LLM call is a dependency, not a function</a></li><li data-astro-cid-xvrfupwn><a href="#validation-and-retry-not-retry-and-hope" data-slug="validation-and-retry-not-retry-and-hope" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Validation-and-retry, not retry-and-hope</a></li><li data-astro-cid-xvrfupwn><a href="#timeouts-and-backoff--inherited-not-reinvented" data-slug="timeouts-and-backoff--inherited-not-reinvented" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Timeouts and backoff — inherited, not reinvented</a></li><li data-astro-cid-xvrfupwn><a href="#circuit-breakers-for-a-probabilistic-dependency" data-slug="circuit-breakers-for-a-probabilistic-dependency" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Circuit breakers for a probabilistic dependency</a></li><li data-astro-cid-xvrfupwn><a href="#evals-as-the-ci-gate-for-a-probabilistic-component" data-slug="evals-as-the-ci-gate-for-a-probabilistic-component" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Evals as the CI gate for a probabilistic component</a></li><li data-astro-cid-xvrfupwn><a href="#prompt-and-schema-versioning" data-slug="prompt-and-schema-versioning" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Prompt and schema versioning</a></li><li data-astro-cid-xvrfupwn><a href="#observability-for-non-deterministic-output" data-slug="observability-for-non-deterministic-output" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Observability for non-deterministic output</a></li><li data-astro-cid-xvrfupwn><a href="#closing-the-part-from-raw-api-to-dependable-component" data-slug="closing-the-part-from-raw-api-to-dependable-component" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Closing the Part: from raw API to dependable component</a></li><li data-astro-cid-xvrfupwn><a href="#metadata" data-slug="metadata" class="toc-link block py-1 leading-snug transition-colors duration-150 border-l-2 border-transparent -ml-px pl-3 text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700" data-astro-cid-xvrfupwn>Metadata</a></li></ul></nav> <div class="mt-8 pt-6 border-t border-slate-800 light:border-slate-200" data-astro-cid-v5yihett> <nav><p class="text-xs font-mono text-slate-600 light:text-slate-400 uppercase tracking-widest mb-3">Knowledge Graph</p><div class="space-y-4"><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Depends On</p><a href="/notes/building-agentic-systems/02-evaluation/02-benchmarks/02-benchmarks" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">2. Benchmarks</span></a></div><div><p class="text-[11px] text-slate-600 light:text-slate-400 mb-1">Referenced By — Related</p><a href="/notes/ai-foundations/01-language-models-in-practice/01-prompt-engineering-fundamentals/01-prompt-engineering-fundamentals" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">1. Prompt Engineering Fundamentals</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/03-structured-outputs/03-structured-outputs" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">3. Structured Outputs</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/07-model-selection-and-routing/07-model-selection-and-routing" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">7. Model Selection &amp; Routing</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/08-hallucination-management/08-hallucination-management" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">8. Hallucination Management</span></a><a href="/notes/ai-foundations/01-language-models-in-practice/09-ai-failure-modes/09-ai-failure-modes" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">9. AI Failure Modes</span></a><a href="/notes/ai-foundations/readme" class="flex items-center gap-1.5 py-1 pl-2 text-xs text-slate-500 hover:text-accent transition-colors no-underline"><span class="text-slate-700 light:text-slate-300">└</span><span class="truncate">AI &amp; LLM Foundations</span></a></div></div></nav> </div> </div> </aside> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer> <script type="module">
+  function currentTheme() {
+    return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+  }
+
+  // Mermaid bakes its theme into the rendered SVG at run() time, so a theme
+  // toggle needs a full re-render, not just a CSS flip. Two full palettes,
+  // not "dark + light overrides," since mermaid's dark theme already covers
+  // every variable used below and a partial override would leave stray
+  // dark-preset defaults showing through on light backgrounds.
+  const THEME_VARS = {
+    dark: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#cbd5e1',
+      primaryBorderColor: '#334155',
+      lineColor: '#00d9a6',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#1e293b',
+      background: '#0f172a',
+      mainBkg: '#1e293b',
+      nodeBorder: '#334155',
+      clusterBkg: '#0f172a',
+      titleColor: '#f1f5f9',
+      edgeLabelBackground: '#1e293b',
+      // Mindmap/pie section colors: mermaid's dark theme derives these from primaryColor
+      // via hue rotation, which can land on light/saturated fills that wash out
+      // cScaleLabel text. Pin both explicitly so every mindmap section stays legible.
+      cScale0: '#1e3a5f',
+      cScale1: '#14532d',
+      cScale2: '#581c87',
+      cScale3: '#7c2d12',
+      cScale4: '#831843',
+      cScale5: '#713f12',
+      cScale6: '#164e63',
+      cScale7: '#3730a3',
+      cScaleLabel0: '#e2e8f0',
+      cScaleLabel1: '#e2e8f0',
+      cScaleLabel2: '#e2e8f0',
+      cScaleLabel3: '#e2e8f0',
+      cScaleLabel4: '#e2e8f0',
+      cScaleLabel5: '#e2e8f0',
+      cScaleLabel6: '#e2e8f0',
+      cScaleLabel7: '#e2e8f0',
+    },
+    light: {
+      primaryColor: '#f1f5f9',
+      primaryTextColor: '#0f172a',
+      primaryBorderColor: '#cbd5e1',
+      lineColor: '#0f766e',
+      secondaryColor: '#f1f5f9',
+      tertiaryColor: '#e2e8f0',
+      background: '#ffffff',
+      mainBkg: '#f1f5f9',
+      nodeBorder: '#cbd5e1',
+      clusterBkg: '#f8fafc',
+      titleColor: '#0f172a',
+      edgeLabelBackground: '#f1f5f9',
+      // Light-pastel fills (inverse of the dark palette's dark fills), one
+      // consistent dark label color across sections — same structure as dark.
+      cScale0: '#dbeafe',
+      cScale1: '#dcfce7',
+      cScale2: '#f3e8ff',
+      cScale3: '#ffedd5',
+      cScale4: '#fce7f3',
+      cScale5: '#fef3c7',
+      cScale6: '#cffafe',
+      cScale7: '#e0e7ff',
+      cScaleLabel0: '#1e293b',
+      cScaleLabel1: '#1e293b',
+      cScaleLabel2: '#1e293b',
+      cScaleLabel3: '#1e293b',
+      cScaleLabel4: '#1e293b',
+      cScaleLabel5: '#1e293b',
+      cScaleLabel6: '#1e293b',
+      cScaleLabel7: '#1e293b',
+    },
+  };
+
+  let mermaidPromise = null;
+  function getMermaid() {
+    return (mermaidPromise ??= import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs').then(
+      ({ default: mermaid }) => {
+        const theme = currentTheme();
+        mermaid.initialize({
+          startOnLoad: false,
+          // 'base' for light: an unstyled canvas driven entirely by
+          // themeVariables, so no dark-preset default shows through anywhere
+          // not explicitly covered above. 'dark' stays as-is for dark mode —
+          // it's the existing, already-tested path.
+          theme: theme === 'light' ? 'base' : 'dark',
+          themeVariables: THEME_VARS[theme],
+        });
+        return mermaid;
+      }
+    ));
+  }
+
+  async function renderMermaid(root = document) {
+    const blocks = root.querySelectorAll('pre[data-language="mermaid"]');
+    if (blocks.length === 0) return;
+    const mermaid = await getMermaid();
+    const nodes = [];
+    blocks.forEach((pre) => {
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8';
+      const source = pre.querySelector('code')?.textContent ?? '';
+      // Preserved so a theme toggle can re-render from source — mermaid.run()
+      // replaces this div's content with rendered SVG, destroying the original.
+      div.dataset.mermaidSource = source;
+      div.textContent = source;
+      pre.replaceWith(div);
+      nodes.push(div);
+    });
+    await mermaid.run({ nodes });
+  }
+
+  async function rerenderAllMermaid() {
+    const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+    if (!rendered.length) return;
+    mermaidPromise = null; // force re-init with the new theme's themeVariables
+    const mermaid = await getMermaid();
+    const nodes = [...rendered];
+    nodes.forEach((div) => {
+      div.removeAttribute('data-processed');
+      div.textContent = div.dataset.mermaidSource;
+    });
+    await mermaid.run({ nodes });
+  }
+
+  window.__renderMermaid = renderMermaid;
+  window.addEventListener('themechange', rerenderAllMermaid);
+  renderMermaid(document);
+</script>  </body></html>  

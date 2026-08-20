@@ -1,0 +1,1246 @@
+<!DOCTYPE html><html lang="en" class="scroll-smooth"> <head><meta charset="UTF-8"><!-- Theme init: must run before first paint to avoid a flash of the wrong
+         theme. Reads a stored preference, defaulting to light on a first
+         visit (OS preference is ignored for the default). Absent/"dark" is
+         still the implicit CSS default (see src/styles/global.css) — only
+         "light" is ever written to the DOM. --><script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored !== 'dark') document.documentElement.dataset.theme = 'light';
+        } catch (e) {}
+      })();
+    </script><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="Astro v4.16.19"><!-- SEO --><title>SignalForge — OTel Validation Lab — Amit Singh</title><meta name="description" content="Configurable OpenTelemetry signal generator for validating Alloy pipelines, testing cardinality budgets, and firing alert rules under controlled conditions. Used to validate observability configs before they reach production."><link rel="canonical" href="https://shipsolid.github.io/projects/signal-forge/"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:title" content="SignalForge — OTel Validation Lab — Amit Singh"><meta property="og:description" content="Configurable OpenTelemetry signal generator for validating Alloy pipelines, testing cardinality budgets, and firing alert rules under controlled conditions. Used to validate observability configs before they reach production."><meta property="og:url" content="https://shipsolid.github.io/projects/signal-forge/"><meta property="og:image" content="https://shipsolid.github.io/og-image.png"><meta property="og:site_name" content="Amit Singh"><!-- Twitter / X --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="SignalForge — OTel Validation Lab — Amit Singh"><meta name="twitter:description" content="Configurable OpenTelemetry signal generator for validating Alloy pipelines, testing cardinality budgets, and firing alert rules under controlled conditions. Used to validate observability configs before they reach production."><meta name="twitter:image" content="https://shipsolid.github.io/og-image.png"><!-- Fonts --><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><!-- Favicon --><link rel="icon" type="image/svg+xml" href="/favicon.svg"><!-- Google Analytics 4 --><script async src="https://www.googletagmanager.com/gtag/js?id=G-C17V8B8EEY"></script><script>(function(){const ga4Id = "G-C17V8B8EEY";
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', ga4Id);
+    })();</script><!-- Grafana Cloud Frontend Observability (Faro). Script tag must stay
+         unconditional in the template — wrapping it in {faroUrl && <script>}
+         stopped Astro from bundling the npm import at all (shipped as raw,
+         unprocessed source, which throws in the browser). The env check
+         below runs client-side instead, and is a no-op when unset (local dev). --><link rel="stylesheet" href="/_astro/_slug_.DJLsCJIh.css">
+<link rel="stylesheet" href="/_astro/_slug_.BXBXtc4O.css">
+<style>.mermaid[data-astro-cid-ovxcmftc]{overflow-x:auto;overflow-y:hidden;padding:1.5rem;margin:1.5rem calc(-50vw + 50%);background:color-mix(in srgb,var(--color-surface) 60%,transparent);border:1px solid var(--color-border);border-radius:.75rem;cursor:grab}.mermaid[data-astro-cid-ovxcmftc]:active{cursor:grabbing}.mermaid[data-astro-cid-ovxcmftc] svg[data-astro-cid-ovxcmftc]{display:block;height:auto;border-radius:.5rem}
+</style><script type="module" src="/_astro/hoisted.Bp1kwDIC.js"></script></head> <body>  <header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" data-astro-cid-3ef6ksr2> <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between" data-astro-cid-3ef6ksr2> <a href="/" class="font-mono font-medium text-sm group flex items-center gap-1.5" data-astro-cid-3ef6ksr2> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>&lt;</span> <span class="text-accent" data-astro-cid-3ef6ksr2>amit.singh</span> <span class="text-slate-600 light:text-slate-400 group-hover:text-slate-400 light:group-hover:text-slate-600 transition-colors" data-astro-cid-3ef6ksr2>/&gt;</span> </a> <!-- Desktop nav --> <nav class="hidden md:flex items-center gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-2 text-sm text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" data-astro-cid-3ef6ksr2> Bhagavad Gita </a>  <button id="theme-toggle-desktop" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="Toggle light/dark theme" title="Toggle theme" data-astro-cid-3ef6ksr2> <svg id="icon-sun-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-desktop" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> </button> <div class="relative" data-astro-cid-3ef6ksr2> <button id="more-menu-btn" class="p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-all duration-200" aria-label="More" aria-haspopup="menu" aria-expanded="false" title="More" data-astro-cid-3ef6ksr2> <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="5" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="12" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle><circle cx="19" cy="12" r="1.75" data-astro-cid-3ef6ksr2></circle> </svg> </button> <div id="more-menu" role="menu" class="hidden absolute right-0 top-full mt-2 min-w-[170px] rounded-lg border border-slate-800 light:border-slate-200 bg-slate-950/95 light:bg-white/95 backdrop-blur-md shadow-lg py-1" data-astro-cid-3ef6ksr2> <a href="/pomo" role="menuitem" class="block px-4 py-2 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> </div> </div> <a href="/#contact" class="ml-2 px-4 py-2 text-sm font-medium text-slate-950 light:text-white bg-accent hover:bg-accent-hover rounded-lg transition-colors duration-200" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> <!-- Mobile menu button --> <button id="menu-btn" class="md:hidden p-2 text-slate-400 light:text-slate-600 hover:text-slate-100 light:hover:text-slate-900 rounded-lg hover:bg-slate-800 light:hover:bg-slate-100 transition-colors" aria-label="Toggle menu" data-astro-cid-3ef6ksr2> <svg id="icon-open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-close" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" data-astro-cid-3ef6ksr2></path> </svg> </button> </div>  <!-- Mobile menu --> <div id="mobile-menu" class="hidden md:hidden bg-slate-950/98 light:bg-white/98 border-t border-slate-800 light:border-slate-200" data-astro-cid-3ef6ksr2> <nav class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1" data-astro-cid-3ef6ksr2> <a href="/#about" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> About </a><a href="/#projects" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Projects </a><a href="/#stack" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Stack </a><a href="/blog" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Blog </a><a href="/gita/topics" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2> Bhagavad Gita </a>  <a href="/pomo" class="px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors" data-astro-cid-3ef6ksr2>
+🍅 Pomodoro Timer
+</a> <button id="theme-toggle-mobile" class="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 light:text-slate-700 hover:text-slate-100 light:hover:text-slate-900 hover:bg-slate-800/50 light:hover:bg-slate-100/50 rounded-lg transition-colors text-left" data-astro-cid-3ef6ksr2> <svg id="icon-sun-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <circle cx="12" cy="12" r="4" stroke-width="2" data-astro-cid-3ef6ksr2></circle> <path stroke-linecap="round" stroke-width="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" data-astro-cid-3ef6ksr2></path> </svg> <svg id="icon-moon-mobile" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" data-astro-cid-3ef6ksr2> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" data-astro-cid-3ef6ksr2></path> </svg> <span id="theme-toggle-label" data-astro-cid-3ef6ksr2>Toggle theme</span> </button> <a href="/#contact" class="mt-2 px-4 py-3 text-sm font-medium text-accent border border-accent/30 rounded-lg text-center hover:bg-accent/10 transition-colors" data-astro-cid-3ef6ksr2>
+Contact
+</a> </nav> </div> </header>   <main class="pt-28 pb-20" data-astro-cid-ovxcmftc> <div class="max-w-6xl mx-auto px-6" data-astro-cid-ovxcmftc> <header class="mb-12" data-astro-cid-ovxcmftc> <div class="flex flex-wrap gap-2 mb-4" data-astro-cid-ovxcmftc> <span class="tag" data-astro-cid-ovxcmftc>OpenTelemetry</span><span class="tag" data-astro-cid-ovxcmftc>Alloy</span><span class="tag" data-astro-cid-ovxcmftc>Prometheus</span><span class="tag" data-astro-cid-ovxcmftc>Kubernetes</span><span class="tag" data-astro-cid-ovxcmftc>Python</span><span class="tag" data-astro-cid-ovxcmftc>YAML</span> </div> <div class="flex items-start gap-4 mb-4" data-astro-cid-ovxcmftc> <h1 class="text-3xl md:text-4xl font-bold text-slate-100 light:text-slate-900 leading-tight flex-1" data-astro-cid-ovxcmftc> SignalForge — OTel Validation Lab </h1> <span class="flex-shrink-0 mt-1 px-2.5 py-1 text-xs font-mono rounded-full border text-green-400 bg-green-400/10 border-green-400/20" data-astro-cid-ovxcmftc> Active </span> </div> <p class="text-lg text-slate-400 light:text-slate-600 mb-6" data-astro-cid-ovxcmftc>Configurable OpenTelemetry signal generator for validating Alloy pipelines, testing cardinality budgets, and firing alert rules under controlled conditions. Used to validate observability configs before they reach production.</p> <div class="flex items-center gap-4 border-t border-slate-800 light:border-slate-200 pt-4" data-astro-cid-ovxcmftc> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-sm text-slate-400 light:text-slate-600 hover:text-accent transition-colors font-mono" data-astro-cid-ovxcmftc> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" data-astro-cid-ovxcmftc> <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" data-astro-cid-ovxcmftc></path> </svg>
+View source
+</a>  </div> </header>  <article class="
+        prose prose-invert max-w-none
+        prose-base leading-relaxed
+        prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-100 light:prose-headings:text-slate-900
+        prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-800 light:prose-h2:border-slate-200 prose-h2:pb-3
+        prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
+        prose-p:text-slate-300 light:prose-p:text-slate-700 prose-p:leading-[1.8] prose-p:my-5
+        prose-a:text-accent prose-a:no-underline hover:prose-a:underline
+        prose-strong:text-slate-100 light:prose-strong:text-slate-900 prose-strong:font-semibold
+        prose-em:text-slate-300 light:prose-em:text-slate-700 prose-em:italic
+        prose-ul:my-5 prose-ul:space-y-2 prose-ul:text-slate-300 light:prose-ul:text-slate-700
+        prose-ol:my-5 prose-ol:space-y-2 prose-ol:text-slate-300 light:prose-ol:text-slate-700
+        prose-li:text-slate-300 light:prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-accent
+        prose-code:text-accent prose-code:bg-accent/10 prose-code:px-1.5 prose-code:py-0.5
+        prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+        prose-pre:bg-slate-900 light:prose-pre:bg-slate-50 prose-pre:border prose-pre:border-slate-800 light:prose-pre:border-slate-200 prose-pre:rounded-xl
+        prose-pre:my-6 prose-pre:overflow-x-auto prose-pre:text-slate-300 light:prose-pre:text-slate-700
+        prose-table:my-6 prose-table:w-full prose-table:text-sm
+        prose-thead:border-b prose-thead:border-slate-700 light:prose-thead:border-slate-300
+        prose-th:text-slate-300 light:prose-th:text-slate-700 prose-th:font-semibold prose-th:py-3 prose-th:px-4 prose-th:text-left
+        prose-td:text-slate-400 light:prose-td:text-slate-600 prose-td:py-3 prose-td:px-4 prose-td:border-b prose-td:border-slate-800/50 light:prose-td:border-slate-200/70
+        prose-hr:border-slate-800 light:prose-hr:border-slate-200 prose-hr:my-10
+      " data-astro-cid-ovxcmftc> <blockquote>
+<p>End-to-end OpenTelemetry instrumentation lab across .NET 8, Python/FastAPI, and Angular 17,
+deployed on k3d with Helm-managed Grafana Alloy agents as the collector stack.</p>
+</blockquote>
+<p><strong>What it validates:</strong> traces (5-hop cross-language), span metrics, exemplars, async trace
+propagation via RabbitMQ, frontend RUM with Faro, log-to-trace correlation via Loki, and tail-based
+sampling.</p>
+<p>Work outside-in, purpose → design → implementation:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Step</th><th>File</th><th>Why</th></tr></thead><tbody><tr><td>1</td><td>/spec/</td><td>The “what” — all services, patterns to validate, the validation checklist at §11</td></tr><tr><td>2</td><td>/architecture/overview/</td><td>Topology diagram, signal flow per type, port map</td></tr><tr><td>3</td><td>/architecture/adrs/</td><td>10 ADRs that explain the non-obvious “why” (most important before touching anything)</td></tr><tr><td>4</td><td>conf.yml</td><td>The single control file — every knob deploy-local.sh reads</td></tr><tr><td>5</td><td>/observability/pipeline/</td><td>Alloy River config stage-by-stage; the heart of the lab</td></tr><tr><td>6</td><td>src/order-api/</td><td>Richest service: gRPC, Outbox, RabbitMQ publish with W3C traceparent injection</td></tr><tr><td>7</td><td>src/notification-svc/</td><td>Python consumer, SpanLink, cross-language async propagation</td></tr><tr><td>8</td><td>src/gateway-api/</td><td>.NET BFF, exemplars, UpDownCounter, fan-out pattern</td></tr><tr><td>9</td><td>src/frontend/</td><td>Angular + Faro RUM — browser-to-backend trace propagation</td></tr><tr><td>10</td><td>k8s/</td><td>Manifests: infra/ → datastores/ → app/ → monitoring/</td></tr></tbody></table>
+<p>For ops understanding: deploy-local.sh → scripts/debug.sh → .github/workflows/ci.yml.</p>
+<hr>
+<h2 id="purpose">Purpose</h2>
+<p>SignalForge exists to provide a portable, reproducible environment for validating OpenTelemetry
+instrumentation patterns across multiple runtimes and communication protocols. It is not a toy: it
+models production-grade concerns — tail-based sampling, async context propagation, exemplar
+plumbing, SLO recording rules, and supply-chain controls — in a self-contained k3d cluster that any
+engineer can spin up on a laptop.</p>
+<p>The lab is consumed by engineers who need to test instrumentation changes before they land on
+production clusters, and by anyone building familiarity with the Grafana Alloy / k8s-monitoring Helm
+chart. It is a reference implementation, not a template — copy patterns from it, but do not fork it
+as application scaffolding.</p>
+<p>It lives here rather than inside the main monorepo because it has its own <code>k3d</code> cluster lifecycle,
+separate image builds, and Grafana Cloud credentials that are scoped to a dev stack and should not
+bleed into production pipelines.</p>
+<hr>
+<h2 id="architecture">Architecture</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    Browser["Browser (Faro RUM)"] --> Gateway["gateway-api (.NET 8, :5000)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Gateway --> MySQL["MySQL 8 (EF Core)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Gateway --> OrderAPI["order-api (.NET 8, gRPC :5001)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Gateway -->|HTTP| Notification["notification-svc (Python, :8000)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    OrderAPI --> Postgres["PostgreSQL 16 (Npgsql)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    OrderAPI --> RabbitMQ["RabbitMQ"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    RabbitMQ --> Notification</span></span>
+<span class="line"><span style="color:#E1E4E8">    Notification --> Redis["Redis 7"]</span></span>
+<span class="line"></span></code></pre>
+<p>All services push OTLP to <code>alloy-receiver</code> (Helm-managed DaemonSet, <code>monitoring</code> namespace):</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart TD</span></span>
+<span class="line"><span style="color:#E1E4E8">    SDK["App SDK"] -->|OTLP gRPC :4317| Receiver[alloy-receiver]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Receiver --> K8sAttrs[k8sattributes enrichment]</span></span>
+<span class="line"><span style="color:#E1E4E8">    K8sAttrs --> Transform["transform (stamp deployment.environment)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Transform --> Filter["filter (drop /healthz spans)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Filter --> SpanMetrics[spanmetrics connector]</span></span>
+<span class="line"><span style="color:#E1E4E8">    SpanMetrics --> RED["RED metrics (before sampling)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Filter --> TailSampling["tail_sampling (errors=100%, slow>2s=100%, rest=25%)"]</span></span>
+<span class="line"><span style="color:#E1E4E8">    TailSampling --> Batch[batch]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Batch --> Backend1["Tempo (cloud) | Jaeger (local)"]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Logs["alloy-logs (DaemonSet)"] --> LogsTail["pod stdout tailing"] --> LogsCorr["trace correlation"] --> Loki[Loki]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    Metrics["alloy-metrics (StatefulSet)"] --> MetricsScrape["kubelet/cAdvisor/KSM"] --> Backend2["Mimir | Prometheus"]</span></span>
+<span class="line"></span></code></pre>
+<p>The single most important configuration knob is <code>monitoring.mode</code> in <a href="conf.yml">conf.yml</a>:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th><code>monitoring.mode</code></th><th>Alloy destinations</th><th>In-cluster backends</th></tr></thead><tbody><tr><td><code>cloud</code> (default)</td><td>Grafana Cloud Tempo / Mimir / Loki</td><td>none</td></tr><tr><td><code>local</code></td><td>In-cluster Jaeger / Prometheus / Loki / Grafana</td><td>Jaeger :16686, Prometheus :9090, Grafana :3000</td></tr></tbody></table>
+<p>The two modes are mutually exclusive — there is no dual-export. Any doc saying otherwise is stale.</p>
+<p>In <strong>cloud mode</strong>, the chart’s Alloy agents are the entire pipeline — no in-cluster Jaeger /
+Prometheus / Loki / Grafana are deployed. In <strong>local mode</strong>, a parallel bespoke Alloy DaemonSet in
+<a href="k8s/monitoring/grafana/">k8s/monitoring/grafana/</a> exports to in-cluster backends; the Helm chart is
+still installed and still serves as the app OTLP ingress, but its destinations point at the
+in-cluster services.</p>
+<p><code>alloy-logs</code> tails pod stdout/stderr with trace-id correlation. <code>alloy-metrics</code> scrapes cluster
+infra metrics. See <a href="/observability/pipeline/">docs/observability/pipeline.md</a> for the full signal
+flow and <a href="/otel-patterns/">docs/OTEL-PATTERNS.md</a> for per-runtime instrumentation choices.</p>
+<h3 id="alloy-roles-helm-release-monitoring-namespace">Alloy roles (Helm release, <code>monitoring</code> namespace)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Alloy role</th><th>Kind</th><th>Responsibility</th><th>Destination (cloud)</th><th>Destination (local)</th></tr></thead><tbody><tr><td><code>alloy-metrics</code></td><td>StatefulSet</td><td>Scrapes cluster infra metrics</td><td>Grafana Cloud Mimir</td><td>in-cluster Prometheus</td></tr><tr><td><code>alloy-singleton</code></td><td>Deployment</td><td>Cluster events, kube-state-metrics</td><td>Cloud Mimir + Loki</td><td>in-cluster Prom + Loki</td></tr><tr><td><code>alloy-logs</code></td><td>DaemonSet</td><td>Pod + node log tailing</td><td>Grafana Cloud Loki</td><td>in-cluster Loki</td></tr><tr><td><code>alloy-receiver</code></td><td>DaemonSet</td><td>OTLP push receiver (app telemetry)</td><td>Cloud Tempo + Mimir</td><td>in-cluster Jaeger + Prom</td></tr><tr><td><code>alloy-profiles</code></td><td>DaemonSet</td><td>Disabled — no Pyroscope</td><td>—</td><td>—</td></tr></tbody></table>
+<p>Values: <a href="k8s/monitoring/grafana-helm/values-local.yaml.tmpl">values-local.yaml.tmpl</a> or
+<a href="k8s/monitoring/grafana-helm/values-cloud.yaml.tmpl">values-cloud.yaml.tmpl</a> — both rendered at
+deploy time from conf.yml.</p>
+<h3 id="trace-propagation">Trace propagation</h3>
+<p>A single “Create Order” click produces a 5-hop trace across three runtimes. The RabbitMQ hop uses a
+SpanLink (not parent-child) because message processing is async; both spans share the same <code>traceId</code>
+and appear as a dashed arrow in Jaeger.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#E1E4E8">flowchart LR</span></span>
+<span class="line"><span style="color:#E1E4E8">    Browser["Browser (Faro)"] --> Gateway[gateway-api]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Gateway --> OrderAPI[order-api]</span></span>
+<span class="line"><span style="color:#E1E4E8">    OrderAPI -->|SpanLink| RabbitMQ[RabbitMQ]</span></span>
+<span class="line"><span style="color:#E1E4E8">    RabbitMQ --> Notification[notification-svc]</span></span>
+<span class="line"><span style="color:#E1E4E8">    OrderAPI --> Postgres[PostgreSQL]</span></span>
+<span class="line"><span style="color:#E1E4E8">    Notification --> Redis[Redis]</span></span>
+<span class="line"></span></code></pre>
+<p>See <a href="/architecture/overview/">docs/architecture/overview.md</a> for the full signal flow diagrams.</p>
+<hr>
+<h2 id="ownership-boundary">Ownership Boundary</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dimension</th><th>Detail</th></tr></thead><tbody><tr><td>Team</td><td>Personal lab / portfolio (Amit Singh)</td></tr><tr><td>Primary owner</td><td>Amit Singh — see GitHub profile / repo issues for contact</td></tr><tr><td>On-call</td><td>None — lab environment, no production SLA</td></tr><tr><td>Escalation path</td><td>GitHub issues on this repo</td></tr></tbody></table>
+<p>This component does not own anything in shared infrastructure. It creates and manages its own k3d
+cluster (<code>otel-lab</code>) and its own Kubernetes namespace (<code>otel-lab</code>). The only external dependency
+with shared ownership is the Grafana Cloud stack (<code>example-org.grafana.net</code>) and the Azure Key Vault
+(<code>example-org-prd-kv</code>) — those are the parent organization’s platform resources and are consumed
+read-only by this lab.</p>
+<p>The lab does not own the Grafana Cloud instance, the AKV vault, or any network resources outside the
+k3d cluster. Changes to Grafana Cloud credentials are fetched from AKV; they are never committed as
+live values.</p>
+<hr>
+<h2 id="deployment-model">Deployment Model</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Environment</th><th>Method</th><th>Trigger</th><th>Target</th></tr></thead><tbody><tr><td>local (lab)</td><td><code>./deploy-local.sh</code></td><td>manual</td><td>k3d cluster <code>otel-lab</code> on localhost</td></tr><tr><td>CI (build + test only)</td><td>GitHub Actions</td><td>push / PR / workflow_dispatch</td><td>no cluster — tests + image scans only</td></tr></tbody></table>
+<p>There is no staging or production deployment of this lab. The k3d cluster is ephemeral and local.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Full deploy: cluster + Docker builds + manifests + Helm (5-15 min cold)</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Subsequent iteration, manifests only (&#x3C;1 min)</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --skip-cluster</span><span style="color:#79B8FF"> --skip-build</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Local mode: also install the Helm monitoring chart</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --with-helm</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Rollback: re-run the deploy — it is idempotent</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --skip-cluster</span><span style="color:#79B8FF"> --skip-build</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Teardown: delete the k3d cluster entirely</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --teardown</span></span>
+<span class="line"></span></code></pre>
+<h3 id="two-deployment-tools--do-not-mix-them">Two deployment tools — do not mix them</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Tool</th><th>Config source</th><th>Credentials</th><th>Use</th></tr></thead><tbody><tr><td><strong><code>./deploy-local.sh</code></strong> (primary)</td><td><a href="conf.yml">conf.yml</a></td><td><code>./scripts/fetch-grafana-cloud-conf-from-akv.sh</code> → updates conf.yml</td><td>Recommended for all new work</td></tr><tr><td><code>Makefile</code> (legacy)</td><td><code>.env</code> + hand-edited values</td><td><code>make secrets-fetch-akv</code> → writes Secret directly</td><td>Reference only — prefer <code>deploy-local.sh</code> for new work</td></tr></tbody></table>
+<p><code>make secrets-fetch-akv</code> used to write a stale <code>GRAFANA_CLOUD_MIMIR_ENDPOINT</code> (<code>/api/v1/otlp</code>) that
+didn’t match the chart’s expected <code>/api/prom/push</code> — fixed, it now writes the correct format. Still
+secondary/legacy; the script-based flow remains the recommended path.</p>
+<h3 id="credentials-grafana-cloud-cloud-mode-only">Credentials (Grafana Cloud, cloud mode only)</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Preview credential diff against AKV</span></span>
+<span class="line"><span style="color:#B392F0">./scripts/fetch-grafana-cloud-conf-from-akv.sh</span><span style="color:#79B8FF"> --dry-run</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Pull and write into conf.yml (creates conf.yml.bak)</span></span>
+<span class="line"><span style="color:#B392F0">./scripts/fetch-grafana-cloud-conf-from-akv.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Re-deploy with new credentials (no cluster rebuild)</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --skip-cluster</span><span style="color:#79B8FF"> --skip-build</span></span>
+<span class="line"></span></code></pre>
+<p>Auth: <code>az login</code> first, or export <code>ARM_CLIENT_ID</code> + <code>ARM_CLIENT_SECRET</code> in the shell. See
+<a href="/deployment/grafana-cloud/">docs/deployment/grafana-cloud.md</a> for the full credential model and
+rotation procedure.</p>
+<h3 id="helm-upgrade-invocation-used-by-deploy-localsh-cloud-mode">Helm upgrade invocation (used by deploy-local.sh, cloud mode)</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">helm</span><span style="color:#9ECBFF"> upgrade</span><span style="color:#79B8FF"> --install</span><span style="color:#9ECBFF"> grafana-k8s</span><span style="color:#9ECBFF"> grafana/k8s-monitoring</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --version</span><span style="color:#79B8FF"> 3.8.4</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --namespace</span><span style="color:#9ECBFF"> monitoring</span><span style="color:#79B8FF"> --create-namespace</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --values</span><span style="color:#9ECBFF"> k8s/monitoring/grafana-helm/values-cloud.yaml</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">  --wait</span><span style="color:#79B8FF"> --timeout</span><span style="color:#9ECBFF"> 5m</span></span>
+<span class="line"></span></code></pre>
+<p>The values file is rendered from
+<a href="k8s/monitoring/grafana-helm/values-cloud.yaml.tmpl">values-cloud.yaml.tmpl</a> using credentials from
+<code>conf.yml</code>. Do not edit the rendered file — edit the template or <code>conf.yml</code>.</p>
+<h3 id="kustomize-overlays">Kustomize overlays</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> kustomize</span><span style="color:#9ECBFF"> k8s/base</span><span style="color:#6A737D">                  # render full stack</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> kustomize</span><span style="color:#9ECBFF"> k8s/overlays/prod</span><span style="color:#6A737D">         # render prod overlay (replicas=6, required anti-affinity)</span></span>
+<span class="line"><span style="color:#B392F0">kubectl</span><span style="color:#9ECBFF"> apply</span><span style="color:#79B8FF"> -k</span><span style="color:#9ECBFF"> k8s/overlays/dev</span><span style="color:#6A737D">           # apply dev overlay</span></span>
+<span class="line"></span></code></pre>
+<hr>
+<h2 id="dependencies">Dependencies</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Dependency</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead><tbody><tr><td>Docker 24+</td><td>tooling</td><td>yes</td><td>Image builds + k3d node images</td></tr><tr><td>k3d v5+</td><td>tooling</td><td>yes</td><td>Local Kubernetes cluster</td></tr><tr><td>kubectl v1.28+</td><td>tooling</td><td>yes</td><td>Manifest apply</td></tr><tr><td>helm v3.14+</td><td>tooling</td><td>yes</td><td><code>grafana/k8s-monitoring</code> chart install</td></tr><tr><td>Python 3.9+</td><td>tooling</td><td>yes</td><td><code>deploy-local.sh</code> uses Python to parse conf.yml, render templates, run scripts</td></tr><tr><td>Azure CLI 2.50+</td><td>tooling</td><td>cloud mode only</td><td><code>./scripts/fetch-grafana-cloud-conf-from-akv.sh</code> — not needed if credentials are already in conf.yml</td></tr><tr><td>Grafana Cloud stack (<code>example-org.grafana.net</code>)</td><td>upstream</td><td>cloud mode only</td><td>Tempo, Mimir, Loki endpoints; credentials in AKV</td></tr><tr><td>Azure Key Vault (<code>example-org-prd-kv</code>)</td><td>upstream</td><td>cloud mode only</td><td>Stores Grafana Cloud API key + endpoint URLs</td></tr><tr><td>Zscaler CA (<code>zcert.crt</code>)</td><td>infra</td><td>corporate networks only</td><td>Staged into Docker builds; empty placeholder used on non-corporate machines — Dockerfiles’ <code>COPY zcert.crt</code> will not fail without it</td></tr><tr><td><code>grafana/k8s-monitoring</code> Helm chart v3.8.4</td><td>infra</td><td>cloud mode (auto-installed)</td><td>Pulled at deploy time; no local vendored copy</td></tr><tr><td>cert-manager v1.18.2 (jetstack chart)</td><td>infra</td><td>when <code>security.tls.enabled: true</code></td><td>Installs into <code>cert-manager</code> namespace; skip by setting <code>security.tls.enabled: false</code></td></tr></tbody></table>
+<p><strong>Version pins that must not drift:</strong></p>
+<ul>
+<li><code>grafana/k8s-monitoring</code> is pinned to <code>3.8.4</code> in <code>conf.yml</code>. Upgrading requires re-validating all
+Alloy role names and values schema — the chart has breaking changes between minor versions.</li>
+<li><code>.NET 8.0</code> in Dockerfiles — do not bump to .NET 9 without re-testing the OTel SDK compatibility
+matrix.</li>
+</ul>
+<hr>
+<h2 id="operational-model">Operational Model</h2>
+<p><strong>Health check:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Mode-aware triage: pod state, Alloy exporter counters, remote-write probe</span></span>
+<span class="line"><span style="color:#B392F0">./scripts/debug.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Verify all service endpoints are responding</span></span>
+<span class="line"><span style="color:#B392F0">make</span><span style="color:#9ECBFF"> validate</span></span>
+<span class="line"></span></code></pre>
+<p><strong>Logs:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Service</th><th>How to access</th></tr></thead><tbody><tr><td>Any app pod</td><td><code>kubectl -n otel-lab logs deploy/&#x3C;service-name></code></td></tr><tr><td>Alloy receiver</td><td><code>kubectl -n monitoring logs daemonset/grafana-k8s-alloy-receiver</code></td></tr><tr><td>Loki query (local mode)</td><td><code>{namespace="otel-lab"}</code> in Grafana Explore or via Loki API on <code>:3100</code></td></tr><tr><td>Loki query (cloud mode)</td><td><code>{namespace="otel-lab", deployment_environment="signal-forge-dev"}</code> in Grafana Cloud Explore</td></tr></tbody></table>
+<p>All services write structured JSON logs. Alloy’s <code>alloy-logs</code> DaemonSet extracts <code>TraceId</code>/<code>SpanId</code>
+fields and attaches them as Loki structured metadata, enabling “Logs for this span” in Grafana.</p>
+<p><strong>Metrics / dashboards:</strong></p>
+<ul>
+<li>Span-derived RED metrics: <code>traces_spanmetrics_calls_total{service_name}</code>,
+<code>traces_spanmetrics_duration_milliseconds_bucket{service_name}</code></li>
+<li>Cluster infra: standard kubelet/cAdvisor/KSM metrics scraped by <code>alloy-metrics</code></li>
+<li>Alloy pipeline UI: <code>kubectl -n monitoring port-forward svc/grafana-k8s-alloy-receiver 12345</code> →
+<code>http://localhost:12345</code></li>
+</ul>
+<p><strong>Alerts:</strong></p>
+<p>SLO rules live in <a href="k8s/monitoring/slo-rules.yaml">k8s/monitoring/slo-rules.yaml</a> (disabled by
+default — set <code>observability.slo_rules.enabled: true</code> in conf.yml and ensure the
+<code>prometheusrules.monitoring.coreos.com</code> CRD is present).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Alert</th><th>Severity</th><th>Trigger</th></tr></thead><tbody><tr><td><code>SignalForgeAvailabilityFastBurn</code></td><td>page</td><td>error_ratio > 7.2% in 5m AND 30m windows</td></tr><tr><td><code>SignalForgeAvailabilitySlowBurn</code></td><td>ticket</td><td>error_ratio > 3% in 30m AND 6h windows</td></tr><tr><td><code>SignalForgeGatewayLatencyHigh</code></td><td>ticket</td><td>gateway-api p99 > 500ms for 10m</td></tr><tr><td><code>SignalForgeDownstreamLatencyHigh</code></td><td>ticket</td><td>order-api or notification-svc p99 > 300ms for 10m</td></tr><tr><td><code>AlloyReceiverDown</code></td><td>page</td><td><code>up == 0</code> for alloy-receiver for 5m</td></tr><tr><td><code>DatastoreDown</code></td><td>page</td><td>any datastore pod not Ready for 3m</td></tr></tbody></table>
+<p><strong>Runbook:</strong> <a href="/operations/runbooks/">docs/operations/runbooks.md</a> — covers no-traces, missing
+metrics, async propagation failures, log correlation gaps, exemplar troubleshooting, Grafana Cloud
+export errors.</p>
+<hr>
+<h2 id="quick-start">Quick Start</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Full deploy: cluster + builds + apply + Helm</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Subsequent iteration (manifests only):</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --skip-cluster</span><span style="color:#79B8FF"> --skip-build</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Triage after a deploy:</span></span>
+<span class="line"><span style="color:#B392F0">./scripts/debug.sh</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Tear down:</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --teardown</span></span>
+<span class="line"></span></code></pre>
+<p>First run: ~5-15 minutes (4 Docker builds + k3d create + cert-manager + Helm rollout).
+<code>--skip-cluster --skip-build</code> runs complete in &#x3C;1 min.</p>
+<h3 id="prerequisites">Prerequisites</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Tool</th><th>Min version</th><th>Install</th></tr></thead><tbody><tr><td>Docker</td><td>24+</td><td><a href="https://docs.docker.com/get-docker/">docs.docker.com</a></td></tr><tr><td>k3d</td><td>v5+</td><td><code>curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash</code></td></tr><tr><td>kubectl</td><td>v1.28+</td><td><a href="https://kubernetes.io/docs/tasks/tools/">kubernetes.io/docs</a></td></tr><tr><td>helm</td><td>v3.14+</td><td><code>curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash</code></td></tr><tr><td>Azure CLI</td><td>2.50+</td><td>needed only for Grafana Cloud credential fetch via AKV</td></tr><tr><td>Python 3</td><td>3.9+</td><td>system package — drives deploy-local.sh</td></tr></tbody></table>
+<h3 id="endpoints-after-deploy">Endpoints (after deploy)</h3>
+<p><strong>Always available:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>URL</th><th>Service</th><th>Notes</th></tr></thead><tbody><tr><td><code>http://localhost:8080</code></td><td>Angular SPA + Gateway API</td><td><code>/api/*</code> → gateway, <code>/</code> → frontend</td></tr><tr><td><code>https://signal-forge.local:8443</code></td><td>Same, TLS</td><td>Requires <code>security.tls.enabled: true</code> + <code>/etc/hosts</code> entry</td></tr><tr><td><code>http://localhost:15672</code></td><td>RabbitMQ Management</td><td>guest/guest</td></tr></tbody></table>
+<p><strong>Local mode only:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>URL</th><th>Service</th><th>Credentials</th></tr></thead><tbody><tr><td><code>http://localhost:16686</code></td><td>Jaeger UI</td><td>—</td></tr><tr><td><code>http://localhost:3000</code></td><td>Grafana</td><td>admin/admin</td></tr><tr><td><code>http://localhost:9090</code></td><td>Prometheus</td><td>—</td></tr></tbody></table>
+<p><strong>Cloud mode only:</strong> your Grafana Cloud stack (e.g. <code>https://example-org.grafana.net</code>) — Explore for
+Tempo/Mimir/Loki.</p>
+<hr>
+<h2 id="repository-layout">Repository Layout</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>signal-forge/</span></span>
+<span class="line"><span>├── src/                        # Application source</span></span>
+<span class="line"><span>│   ├── gateway-api/            # .NET 8 Minimal API — BFF, MySQL, gRPC client</span></span>
+<span class="line"><span>│   ├── order-api/              # .NET 8 gRPC — PostgreSQL, RabbitMQ publisher</span></span>
+<span class="line"><span>│   ├── notification-svc/       # Python FastAPI — RabbitMQ consumer, Redis</span></span>
+<span class="line"><span>│   ├── frontend/               # Angular 17 SPA — Faro RUM, nginx</span></span>
+<span class="line"><span>│   └── proto/                  # Shared gRPC protobuf definitions</span></span>
+<span class="line"><span>│</span></span>
+<span class="line"><span>├── k8s/</span></span>
+<span class="line"><span>│   ├── base/                   # Kustomize base (ArgoCD / Flux entrypoint)</span></span>
+<span class="line"><span>│   ├── overlays/{dev,staging,prod}/</span></span>
+<span class="line"><span>│   ├── infra/                  # namespace, secrets, PDB, NetworkPolicies, ingress, cert-manager issuer</span></span>
+<span class="line"><span>│   ├── app/                    # Application Deployments + Services</span></span>
+<span class="line"><span>│   ├── datastores/             # MySQL, PostgreSQL, Redis, RabbitMQ</span></span>
+<span class="line"><span>│   ├── monitoring/</span></span>
+<span class="line"><span>│   │   ├── slo-rules.yaml      #   PrometheusRule (SLOs + burn-rate alerts)</span></span>
+<span class="line"><span>│   │   ├── grafana/            #   Bespoke Alloy DaemonSet (local mode only)</span></span>
+<span class="line"><span>│   │   ├── grafana-helm/       #   grafana/k8s-monitoring Helm values</span></span>
+<span class="line"><span>│   │   └── local/              #   In-cluster backends: Jaeger, Prometheus, Loki, Grafana</span></span>
+<span class="line"><span>│   └── loadtest/               # k6 load test Job</span></span>
+<span class="line"><span>│</span></span>
+<span class="line"><span>├── conf.yml                    # Single source of truth for all deploy-local.sh knobs</span></span>
+<span class="line"><span>├── deploy-local.sh             # Idempotent local deploy script</span></span>
+<span class="line"><span>├── scripts/                    # AKV fetch, debug, smoke tests</span></span>
+<span class="line"><span>├── Makefile                    # Legacy lifecycle targets</span></span>
+<span class="line"><span>└── docs/</span></span>
+<span class="line"><span>    ├── spec.md                 # OTel validation test scenarios and checklist</span></span>
+<span class="line"><span>    ├── OTEL-PATTERNS.md        # Instrumentation patterns per runtime</span></span>
+<span class="line"><span>    ├── architecture/           # System topology, decisions</span></span>
+<span class="line"><span>    ├── observability/          # SLOs, pipeline, sampling, exemplars, correlation</span></span>
+<span class="line"><span>    ├── infrastructure/         # Hardening, Kustomize, datastores, HA paths</span></span>
+<span class="line"><span>    └── operations/             # Networking, runbooks, supply chain, reliability</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>Deploy order within <code>k8s/</code>: <code>infra/</code> → <code>app-env ConfigMap</code> → <code>grafana-cloud-secrets</code> → cert-manager
+→ <code>datastores/</code> → <code>monitoring/</code> → <code>app/</code> → post (ingress). Driven by <code>deploy-local.sh</code> with
+context-guard and NodePort drift-check.</p>
+<hr>
+<h2 id="services">Services</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Service</th><th>Stack</th><th>Port (cluster)</th><th>DB</th><th>Role</th></tr></thead><tbody><tr><td>otel-frontend</td><td>Angular 17 + nginx</td><td>80 (host: 8080 via ingress)</td><td>—</td><td>SPA + Faro RUM</td></tr><tr><td>gateway-api</td><td>.NET 8 Minimal API</td><td>5000</td><td>MySQL</td><td>BFF, gRPC client</td></tr><tr><td>order-api</td><td>.NET 8 gRPC</td><td>5001</td><td>PostgreSQL</td><td>Order CRUD + RabbitMQ publisher</td></tr><tr><td>notification-svc</td><td>Python/FastAPI</td><td>8000</td><td>Redis</td><td>RabbitMQ consumer + REST</td></tr></tbody></table>
+<hr>
+<h2 id="testing--ci">Testing &#x26; CI</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># .NET — order-api.Tests requires Docker (Testcontainers starts a real postgres:16.4</span></span>
+<span class="line"><span style="color:#6A737D"># for OutboxRelayWorkerTests)</span></span>
+<span class="line"><span style="color:#B392F0">dotnet</span><span style="color:#9ECBFF"> test</span><span style="color:#9ECBFF"> src/order-api.Tests/order-api.Tests.csproj</span><span style="color:#79B8FF"> --configuration</span><span style="color:#9ECBFF"> Release</span></span>
+<span class="line"><span style="color:#B392F0">dotnet</span><span style="color:#9ECBFF"> test</span><span style="color:#9ECBFF"> src/gateway-api.Tests/gateway-api.Tests.csproj</span><span style="color:#79B8FF"> --configuration</span><span style="color:#9ECBFF"> Release</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Python</span></span>
+<span class="line"><span style="color:#B392F0">python</span><span style="color:#79B8FF"> -m</span><span style="color:#9ECBFF"> pytest</span><span style="color:#9ECBFF"> src/notification-svc/tests/</span><span style="color:#79B8FF"> -v</span><span style="color:#79B8FF"> --tb=short</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Frontend</span></span>
+<span class="line"><span style="color:#79B8FF">cd</span><span style="color:#9ECBFF"> src/frontend</span><span style="color:#E1E4E8"> &#x26;&#x26; </span><span style="color:#B392F0">npm</span><span style="color:#9ECBFF"> ci</span><span style="color:#79B8FF"> --legacy-peer-deps</span><span style="color:#E1E4E8"> &#x26;&#x26; </span><span style="color:#B392F0">npx</span><span style="color:#9ECBFF"> jest</span><span style="color:#79B8FF"> --config</span><span style="color:#9ECBFF"> jest.config.js</span></span>
+<span class="line"></span></code></pre>
+<p>CI (<a href=".github/workflows/ci.yml">.github/workflows/ci.yml</a>) runs on <code>push</code>/<code>pull_request</code> to <code>main</code>
+and on manual <code>workflow_dispatch</code>:</p>
+<ul>
+<li><code>.NET</code> + Python + Angular unit tests</li>
+<li><code>pip-audit</code> + <code>dotnet list package --vulnerable</code> for known CVEs</li>
+<li>Trivy image scan (HIGH/CRITICAL, fixed-only) for all four images</li>
+<li>Syft SBOM generation (CycloneDX JSON)</li>
+<li>cosign keyless signing on <code>main</code> push (OIDC — no long-lived secrets)</li>
+</ul>
+<hr>
+<h2 id="grafana-cloud-mode">Grafana Cloud Mode</h2>
+<p>Set <code>monitoring.mode: cloud</code> in <a href="conf.yml">conf.yml</a> and the Helm chart’s Alloy agents ship every
+signal to Grafana Cloud Tempo / Mimir / Loki. The in-cluster Jaeger / Prometheus / Loki / Grafana
+are not deployed — the cloud backends are the only sink.</p>
+<p>Credentials live in Azure Key Vault. The fetch script pulls them, writes them into
+<a href="conf.yml">conf.yml</a> in place (preserving comments), and then <code>./deploy-local.sh</code> materialises them
+into the <code>grafana-cloud-secrets</code> Kubernetes Secret that the chart’s destinations reference by name.</p>
+<h3 id="setup">Setup</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Azure auth: either an existing `az login` session, or export ARM_CLIENT_ID +</span></span>
+<span class="line"><span style="color:#6A737D"># ARM_CLIENT_SECRET in your shell (no .env loading).</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># AKV coordinates live in conf.yml → monitoring.grafana_cloud.akv.{tenant_id,</span></span>
+<span class="line"><span style="color:#6A737D">#   subscription_id, resource_group, vault_name}. Edit these if they change.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Pull every Grafana Cloud secret and update conf.yml in place:</span></span>
+<span class="line"><span style="color:#B392F0">./scripts/fetch-grafana-cloud-conf-from-akv.sh</span><span style="color:#6A737D">             # writes conf.yml + conf.yml.bak</span></span>
+<span class="line"><span style="color:#B392F0">./scripts/fetch-grafana-cloud-conf-from-akv.sh</span><span style="color:#79B8FF"> --dry-run</span><span style="color:#6A737D">   # preview diff only</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Re-apply (no cluster rebuild):</span></span>
+<span class="line"><span style="color:#B392F0">./deploy-local.sh</span><span style="color:#79B8FF"> --skip-cluster</span><span style="color:#79B8FF"> --skip-build</span></span>
+<span class="line"></span></code></pre>
+<p>See <a href="/deployment/grafana-cloud/">docs/deployment/grafana-cloud.md</a> for the full credential model and
+rotation procedure.</p>
+<h3 id="credentials">Credentials</h3>
+<p>Credentials are stored in <strong>Azure Key Vault</strong> (<code>example-org-prd-kv</code>) under the
+<code>grafana-example-org-*</code> secret prefix. The fetch script writes them into <a href="conf.yml">conf.yml</a> at
+<code>monitoring.grafana_cloud.*</code>; <code>deploy-local.sh</code> materialises them into the <code>grafana-cloud-secrets</code>
+Kubernetes Secret.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>AKV secret name</th><th>conf.yml key</th><th>Notes</th></tr></thead><tbody><tr><td><code>grafana-example-org-alloy-writer-example-org-token</code></td><td><code>monitoring.grafana_cloud.api_key</code></td><td><code>glc_</code> access-policy token — scopes: <code>metrics:write logs:write traces:write</code></td></tr><tr><td><code>grafana-example-org-cloud-tempo-endpoint</code></td><td><code>monitoring.grafana_cloud.tempo.endpoint</code></td><td>host only — <code>:443</code> suffix added by fetch script</td></tr><tr><td><code>grafana-example-org-cloud-tempo-username</code></td><td><code>monitoring.grafana_cloud.tempo.user</code></td><td>Tempo instance ID</td></tr><tr><td><code>grafana-example-org-cloud-mimir-endpoint</code></td><td><code>monitoring.grafana_cloud.mimir.endpoint</code></td><td>base URL → <code>/push</code> suffix added if missing</td></tr><tr><td><code>grafana-example-org-cloud-mimir-username</code></td><td><code>monitoring.grafana_cloud.mimir.user</code></td><td>Mimir instance ID</td></tr><tr><td><code>grafana-example-org-cloud-loki-endpoint</code></td><td><code>monitoring.grafana_cloud.loki.endpoint</code></td><td>base URL → <code>/loki/api/v1/push</code> suffix added if missing</td></tr><tr><td><code>grafana-example-org-cloud-loki-username</code></td><td><code>monitoring.grafana_cloud.loki.user</code></td><td>Loki instance ID</td></tr><tr><td><code>grafana-example-org-faro-api-endpoint</code></td><td><code>monitoring.grafana_cloud.faro.endpoint</code></td><td>browser Faro collector (runtime env)</td></tr><tr><td><code>grafana-example-org-faro-sourcemap-token</code></td><td><code>monitoring.grafana_cloud.faro.api_key</code></td><td>webpack source-map upload (build arg)</td></tr></tbody></table>
+<hr>
+<h2 id="production-readiness-controls">Production Readiness Controls</h2>
+<p>For any step beyond local lab, the following controls are already implemented:</p>
+<ul>
+<li><a href="/infrastructure/hardening/">Container hardening</a> — non-root UIDs per image,
+<code>readOnlyRootFilesystem</code>, securityContext</li>
+<li><a href="/infrastructure/kustomize/">Kustomize layout</a> — base + overlays for dev/staging/prod</li>
+<li><a href="/operations/reliability/">Reliability</a> — PodDisruptionBudgets, pod anti-affinity, graceful
+shutdown</li>
+<li><a href="/operations/networking/">Networking &#x26; TLS</a> — NetworkPolicies, cert-manager, flannel caveat</li>
+<li><a href="/operations/supply-chain/">Supply-chain security</a> — Trivy scan, Syft SBOM, cosign keyless signing</li>
+<li><a href="/observability/slos/">SLOs &#x26; burn-rate alerts</a> — <code>PrometheusRule</code> with multi-window burn
+thresholds</li>
+<li><a href="/infrastructure/datastore-ha/">Datastore HA migration</a> — CloudNativePG / RabbitMQ Operator /
+Redis Sentinel paths</li>
+</ul>
+<hr>
+<h2 id="observability-uis">Observability UIs</h2>
+<p><strong>Always available</strong> (both modes):</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>UI</th><th>URL</th><th>Notes</th></tr></thead><tbody><tr><td>Angular SPA</td><td><code>http://localhost:8080</code></td><td>Frontend entry point</td></tr><tr><td>RabbitMQ</td><td><code>http://localhost:15672</code></td><td>guest / guest — inspect queues and message headers</td></tr><tr><td>Alloy UI</td><td><code>kubectl -n monitoring port-forward svc/grafana-k8s-alloy-receiver 12345</code> then <code>http://localhost:12345</code></td><td>Pipeline graph, component status, debug traces</td></tr></tbody></table>
+<p><strong>Only in <code>monitoring.mode: local</code>:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>UI</th><th>URL</th><th>Notes</th></tr></thead><tbody><tr><td>Grafana</td><td><code>http://localhost:3000</code></td><td>admin / admin</td></tr><tr><td>Jaeger</td><td><code>http://localhost:16686</code></td><td>Trace search and waterfall</td></tr><tr><td>Prometheus</td><td><code>http://localhost:9090</code></td><td>Metric explorer + exemplars</td></tr></tbody></table>
+<p><strong>Only in <code>monitoring.mode: cloud</code>:</strong> your Grafana Cloud stack’s Explore + dashboards (e.g.
+<code>https://example-org.grafana.net/explore</code>).</p>
+<hr>
+<h2 id="make-targets-reference">Make Targets Reference</h2>
+<p><code>./deploy-local.sh</code> is the sole deploy path. The Makefile no longer deploys anything — it only
+builds images, runs tests, and fetches/applies Grafana Cloud credentials. Its former
+<code>deploy</code>/<code>deploy-cloud</code>/<code>deploy-local</code>/<code>full</code>/<code>helm-repo</code>/<code>helm-render</code>/<code>deploy-helm</code>/
+<code>deploy-helm-cloud</code>/<code>teardown-helm</code>/<code>full-helm</code> targets (a second, parallel Jinja2-based Helm-values
+pipeline plus a legacy <code>kubectl apply -f</code> flow, both superseded by <code>deploy-local.sh</code>) were retired;
+<code>make deploy</code>/<code>deploy-cloud</code>/<code>deploy-local</code>/<code>full</code> now just print a redirect to <code>./deploy-local.sh</code>
+and exit non-zero, so old muscle memory fails loudly instead of silently doing the wrong thing.</p>
+<h3 id="cluster-lifecycle">Cluster lifecycle</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Target</th><th>Description</th><th>Equivalent</th></tr></thead><tbody><tr><td><code>make cluster-up</code></td><td>Create k3d cluster with port mappings</td><td><code>./deploy-local.sh</code> (builds + deploys too)</td></tr><tr><td><code>make cluster-down</code></td><td>Delete k3d cluster</td><td><code>./deploy-local.sh --teardown</code></td></tr><tr><td><code>make build</code></td><td>Build all 4 Docker images locally</td><td>implicit in <code>./deploy-local.sh</code></td></tr><tr><td><code>make import</code></td><td>Build + import images into k3d</td><td>implicit</td></tr><tr><td><code>make teardown</code></td><td>Delete the <code>otel-lab</code> namespace</td><td>use <code>./deploy-local.sh --teardown</code> to drop the whole cluster</td></tr></tbody></table>
+<h3 id="testing--ops">Testing &#x26; ops</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Target</th><th>Description</th></tr></thead><tbody><tr><td><code>make test</code></td><td>Run k6 load test Job (generates realistic traffic)</td></tr><tr><td><code>make validate</code></td><td>Smoke-test all endpoints with curl</td></tr><tr><td><code>make logs</code></td><td>Stream logs from all app pods</td></tr><tr><td><code>./scripts/debug.sh</code></td><td>Mode-aware triage — pod state, Alloy exporter counters, remote-write reachability probe</td></tr><tr><td><code>./scripts/smoke-test-conf-updater.sh</code></td><td>Offline regression test for the conf.yml in-place updater</td></tr></tbody></table>
+<h3 id="grafana-cloud-credentials-azure-key-vault">Grafana Cloud credentials (Azure Key Vault)</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Path</th><th>Description</th></tr></thead><tbody><tr><td><strong><code>./scripts/fetch-grafana-cloud-conf-from-akv.sh</code></strong></td><td><strong>Preferred.</strong> Pulls AKV secrets, writes them into <code>conf.yml</code> in place (preserving comments), supports <code>--dry-run</code>. Auth via existing <code>az login</code> or shell-exported <code>ARM_CLIENT_ID/SECRET</code>.</td></tr><tr><td><code>make secrets-fetch-akv</code></td><td>Legacy — writes the K8s Secret directly and also drives its own <code>helm upgrade</code>, bypassing <code>deploy-local.sh</code>. Kept for the manual-<code>.env</code> fallback case; the script-based flow above covers everything else.</td></tr><tr><td><code>make secrets-apply</code></td><td>Legacy — applies credentials from <code>.env</code>.</td></tr><tr><td><code>make secrets-show</code></td><td>Print stored Secret values (API key redacted). Still accurate.</td></tr></tbody></table>
+<h3 id="helm-monitoring">Helm monitoring</h3>
+<p>There’s no separate <code>make *-helm</code> step anymore — <code>./deploy-local.sh</code> handles the Helm install
+inline, adding the <code>grafana</code> repo itself and rendering
+<a href="k8s/monitoring/grafana-helm/values-cloud.yaml.tmpl">values-cloud.yaml.tmpl</a> directly from
+<code>conf.yml</code> (see <a href="/deployment/helm/">docs/deployment/helm.md</a>). The Jinja2-based render pipeline this
+table used to document (<code>render.py</code> + <code>config.yaml.j2</code>, real prod Grafana Cloud fingerprints left
+over from a copy-paste) has been deleted along with the Makefile targets that drove it.</p>
+<hr>
+<h2 id="otel-validation-checklist">OTel Validation Checklist</h2>
+<p>See <a href="/spec/">docs/spec.md</a> for the full test scenarios, including:</p>
+<ul>
+<li>Trace propagation (HTTP, gRPC, RabbitMQ async)</li>
+<li>Span metrics (RED) + exemplars</li>
+<li>K8s attribute enrichment via <code>k8sattributes</code> processor</li>
+<li>Log-to-trace correlation via Loki structured metadata</li>
+<li>Tail sampling rates (verify 25% sampling of normal traffic)</li>
+<li>Frontend RUM (Faro) session and page view spans</li>
+<li>Resilience / negative scenarios (datastore down, consumer crash)</li>
+</ul>
+<hr>
+<h2 id="roadmap">Roadmap</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Phase</th><th>Item</th><th>Status</th><th>Target</th></tr></thead><tbody><tr><td>1</td><td>Core 4-service OTel stack with cloud + local mode</td><td>done</td><td>—</td></tr><tr><td>1</td><td>Kustomize overlays (dev/staging/prod)</td><td>done</td><td>—</td></tr><tr><td>1</td><td>CI pipeline: tests + Trivy + SBOM + cosign</td><td>done</td><td>—</td></tr><tr><td>1</td><td>SLO recording rules + multi-window burn alerts</td><td>done</td><td>—</td></tr><tr><td>1</td><td>Tail-based sampling + spanmetrics</td><td>done</td><td>—</td></tr><tr><td>2</td><td>Faro RUM source-map upload + error grouping</td><td>active</td><td>TBD — depends on Faro source-map token in AKV</td></tr><tr><td>2</td><td>SLO rules enabled by default (<code>slo_rules.enabled: true</code>)</td><td>planned</td><td>Requires Prometheus Operator CRD install in deploy-local.sh</td></tr><tr><td>3</td><td>k6 CronJob for continuous synthetic traffic</td><td>planned</td><td>Required for client-perceived SLO validation</td></tr><tr><td>3</td><td>Pyroscope continuous profiling (alloy-profiles enable)</td><td>planned</td><td>Blocked on in-cluster Pyroscope backend</td></tr><tr><td>3</td><td>Datastore HA operators (CNPG / RabbitMQ Operator / Redis Sentinel)</td><td>deferred</td><td>See /infrastructure/datastore-ha/</td></tr></tbody></table> </article> <div class="mt-16 pt-8 border-t border-slate-800 light:border-slate-200 flex items-center justify-between" data-astro-cid-ovxcmftc> <a href="/projects" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors" data-astro-cid-ovxcmftc>
+← All projects
+</a> <a href="/" class="text-sm text-slate-500 hover:text-slate-300 light:hover:text-slate-700 transition-colors" data-astro-cid-ovxcmftc>Home</a> </div> </div> </main> <footer class="border-t border-slate-800 light:border-slate-200 bg-slate-950 light:bg-slate-50"> <div class="max-w-6xl mx-auto px-6 py-12"> <div class="flex flex-col md:flex-row items-center justify-between gap-6"> <div> <a href="/" class="font-mono text-accent font-medium group"> <span class="text-slate-600 light:text-slate-400">&lt;</span>amit.singh<span class="text-slate-600 light:text-slate-400">/&gt;</span> </a> <p class="text-xs text-slate-600 light:text-slate-500 mt-1 font-mono">Observability Architect · SRE · Platform Engineering · BITS Pilani M.Tech</p> </div> <div class="flex items-center gap-4"> <a href="https://github.com/shipsolid" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg></a><a href="https://linkedin.com/in/amitsingh007s" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><a href="mailto:amitsingh007s@gmail.com" aria-label="Email" class="text-slate-500 hover:text-accent transition-colors duration-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></a> </div> </div> <div class="mt-8 pt-6 border-t border-slate-800/50 light:border-slate-200/70 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-600 light:text-slate-500 font-mono"> <span>© 2026 Amit Singh. Built with Astro + Tailwind.</span> <span> <span class="text-slate-700 light:text-slate-400">// </span> <a href="https://github.com/shipsolid" class="hover:text-slate-400 light:hover:text-slate-700 transition-colors">source</a> </span> </div> </div> </footer>  </body></html>  <script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+// Same theme-var pair and re-render-on-toggle approach as
+// src/components/MermaidRenderer.astro — this page has its own standalone
+// Mermaid setup rather than the shared component (pre-existing duplication,
+// unrelated to this change), so the theme handling is duplicated here too
+// rather than left dark-only.
+function currentTheme() {
+  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+}
+const THEME_VARS = {
+  dark: {
+    primaryColor: '#1e293b',
+    primaryTextColor: '#cbd5e1',
+    primaryBorderColor: '#334155',
+    lineColor: '#00d9a6',
+    secondaryColor: '#0f172a',
+    tertiaryColor: '#1e293b',
+    background: '#0f172a',
+    mainBkg: '#1e293b',
+    nodeBorder: '#334155',
+    clusterBkg: '#0f172a',
+    titleColor: '#f1f5f9',
+    edgeLabelBackground: '#1e293b',
+  },
+  light: {
+    primaryColor: '#f1f5f9',
+    primaryTextColor: '#0f172a',
+    primaryBorderColor: '#cbd5e1',
+    lineColor: '#0f766e',
+    secondaryColor: '#f1f5f9',
+    tertiaryColor: '#e2e8f0',
+    background: '#ffffff',
+    mainBkg: '#f1f5f9',
+    nodeBorder: '#cbd5e1',
+    clusterBkg: '#f8fafc',
+    titleColor: '#0f172a',
+    edgeLabelBackground: '#f1f5f9',
+  },
+};
+
+function initMermaid() {
+  const theme = currentTheme();
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: theme === 'light' ? 'base' : 'dark',
+    themeVariables: THEME_VARS[theme],
+  });
+}
+
+initMermaid();
+
+document.querySelectorAll('pre[data-language="mermaid"]').forEach((pre) => {
+  const div = document.createElement('div');
+  div.className = 'mermaid not-prose my-8';
+  const source = pre.querySelector('code')?.textContent ?? '';
+  div.dataset.mermaidSource = source;
+  div.textContent = source;
+  pre.replaceWith(div);
+});
+
+await mermaid.run();
+
+window.addEventListener('themechange', async () => {
+  const rendered = document.querySelectorAll('.mermaid[data-mermaid-source]');
+  if (!rendered.length) return;
+  initMermaid();
+  rendered.forEach((div) => {
+    div.removeAttribute('data-processed');
+    div.textContent = div.dataset.mermaidSource;
+  });
+  await mermaid.run({ nodes: [...rendered] });
+});
+
+// Drag-to-scroll on mermaid containers
+document.querySelectorAll('.mermaid').forEach((el) => {
+  let isDown = false, startX = 0, scrollLeft = 0;
+  el.addEventListener('mousedown', (e) => {
+    isDown = true;
+    startX = e.pageX - el.offsetLeft;
+    scrollLeft = el.scrollLeft;
+  });
+  el.addEventListener('mouseleave', () => { isDown = false; });
+  el.addEventListener('mouseup', () => { isDown = false; });
+  el.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    el.scrollLeft = scrollLeft - (e.pageX - el.offsetLeft - startX);
+  });
+});
+</script>
