@@ -1,0 +1,35 @@
+(function(){try{var e=typeof globalThis<`u`?globalThis:typeof global<`u`?global:typeof window<`u`?window:typeof self<`u`?self:{};e.__faroGitHash_shipsolid=`5a3e07490cf86c817b483e0ab4730c693be342ed`}catch{}})(),(function(){try{var e=typeof globalThis<`u`?globalThis:typeof global<`u`?global:typeof window<`u`?window:typeof self<`u`?self:{};e.__faroBundleId_shipsolid=`1788641390084921a54574d`}catch{}})();import{r as e,t}from"./storage.P2AEtGSn.js";var n=/\b\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/,r=/^\s*(\d{10}|\d{13})\b/,i=/\b(TRACE|DEBUG|INFO|INFORMATION|NOTICE|WARN|WARNING|ERROR|ERR|FATAL|CRIT|CRITICAL)\b/i,a=/([A-Za-z_][\w.\-]*)=(?:"([^"]*)"|'([^']*)'|(\S+))/g;function o(e){let t=e.toUpperCase();return t===`WARNING`?`WARN`:t===`ERR`?`ERROR`:t===`INFORMATION`?`INFO`:t===`CRIT`?`CRITICAL`:t}function s(e){return e==null?``:typeof e==`object`?JSON.stringify(e):String(e)}function c(e,t,n){let r=[`level`,`severity`,`lvl`,`levelname`,`loglevel`],i=[`timestamp`,`ts`,`time`,`@timestamp`,`datetime`,`date`],a=[`message`,`msg`,`text`,`body`],c=r.find(t=>t in e),l=i.find(t=>t in e),u=a.find(t=>t in e),d=new Set([c,l,u].filter(Boolean)),f={};for(let[t,n]of Object.entries(e))d.has(t)||(f[t]=s(n));return{raw:t,lineNumber:n,timestamp:l&&s(e[l])||null,level:c?o(s(e[c])):null,message:u?s(e[u]):t,fields:f}}function l(e,t){let s=e.match(n),c=e.match(r),l=s?s[0]:c?c[1]:null,u=e.match(i),d=u?o(u[1]):null,f={},p;for(a.lastIndex=0;(p=a.exec(e))!==null;){let e=p[1];f[e]=p[2]??p[3]??p[4]??``}let m=e;return l&&m.includes(l)&&(m=m.slice(m.indexOf(l)+l.length)),m=m.replace(i,``).replace(/^[\s\-:|\]]+/,``).trim()||e.trim(),{raw:e,lineNumber:t,timestamp:l,level:d,message:m,fields:f}}function u(e){let t=[],n=e.split(`
+`);for(let e=0;e<n.length;e++){let r=n[e];if(r.trim()===``)continue;let i=e+1,a=r.trim();if(a.startsWith(`{`)&&a.endsWith(`}`))try{let e=JSON.parse(a);if(e&&typeof e==`object`&&!Array.isArray(e)){t.push(c(e,r,i));continue}}catch{}t.push(l(r,i))}return t}function d(e,t){let n=null,r=t.query?.trim();if(r){if(t.regex){let e;try{e=new RegExp(r,`i`)}catch(e){throw Error(`Invalid regex: ${e instanceof Error?e.message:String(e)}`)}n=t=>e.test(t.raw)}else{let e=r.toLowerCase();n=t=>t.raw.toLowerCase().includes(e)}}let i=t.levels&&t.levels.length>0?new Set(t.levels.map(e=>e.toUpperCase())):null;return e.filter(e=>!(i&&!(e.level&&i.has(e.level))||n&&!n(e)))}function f(e){let t={};for(let n of e){let e=n.level??`(none)`;t[e]=(t[e]??0)+1}return t}function p(e,t,n){if(t===`field`&&!n)throw Error(`groupBy("field") requires a field name`);let r=new Map;for(let i of e){let e=t===`level`?i.level??`(none)`:i.fields[n]??`(missing)`;r.set(e,(r.get(e)??0)+1)}return[...r.entries()].map(([e,t])=>({key:e,count:t})).sort((e,t)=>t.count-e.count)}var m=`tools:log-explorer:state`,h=262144,g=1e3,_=[`TRACE`,`DEBUG`,`INFO`,`NOTICE`,`WARN`,`ERROR`,`FATAL`,`CRITICAL`],v={text:[`2026-08-27 10:14:02 INFO  192.168.1.42 GET /api/orders status=200 dur=34ms`,`2026-08-27 10:14:05 WARN  10.0.0.17 POST /api/checkout status=429 dur=812ms`,`{"ts":"2026-08-27T10:14:11Z","level":"error","msg":"inventory timeout","service":"inventory","status":500}`,`2026-08-27 10:15:44 INFO  192.168.1.42 GET /api/orders status=200 dur=29ms`,`2026-08-27 10:16:03 ERROR 172.16.4.9 GET /api/inventory status=500 dur=1502ms trace_id=a1b2c3`].join(`
+`),query:``,levels:[],regex:!1,...t(m,{})},y=document.getElementById(`le-input`),b=document.getElementById(`le-persist-note`),x=document.getElementById(`le-query`),S=document.getElementById(`le-regex`),C=document.getElementById(`le-levels`),w=document.getElementById(`le-error`),T=document.getElementById(`le-summary`),E=document.getElementById(`le-lines`);y&&(y.value=v.text),x&&(x.value=v.query),S&&(S.checked=v.regex);function D(e){return e.replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`)}function O(){let t={...v};new Blob([v.text]).size>h?(t.text=``,b?.classList.remove(`hidden`)):b?.classList.add(`hidden`),e(m,t)}var k={ERROR:`bg-red-500`,FATAL:`bg-red-600`,CRITICAL:`bg-red-600`,WARN:`bg-amber-400`,NOTICE:`bg-sky-400`,INFO:`bg-emerald-500`,DEBUG:`bg-dim`,TRACE:`bg-faint`};function A(e){C&&(C.innerHTML=_.filter(t=>e[t]).map(t=>`<button type="button" data-level="${t}"
+          class="filter-tag ${v.levels.includes(t)?`active`:``}" style="width:auto">
+          <span>${t}</span><span class="tag-count">${e[t]}</span>
+        </button>`).join(``))}function j(){if(!w||!T||!E)return;v.text=y?.value??``,v.query=x?.value??``,v.regex=!!S?.checked,O();let e=u(v.text);A(f(e));let t;try{t=d(e,{query:v.query,levels:v.levels,regex:v.regex}),w.classList.add(`hidden`)}catch(n){w.textContent=n instanceof Error?n.message:String(n),w.classList.remove(`hidden`),t=e}let n=p(t,`level`),r=t.length||1;T.innerHTML=`
+      <h2 class="section-label mb-3">Summary</h2>
+      <p class="text-sm font-mono text-muted mb-3">${t.length} of ${e.length} lines match.</p>
+      ${n.map(e=>`
+        <div class="mt-1">
+          <div class="flex justify-between text-xs font-mono text-muted">
+            <span>${D(e.key)}</span><span>${e.count}</span>
+          </div>
+          <div class="mt-1 h-2 rounded bg-surface-hover overflow-hidden">
+            <div class="h-full bg-accent" style="width:${e.count/r*100}%"></div>
+          </div>
+        </div>`).join(``)}
+    `;let i=t.slice(0,g).map(e=>{let t=k[e.level??``]??`bg-line-hover`,n=Object.entries(e.fields).map(([e,t])=>`<span class="text-dim">${D(e)}=</span>${D(t)}`).join(`  `);return`
+          <details class="border-b border-line last:border-0">
+            <summary class="flex items-start gap-2 py-1.5 cursor-pointer text-sm font-mono">
+              <span class="text-faint w-10 shrink-0 text-right select-none">${e.lineNumber}</span>
+              <span class="mt-1.5 w-2 h-2 rounded-full shrink-0 ${t}"></span>
+              <span class="text-dim shrink-0">${D(e.timestamp??``)}</span>
+              <span class="text-ink break-all">${D(e.message)}</span>
+            </summary>
+            <div class="pl-14 pb-2 text-xs font-mono text-muted space-y-1">
+              ${n?`<div class="break-all">${n}</div>`:``}
+              <div class="text-faint break-all">${D(e.raw)}</div>
+            </div>
+          </details>`}).join(``);E.innerHTML=`
+      <h2 class="section-label mb-3">Lines</h2>
+      ${t.length===0?`<p class="text-sm text-dim font-mono">No lines match.</p>`:`<div>${i}</div>`}
+      ${t.length>g?`<p class="text-xs text-dim font-mono mt-2">Showing the first ${g} of ${t.length}.</p>`:``}
+    `}y?.addEventListener(`input`,j),x?.addEventListener(`input`,j),S?.addEventListener(`change`,j),C?.addEventListener(`click`,e=>{let t=e.target.closest(`[data-level]`);if(!t)return;let n=t.dataset.level;v.levels=v.levels.includes(n)?v.levels.filter(e=>e!==n):[...v.levels,n],j()}),j();
+//# sourceMappingURL=log-explorer.astro_astro_type_script_index_0_lang.DDabCs5X.js.map
