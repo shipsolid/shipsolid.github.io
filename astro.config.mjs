@@ -22,13 +22,15 @@ const CLOUDFLARE = process.env.DEPLOY_TARGET === 'cloudflare';
 export default defineConfig({
   site: CLOUDFLARE ? 'https://amit.shipsolid.workers.dev' : 'https://shipsolid.github.io',
   outDir: CLOUDFLARE ? './dist-cloudflare' : './dist',
-  // SignalForge's write-up moved to its own Cloudflare Workers deploy (previously a
-  // sibling GitHub Pages project page at /signal-forge/, now retired).
-  // Static output turns this into dist/projects/signal-forge/index.html — a meta-refresh
-  // + <link rel="canonical"> page, the only redirect kind GitHub Pages static hosting
-  // supports — so old inbound links to the retired route still land in the right place.
+  // SignalForge's and repo-policy's write-ups each live on their own Cloudflare
+  // Workers deploy (SignalForge's previously a sibling GitHub Pages project page
+  // at /signal-forge/, now retired). Static output turns each entry below into
+  // dist/projects/<id>/index.html — a meta-refresh + <link rel="canonical"> page,
+  // the only redirect kind GitHub Pages static hosting supports — so inbound
+  // links to the local route still land in the right place.
   redirects: {
     '/projects/signal-forge': 'https://signal-forge.shipsolid.workers.dev/',
+    '/projects/repo-policy': 'https://repo-policy.shipsolid.workers.dev/',
   },
   // Tailwind 4 is a first-class Vite plugin (see vite.plugins below), not an
   // Astro integration: @astrojs/tailwind has no Astro 7 release and v4 needs
