@@ -1,0 +1,254 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="url-toolkit"
+  description="Encode and decode URL components, and parse or build query strings. Client-side only, no sign-up, no tracking."
+  intro="Two things: percent-encode / decode a string, and pull a URL apart into an editable query-parameter table that rebuilds as you type. Everything stays in your browser."
+>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" data-tab="encode" role="tab" aria-selected="true" type="button">Encode / Decode</button>
+    <button class="tab" data-tab="query" role="tab" aria-selected="false" type="button">Query params</button>
+  </div>
+
+  <!-- Encode / Decode -->
+  <div id="ut-panel-encode" role="tabpanel">
+    <div class="card">
+      <label class="text-xs font-mono text-dim">
+        Direction
+        <select id="ut-dir"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70">
+          <option value="encode">Encode (text → %XX)</option>
+          <option value="decode">Decode (%XX → text)</option>
+        </select>
+      </label>
+      <label class="text-xs font-mono text-dim block mt-4">
+        Input
+        <textarea id="ut-ec-input" rows="4"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"></textarea>
+      </label>
+      <p id="ut-ec-error" class="mt-2 text-sm text-red-400 font-mono hidden"></p>
+    </div>
+    <div class="card mt-6">
+      <div class="flex items-center justify-between">
+        <h2 class="section-label">Output</h2>
+        <button id="ut-ec-copy" type="button" class="btn-outline text-xs">Copy</button>
+      </div>
+      <textarea id="ut-ec-output" readonly rows="4"
+        class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"></textarea>
+    </div>
+  </div>
+
+  <!-- Query params -->
+  <div id="ut-panel-query" role="tabpanel" class="hidden">
+    <div class="card">
+      <label class="text-xs font-mono text-dim">
+        URL
+        <input id="ut-url" type="text" placeholder="https://api.example.com/v1/orders?x=1&y=2"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+      </label>
+      <p id="ut-url-error" class="mt-2 text-sm text-red-400 font-mono hidden"></p>
+      <div class="mt-4 flex items-center justify-between">
+        <h3 class="section-label">Parameters</h3>
+        <button id="ut-add-param" type="button" class="btn-outline text-xs">Add</button>
+      </div>
+      <div id="ut-params" class="mt-3 space-y-2"></div>
+    </div>
+    <div class="card mt-6">
+      <div class="flex items-center justify-between">
+        <h2 class="section-label">Rebuilt URL</h2>
+        <button id="ut-url-copy" type="button" class="btn-outline text-xs">Copy</button>
+      </div>
+      <pre id="ut-url-output" class="mt-4 whitespace-pre-wrap break-all text-sm font-mono text-body"></pre>
+    </div>
+  </div>
+
+</ToolLayout>
+
+<script>
+  import { buildUrl, decodeComponent, encodeComponent, parseUrl } from '../../lib/tools/url-toolkit';
+  import type { QueryParam } from '../../lib/tools/url-toolkit';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:url-toolkit:state';
+  const TABS = ['encode', 'query'];
+
+  interface UtState {
+    tab: string;
+    direction: 'encode' | 'decode';
+    ecInput: string;
+    url: string;
+    params: QueryParam[];
+  }
+
+  const DEFAULT_STATE: UtState = {
+    tab: 'encode',
+    direction: 'encode',
+    ecInput: 'name=Amit Singh & role=SRE',
+    url: 'https://api.example.com/v1/orders?status=open&expand=items&expand=customer',
+    params: [],
+  };
+
+  const state: UtState = { ...DEFAULT_STATE, ...loadJSON<Partial<UtState>>(STORAGE_KEY, {}) };
+  if (!TABS.includes(state.tab)) state.tab = 'encode';
+
+  function persist() {
+    saveJSON(STORAGE_KEY, state);
+  }
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // ---- tabs ----
+  function setTab(tab: string | undefined) {
+    state.tab = TABS.includes(tab ?? '') ? (tab as string) : 'encode';
+    document.querySelectorAll('.tab').forEach((btn) =>
+      btn.setAttribute('aria-selected', String((btn as HTMLElement).dataset.tab === state.tab))
+    );
+    TABS.forEach((t) => document.getElementById(`ut-panel-${t}`)?.classList.toggle('hidden', t !== state.tab));
+    persist();
+  }
+  document.querySelectorAll('.tab').forEach((btn) =>
+    btn.addEventListener('click', () => setTab((btn as HTMLElement).dataset.tab))
+  );
+
+  // ---- encode / decode ----
+  const dirEl = document.getElementById('ut-dir') as HTMLSelectElement | null;
+  const ecInputEl = document.getElementById('ut-ec-input') as HTMLTextAreaElement | null;
+  const ecOutputEl = document.getElementById('ut-ec-output') as HTMLTextAreaElement | null;
+  const ecErrorEl = document.getElementById('ut-ec-error');
+  const ecCopyEl = document.getElementById('ut-ec-copy') as HTMLButtonElement | null;
+
+  if (dirEl) dirEl.value = state.direction;
+  if (ecInputEl) ecInputEl.value = state.ecInput;
+
+  function runEncode() {
+    state.direction = (dirEl?.value as 'encode' | 'decode') ?? 'encode';
+    state.ecInput = ecInputEl?.value ?? '';
+    persist();
+    try {
+      const out = state.direction === 'encode' ? encodeComponent(state.ecInput) : decodeComponent(state.ecInput);
+      if (ecOutputEl) ecOutputEl.value = out;
+      ecErrorEl?.classList.add('hidden');
+    } catch (err) {
+      if (ecOutputEl) ecOutputEl.value = '';
+      if (ecErrorEl) {
+        ecErrorEl.textContent = err instanceof Error ? err.message : String(err);
+        ecErrorEl.classList.remove('hidden');
+      }
+    }
+  }
+  dirEl?.addEventListener('change', runEncode);
+  ecInputEl?.addEventListener('input', runEncode);
+  ecCopyEl?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(ecOutputEl?.value ?? '');
+    const o = ecCopyEl.textContent;
+    ecCopyEl.textContent = 'Copied!';
+    setTimeout(() => (ecCopyEl.textContent = o), 1500);
+  });
+
+  // ---- query params ----
+  const urlEl = document.getElementById('ut-url') as HTMLInputElement | null;
+  const urlErrorEl = document.getElementById('ut-url-error');
+  const paramsEl = document.getElementById('ut-params') as HTMLElement | null;
+  const urlOutputEl = document.getElementById('ut-url-output');
+  const addParamEl = document.getElementById('ut-add-param');
+  const urlCopyEl = document.getElementById('ut-url-copy') as HTMLButtonElement | null;
+
+  if (urlEl) urlEl.value = state.url;
+
+  const inputClass =
+    'w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 font-mono';
+
+  function renderParamRows() {
+    if (!paramsEl) return;
+    paramsEl.innerHTML = state.params
+      .map(
+        (_, i) => `
+        <div class="flex gap-2 items-center">
+          <input type="text" data-role="key" data-index="${i}" placeholder="key" class="${inputClass} flex-1 min-w-0" />
+          <input type="text" data-role="val" data-index="${i}" placeholder="value" class="${inputClass} flex-1 min-w-0" />
+          <button type="button" data-role="rm" data-index="${i}" class="btn-outline text-xs shrink-0">✕</button>
+        </div>`
+      )
+      .join('');
+    state.params.forEach((p, i) => {
+      (paramsEl.querySelector(`[data-role="key"][data-index="${i}"]`) as HTMLInputElement).value = p.key;
+      (paramsEl.querySelector(`[data-role="val"][data-index="${i}"]`) as HTMLInputElement).value = p.value;
+    });
+  }
+
+  function renderRebuilt() {
+    if (!urlOutputEl) return;
+    try {
+      urlOutputEl.textContent = buildUrl(state.url, state.params);
+      urlErrorEl?.classList.add('hidden');
+    } catch (err) {
+      urlOutputEl.textContent = '';
+      if (urlErrorEl) {
+        urlErrorEl.textContent = err instanceof Error ? err.message : String(err);
+        urlErrorEl.classList.remove('hidden');
+      }
+    }
+  }
+
+  function loadParamsFromUrl() {
+    state.url = urlEl?.value ?? '';
+    try {
+      state.params = parseUrl(state.url).params;
+      urlErrorEl?.classList.add('hidden');
+    } catch (err) {
+      if (urlErrorEl) {
+        urlErrorEl.textContent = err instanceof Error ? err.message : String(err);
+        urlErrorEl.classList.remove('hidden');
+      }
+    }
+    persist();
+    renderParamRows();
+    renderRebuilt();
+  }
+
+  urlEl?.addEventListener('input', loadParamsFromUrl);
+
+  paramsEl?.addEventListener('input', (event) => {
+    const target = event.target as HTMLElement;
+    const i = Number(target.dataset.index);
+    if (Number.isNaN(i) || !state.params[i]) return;
+    if (target.dataset.role === 'key') state.params[i].key = (target as HTMLInputElement).value;
+    if (target.dataset.role === 'val') state.params[i].value = (target as HTMLInputElement).value;
+    persist();
+    renderRebuilt();
+  });
+  paramsEl?.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    if (target.dataset.role !== 'rm') return;
+    state.params.splice(Number(target.dataset.index), 1);
+    persist();
+    renderParamRows();
+    renderRebuilt();
+  });
+  addParamEl?.addEventListener('click', () => {
+    state.params.push({ key: '', value: '' });
+    persist();
+    renderParamRows();
+    renderRebuilt();
+  });
+  urlCopyEl?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(urlOutputEl?.textContent ?? '');
+    const o = urlCopyEl.textContent;
+    urlCopyEl.textContent = 'Copied!';
+    setTimeout(() => (urlCopyEl.textContent = o), 1500);
+  });
+
+  // ---- init ----
+  setTab(state.tab);
+  runEncode();
+  if (state.params.length === 0) {
+    loadParamsFromUrl();
+  } else {
+    renderParamRows();
+    renderRebuilt();
+  }
+</script>

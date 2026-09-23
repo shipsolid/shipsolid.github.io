@@ -1,0 +1,73 @@
+title: "Fan-Out / Fan-In: Observability KPIs"
+description: "Pattern-specific telemetry beyond RED metrics for fan-out/fan-in systems — width, per-shard latency, aggregation cost, partial results, cancellation, and hedging."
+tags: ["patterns", "distributed-systems", "concurrency", "maang-prep", "observability"]
+cards:
+  - id: red-metrics-insufficient
+    type: basic
+    q: "Why are generic RED metrics (Rate, Errors, Duration) insufficient for a fan-out/fan-in service?"
+    a: "Fan-out performance depends on factors RED can't see: number of parallel workers, the slowest worker specifically (not the average), aggregation efficiency, partial failures, cancellation propagation, and tail-latency mitigation. A fan-out service needs additional pattern-specific telemetry on top of RED."
+
+  - id: fan-out-width-metric
+    type: basic
+    q: "What does the fan_out_width histogram measure, and what does it help detect?"
+    a: "How many child requests are created per parent request (e.g. a search request producing 20 shard requests → width = 20). Helps identify query amplification, routing issues, retry storms, shard count growth, and unexpected increases in parallelism."
+
+  - id: per-shard-latency-purpose
+    type: basic
+    q: "What does fan_out_shard_latency_seconds{shard_id} reveal that an aggregate latency number cannot?"
+    a: "Which specific shard is slow — e.g. three shards at ~20ms and one at 145ms still means the client waits 145ms. It identifies hot partitions, slow databases, network issues, and uneven workload distribution that an averaged number would hide."
+
+  - id: aggregation-latency-separate-metric
+    type: basic
+    q: "Why must fan_out_aggregation_latency_seconds be tracked as its own histogram, separate from shard latency?"
+    a: "Without it, it's easy to incorrectly blame downstream services when the fan-in (merge/sort/dedup/rank/filter/serialize) step is actually the slow part — e.g. workers finish in 40ms but aggregation takes 150ms of a 190ms total."
+
+  - id: partial-result-total-reasons
+    type: basic
+    q: "What reasons does fan_out_partial_result_total{reason} typically break down, and why does it matter?"
+    a: "timeout, cancelled, quota, circuit_open, unavailable, hedged_loser. Without this counter, a successful HTTP 200 can hide significant backend degradation — e.g. 18 of 20 shards succeeded and 2 timed out, but the client still got a response that looks fully successful."
+
+  - id: cancelled-worker-validates-deadline-propagation
+    type: basic
+    q: "What does fan_out_cancelled_worker_total validate, and what does it mean if parent requests time out but this stays at zero?"
+    a: "It validates that deadline propagation is actually working — workers terminate when the parent context is cancelled. If parent requests are timing out but this counter stays at zero, workers are likely ignoring cancellation entirely."
+
+  - id: hedged-requests-metric-signal
+    type: basic
+    q: "What does a rising fan_out_hedged_requests_used_total often indicate before users notice failures?"
+    a: "Degrading infrastructure — tail latency, replica imbalance, slow storage, or overloaded shards. An increasing hedge-fire rate is a leading indicator, since hedging exists specifically to paper over exactly this kind of degradation before it becomes a user-visible failure."
+
+  - id: max-child-latency-vs-average
+    type: basic
+    q: "Why is fan_out_max_child_latency_seconds often the most important latency metric in a fan-out system?"
+    a: "Because overall request latency is constrained by the slowest worker, not the average — tracking the max/slowest child directly measures the thing that actually determines end-to-end latency, rather than a statistic that can look fine while one worker is the bottleneck."
+
+  - id: straggler-count-definition
+    type: basic
+    q: "What does fan_out_stragglers_total count, and what does it help detect?"
+    a: "Workers significantly slower than the median (e.g. median 20ms, one worker at 400ms = a straggler). Useful for detecting hot partitions, resource contention, GC pauses, and network congestion — causes of localized slowness rather than systemic load."
+
+  - id: queue-wait-time-signal
+    type: basic
+    q: "What does elevated fan_out_queue_wait_seconds usually indicate?"
+    a: "Worker pool exhaustion, downstream saturation, or insufficient concurrency — time spent waiting for an available worker before the actual request even starts, distinct from the request's own processing latency."
+
+  - id: worker-utilization-warning-threshold
+    type: basic
+    q: "What worker_utilization level typically precedes latency increases in a fan-out system?"
+    a: "Above ~90% (busy workers / total workers). High utilization is a leading indicator that queue wait and latency degradation are about to follow, since there's little slack left to absorb any burst."
+
+  - id: retry-total-as-leading-indicator
+    type: basic
+    q: "Why is fan_out_retry_total described as a leading indicator of downstream instability?"
+    a: "An increasing retry rate often signals downstream instability before outright failures occur — retries are often invisible in a latency dashboard until they've already caused cascading failure, so tracking retry count as its own series catches the problem earlier than waiting for the aggregate to degrade."
+
+  - id: histogram-vs-counter-choice
+    type: basic
+    q: "Which fan-out metrics should be histograms vs. counters, and why?"
+    a: "Histograms for measurements needing percentile analysis: latency, width, queue wait time. Counters for discrete events: retries, cancellations, partial responses, hedged requests. The distinction matters because percentile analysis (P95/P99) only makes sense on a distribution, not a running total."
+
+  - id: resilience-metrics-invisible-in-http-success-rate
+    type: basic
+    q: "Why do partial-result, cancelled-worker, and hedged-request metrics matter even when HTTP success rate looks fine?"
+    a: "They provide visibility into resilience mechanisms that are otherwise invisible in standard HTTP success rates — a request can return 200 while quietly having dropped shards, cancelled workers, or relied on a hedge to hit its latency target, none of which a plain success/error count would ever surface."

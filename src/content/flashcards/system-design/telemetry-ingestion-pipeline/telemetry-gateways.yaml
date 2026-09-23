@@ -1,0 +1,63 @@
+title: "Telemetry Gateways: Protocol-Specific Ingestion Points"
+description: "The ten protocol-specific gateways in the ingestion frontier — what each accepts, from whom, and when to use it."
+tags: ["system-design", "observability", "telemetry", "maang-prep", "gateways"]
+cards:
+  - id: otlp-gateway-purpose
+    type: basic
+    q: "What does the OTLP Gateway accept and why is it preferred for new instrumentation?"
+    a: "OTLP/gRPC (port 4317) and OTLP/HTTP (port 4318) — metrics, logs, and traces over a single protocol. It's the industry standard for new instrumentation; prefer it over every other gateway unless a producer can't emit it."
+
+  - id: prom-rw-gateway-role
+    type: basic
+    q: "What is the Prometheus Remote Write Gateway's role, and who uses it?"
+    a: "Accepts the Prometheus Remote Write protocol (metrics only) after Prometheus/an agent scrapes targets and pushes onward. Responsibilities: auth, rate limiting, compression, tenant routing, forward to Mimir. Used by Prometheus, Grafana Alloy, Prometheus Agent, VictoriaMetrics Agent."
+
+  - id: syslog-gateway-clients
+    type: basic
+    q: "What clients typically send to a Syslog Gateway?"
+    a: "Traditional infrastructure: Linux/Unix hosts, routers, switches, firewalls, load balancers — over UDP, TCP, or TLS transport. Logs forward to Loki."
+
+  - id: kafka-gateway-tradeoff
+    type: basic
+    q: "What's the advantage and operational trade-off of a Kafka Gateway for telemetry ingestion?"
+    a: "Advantage: buffering, replay, high throughput, decoupling producers/consumers — common in enterprises that already run Kafka as their transport backbone. Trade-off: a consumer group, schema registry, and offset-management story to run alongside it."
+
+  - id: statsd-gateway-purpose
+    type: basic
+    q: "What is the StatsD Gateway for, and what does it do to incoming data?"
+    a: "A legacy metrics protocol (UDP) still common in older Java/Python/Ruby apps. The gateway converts StatsD metrics into Prometheus/OpenTelemetry format before forwarding."
+
+  - id: jaeger-zipkin-gateways
+    type: basic
+    q: "Why keep Jaeger and Zipkin gateways in an OTLP-first platform?"
+    a: "Both are legacy tracing protocols predating OpenTelemetry (Jaeger gRPC/Thrift, Zipkin HTTP — the latter historically common from Spring Boot apps). Keep them only during migrations from older observability stacks; new deployments should use OTLP."
+
+  - id: fluent-forward-gateway
+    type: basic
+    q: "What protocol does the Fluent Bit/Fluentd Gateway speak, and where is it common?"
+    a: "The Fluent Forward protocol — common in Kubernetes environments where Fluent Bit or Fluentd act as node-level log collectors, forwarding to Loki."
+
+  - id: openmetrics-gateway
+    type: basic
+    q: "What does the OpenMetrics Gateway accept and convert?"
+    a: "HTTP scrape — some exporters expose metrics directly over HTTP scrape (OpenMetrics format), and the gateway converts scraped metrics into the platform's internal storage format."
+
+  - id: why-multiple-gateways
+    type: basic
+    q: "Why does an enterprise observability platform need many protocol-specific gateways instead of just OTLP?"
+    a: "It must support many telemetry producers, not just OpenTelemetry-instrumented apps — legacy infra (syslog), existing Kafka backbones, older tracing SDKs (Jaeger/Zipkin), and legacy metrics protocols (StatsD) all still exist in a brownfield estate."
+
+  - id: gateways-shared-ingestion-layer
+    type: basic
+    q: "What do all protocol gateways funnel into, regardless of wire format?"
+    a: "A shared ingestion layer that performs auth, rate limiting, schema validation, tenant routing, and metadata enrichment — before writing to observability storage (Mimir, Loki, Tempo, etc.). The protocol-specific part is only the termination point."
+
+  - id: azure-deployment-gateway-choice
+    type: basic
+    q: "In an Azure-based deployment (Container Apps, Functions, AKS), which gateways would you actually run, and which only temporarily?"
+    a: "OTLP Gateway for modern OpenTelemetry-instrumented apps; Prometheus Remote Write Gateway for K8s-collected Prometheus metrics; Syslog/HTTP only if network devices or legacy hosts exist. StatsD, Jaeger, and Zipkin gateways only during migration off older stacks — OTLP is preferred for new work."
+
+  - id: http-log-gateway-use-case
+    type: basic
+    q: "When would you use the HTTP Log Gateway instead of the Syslog Gateway?"
+    a: "When an application simply POSTs logs over HTTP/REST and Syslog isn't available or appropriate — common clients are Fluent Bit, Vector, and custom application agents."

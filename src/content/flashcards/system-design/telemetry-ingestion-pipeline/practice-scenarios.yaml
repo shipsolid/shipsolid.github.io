@@ -1,0 +1,123 @@
+title: "Telemetry Pipeline: MAANG Practice Scenarios"
+description: "Twelve principal/staff-level system design scenarios on the telemetry ingestion pipeline — the core diagnosis, redesign, or trade-off decision behind each answer."
+tags: ["system-design", "observability", "telemetry", "maang-prep", "practice-q"]
+cards:
+  - id: q1-durability-boundary-answer
+    type: basic
+    q: "Q1 (500M samples/sec, zero-drop rolling deploy): What single design decision makes 'never drop during rolling deploy' achievable?"
+    a: "Make Kafka the durability boundary, not the gateway. The gateway fleet is intentionally stateless and expendable — agent-side WAL absorbs any gateway disruption, and Kafka's acks=all guarantees durability once a batch lands there."
+
+  - id: q1-capacity-gap-insight
+    type: basic
+    q: "Q1: What is 'the silent failure mode most teams miss' even with perfect graceful shutdown?"
+    a: "The capacity gap — if the fleet is sized to exactly 100% at steady state, losing one pod during a rolling deploy (even with a PDB limiting maxUnavailable to 1) leaves the remaining fleet unable to absorb peak traffic. Fix: target HPA at ~65% utilization so the remaining pods still have headroom."
+
+  - id: q2-cardinality-mechanism
+    type: basic
+    q: "Q2 (cardinality storm): Mechanistically, why does 50M new series/minute break a shared TSDB for every tenant, not just the offender?"
+    a: "Ingester memory grows with fixed per-series overhead regardless of sample rate, causing GC pressure that degrades query latency for all tenants on that ingester. The resulting oversized 2h block also takes the compactor longer to merge, backing up its queue for every tenant sharing that compactor pool."
+
+  - id: q2-detection-cannot-be-exact
+    type: basic
+    q: "Q2: Why must cardinality detection be approximate (HyperLogLog), and what's the second trigger beyond a static budget?"
+    a: "An exact set of 50M label combinations per tenant would need tens of GB of processor memory — not affordable inline on the hot path. Beyond a static budget breach, a rate-of-change anomaly detector (>20x the 7-day baseline growth) catches a fast, contained spike that never crosses the ceiling but still causes a compaction storm."
+
+  - id: q3-eviction-bias-root-cause
+    type: basic
+    q: "Q3 (trace pipeline losing spans at incident peaks): What is the mechanistic root cause, stated precisely?"
+    a: "A memory-bounded LRU assembler evicts the OLDEST open traces first under pressure — but slow traces (exactly what the policy wants to keep) are open the longest. The eviction policy is anti-correlated with the sampling policy's goal; the bug is capacity-shaped, not capacity-sized."
+
+  - id: q3-redesign-fixes
+    type: basic
+    q: "Q3: What are the two key redesign fixes, beyond just adding memory?"
+    a: "1) Provisional priority — promote a trace to a protected, non-evictable pool the moment any span shows error=true or exceeds a running P99 latency, rather than waiting for the root span. 2) Graceful degradation — under memory pressure, degrade cold-tier traces to a reduced sample rate (e.g. 1-in-20) instead of a hard drop."
+
+  - id: q4-thirteen-hops-meta-answer
+    type: basic
+    q: "Q4 (trace a metric's full journey): What's the strongest opening answer before the hop-by-hop breakdown?"
+    a: "Lead with the synthetic canary, not the hop list — a gap BETWEEN two correctly-instrumented hops (e.g. silent misrouting) won't show up in any single hop's metrics. An end-to-end canary is the only thing that catches 'the pipeline looks healthy everywhere and the data still isn't there.'"
+
+  - id: q4-invisible-failure-hop
+    type: basic
+    q: "Q4: Which failure in the metric's journey is invisible to every pipeline metric, and what's the only thing that catches it?"
+    a: "An instrumentation bug — the counter is never incremented because of dead code or a wrong condition. Nothing downstream fires an error because nothing was ever emitted. Only a synthetic canary or a code-review-time unit test catches this."
+
+  - id: q5-why-fourth-signal
+    type: basic
+    q: "Q5 (add continuous profiling): Why is profiling a fourth pipeline, not a mode of the existing trace pipeline?"
+    a: "Profiles are stack-trace samples aggregated into a flamegraph-shaped tree (continuous, node-driven), fundamentally different from traces' request-scoped span DAG. No existing processor handles the pprof/folded-stack format or the flamegraph merge operation."
+
+  - id: q5-reused-vs-new
+    type: basic
+    q: "Q5: What's reused unchanged when adding profiling, and what's the one genuinely new hard problem?"
+    a: "Reused unchanged: the gateway (signal-agnostic by design), Kafka buffer (new topic only), multi-tenancy enforcement, canary/self-observability pattern. Genuinely new and hardest: symbolization — resolving raw eBPF memory addresses to function names, which has no analog in metrics/logs/traces."
+
+  - id: q6-why-not-pause-ingestion
+    type: basic
+    q: "Q6 (compactor storm): Why doesn't pausing ingestion even solve the stated problem?"
+    a: "The compactor's backlog is already queued in object storage, independent of the live ingester write path. Pausing ingestion only stops the backlog from growing further — it does nothing to drain what's already queued, so it fails to solve the problem even though it feels like the obvious lever."
+
+  - id: q6-mitigation-without-pausing
+    type: basic
+    q: "Q6: What two immediate levers fix the compactor backlog without touching the write path?"
+    a: "1) Scale out compactor replicas — compaction is embarrassingly parallel by tenant/time-range shard, unlike the ring-based ingester. 2) Prioritize compaction jobs for the most-queried time range (e.g. last 24h) so user-visible query latency recovers before the full historical backlog clears."
+
+  - id: q7-blast-radius-containment
+    type: basic
+    q: "Q7 (regional gateway dark for 10 min): Why does a 10-min outage show as only a partial (~1/3) dip globally, not a full outage?"
+    a: "The regional-write + async-replication topology means each region's agents, gateways, and dashboards are independent — only the affected region's dashboards show a gap; the other regions are completely unaffected. This is the direct payoff of never using a single global cluster."
+
+  - id: q7-actual-failure-boundary
+    type: basic
+    q: "Q7: What is the real failure boundary that determines whether this outage causes permanent data loss?"
+    a: "The agent WAL's retention window (e.g. 4h), not the 10-minute outage duration itself. A 10-min outage is comfortably inside that boundary; the actual risk is a longer outage combined with high write volume filling local disk before the network recovers."
+
+  - id: q8-symptom-fingerprint
+    type: basic
+    q: "Q8 (counters reset to zero after an SDK upgrade): What does the specific symptom 'periodic reset to exactly zero' tell you immediately?"
+    a: "It's a stateful component losing accumulated state on restart, not a data-loss or mislabeling bug. Combined with 'SDK upgrade' as the trigger, the first hypothesis to test is that the upgrade reverted temporality to the SDK's delta default, breaking the deltaToCumulative processor's per-series accumulator on its next restart."
+
+  - id: q8-fix-without-touching-tenant-code
+    type: basic
+    q: "Q8: Since the SDK-level fix is off the table (no instrumentation change allowed), what's the recommended pipeline-side fix?"
+    a: "Make the deltaToCumulative processor's per-series accumulator state durable across restarts (checkpoint to Redis or a persistent volume) so it resumes from the last known cumulative value instead of restarting from zero. Cost: added checkpoint latency and a new stateful dependency for a previously-stateless processor."
+
+  - id: q9-look-here-first
+    type: basic
+    q: "Q9 (cut cost 40% without violating SLOs): Where should you look first, and why?"
+    a: "Storage (retention × cardinality), not compute — it's usually the largest single cost line (~35-45%) and can be changed via a decision (retention days, dedup correctness) without touching the real-time write path's behavior at all. Compute is provisioned for throughput, which is harder to cut without SLO risk."
+
+  - id: q9-refused-cuts
+    type: basic
+    q: "Q9: What two cost levers does the design explicitly refuse to touch, and why?"
+    a: "Cutting cardinality budgets below what production tenants need (breaks dashboards/alerts — an availability regression wearing a cost-savings label) and reducing gateway/processor replica count below the rolling-deploy capacity-gap math from Q1 (directly threatens the zero-drop SLO)."
+
+  - id: q10-trust-bootstrapping-tension
+    type: basic
+    q: "Q10 (self-service tenant onboarding): What is the core tension in this problem, and how is it resolved?"
+    a: "Self-service means no human reviews a request before it's granted, but the platform must still be protected from a malicious new tenant. Resolved by zero-trust-by-default: every new tenant is issued credentials already scoped to the most conservative tier atomically at creation — there is no window between 'tenant exists' and 'tenant is protected.'"
+
+  - id: q10-graduation-mechanism
+    type: basic
+    q: "Q10: How do legitimate tenants escape the minimal default tier without a human gate?"
+    a: "Auto-graduation: N days of clean behavior (no budget breaches, no anomaly alerts, reusing the cardinality anomaly detection from Q2) automatically promotes a tenant to the next tier. A human is only pulled in when the graduation logic itself flags something ambiguous."
+
+  - id: q11-tenant-id-from-cert
+    type: basic
+    q: "Q11 (compromised agent threat model): What is the single most important defense against a spoofed tenant ID?"
+    a: "Tenant identity must be derived exclusively from the authenticated credential (cert subject/SAN or API-key-bound mapping) — never from the payload body. A compromised agent cannot spoof a different tenant no matter what it puts in the OTLP payload, because that claim is never trusted."
+
+  - id: q11-per-identity-vs-per-tenant-limit
+    type: basic
+    q: "Q11: Why is per-tenant rate limiting insufficient against a compromised agent, and what's the fix?"
+    a: "A compromised single agent within a large tenant can consume that tenant's entire rate budget, denial-of-servicing every other legitimate agent under the same tenant. Fix: add a second, tighter rate limit bound to the individual credential/cert, not just the tenant aggregate."
+
+  - id: q12-which-hop-already-solved
+    type: basic
+    q: "Q12 (exactly-once for one billing tenant): Which hop is already exactly-once by default, and which requires genuinely new architecture?"
+    a: "Gateway→Kafka is already solved by the standing enable.idempotence=true producer config (dedups by producer ID + sequence number, no new work needed). Kafka→Processor is the hop needing real architecture: a dedicated consumer group using Kafka transactions to commit the Mimir write and the offset as one atomic unit."
+
+  - id: q12-real-proof-of-correctness
+    type: basic
+    q: "Q12: What is described as 'the real proof' that the exactly-once guarantee actually held, more than any pipeline-internal metric?"
+    a: "A monthly reconciliation job comparing billed usage against an independently-computed raw agent-side counter. A bug in the exactly-once mechanism itself would still produce internally-consistent-looking pipeline metrics — only comparison against a source of truth outside the pipeline catches that class of failure."

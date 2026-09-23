@@ -1,0 +1,261 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="base64-hash"
+  description="Encode and decode Base64 (UTF-8 safe), and compute SHA-1/256/384/512 hashes — all client-side, no sign-up, no tracking."
+  intro="Encode/decode Base64 and compute cryptographic hashes — everything stays in your browser."
+>
+
+  <!-- Tabs -->
+      <div class="tabs" role="tablist">
+        <button class="tab" data-tab="base64" role="tab" aria-selected="true" type="button">Base64</button>
+        <button class="tab" data-tab="hash" role="tab" aria-selected="false" type="button">Hash</button>
+      </div>
+
+      <!-- Base64 -->
+      <div id="b64-panel-base64" role="tabpanel">
+        <div class="card">
+          <h2 class="section-label">Encode / Decode</h2>
+          <form id="b64-form" class="mt-4 space-y-4">
+            <label class="text-xs font-mono text-dim">
+              Mode
+              <select
+                id="b64-mode"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              >
+                <option value="encode">Text → Base64 (encode)</option>
+                <option value="decode">Base64 → Text (decode)</option>
+              </select>
+            </label>
+
+            <label class="text-xs font-mono text-dim">
+              Input
+              <textarea
+                id="b64-input"
+                rows="6"
+                placeholder="Paste text or Base64 here…"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              ></textarea>
+            </label>
+
+            <button type="submit" class="btn-primary">Convert</button>
+          </form>
+        </div>
+
+        <div id="b64-error" class="mt-6 text-sm text-red-400 font-mono hidden"></div>
+
+        <div id="b64-result-card" class="card mt-6 hidden">
+          <div class="flex items-center justify-between">
+            <h2 class="section-label">Output</h2>
+            <button type="button" id="b64-copy" class="btn-outline text-xs">Copy</button>
+          </div>
+          <textarea
+            id="b64-output"
+            readonly
+            rows="6"
+            class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Hash -->
+      <div id="b64-panel-hash" role="tabpanel" class="hidden">
+        <div class="card">
+          <h2 class="section-label">Hash</h2>
+          <form id="hash-form" class="mt-4 space-y-4">
+            <label class="text-xs font-mono text-dim">
+              Algorithm
+              <select
+                id="hash-algorithm"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              >
+                <option value="SHA-1">SHA-1</option>
+                <option value="SHA-256" selected>SHA-256</option>
+                <option value="SHA-384">SHA-384</option>
+                <option value="SHA-512">SHA-512</option>
+              </select>
+            </label>
+
+            <label class="text-xs font-mono text-dim">
+              Text
+              <textarea
+                id="hash-input"
+                rows="6"
+                placeholder="Text to hash…"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              ></textarea>
+            </label>
+
+            <button type="submit" class="btn-primary">Compute</button>
+            <p class="text-xs text-dim font-mono">
+              MD5 intentionally not offered — not available in the browser's Web Crypto API.
+            </p>
+          </form>
+        </div>
+
+        <div id="hash-error" class="mt-6 text-sm text-red-400 font-mono hidden"></div>
+
+        <div id="hash-result-card" class="card mt-6 hidden">
+          <div class="flex items-center justify-between">
+            <h2 class="section-label">Digest</h2>
+            <button type="button" id="hash-copy" class="btn-outline text-xs">Copy</button>
+          </div>
+          <pre id="hash-output" class="mt-4 bg-field border border-line rounded-lg p-3 text-sm text-ink font-mono overflow-x-auto break-all whitespace-pre-wrap"></pre>
+        </div>
+      </div>
+
+</ToolLayout>
+
+<script>
+import { decodeBase64, encodeBase64, hashHex, type HashAlgorithm } from '../../lib/tools/base64-hash';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:base64-hash:input';
+  const TABS = ['base64', 'hash'];
+
+  type Base64Mode = 'encode' | 'decode';
+
+  interface Base64State {
+    mode: Base64Mode;
+    input: string;
+  }
+
+  const DEFAULT_STATE: Base64State = {
+    mode: 'encode',
+    input: 'Hello, world! 🎉',
+  };
+
+  const state: Base64State = loadJSON<Base64State>(STORAGE_KEY, DEFAULT_STATE);
+
+  function persistState() {
+    saveJSON(STORAGE_KEY, state);
+  }
+
+  // ---------------------------------------------------------------------
+  // Tabs
+  // ---------------------------------------------------------------------
+  function setActiveTab(tab: string | undefined) {
+    const resolved = TABS.includes(tab ?? '') ? (tab as string) : TABS[0];
+    document.querySelectorAll('.tab').forEach((btn) => {
+      btn.setAttribute('aria-selected', String((btn as HTMLElement).dataset.tab === resolved));
+    });
+    TABS.forEach((t) => {
+      document.getElementById(`b64-panel-${t}`)?.classList.toggle('hidden', t !== resolved);
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => setActiveTab((btn as HTMLElement).dataset.tab));
+  });
+
+  async function copyText(button: HTMLButtonElement | null, text: string) {
+    if (!button) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = button.textContent;
+      button.textContent = 'Copied!';
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Base64
+  // ---------------------------------------------------------------------
+  const b64Form = document.getElementById('b64-form');
+  const b64Mode = document.getElementById('b64-mode') as HTMLSelectElement | null;
+  const b64Input = document.getElementById('b64-input') as HTMLTextAreaElement | null;
+  const b64Output = document.getElementById('b64-output') as HTMLTextAreaElement | null;
+  const b64ResultCard = document.getElementById('b64-result-card');
+  const b64ErrorBox = document.getElementById('b64-error');
+  const b64CopyBtn = document.getElementById('b64-copy') as HTMLButtonElement | null;
+
+  if (b64Mode) b64Mode.value = state.mode;
+  if (b64Input) b64Input.value = state.input;
+
+  function showBase64Error(message: string) {
+    b64ResultCard?.classList.add('hidden');
+    if (b64ErrorBox) {
+      b64ErrorBox.textContent = message;
+      b64ErrorBox.classList.remove('hidden');
+    }
+  }
+
+  function showBase64Result(output: string) {
+    b64ErrorBox?.classList.add('hidden');
+    if (b64Output) b64Output.value = output;
+    b64ResultCard?.classList.remove('hidden');
+  }
+
+  function runBase64() {
+    const mode = (b64Mode?.value ?? DEFAULT_STATE.mode) as Base64Mode;
+    const input = b64Input?.value ?? '';
+
+    state.mode = mode;
+    state.input = input;
+    persistState();
+
+    try {
+      const output = mode === 'encode' ? encodeBase64(input) : decodeBase64(input);
+      showBase64Result(output);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      showBase64Error(message);
+    }
+  }
+
+  b64Form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    runBase64();
+  });
+  runBase64();
+
+  b64CopyBtn?.addEventListener('click', () => copyText(b64CopyBtn, b64Output?.value ?? ''));
+
+  // ---------------------------------------------------------------------
+  // Hash
+  // ---------------------------------------------------------------------
+  const hashForm = document.getElementById('hash-form');
+  const hashAlgorithm = document.getElementById('hash-algorithm') as HTMLSelectElement | null;
+  const hashInput = document.getElementById('hash-input') as HTMLTextAreaElement | null;
+  const hashOutput = document.getElementById('hash-output');
+  const hashResultCard = document.getElementById('hash-result-card');
+  const hashErrorBox = document.getElementById('hash-error');
+  const hashCopyBtn = document.getElementById('hash-copy') as HTMLButtonElement | null;
+
+  // Hash input/output is deliberately NOT persisted — unlike the Base64 tab, this could be an
+  // arbitrary secret someone is hashing, so the form starts empty on every visit.
+
+  async function runHash() {
+    const algorithm = (hashAlgorithm?.value ?? 'SHA-256') as HashAlgorithm;
+    const input = hashInput?.value ?? '';
+
+    try {
+      const digest = await hashHex(algorithm, input);
+      hashErrorBox?.classList.add('hidden');
+      if (hashOutput) hashOutput.textContent = digest;
+      hashResultCard?.classList.remove('hidden');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      hashResultCard?.classList.add('hidden');
+      if (hashErrorBox) {
+        hashErrorBox.textContent = message;
+        hashErrorBox.classList.remove('hidden');
+      }
+    }
+  }
+
+  hashForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void runHash();
+  });
+
+  hashCopyBtn?.addEventListener('click', () => copyText(hashCopyBtn, hashOutput?.textContent ?? ''));
+})();
+</script>

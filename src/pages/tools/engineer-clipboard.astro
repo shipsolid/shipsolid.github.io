@@ -1,0 +1,265 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="engineer-clipboard"
+  description="Searchable personal snippet library — kubectl, az, docker, PromQL, KQL, SQL, regex. Click to copy. Client-side only, no sign-up, no tracking."
+  intro="A searchable personal snippet library for kubectl, az, docker, curl, PromQL, KQL, SQL, and regex. Click to copy. Everything stays in your browser — no account, no server."
+>
+
+  <!-- Search + filter -->
+      <div class="card">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input
+            id="ec-search"
+            type="search"
+            placeholder="Search snippets…"
+            aria-label="Search snippets"
+            class="flex-1 bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+          />
+          <select
+            id="ec-category-filter"
+            aria-label="Filter by category"
+            class="sm:w-48 bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+          >
+            <option value="all">All</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Snippet list -->
+      <div id="ec-list" class="mt-6 space-y-4"></div>
+
+      <!-- Add snippet -->
+      <div class="card mt-6">
+        <h2 class="section-label">Add Snippet</h2>
+
+        <p id="ec-form-errors" class="text-xs text-red-400 mt-3 hidden"></p>
+
+        <form id="ec-form" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="text-xs font-mono text-dim sm:col-span-1">
+            Label
+            <input
+              id="ec-label"
+              type="text"
+              required
+              placeholder="e.g. List pods sorted by age"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+
+          <label class="text-xs font-mono text-dim sm:col-span-1">
+            Category
+            <select
+              id="ec-category"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            >
+            </select>
+          </label>
+
+          <label class="text-xs font-mono text-dim sm:col-span-2">
+            Code
+            <textarea
+              id="ec-code"
+              required
+              rows="3"
+              placeholder="e.g. kubectl get pods -A --sort-by=.metadata.creationTimestamp"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            ></textarea>
+          </label>
+
+          <label class="text-xs font-mono text-dim sm:col-span-2">
+            Notes <span class="text-faint">(optional)</span>
+            <input
+              id="ec-notes"
+              type="text"
+              placeholder="Free text"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+
+          <div class="sm:col-span-2">
+            <button type="submit" class="btn-primary">Add</button>
+          </div>
+        </form>
+      </div>
+
+</ToolLayout>
+
+<style is:global>
+  .ec-empty {
+    font-size: 0.85rem;
+    color: var(--color-dim);
+    font-style: italic;
+  }
+
+  .ec-code {
+    display: block;
+    overflow-x: auto;
+    white-space: pre;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+  }
+</style>
+
+<script>
+  import { filterSnippets, validateSnippet, SNIPPET_CATEGORIES, SEED_SNIPPETS } from '../../lib/tools/engineer-clipboard';
+  import type { Snippet, SnippetCategory } from '../../lib/tools/engineer-clipboard';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:engineer-clipboard:snippets';
+
+  let snippets: Snippet[] = loadJSON<Snippet[]>(STORAGE_KEY, SEED_SNIPPETS);
+
+  function persist() {
+    saveJSON(STORAGE_KEY, snippets);
+  }
+
+  function escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // ---------------------------------------------------------------------
+  // Category <select> options — shared markup for both the filter dropdown
+  // and the add-snippet form, generated from SNIPPET_CATEGORIES so the two
+  // never drift out of sync with the lib module.
+  // ---------------------------------------------------------------------
+  const filterSelect = document.getElementById('ec-category-filter') as HTMLSelectElement | null;
+  const formCategorySelect = document.getElementById('ec-category') as HTMLSelectElement | null;
+
+  SNIPPET_CATEGORIES.forEach((category) => {
+    filterSelect?.insertAdjacentHTML('beforeend', `<option value="${category}">${category}</option>`);
+    formCategorySelect?.insertAdjacentHTML('beforeend', `<option value="${category}">${category}</option>`);
+  });
+
+  // ---------------------------------------------------------------------
+  // List rendering — structural HTML goes through a template string (ids
+  // only, no user content), then each row's <code> element gets its raw
+  // snippet code assigned via textContent so snippets containing
+  // `<`/`>`/`&` can never break the surrounding markup.
+  // ---------------------------------------------------------------------
+  const listContainer = document.getElementById('ec-list');
+  const searchInput = document.getElementById('ec-search') as HTMLInputElement | null;
+
+  function currentQuery(): string {
+    return searchInput?.value || '';
+  }
+
+  function currentCategory(): SnippetCategory | 'all' {
+    return (filterSelect?.value as SnippetCategory | 'all') || 'all';
+  }
+
+  function renderList() {
+    if (!listContainer) return;
+    const visible = filterSnippets(snippets, currentQuery(), currentCategory());
+
+    if (visible.length === 0) {
+      listContainer.innerHTML = '<p class="ec-empty">No snippets match.</p>';
+      return;
+    }
+
+    listContainer.innerHTML = visible
+      .map((snippet) => {
+        const notes = snippet.notes
+          ? `<p class="text-xs text-dim mt-2">${escapeHtml(snippet.notes)}</p>`
+          : '';
+        return `
+          <div class="card" data-id="${snippet.id}">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm text-ink font-medium">${escapeHtml(snippet.label)}</p>
+                <span class="tag mt-2 inline-block">${snippet.category}</span>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <button type="button" class="btn-primary text-xs ec-copy" data-id="${snippet.id}">Copy</button>
+                <button type="button" class="btn-outline text-xs ec-delete" data-id="${snippet.id}">Delete</button>
+              </div>
+            </div>
+            <pre class="mt-3 bg-field border border-line rounded-lg p-3"><code class="ec-code text-body" data-code-id="${snippet.id}"></code></pre>
+            ${notes}
+          </div>
+        `;
+      })
+      .join('');
+
+    // Assign code text after the row markup exists — see comment above.
+    listContainer.querySelectorAll<HTMLElement>('[data-code-id]').forEach((codeEl) => {
+      const snippet = snippets.find((s) => s.id === codeEl.dataset.codeId);
+      if (snippet) codeEl.textContent = snippet.code;
+    });
+
+    listContainer.querySelectorAll<HTMLButtonElement>('.ec-copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const snippet = snippets.find((s) => s.id === btn.dataset.id);
+        if (!snippet) return;
+        try {
+          await navigator.clipboard.writeText(snippet.code);
+          const original = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => {
+            btn.textContent = original;
+          }, 1500);
+        } catch (err) {
+          console.error('Failed to copy snippet to clipboard:', err);
+        }
+      });
+    });
+
+    listContainer.querySelectorAll<HTMLButtonElement>('.ec-delete').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        snippets = snippets.filter((s) => s.id !== btn.dataset.id);
+        persist();
+        renderList();
+      });
+    });
+  }
+
+  searchInput?.addEventListener('input', renderList);
+  filterSelect?.addEventListener('change', renderList);
+
+  // ---------------------------------------------------------------------
+  // Add snippet form
+  // ---------------------------------------------------------------------
+  const form = document.getElementById('ec-form') as HTMLFormElement | null;
+  const labelInput = document.getElementById('ec-label') as HTMLInputElement | null;
+  const codeInput = document.getElementById('ec-code') as HTMLTextAreaElement | null;
+  const notesInput = document.getElementById('ec-notes') as HTMLInputElement | null;
+  const formErrors = document.getElementById('ec-form-errors');
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!labelInput || !codeInput || !formCategorySelect) return;
+
+    const candidate = { label: labelInput.value, code: codeInput.value };
+    const errors = validateSnippet(candidate);
+    if (errors.length > 0) {
+      if (formErrors) {
+        formErrors.textContent = errors.join(' ');
+        formErrors.classList.remove('hidden');
+      }
+      return;
+    }
+
+    formErrors?.classList.add('hidden');
+
+    snippets.push({
+      id: crypto.randomUUID(),
+      label: labelInput.value.trim(),
+      category: formCategorySelect.value as SnippetCategory,
+      code: codeInput.value.trim(),
+      notes: notesInput?.value.trim() || undefined,
+    });
+    persist();
+    renderList();
+
+    form.reset();
+  });
+
+  renderList();
+</script>

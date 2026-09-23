@@ -1,0 +1,44 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import Patent from '../components/Patent.astro';
+import Projects from '../components/Projects.astro';
+import CareerTimeline from '../components/CareerTimeline.astro';
+import TechStack from '../components/TechStack.astro';
+import BlogPreview from '../components/BlogPreview.astro';
+import Speaking from '../components/Speaking.astro';
+import OSS from '../components/OSS.astro';
+import Contact from '../components/Contact.astro';
+import Footer from '../components/Footer.astro';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const recentPosts = allPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+const allProjects = await getCollection('projects');
+const featuredProjects = allProjects
+  .filter((p) => p.data.featured)
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+---
+
+<Base title="Amit Singh — Observability Architect">
+  <Header />
+  <main id="main" tabindex="-1">
+    <Hero />
+    <About />
+    <Patent />
+    <Projects projects={featuredProjects} />
+    <TechStack />
+    <CareerTimeline />
+    <Speaking />
+    <BlogPreview posts={recentPosts} />
+    <OSS />
+    <Contact />
+  </main>
+  <Footer />
+</Base>

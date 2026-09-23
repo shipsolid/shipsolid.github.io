@@ -1,0 +1,272 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="incident-timeline"
+  description="Turn a list of timestamped events into a visual incident timeline. Client-side only, no sign-up, no tracking."
+  intro="Log timestamped events as an incident unfolds, then copy the timeline out as Markdown for your post-mortem. Everything stays in your browser — no account, no server."
+>
+
+  <!-- Add event -->
+      <div class="card">
+        <h2 class="section-label">Add Event</h2>
+
+        <p id="itl-form-errors" class="text-xs text-red-400 mt-3 hidden"></p>
+
+        <form id="itl-form" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="text-xs font-mono text-dim sm:col-span-1">
+            Time
+            <input
+              id="itl-timestamp"
+              type="datetime-local"
+              required
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+
+          <label class="text-xs font-mono text-dim sm:col-span-1">
+            Severity
+            <select
+              id="itl-severity"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            >
+              <option value="SEV1">SEV1</option>
+              <option value="SEV2">SEV2</option>
+              <option value="SEV3">SEV3</option>
+              <option value="SEV4">SEV4</option>
+            </select>
+          </label>
+
+          <label class="text-xs font-mono text-dim sm:col-span-2">
+            Label
+            <input
+              id="itl-label"
+              type="text"
+              required
+              placeholder="e.g. Checkout latency spike detected"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+
+          <label class="text-xs font-mono text-dim sm:col-span-1">
+            Owner <span class="text-faint">(optional)</span>
+            <input
+              id="itl-owner"
+              type="text"
+              placeholder="e.g. Amit / Platform SRE"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+
+          <label class="text-xs font-mono text-dim sm:col-span-1">
+            Note <span class="text-faint">(optional)</span>
+            <input
+              id="itl-note"
+              type="text"
+              placeholder="Free text, may include a URL"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+
+          <div class="sm:col-span-2">
+            <button type="submit" class="btn-primary">Add event</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card mt-6">
+        <div class="flex items-center justify-between">
+          <h2 class="section-label">Timeline</h2>
+          <button id="itl-copy-md" type="button" class="btn-outline text-xs">Copy as Markdown</button>
+        </div>
+
+        <div id="itl-timeline" class="mt-5"></div>
+      </div>
+
+</ToolLayout>
+
+<style is:global>
+  .itl-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .itl-row:last-child {
+    border-bottom: none;
+  }
+
+  .itl-time {
+    flex-shrink: 0;
+    width: 4.5rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: rgb(var(--color-accent-rgb));
+    padding-top: 0.15rem;
+  }
+
+  .itl-dot {
+    flex-shrink: 0;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 9999px;
+    margin-top: 0.35rem;
+  }
+
+  .itl-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .itl-empty {
+    font-size: 0.85rem;
+    color: var(--color-dim);
+    font-style: italic;
+  }
+</style>
+
+<script>
+  import { sortEventsByTime, toMarkdown, validateEvent } from '../../lib/tools/incident-timeline';
+  import type { IncidentEvent, Severity } from '../../lib/tools/incident-timeline';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:incident-timeline:events';
+
+  // Tailwind utilities only — no new CSS — mapped from most to least severe.
+  const SEVERITY_DOT_CLASS: Record<Severity, string> = {
+    SEV1: 'bg-red-500',
+    SEV2: 'bg-orange-500',
+    SEV3: 'bg-amber-400',
+    SEV4: 'bg-dim',
+  };
+
+  let events: IncidentEvent[] = loadJSON<IncidentEvent[]>(STORAGE_KEY, []);
+
+  function persist() {
+    saveJSON(STORAGE_KEY, events);
+  }
+
+  function escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function timeOf(timestampIso: string): string {
+    return timestampIso.slice(11, 16);
+  }
+
+  function renderTimeline() {
+    const container = document.getElementById('itl-timeline');
+    if (!container) return;
+
+    if (events.length === 0) {
+      container.innerHTML = '<p class="itl-empty">No events recorded yet — add one above.</p>';
+      return;
+    }
+
+    const sorted = sortEventsByTime(events);
+    container.innerHTML = sorted
+      .map((event) => {
+        const metaBits: string[] = [event.severity];
+        if (event.owner) metaBits.push(escapeHtml(event.owner));
+        const meta = metaBits.join(' · ');
+        const note = event.note
+          ? `<p class="text-xs text-dim mt-1">${escapeHtml(event.note)}</p>`
+          : '';
+
+        return `
+          <div class="itl-row">
+            <div class="itl-time">${timeOf(event.timestampIso)}</div>
+            <span class="itl-dot ${SEVERITY_DOT_CLASS[event.severity]}"></span>
+            <div class="itl-body">
+              <p class="text-sm text-ink">${escapeHtml(event.label)}</p>
+              <p class="text-xs text-dim mt-0.5">${meta}</p>
+              ${note}
+            </div>
+            <button type="button" class="btn-outline text-xs itl-delete" data-id="${event.id}">Delete</button>
+          </div>
+        `;
+      })
+      .join('');
+
+    container.querySelectorAll<HTMLButtonElement>('.itl-delete').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        events = events.filter((e) => e.id !== btn.dataset.id);
+        persist();
+        renderTimeline();
+      });
+    });
+  }
+
+  const form = document.getElementById('itl-form') as HTMLFormElement | null;
+  const timestampInput = document.getElementById('itl-timestamp') as HTMLInputElement | null;
+  const labelInput = document.getElementById('itl-label') as HTMLInputElement | null;
+  const ownerInput = document.getElementById('itl-owner') as HTMLInputElement | null;
+  const severitySelect = document.getElementById('itl-severity') as HTMLSelectElement | null;
+  const noteInput = document.getElementById('itl-note') as HTMLInputElement | null;
+  const formErrors = document.getElementById('itl-form-errors');
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!timestampInput || !labelInput || !severitySelect) return;
+
+    // datetime-local has no timezone/seconds — normalize to a full ISO string so
+    // validateEvent/Date.parse and the "HH:MM" slice both behave predictably.
+    const timestampIso = timestampInput.value ? new Date(timestampInput.value).toISOString() : '';
+
+    const candidate = {
+      timestampIso,
+      label: labelInput.value,
+      severity: severitySelect.value,
+    };
+
+    const errors = validateEvent(candidate);
+    if (errors.length > 0) {
+      if (formErrors) {
+        formErrors.textContent = errors.join(' ');
+        formErrors.classList.remove('hidden');
+      }
+      return;
+    }
+
+    formErrors?.classList.add('hidden');
+
+    events.push({
+      id: crypto.randomUUID(),
+      timestampIso,
+      label: labelInput.value.trim(),
+      owner: ownerInput?.value.trim() || undefined,
+      severity: severitySelect.value as Severity,
+      note: noteInput?.value.trim() || undefined,
+    });
+    persist();
+    renderTimeline();
+
+    form.reset();
+    severitySelect.value = 'SEV3';
+  });
+
+  document.getElementById('itl-copy-md')?.addEventListener('click', async (event) => {
+    const btn = event.currentTarget as HTMLButtonElement;
+    const markdown = toMarkdown(events);
+    try {
+      await navigator.clipboard.writeText(markdown);
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => {
+        btn.textContent = original;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy timeline to clipboard:', err);
+    }
+  });
+
+  renderTimeline();
+</script>

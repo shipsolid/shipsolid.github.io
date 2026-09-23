@@ -1,0 +1,707 @@
+---
+// Shared flip/grade/self-check study session, extracted so the single-deck page
+// ([...deck].astro) and the cross-deck review hub (review.astro) share exactly one copy of
+// this logic — it's already produced one real bug (a stale-progress-bar issue caught during
+// Phase 1 verification), so duplicating it a second time was judged too risky.
+//
+// Exposes a runtime API on window.__fcStudySession (same cross-script idiom as
+// window.__renderMermaid) rather than a build-time `queueMode` prop, because a single mounted
+// instance needs to switch queue-selection behavior per preset button click (the hub mounts
+// ONE instance and drives it through multiple different sessions without remounting).
+import type { ResolvedReviewUnit } from '../lib/content/render-card';
+import MermaidRenderer from './MermaidRenderer.astro';
+import 'katex/dist/katex.min.css';
+
+interface Props {
+  resolvedUnits: ResolvedReviewUnit[];
+  autoStart?: boolean;
+  newCardsPerSession?: number;
+  backLink?: { href: string; label: string };
+}
+
+const {
+  resolvedUnits,
+  autoStart = true,
+  newCardsPerSession = 20,
+  backLink = { href: '/flashcards', label: 'All decks' },
+} = Astro.props;
+
+// <script> is an HTML "raw text" element — a literal `</script>` inside embedded JSON would
+// prematurely close the tag if not guarded (a real risk here: card frontHtml/backHtml can contain
+// authored code-block content). Astro's default `{expr}` escaping doesn't protect against this
+// specifically inside <script>, since raw-text elements aren't entity-decoded the way normal text
+// nodes are. set:html + a manual `<` escape is the standard safe pattern (see flashcards/stats.astro).
+const studyDataJson = JSON.stringify({ resolvedUnits, autoStart, newCardsPerSession }).replace(/</g, '\\u003c');
+---
+
+<div id="study-view">
+
+  <!-- Gamification strip: streak · level/XP · daily goal. A persistent, session-independent
+       HUD placed above the session-scoped progress bar below it. -->
+  <div id="gamify-strip" class="mb-4 flex items-center flex-wrap gap-x-4 gap-y-2 text-xs font-mono">
+    <div class="flex items-center gap-1 text-muted shrink-0">
+      <span>🔥</span><span id="gamify-streak-value">0</span>
+    </div>
+    <div class="flex-1 min-w-[120px]">
+      <div class="flex items-center justify-between mb-1">
+        <span id="gamify-level-label" class="text-dim">Lv 1</span>
+        <span id="gamify-xp-label" class="text-faint"></span>
+      </div>
+      <div class="h-1.5 bg-surface-hover rounded-full overflow-hidden">
+        <div id="gamify-xp-bar" class="h-full bg-accent rounded-full transition duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+    <div id="gamify-goal" class="text-dim shrink-0 whitespace-nowrap">0/20 today</div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-2">
+      <span id="progress-label" class="text-xs font-mono text-dim"></span>
+      <span id="card-counter" class="text-xs font-mono text-faint"></span>
+    </div>
+    <div class="h-1.5 bg-surface-hover rounded-full overflow-hidden">
+      <div
+        id="progress-bar"
+        class="h-full bg-accent rounded-full transition duration-500"
+        style="width: 0%"
+      ></div>
+    </div>
+  </div>
+
+  <!-- Card -->
+  <div class="perspective mb-6">
+    <div
+      id="card-inner"
+      class="card-inner relative cursor-pointer select-none"
+      style="min-height: 360px;"
+      role="button"
+      aria-label="Flip card"
+      aria-pressed="false"
+      tabindex="0"
+    >
+      <!-- Front -->
+      <div class="card-face absolute inset-0 bg-surface border border-line rounded-2xl p-8 flex flex-col items-center overflow-y-auto">
+        <p class="text-xs font-mono text-faint uppercase tracking-widest mb-6 shrink-0">Question</p>
+        <div id="question-text" class="prose prose-invert prose-sm max-w-none card-content w-full text-center light:prose-headings:text-ink light:prose-p:text-faint light:prose-strong:text-ink light:prose-li:text-faint light:prose-blockquote:text-faint" aria-live="polite" aria-atomic="true"></div>
+        <p id="flip-hint" class="mt-6 text-xs font-mono text-faint transition-opacity duration-300 shrink-0">
+          tap to reveal &nbsp;·&nbsp; <kbd class="font-mono">space</kbd>
+        </p>
+      </div>
+      <!-- Back: aria-hidden while not flipped so screen readers don't get the answer read
+           together with the question (defeats the point of a self-quiz); toggled in flip()/render(). -->
+      <div id="card-back" class="card-face card-back absolute inset-0 bg-surface border border-accent/40 rounded-2xl p-8 flex flex-col items-center overflow-y-auto" aria-hidden="true">
+        <p class="text-xs font-mono text-accent uppercase tracking-widest mb-6 shrink-0">Answer</p>
+        <div id="answer-text" class="prose prose-invert prose-sm max-w-none card-content w-full text-center light:prose-headings:text-ink light:prose-p:text-faint light:prose-strong:text-ink light:prose-li:text-faint light:prose-blockquote:text-faint"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Self-check (MCQ / true-false / fill-blank / typing) — optional, non-gating -->
+  <div id="self-check-area" class="mb-6 hidden"></div>
+
+  <!-- Confidence rating: optional, non-blocking self-assessment, independent of SM-2 grading.
+       Same visibility lifecycle as the grade buttons below (shown on flip, hidden on next card)
+       but never drives scheduling. Mouse/tap-only — 1-4 are already keyboard shortcuts for grading. -->
+  <div
+    id="confidence-rating"
+    class="flex items-center justify-center gap-2 mb-4 transition-opacity duration-200"
+    style="visibility: hidden;"
+  >
+    <span class="text-xs font-mono text-faint mr-1">confidence</span>
+    <div class="flex items-center gap-1.5" role="group" aria-label="Rate your confidence">
+      <button type="button" class="confidence-btn w-10 h-10 flex items-center justify-center border border-line-hover text-muted hover:text-ink hover:border-dim rounded-lg text-xs font-mono transition-colors duration-200" data-rating="1">1</button>
+      <button type="button" class="confidence-btn w-10 h-10 flex items-center justify-center border border-line-hover text-muted hover:text-ink hover:border-dim rounded-lg text-xs font-mono transition-colors duration-200" data-rating="2">2</button>
+      <button type="button" class="confidence-btn w-10 h-10 flex items-center justify-center border border-line-hover text-muted hover:text-ink hover:border-dim rounded-lg text-xs font-mono transition-colors duration-200" data-rating="3">3</button>
+      <button type="button" class="confidence-btn w-10 h-10 flex items-center justify-center border border-line-hover text-muted hover:text-ink hover:border-dim rounded-lg text-xs font-mono transition-colors duration-200" data-rating="4">4</button>
+      <button type="button" class="confidence-btn w-10 h-10 flex items-center justify-center border border-line-hover text-muted hover:text-ink hover:border-dim rounded-lg text-xs font-mono transition-colors duration-200" data-rating="5">5</button>
+    </div>
+  </div>
+
+  <!-- Grade buttons (hidden until card is flipped) -->
+  <div
+    id="action-buttons"
+    class="flex items-center justify-center gap-2 flex-wrap transition-opacity duration-200"
+    style="visibility: hidden;"
+  >
+    <button
+      id="btn-again"
+      class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 border border-line-hover text-muted hover:text-ink hover:border-dim rounded-xl font-medium text-sm transition duration-200 group"
+    >
+      Again
+      <span class="block text-[10px] font-mono text-faint group-hover:text-faint mt-0.5">1</span>
+    </button>
+    <button
+      id="btn-hard"
+      class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 border border-line-hover text-muted hover:text-ink hover:border-dim rounded-xl font-medium text-sm transition duration-200 group"
+    >
+      Hard
+      <span class="block text-[10px] font-mono text-faint group-hover:text-faint mt-0.5">2</span>
+    </button>
+    <button
+      id="btn-good"
+      class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 bg-accent/10 border border-accent/30 text-accent hover:bg-accent hover:text-on-accent rounded-xl font-semibold text-sm transition duration-200 group"
+    >
+      Good
+      <span class="block text-[10px] font-mono text-accent/50 group-hover:text-on-accent mt-0.5">3</span>
+    </button>
+    <button
+      id="btn-easy"
+      class="flex-1 min-w-[90px] max-w-[120px] px-4 py-3 bg-accent/20 border border-accent/40 text-accent hover:bg-accent hover:text-on-accent rounded-xl font-semibold text-sm transition duration-200 group"
+    >
+      Easy
+      <span class="block text-[10px] font-mono text-accent/60 group-hover:text-on-accent mt-0.5">4</span>
+    </button>
+  </div>
+
+  <!-- Restart -->
+  <div class="mt-8 text-center">
+    <button
+      id="btn-restart"
+      class="text-xs font-mono text-faint hover:text-dim transition-colors"
+    >
+      restart session
+    </button>
+  </div>
+</div>
+
+<!-- Completion view (shown when the session queue is empty) -->
+<div id="done-view" class="hidden text-center py-20">
+  <div class="text-5xl mb-6">✓</div>
+  <h2 id="done-title" class="text-2xl font-bold text-ink mb-2"></h2>
+  <p id="done-subtitle" class="text-dim mb-8 text-sm"></p>
+  <div class="flex items-center justify-center gap-4">
+    <button id="btn-restart-done" class="btn-primary">Study again</button>
+    <a href={backLink.href} class="btn-outline">{backLink.label}</a>
+  </div>
+</div>
+
+<!-- Level-up flourish: a plain in-memory before/after level comparison per graded review, no
+     persisted "seen" flag (structurally different from badge-unlock, which is never notified on,
+     matching pomo.astro's own precedent). -->
+<div
+  id="level-up-flourish"
+  class="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-300 px-5 py-3 bg-surface border border-accent/40 rounded-xl shadow-lg shadow-accent/10 text-center"
+>
+  <div class="text-2xl">🎉</div>
+  <div id="level-up-text" class="text-accent font-semibold text-sm mt-1"></div>
+</div>
+
+<MermaidRenderer />
+
+<style>
+  .perspective {
+    perspective: 1200px;
+  }
+  .card-inner {
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-inner.flipped {
+    transform: rotateY(180deg);
+  }
+  .card-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .card-back {
+    transform: rotateY(180deg);
+  }
+</style>
+
+<script type="application/json" id="fc-study-data" set:html={studyDataJson}></script>
+
+<script>
+  import { schedule as scheduleCard, createCardState, addDays, isDue, type Grade, type CardSrsState } from '../lib/srs/sm2';
+  import { recordConfidence, type ConfidenceStore, type ConfidenceRating } from '../lib/srs/confidence';
+  import { loadJSON, saveJSON } from '../lib/storage';
+  import { computeReviewXp, levelInfo } from '../lib/gamification/rules';
+  import { loadGamifyState, saveGamifyState, loadGoals } from '../lib/gamification/state';
+  import { computeDailyCounts as computeDailyCountsFromEvents, computeStreak as computeStreakFromCounts, type ReviewEvent } from '../lib/stats/aggregate';
+  import type { ResolvedReviewUnit, InteractiveSpec } from '../lib/content/render-card';
+
+  type SessionArgs =
+    | { mode: 'auto'; cram: boolean }
+    | { mode: 'fixed'; unitKeys: string[] };
+  type FcLog = { v: number; events: ReviewEvent[] };
+  type SrsStore = { v: number; cards: Record<string, CardSrsState> };
+
+  declare global {
+    interface Window {
+      __fcStudySession?: {
+        startSession: (args: SessionArgs) => void;
+        endSession: (reason?: string) => void;
+        getSrsState: (deckSlug: string, reviewId: string) => CardSrsState | undefined;
+      };
+    }
+  }
+
+  // non-null: #fc-study-data is rendered unconditionally just above and always holds the JSON data island.
+  const { resolvedUnits, autoStart, newCardsPerSession } = JSON.parse(
+    document.getElementById('fc-study-data')!.textContent!
+  ) as { resolvedUnits: ResolvedReviewUnit[]; autoStart: boolean; newCardsPerSession: number };
+
+  const LOG_KEY = 'fc:log';
+  const LOG_CAP = 20000;
+  const REQUEUE_OFFSET = 4;
+
+  function todayKey(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function appendLogEvent(event: ReviewEvent) {
+    const log = loadJSON<FcLog>(LOG_KEY, { v: 1, events: [] });
+    log.events.push(event);
+    const overflow = log.events.length - LOG_CAP;
+    // Bank the evicted events' XP/count before they're gone — otherwise a long-term user's total
+    // XP (and review-count badges) would silently shrink as history ages out of this capped log.
+    // bankedXp/bankedReviewCount are append-only corrections, never current-state derived data.
+    const evicted = overflow > 0 ? log.events.splice(0, overflow) : [];
+    // Persist the trimmed log FIRST, and only bank if that write actually succeeded. fc:log at
+    // its cap is a multi-MB blob while fc:gamify is ~100 bytes, so under localStorage quota
+    // pressure the log write is far more likely to fail than the bank write — banking first (the
+    // old order) risked double-counting evicted events that, in storage, were never actually
+    // removed because the log write silently failed.
+    const logSaved = saveJSON(LOG_KEY, log);
+    if (logSaved && evicted.length > 0) {
+      const gamify = loadGamifyState();
+      gamify.bankedXp += evicted.reduce((sum, e) => sum + (e.xpAwarded ?? 0), 0);
+      gamify.bankedReviewCount += evicted.length;
+      saveGamifyState(gamify);
+    }
+  }
+
+  // --- Multi-deck storage (a single-deck page is just a one-entry map) ---
+  function unitKey(u: ResolvedReviewUnit): string { return `${u.deckSlug}::${u.reviewId}`; }
+
+  const deckSlugs = [...new Set(resolvedUnits.map((u) => u.deckSlug))];
+  // No principled way to remap the old positional known-set onto stable ids — discard it.
+  for (const slug of deckSlugs) {
+    try { localStorage.removeItem(`fc:${slug}`); } catch {}
+  }
+  const srsStores = new Map<string, SrsStore>(
+    deckSlugs.map((slug): [string, SrsStore] => [slug, loadJSON<SrsStore>(`fc:srs:${slug}`, { v: 1, cards: {} })])
+  );
+  function getSrsState(deckSlug: string, reviewId: string): CardSrsState | undefined {
+    return srsStores.get(deckSlug)?.cards?.[reviewId];
+  }
+
+  // Confidence: a separate, flat per-deck store (unlike srsStores' { v, cards } wrapper) since it
+  // never needed a schema-version gate — see src/lib/srs/confidence.ts.
+  const confidenceStores = new Map<string, ConfidenceStore>(
+    deckSlugs.map((slug): [string, ConfidenceStore] => [slug, loadJSON<ConfidenceStore>(`fc:confidence:${slug}`, {})])
+  );
+
+  const resolvedById = new Map<string, ResolvedReviewUnit>(
+    resolvedUnits.map((u): [string, ResolvedReviewUnit] => [unitKey(u), u])
+  );
+
+  // --- Shuffle (Fisher-Yates) ---
+  function shuffle<T>(arr: T[]): T[] {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // --- Session state ---
+  const today = todayKey();
+  let currentArgs: SessionArgs | null = null;       // last startSession() args — restart() replays these
+  let queue: string[] = [];
+  let initialQueueSize = 0;
+  let reviewedAtEnd = 0;        // captured snapshot when endSession() forces the queue empty
+  let endedEarlyReason: string | null = null;
+  let isFlipped = false;
+  let flipStartedAt = 0;
+  let currentInteractive: InteractiveSpec | null = null;
+  let selfCheckAnswered = false;
+
+  // --- DOM refs ---
+  // non-null: every id below is rendered unconditionally in this component's own template above,
+  // so getElementById never returns null here.
+  const cardInner     = document.getElementById('card-inner')!;
+  const cardBack       = document.getElementById('card-back')!;
+  const questionText   = document.getElementById('question-text')!;
+  const answerText     = document.getElementById('answer-text')!;
+  const cardCounter    = document.getElementById('card-counter')!;
+  const progressBar    = document.getElementById('progress-bar')!;
+  const progressLabel  = document.getElementById('progress-label')!;
+  const actionBtns     = document.getElementById('action-buttons')!;
+  const flipHint       = document.getElementById('flip-hint')!;
+  const studyView      = document.getElementById('study-view')!;
+  const doneView       = document.getElementById('done-view')!;
+  const doneTitle      = document.getElementById('done-title')!;
+  const doneSubtitle   = document.getElementById('done-subtitle')!;
+  const selfCheckArea  = document.getElementById('self-check-area')!;
+  const confidenceRating  = document.getElementById('confidence-rating')!;
+  const confidenceButtons = [...confidenceRating.querySelectorAll<HTMLElement>('.confidence-btn')];
+  // Host-page-authored, optional — single-deck pages have a `?mode=cram` toggle link; the
+  // review hub doesn't, so this is a no-op there.
+  const modeToggle     = document.getElementById('mode-toggle') as HTMLAnchorElement | null;
+  const gamifyStreakValue = document.getElementById('gamify-streak-value')!;
+  const gamifyLevelLabel  = document.getElementById('gamify-level-label')!;
+  const gamifyXpLabel     = document.getElementById('gamify-xp-label')!;
+  const gamifyXpBar       = document.getElementById('gamify-xp-bar')!;
+  const gamifyGoal        = document.getElementById('gamify-goal')!;
+  const levelUpFlourish   = document.getElementById('level-up-flourish')!;
+  const levelUpText       = document.getElementById('level-up-text')!;
+
+  function updateModeToggle() {
+    if (!modeToggle) return;
+    const cram = currentArgs?.mode === 'auto' && !!currentArgs.cram;
+    modeToggle.href = cram ? location.pathname : `${location.pathname}?mode=cram`;
+    modeToggle.textContent = cram ? '← due queue' : 'study all (cram) →';
+  }
+
+  function renderGamifyStrip() {
+    const log = loadJSON<FcLog>(LOG_KEY, { v: 1, events: [] });
+    const dailyCounts = computeDailyCountsFromEvents(log.events);
+    const streakDays = computeStreakFromCounts(dailyCounts, today);
+    const gamify = loadGamifyState();
+    const totalXp = gamify.bankedXp + log.events.reduce((sum, e) => sum + (e.xpAwarded ?? 0), 0);
+    const { level, xpIntoLevel, xpForNextLevel } = levelInfo(totalXp);
+    const goals = loadGoals();
+    const dailyCount = dailyCounts[today] ?? 0;
+
+    gamifyStreakValue.textContent = String(streakDays);
+    gamifyLevelLabel.textContent = `Lv ${level}`;
+    gamifyXpLabel.textContent = `${xpIntoLevel}/${xpForNextLevel} xp`;
+    gamifyXpBar.style.width = xpForNextLevel === 0 ? '0%' : `${Math.round((xpIntoLevel / xpForNextLevel) * 100)}%`;
+    gamifyGoal.textContent = `${dailyCount}/${goals.dailyReviewTarget} today`;
+  }
+
+  let levelUpTimeout: ReturnType<typeof setTimeout> | null = null;
+  function showLevelUp(level: number) {
+    levelUpText.textContent = `Level ${level}!`;
+    levelUpFlourish.classList.remove('opacity-0');
+    clearTimeout(levelUpTimeout ?? undefined);
+    levelUpTimeout = setTimeout(() => levelUpFlourish.classList.add('opacity-0'), 2200);
+  }
+
+  // --- Self-check templates ---
+  function optionButtonHtml(index: number, html: string) {
+    const letter = String.fromCharCode(65 + index);
+    return `<button type="button" class="mcq-option w-full text-left px-4 py-3 border border-line-hover text-body hover:border-dim rounded-xl text-sm transition duration-200" data-index="${index}">` +
+      `<span class="font-mono text-faint mr-2">${letter}.</span><span class="option-label">${html}</span></button>`;
+  }
+
+  function renderSelfCheckTemplate(interactive: InteractiveSpec): string {
+    if (interactive.kind === 'mcq') {
+      return `<div class="grid gap-2" role="group" aria-label="Answer options">` +
+        interactive.optionsHtml.map((html, i) => optionButtonHtml(i, html)).join('') +
+        `</div>`;
+    }
+    if (interactive.kind === 'true-false') {
+      return `<div class="flex items-center justify-center gap-3">` +
+        `<button type="button" class="tf-option flex-1 max-w-[140px] px-4 py-3 border border-line-hover text-muted hover:text-ink hover:border-dim rounded-xl font-medium text-sm transition duration-200" data-value="true">True</button>` +
+        `<button type="button" class="tf-option flex-1 max-w-[140px] px-4 py-3 border border-line-hover text-muted hover:text-ink hover:border-dim rounded-xl font-medium text-sm transition duration-200" data-value="false">False</button>` +
+        `</div>`;
+    }
+    // text (fill-blank / typing)
+    return `<form id="text-check-form" class="flex items-center gap-2" autocomplete="off">` +
+      `<input type="text" class="flex-1 bg-surface border border-line-hover rounded-xl px-4 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 transition-colors" placeholder="Type your answer…" />` +
+      `<button type="submit" class="px-4 py-2.5 border border-line-hover text-muted hover:text-ink hover:border-dim rounded-xl text-sm font-medium transition duration-200">Check</button>` +
+      `</form><p class="mt-2 text-xs font-mono hidden" id="text-check-feedback"></p>`;
+  }
+
+  function renderSelfCheck(interactive: InteractiveSpec | null) {
+    currentInteractive = interactive;
+    selfCheckAnswered = false;
+    if (!interactive) {
+      selfCheckArea.classList.add('hidden');
+      selfCheckArea.innerHTML = '';
+      return;
+    }
+    selfCheckArea.classList.remove('hidden');
+    selfCheckArea.innerHTML = renderSelfCheckTemplate(interactive);
+  }
+
+  function markOption(btn: HTMLButtonElement, isCorrect: boolean, isUserPick: boolean) {
+    btn.disabled = true;
+    if (isCorrect) {
+      btn.classList.add('bg-accent/10', 'border-accent/30', 'text-accent');
+    } else if (isUserPick) {
+      btn.classList.add('opacity-60');
+      const marker = document.createElement('span');
+      marker.className = 'ml-2 text-[10px] font-mono text-faint';
+      marker.textContent = '✕ your answer';
+      btn.appendChild(marker);
+    }
+  }
+
+  function handleMcqPick(btn: HTMLButtonElement) {
+    if (selfCheckAnswered) return;
+    selfCheckAnswered = true;
+    const idx = Number(btn.dataset.index);
+    // handleMcqPick is only dispatched for an mcq self-check (see the .mcq-option click route below).
+    const ci = currentInteractive as Extract<InteractiveSpec, { kind: 'mcq' }>;
+    [...selfCheckArea.querySelectorAll<HTMLButtonElement>('.mcq-option')].forEach((b, i) =>
+      markOption(b, i === ci.correctIndex, i === idx)
+    );
+  }
+
+  function handleTfPick(btn: HTMLButtonElement) {
+    if (selfCheckAnswered) return;
+    selfCheckAnswered = true;
+    // handleTfPick is only dispatched for a true-false self-check (see the .tf-option click route below).
+    const ci = currentInteractive as Extract<InteractiveSpec, { kind: 'true-false' }>;
+    [...selfCheckArea.querySelectorAll<HTMLButtonElement>('.tf-option')].forEach((b) => {
+      const val = b.dataset.value === 'true';
+      markOption(b, val === ci.correct, b === btn);
+    });
+  }
+
+  function handleTextCheck(form: HTMLFormElement) {
+    const input = form.querySelector('input')!; // non-null: the text self-check template always renders an <input>
+    const feedback = selfCheckArea.querySelector('#text-check-feedback')!; // non-null: rendered by renderSelfCheckTemplate for the text kind
+    // handleTextCheck is only dispatched for a text self-check (fill-blank / typing).
+    const ci = currentInteractive as Extract<InteractiveSpec, { kind: 'text' }>;
+    const isCorrect = input.value.trim().toLowerCase() === ci.correctAnswer.toLowerCase();
+    feedback.textContent = isCorrect ? '✓ correct' : `Not quite — correct answer: ${ci.correctAnswer}`;
+    feedback.classList.remove('hidden');
+    feedback.classList.toggle('text-accent', isCorrect);
+    feedback.classList.toggle('text-dim', !isCorrect);
+    // Otherwise focus stays trapped in the input, and the global keydown guard below
+    // (`activeElement.tagName === 'INPUT' → return`) would silently eat the next Space-to-flip.
+    input.blur();
+  }
+
+  selfCheckArea.addEventListener('click', (e) => {
+    const mcqBtn = (e.target as HTMLElement).closest<HTMLButtonElement>('.mcq-option');
+    if (mcqBtn) return handleMcqPick(mcqBtn);
+    const tfBtn = (e.target as HTMLElement).closest<HTMLButtonElement>('.tf-option');
+    if (tfBtn) return handleTfPick(tfBtn);
+  });
+  selfCheckArea.addEventListener('submit', (e) => {
+    const form = (e.target as HTMLElement).closest<HTMLFormElement>('#text-check-form');
+    if (form) { e.preventDefault(); handleTextCheck(form); }
+  });
+
+  // --- Queue building ---
+  function buildQueue() {
+    const args = currentArgs!; // non-null: buildQueue runs only from startSession, right after currentArgs is assigned
+    if (args.mode === 'fixed') {
+      return shuffle([...args.unitKeys]);
+    }
+    // auto
+    if (args.cram) return shuffle(resolvedUnits.map(unitKey));
+    const due: string[] = [];
+    const fresh: string[] = [];
+    for (const unit of resolvedUnits) {
+      const state = getSrsState(unit.deckSlug, unit.reviewId);
+      if (!state) fresh.push(unitKey(unit));
+      else if (isDue(state, today)) due.push(unitKey(unit));
+    }
+    return shuffle([...due, ...shuffle(fresh).slice(0, newCardsPerSession)]);
+  }
+
+  // --- Render ---
+  function render() {
+    renderGamifyStrip();
+
+    // Always resolve the progress bar/counters to their final values first — the done
+    // branch below returns early and must not leave them showing the second-to-last card's
+    // stale numbers. When a session was force-ended (endSession), `reviewedAtEnd` is the
+    // snapshot taken before the queue was wiped — `initialQueueSize - queue.length` would
+    // otherwise read as 100% regardless of how much was actually reviewed.
+    const reviewed = endedEarlyReason ? reviewedAtEnd : initialQueueSize - queue.length;
+    progressBar.style.width = initialQueueSize === 0 ? '0%' : `${(reviewed / initialQueueSize) * 100}%`;
+    progressLabel.textContent = `${reviewed} / ${initialQueueSize} reviewed`;
+    cardCounter.textContent = `${queue.length} remaining`;
+
+    if (queue.length === 0) {
+      studyView.classList.add('hidden');
+      doneView.classList.remove('hidden');
+      if (endedEarlyReason) {
+        doneTitle.textContent = `Session ended — ${reviewedAtEnd} of ${initialQueueSize} reviewed`;
+        doneSubtitle.textContent = endedEarlyReason === 'timeout' ? 'Time was up.' : 'Session ended early.';
+      } else if (initialQueueSize === 0) {
+        doneTitle.textContent = 'Nothing due today';
+        doneSubtitle.textContent = currentArgs?.mode === 'auto' && currentArgs.cram
+          ? 'This deck has no cards at all.'
+          : 'Everything is scheduled for later.';
+      } else {
+        doneTitle.textContent = `Session complete — ${initialQueueSize} reviewed`;
+        doneSubtitle.textContent = 'Nice work. Come back when more cards are due.';
+      }
+      window.dispatchEvent(new CustomEvent('fc:session-done', { detail: { reason: endedEarlyReason || 'complete' } }));
+      return;
+    }
+
+    const unit = resolvedById.get(queue[0])!; // non-null: queue holds only unitKeys of resolvedUnits; the queue-empty case returned above
+    questionText.innerHTML = unit.frontHtml;
+    answerText.innerHTML = unit.backHtml;
+    renderSelfCheck(unit.interactive);
+    (window as unknown as { __renderMermaid?: (root: Element) => void }).__renderMermaid?.(cardInner);
+
+    isFlipped = false;
+    cardInner.classList.remove('flipped');
+    cardInner.setAttribute('aria-pressed', 'false');
+    cardBack.setAttribute('aria-hidden', 'true');
+    actionBtns.style.visibility = 'hidden';
+    confidenceRating.style.visibility = 'hidden';
+    setConfidenceSelected(null);
+    flipHint.style.opacity = '1';
+  }
+
+  function flip() {
+    if (isFlipped || queue.length === 0) return;
+    isFlipped = true;
+    flipStartedAt = Date.now();
+    cardInner.classList.add('flipped');
+    cardInner.setAttribute('aria-pressed', 'true');
+    cardBack.setAttribute('aria-hidden', 'false');
+    actionBtns.style.visibility = 'visible';
+    confidenceRating.style.visibility = 'visible';
+    flipHint.style.opacity = '0';
+  }
+
+  // --- Confidence rating: optional self-assessment, entirely separate from SM-2 grading above.
+  // Persisted per-deck (mirrors srsStores' sharding) and keyed by the same unit.reviewId used by
+  // gradeCurrent(), but never read by scheduleCard() or buildQueue(). ---
+  function setConfidenceSelected(rating: number | null) {
+    confidenceButtons.forEach((btn) => {
+      const selected = rating !== null && Number(btn.dataset.rating) === rating;
+      btn.classList.toggle('bg-accent/20', selected);
+      btn.classList.toggle('border-accent/40', selected);
+      btn.classList.toggle('text-accent', selected);
+    });
+  }
+
+  confidenceRating.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('.confidence-btn');
+    if (!btn || queue.length === 0) return;
+    const rating = Number(btn.dataset.rating) as ConfidenceRating; // data-rating is always 1–5 in this component's template
+    const unit = resolvedById.get(queue[0])!; // non-null: queue holds only unitKeys of resolvedUnits; queue.length guarded above
+    const store = confidenceStores.get(unit.deckSlug) ?? {};
+    const next = recordConfidence(store, unit.reviewId, rating, new Date().toISOString());
+    confidenceStores.set(unit.deckSlug, next);
+    saveJSON(`fc:confidence:${unit.deckSlug}`, next);
+    setConfidenceSelected(rating);
+  });
+
+  // A "fixed" (hub-curated) session always updates the real SM-2 schedule — "cram" isn't a
+  // meaningful concept for an already-curated drill list. An "auto" session in cram mode never
+  // does, so cramming can't be used to accidentally push a card's due date around, while still
+  // logging the review so streaks/stats stay honest.
+  function gradeCurrent(grade: Grade) {
+    if (!isFlipped || queue.length === 0) return;
+    const key = queue[0];
+    const unit = resolvedById.get(key)!; // non-null: queue holds only unitKeys of resolvedUnits; queue.length guarded above
+    const elapsedMs = Date.now() - flipStartedAt;
+    const args = currentArgs!; // non-null: gradeCurrent runs only after flip(), which requires an active session
+    const isAutoCram = args.mode === 'auto' && args.cram;
+    const mode = args.mode === 'fixed' ? 'custom' : (args.cram ? 'cram' : 'due');
+
+    // Read pre-grade ease before scheduleCard() mutates this same store object in place below —
+    // otherwise the hard-card XP bonus would be evaluated against the post-grade ease instead.
+    const priorEase = getSrsState(unit.deckSlug, unit.reviewId)?.ease;
+
+    if (!isAutoCram) {
+      const store = srsStores.get(unit.deckSlug)!; // non-null: srsStores has an entry for every deckSlug present in resolvedUnits
+      const prev = store.cards[unit.reviewId] ?? createCardState(unit.reviewId, today);
+      store.cards[unit.reviewId] = scheduleCard(prev, grade, today);
+      saveJSON(`fc:srs:${unit.deckSlug}`, store);
+    }
+
+    // --- Gamification: XP stamped now (the only moment streak/ease inputs are knowable) and
+    // a before/after level comparison for the level-up flourish, both computed from a single
+    // fc:log snapshot taken before this event is appended. ---
+    const logSnapshot = loadJSON<FcLog>(LOG_KEY, { v: 1, events: [] });
+    const dailyCountsBefore = computeDailyCountsFromEvents(logSnapshot.events);
+    const streakDays = computeStreakFromCounts(dailyCountsBefore, today);
+    const xpAwarded = computeReviewXp({ grade, streakDays, priorEase, mode });
+    const gamifyBefore = loadGamifyState();
+    const totalXpBefore = gamifyBefore.bankedXp + logSnapshot.events.reduce((sum, e) => sum + (e.xpAwarded ?? 0), 0);
+    const levelBefore = levelInfo(totalXpBefore).level;
+
+    appendLogEvent({ reviewId: unit.reviewId, deckSlug: unit.deckSlug, grade, timestamp: Date.now(), elapsedMs, mode, xpAwarded });
+
+    // Streak "as of today" (post-append) for the permanent best-streak high-water-mark — derived
+    // locally (today's count + 1) rather than a third fc:log read.
+    const dailyCountsAfter = { ...dailyCountsBefore, [today]: (dailyCountsBefore[today] ?? 0) + 1 };
+    const streakAfter = computeStreakFromCounts(dailyCountsAfter, today);
+    const gamifyAfter = loadGamifyState(); // re-read: appendLogEvent may have updated banked totals
+    if (streakAfter > gamifyAfter.bestStreak) {
+      gamifyAfter.bestStreak = streakAfter;
+      saveGamifyState(gamifyAfter);
+    }
+
+    const totalXpAfter = totalXpBefore + xpAwarded;
+    const levelAfter = levelInfo(totalXpAfter).level;
+    if (levelAfter > levelBefore) showLevelUp(levelAfter);
+
+    if (grade === 'again') {
+      queue.shift();
+      queue.splice(Math.min(queue.length, REQUEUE_OFFSET), 0, key);
+    } else {
+      queue.shift();
+    }
+    render();
+  }
+
+  function startSession(args: SessionArgs) {
+    currentArgs = args;
+    endedEarlyReason = null;
+    reviewedAtEnd = 0;
+    queue = buildQueue();
+    initialQueueSize = queue.length;
+    updateModeToggle();
+    studyView.classList.remove('hidden');
+    doneView.classList.add('hidden');
+    render();
+  }
+
+  function endSession(reason?: string) {
+    if (queue.length === 0) return; // already done
+    reviewedAtEnd = initialQueueSize - queue.length;
+    endedEarlyReason = reason || 'ended';
+    queue = [];
+    render();
+  }
+
+  function restart() {
+    if (currentArgs) startSession(currentArgs);
+  }
+
+  window.__fcStudySession = { startSession, endSession, getSrsState };
+
+  // --- Events ---
+  cardInner.addEventListener('click', flip);
+  cardInner.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+  });
+  // non-null: btn-again / btn-hard / btn-good / btn-easy / btn-restart / btn-restart-done are all
+  // rendered unconditionally in this component's template above.
+  document.getElementById('btn-again')!.addEventListener('click', () => gradeCurrent('again'));
+  document.getElementById('btn-hard')!.addEventListener('click', () => gradeCurrent('hard'));
+  document.getElementById('btn-good')!.addEventListener('click', () => gradeCurrent('good'));
+  document.getElementById('btn-easy')!.addEventListener('click', () => gradeCurrent('easy'));
+  document.getElementById('btn-restart')!.addEventListener('click', restart);
+  document.getElementById('btn-restart-done')!.addEventListener('click', restart);
+
+  document.addEventListener('keydown', (e) => {
+    const activeTag = document.activeElement?.tagName;
+    if (activeTag === 'INPUT') return;
+    // Space/Enter natively activates a focused button/link — don't hijack it into a flip when a
+    // self-check option, grade button, or restart control has focus, or keyboard users can never
+    // actually activate those controls (this used to preventDefault() unconditionally).
+    const isNativelyActivatable = activeTag === 'BUTTON' || activeTag === 'A';
+    if ((e.key === ' ' || e.key === 'Enter') && !isNativelyActivatable) { e.preventDefault(); flip(); }
+    if (!isFlipped) return;
+    if (e.key === '1' || e.key === 'ArrowLeft') gradeCurrent('again');
+    if (e.key === '2') gradeCurrent('hard');
+    if (e.key === '3' || e.key === 'ArrowRight') gradeCurrent('good');
+    if (e.key === '4') gradeCurrent('easy');
+  });
+
+  // --- Init ---
+  if (autoStart) {
+    const cramFromUrl = new URLSearchParams(window.location.search).get('mode') === 'cram';
+    startSession({ mode: 'auto', cram: cramFromUrl });
+  }
+</script>

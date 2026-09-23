@@ -1,0 +1,73 @@
+title: "Rate Limiting Architecture: Token Bucket, Gossip, and Envoy"
+description: "Three ways to enforce rate limits across a replicated gateway fleet — centralized Redis token bucket, decentralized gossip-based estimation, and Envoy's sidecar-plus-global-service pattern — and their precision/SPOF/latency trade-offs."
+tags: ["system-design", "observability", "telemetry", "maang-prep", "rate-limiting"]
+cards:
+  - id: rate-limit-distributed-state-problem
+    type: basic
+    q: "Why is rate limiting at gateway-fleet scale 'fundamentally a distributed-state problem'?"
+    a: "Because the gateway fleet is stateless and horizontally scaled — if each pod counts locally, the effective limit becomes configured_limit × replica_count, which drifts as the fleet autoscales. Pods must share state (strongly or eventually consistent) for the limit to hold regardless of replica count."
+
+  - id: per-pod-rate-limit-multiple-replicas-problem
+    type: basic
+    q: "Why is implementing rate limiting inside individual gateway pods problematic when you have multiple replicas?"
+    a: "Each pod would enforce its own limit independently, with no shared view of how much of the quota other replicas have already consumed. A tenant's effective limit becomes configured_limit × pod_count instead of the intended limit, and that effective limit silently drifts every time the fleet autoscales up or down — the more replicas you add, the looser the 'limit' actually gets."
+
+  - id: token-bucket-algorithm
+    type: basic
+    q: "How does the token bucket algorithm work, and why is it preferred over a fixed-window counter?"
+    a: "Each tenant gets a bucket with a fixed capacity that refills at a steady rate; each request consumes one token, rejected if empty. Preferred over fixed-window because it smooths bursts — an idle bucket can absorb a short burst up to capacity, instead of allowing a full quota in the first millisecond of every window and nothing for the rest of it."
+
+  - id: redis-token-bucket-atomicity
+    type: basic
+    q: "Why must the token bucket check-and-decrement in Redis be atomic, and how is that achieved?"
+    a: "A naive GET-then-SET from two racing pods could both see '1 token left' and both allow the request. It's implemented as a Lua script executed atomically via Redis EVAL, so the check and decrement happen as one indivisible operation."
+
+  - id: redis-rate-limit-scaling-ceiling
+    type: basic
+    q: "What is Redis's scaling ceiling for token-bucket rate limiting, and how is it addressed?"
+    a: "Redis is largely single-threaded for command execution — a single instance tops out around 100K ops/sec, comfortable at 100K agents but a bottleneck approaching 10M. Mitigations: shard tenants across Redis instances, use Redis Cluster, or accept a local short-TTL cache of the last decision."
+
+  - id: fail-open-vs-fail-closed
+    type: basic
+    q: "What is the fail-open vs. fail-closed choice when Redis is down for rate limiting, and why is it worth stating explicitly?"
+    a: "Fail-open: allow everything, risk overload. Fail-closed: reject everything, guaranteeing safety but making a Redis blip look like a full outage to every tenant. There's no universally correct answer — it depends on which outcome is worse for your system."
+
+  - id: gossip-rate-limiting-mechanism
+    type: basic
+    q: "How does gossip-based distributed rate limiting work without a central store?"
+    a: "Each pod tracks its own local request count per tenant and periodically exchanges counts with a subset of peers (a gossip protocol) — information propagates fleet-wide in O(log N) rounds. Each pod combines its own count with the most recent peer counts to estimate the global rate."
+
+  - id: gossip-rate-limit-no-wait-for-fresh-gossip
+    type: basic
+    q: "In the gossip-based approach, when a request comes in, does the pod wait for fresh gossip messages before deciding whether to allow it?"
+    a: "No — the decision is made immediately using the pod's current running estimate (its own local count combined with the most recently heard peer counts, which may already be a gossip interval or two stale). The pod never blocks a request waiting for a new gossip round. This is exactly why the approach is eventually consistent and imprecise by design: a burst can temporarily exceed the intended limit by roughly the amount that arrives within one gossip interval before every pod's estimate catches up."
+
+  - id: gossip-rate-limiting-tradeoffs
+    type: basic
+    q: "What consistency and precision trade-offs does gossip-based rate limiting make, and when is it the right choice?"
+    a: "Eventual consistency (1-3s propagation delay) and imprecise by design (a burst can temporarily exceed the limit within one gossip interval). No SPOF — the right choice where Redis becomes the bottleneck (~10M agents) and slight over-admission during bursts is an acceptable trade."
+
+  - id: netflix-concurrency-limits-vs-gossip
+    type: basic
+    q: "How does Netflix's concurrency-limits library differ from gossip-based rate limiting, despite often being grouped together?"
+    a: "concurrency-limits is a purely local, per-instance adaptive concurrency limiter (no peer exchange) that answers 'how much load can I handle right now' using latency-based algorithms like Vegas/gradient. Gossip-based limiting answers 'what's our shared global rate.' They compose well but are not the same mechanism."
+
+  - id: envoy-global-rate-limit-pattern
+    type: basic
+    q: "How does the Envoy sidecar + global rate limit service pattern work?"
+    a: "Envoy's rate limit filter intercepts each request, classifies it into descriptors (e.g. {tenant_id, route}), and makes a gRPC call to a separate rate limit service (commonly envoyproxy/ratelimit, itself Redis-backed) before deciding whether to forward or reject."
+
+  - id: envoy-pattern-not-a-fourth-algorithm
+    type: basic
+    q: "Why is the Envoy + global rate limit service pattern 'not actually a fourth distinct algorithm'?"
+    a: "Under the hood it's usually still a centralized Redis store — the token-bucket-in-Redis pattern, just relocated behind a shared service and proxy filter. What's different is where the enforcement lives: uniformly in the mesh instead of per-application client code."
+
+  - id: rate-limiting-scale-recommendation
+    type: basic
+    q: "What rate-limiting approach does the design recommend at each scale tier?"
+    a: "Up to ~100K agents: token bucket in Redis (simplest, strong consistency). Approaching 10M agents: gossip-based or sharded Redis (accept eventual consistency for horizontal scale). Service-mesh-wide: Envoy + global rate limit service for uniform enforcement across many services."
+
+  - id: coarse-vs-fine-rate-limit-layering
+    type: basic
+    q: "What's the recommended split between coarse-grained and fine-grained rate limit enforcement?"
+    a: "Coarse-grained enforcement at the load balancer (simple token bucket, catches the worst abuse early and cheaply) layered with fine-grained enforcement at the gateway (precise, per-tenant, eventually-consistent distributed counters). These aren't mutually exclusive — real deployments commonly run both."

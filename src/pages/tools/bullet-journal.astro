@@ -1,0 +1,234 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+
+const LEGEND: Array<{ token: string; category: string }> = [
+  { token: '#', category: 'heading' },
+  { token: '-', category: 'task' },
+  { token: '->', category: 'note' },
+  { token: '?', category: 'question' },
+  { token: '??', category: 'unresolved' },
+  { token: '!!', category: 'critical' },
+  { token: '!', category: 'important' },
+  { token: '*', category: 'low-priority' },
+  { token: '~>', category: 'actionable' },
+  { token: '>', category: 'decision' },
+  { token: '<', category: 'waiting' },
+  { token: '<<', category: 'blocked' },
+  { token: '>>', category: 'future' },
+  { token: 'x', category: 'done' },
+  { token: 'X', category: 'cancelled' },
+  { token: '$m', category: 'meeting' },
+  { token: '$w', category: 'workshop' },
+  { token: '$1', category: 'one-on-one' },
+  { token: '$e', category: 'event' },
+  { token: '@', category: 'person' },
+  { token: '+', category: 'win' },
+  { token: '=', category: 'reflection' },
+  { token: '~', category: 'idea' },
+  { token: '<~', category: 'emotional' },
+];
+---
+
+<ToolLayout
+  slug="bullet-journal"
+  description="Rapid-log capture using a compact symbol notation, parsed into a daily rollup. Client-side only, no sign-up, no tracking."
+  intro="Rapid-log with a compact, greppable symbol notation, then get a live rollup by category. Everything stays in your browser — no account, no server."
+>
+
+  <!-- Symbol legend -->
+      <details class="card mb-6">
+        <summary class="section-label cursor-pointer select-none">Symbol legend</summary>
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2">
+          {LEGEND.map((row) => (
+            <div class="flex items-center gap-2 text-xs">
+              <span class="pomo-legend-token font-mono text-accent">{row.token}</span>
+              <span class="text-muted">{row.category}</span>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      <!-- Rapid log input -->
+      <div class="card">
+        <h2 class="section-label">Rapid Log</h2>
+        <textarea
+          id="bujo-input"
+          rows="10"
+          class="mt-4 w-full bg-field border border-line rounded-lg px-4 py-3 text-sm text-ink font-mono leading-relaxed outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+          placeholder={'- Review Alloy configuration\n? Why is Cosmos DB telemetry missing?\n> Use Mimir as the central metrics backend'}
+        ></textarea>
+      </div>
+
+      <!-- Rollup + filters + parsed entries -->
+      <div class="card mt-6">
+        <h2 class="section-label">Rollup</h2>
+        <div id="bujo-rollup" class="flex flex-wrap gap-2 mt-4">
+          <span class="text-xs text-faint font-mono">Nothing logged yet.</span>
+        </div>
+
+        <h2 class="section-label mt-6">Filter</h2>
+        <div id="bujo-filters" class="flex flex-wrap gap-2 mt-4">
+          <button type="button" class="btn-outline text-xs" data-filter="task" aria-pressed="false">Tasks</button>
+          <button type="button" class="btn-outline text-xs" data-filter="question" aria-pressed="false">Questions</button>
+          <button type="button" class="btn-outline text-xs" data-filter="decision" aria-pressed="false">Decisions</button>
+          <button type="button" class="btn-outline text-xs" data-filter="waiting" aria-pressed="false">Waiting</button>
+        </div>
+
+        <h2 class="section-label mt-6">Entries</h2>
+        <div id="bujo-entries" class="mt-4">
+          <p class="text-xs text-faint font-mono italic">No entries yet — start typing above.</p>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-line">
+          <button id="bujo-copy" type="button" class="btn-primary text-sm">Copy as Markdown</button>
+        </div>
+      </div>
+
+</ToolLayout>
+
+<style is:global>
+  .pomo-legend-token {
+    min-width: 1.5rem;
+    display: inline-block;
+  }
+
+  .bujo-entry-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .bujo-entry-row:last-child {
+    border-bottom: none;
+  }
+
+  .bujo-entry-text {
+    font-size: 0.85rem;
+    color: var(--color-prose-body);
+  }
+</style>
+
+<script>
+  import { filterByCategory, parseEntries, rollupCounts, toMarkdown } from '../../lib/tools/bullet-journal';
+  import type { BujoCategory, BujoEntry } from '../../lib/tools/bullet-journal';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:bullet-journal:entries';
+
+  // Which BujoCategory values each filter button maps to — Questions and Waiting each fold two
+  // categories together (question+unresolved, waiting+blocked) per the tool spec.
+  const FILTER_DEFS: Record<string, BujoCategory[]> = {
+    task: ['task'],
+    question: ['question', 'unresolved'],
+    decision: ['decision'],
+    waiting: ['waiting', 'blocked'],
+  };
+
+  const textarea = document.getElementById('bujo-input') as HTMLTextAreaElement | null;
+  const rollupEl = document.getElementById('bujo-rollup');
+  const entriesEl = document.getElementById('bujo-entries');
+  const copyBtn = document.getElementById('bujo-copy') as HTMLButtonElement | null;
+  const filterButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('#bujo-filters [data-filter]'));
+
+  let currentEntries: BujoEntry[] = [];
+  let activeFilter: string | null = null;
+
+  function renderRollup(entries: BujoEntry[]) {
+    if (!rollupEl) return;
+    rollupEl.innerHTML = '';
+    const counts = rollupCounts(entries);
+    const nonZero = (Object.entries(counts) as Array<[BujoCategory, number]>).filter(([, count]) => count > 0);
+
+    if (nonZero.length === 0) {
+      const empty = document.createElement('span');
+      empty.className = 'text-xs text-faint font-mono';
+      empty.textContent = 'Nothing logged yet.';
+      rollupEl.appendChild(empty);
+      return;
+    }
+
+    nonZero.forEach(([category, count]) => {
+      const pill = document.createElement('span');
+      pill.className = 'tag';
+      pill.textContent = `${count} ${category}${count === 1 ? '' : 's'}`;
+      rollupEl.appendChild(pill);
+    });
+  }
+
+  function renderEntries(entries: BujoEntry[]) {
+    if (!entriesEl) return;
+    entriesEl.innerHTML = '';
+
+    const shown = activeFilter ? filterByCategory(entries, FILTER_DEFS[activeFilter] ?? []) : entries;
+
+    if (shown.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'text-xs text-faint font-mono italic';
+      empty.textContent = entries.length === 0 ? 'No entries yet — start typing above.' : 'No entries match this filter.';
+      entriesEl.appendChild(empty);
+      return;
+    }
+
+    shown.forEach((entry) => {
+      const row = document.createElement('div');
+      row.className = 'bujo-entry-row';
+
+      const tag = document.createElement('span');
+      tag.className = 'tag shrink-0';
+      tag.textContent = entry.category;
+
+      const text = document.createElement('span');
+      text.className = 'bujo-entry-text';
+      text.textContent = entry.text || entry.raw;
+
+      row.appendChild(tag);
+      row.appendChild(text);
+      entriesEl.appendChild(row);
+    });
+  }
+
+  function renderAll() {
+    if (!textarea) return;
+    currentEntries = parseEntries(textarea.value);
+    renderRollup(currentEntries);
+    renderEntries(currentEntries);
+  }
+
+  if (textarea) {
+    textarea.value = loadJSON<string>(STORAGE_KEY, '');
+    textarea.addEventListener('input', () => {
+      saveJSON(STORAGE_KEY, textarea.value);
+      renderAll();
+    });
+  }
+
+  filterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.filter ?? null;
+      activeFilter = activeFilter === key ? null : key;
+      filterButtons.forEach((other) => {
+        other.setAttribute('aria-pressed', String(other === btn && activeFilter !== null));
+      });
+      renderEntries(currentEntries);
+    });
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const markdown = toMarkdown(currentEntries);
+      try {
+        await navigator.clipboard.writeText(markdown);
+        const original = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = original;
+        }, 1500);
+      } catch (err) {
+        console.error('Failed to copy bullet journal markdown to clipboard:', err);
+      }
+    });
+  }
+
+  renderAll();
+</script>

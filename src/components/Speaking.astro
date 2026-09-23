@@ -1,0 +1,68 @@
+---
+const talks = [
+  {
+    title: "From Reactive to Resilient — McCain's Observability in Motion",
+    event: 'CTO Presentation',
+    venue: 'McCain Foods',
+    date: 'March 2026',
+    type: 'internal',
+    description:
+      "Presented the global observability transformation narrative to CTO leadership — framing the journey from reactive monitoring to resilient, autonomous reliability across hybrid cloud workloads. Covered key metrics, architecture decisions, and the roadmap to autonomous SRE.",
+    tags: ['Observability', 'SRE', 'Platform Engineering', 'AIOps'],
+  },
+];
+
+const upcoming = [
+  'KubeCon / CNCF — observability at scale',
+  'SREcon — autonomous incident response with LLMs',
+  'Grafana ObservabilityCON — Alloy pipeline patterns',
+];
+---
+
+<section class="border-t border-line">
+  <div class="section-container">
+    <p class="section-label">Speaking</p>
+    <h2 class="section-title">Sharing the hard parts</h2>
+
+    <!-- Published talks -->
+    <div class="mt-10 space-y-5">
+      {talks.map(({ title, event, venue, date, description, tags }) => (
+        <div class="card">
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+            <div>
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="px-2 py-0.5 text-xs font-mono text-accent bg-accent/10 border border-accent/20 rounded">
+                  {event}
+                </span>
+                <span class="text-xs text-faint font-mono">{date}</span>
+              </div>
+              <h3 class="font-semibold text-ink text-base">{title}</h3>
+              <p class="text-xs text-dim mt-0.5">{venue}</p>
+            </div>
+          </div>
+          <p class="text-sm text-muted leading-relaxed">{description}</p>
+          <div class="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-line">
+            {tags.map((tag) => <span class="tag">{tag}</span>)}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Upcoming / aspiring -->
+    <div class="mt-8 p-6 rounded-xl border border-line bg-surface/50">
+      <h4 class="text-sm font-semibold text-muted mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-yellow-400/70 animate-pulse"></span>
+        On the radar
+      </h4>
+      <ul class="space-y-2.5">
+        {upcoming.map((item) => (
+          <li class="flex items-start gap-2.5 text-sm text-dim">
+            <span class="text-faint mt-0.5 flex-shrink-0">›</span>
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+
+  </div>
+</section>

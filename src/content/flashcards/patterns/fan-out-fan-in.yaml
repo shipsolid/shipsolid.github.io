@@ -1,0 +1,78 @@
+title: "Fan-Out / Fan-In"
+description: "Parallel scatter-gather, deadline propagation, hedged requests, and partial-failure policies."
+tags: ["patterns", "distributed-systems", "maang-prep"]
+cards:
+  - id: fan-out-fan-in-definition
+    type: basic
+    q: "What is the fan-out / fan-in pattern?"
+    a: "Decompose one request into N parallel sub-tasks (fan-out), execute them concurrently, then merge results (fan-in). Turns serial sum-of-latencies into max-of-N latency."
+
+  - id: fan-out-latency-driver
+    type: basic
+    q: "What determines the overall response latency in a fan-out?"
+    a: "The slowest worker. You wait for the last sub-task before the merge can return, so P99 of the fan-out ≈ P99 of the worst shard."
+
+  - id: deadline-propagation
+    type: basic
+    q: "What is deadline propagation and why does it matter?"
+    a: "Every worker goroutine/thread must inherit the parent request's deadline (e.g., via Go context). Without it, a worker that exceeds the deadline keeps consuming CPU, memory, and connections for a request no one is waiting for."
+
+  - id: fan-out-failure-policies
+    type: basic
+    q: "Name the three failure policies for fan-out calls."
+    a: "1. Fail-fast — abort if any required dependency fails. 2. Best-effort — return what succeeded, surface what's missing. 3. Minimum quorum — succeed once K-of-N replicas respond."
+
+  - id: fail-fast-vs-partial-results
+    type: basic
+    q: "When should you default to fail-fast over partial results?"
+    a: "When missing data makes the answer incorrect — bank balances, checkout totals, payments. Allow partial results only when the product spec explicitly says incomplete data is still useful (search, dashboards, recommendations)."
+
+  - id: hedged-request-definition
+    type: basic
+    q: "What is a hedged request?"
+    a: "Sending the same idempotent request to two replicas simultaneously, using whichever responds first and cancelling the other. Trades ~2× upstream load for dramatic P99/P999 latency reduction."
+
+  - id: delayed-hedging
+    type: basic
+    q: "What is delayed hedging and why is it preferred over immediate hedging?"
+    a: "Send to replica A; only send to replica B if A hasn't responded within a threshold (e.g., 20ms). Most requests complete via A, so average overhead is far less than 2×."
+
+  - id: hedged-request-caveats
+    type: basic
+    q: "When should you NOT use hedged requests?"
+    a: "When the operation has side effects (charging a card, creating an order) unless protected by idempotency keys. Also avoid when replicas share the same bottleneck or backends are already overloaded."
+
+  - id: shard-latency-metric
+    type: basic
+    q: "What Prometheus metric reveals a slow shard in a fan-out system?"
+    a: "fan_out_shard_latency_seconds{shard_id=X} P99. Correlate with fan_out_cancelled_worker_total rising to identify the culprit shard."
+
+  - id: otel-fan-out-trace-shape
+    type: basic
+    q: "Describe the OTel trace shape for a fan-out request."
+    a: "Parent span covers the full fan-out duration. Each worker creates a child span tagged with shard_id. The aggregation is a sibling span of the last worker to finish. In a waterfall, the longest child immediately reveals the tail shard."
+
+  - id: load-amplification
+    type: basic
+    q: "What is load amplification in fan-out?"
+    a: "1 client request generates N backend calls. At 10K RPS with fan-out width 100, you produce 1M backend calls/sec. Size backends with this multiplier in mind."
+
+  - id: shard-vs-worker
+    type: basic
+    q: "What is the difference between a shard and a worker?"
+    a: "A shard is a persistent data partition (where data lives). A worker is a temporary execution unit — thread, goroutine, pod — that performs computation. Workers fan out to query shards."
+
+  - id: deadline-amplification
+    type: basic
+    q: "What is deadline amplification in a fan-out dispatcher?"
+    a: "The dispatcher itself consumes time (e.g., 10ms) to shard the request. If the parent deadline is 200ms, workers effectively have 190ms. Always propagate the remaining deadline, not the original."
+
+  - id: mimir-loki-fan-out
+    type: basic
+    q: "How do Grafana Mimir and Loki use fan-out internally?"
+    a: "Mimir: query frontend fans PromQL queries to queriers, which fetch from distributed store-gateways. Loki: query frontend distributes log queries across ingesters and store-gateways. Both use scatter-gather for horizontal scale."
+
+  - id: partial-results-surfacing
+    type: basic
+    q: "How should partial results be surfaced to clients?"
+    a: "Return data with explicit degradation metadata: {\"results\":[...],\"partial\":true,\"missing_shards\":[\"shard3\"]}. Never silently return incomplete results — silent data loss is hard to debug and misleads users."

@@ -1,0 +1,166 @@
+# Singh Family Tree
+# Edit this file to add/remove people or update spouse names.
+# Node IDs follow g<generation>_<path> — see README in the family-tree page.
+# Fields per node:
+#   id       required  unique path-encoded UID
+#   name     required  display name
+#   spouse   optional  spouse name (omit if unknown or not applicable)
+#   note     optional  small italic label below the name
+#   branch   optional  triveni | udit | muneshwar | root  (inherited by children)
+#   children optional  list of child nodes
+
+id: g1_a
+name: Gurubakas Singh
+branch: root
+children:
+
+  - id: g2_a
+    name: Triveni Singh
+    branch: triveni
+    children:
+      - id: g3_aa
+        name: Maheshwar Prasad Singh
+        children:
+          - id: g4_aaa
+            name: Chandrashekar Singh
+            children:
+              - id: g5_aaaa
+                name: Deepak Singh
+                note: s/o Chandrashekar
+              - id: g5_aaab
+                name: Kismohan Singh
+
+  - id: g2_b
+    name: Udit Narayan Singh
+    branch: udit
+    children:
+      - id: g3_ba
+        name: Ram Briksh Singh
+      - id: g3_bb
+        name: Ram Sogarath Singh
+        children:
+          - id: g4_bba
+            name: Mithlesh Singh
+            children:
+              - id: g5_bbaa
+                name: Sunny
+              - id: g5_bbab
+                name: Vishal
+          - id: g4_bbb
+            name: Umesh Singh
+          - id: g4_bbc
+            name: Manju Singh
+
+  - id: g2_c
+    name: Muneshwar Prasad Singh
+    spouse: Kaushlya Devi
+    branch: muneshwar
+    children:
+
+      - id: g3_ca
+        name: Ramodgar Singh
+        spouse: Jayanti Devi
+        children:
+          - id: g4_caa
+            name: Vinod Singh
+            spouse: Rekha Devi
+          - id: g4_cab
+            name: Pramod Singh
+            spouse: Inderasen Devi
+            children:
+              - id: g5_caba
+                name: Amit Kumar Singh
+                spouse: Anubha Prashar
+              - id: g5_cabb
+                name: Sumit Kumar Singh
+                spouse: Barsha
+                children:
+                  - id: g6_cabba
+                    name: Deepak Singh
+                    note: s/o Sumit
+              - id: g5_cabc
+                name: Ashit Kumar Singh
+                spouse: Shalini
+          - id: g4_cac
+            name: Nutan Singh
+            spouse: Sunil Singh
+            children:
+              - id: g5_caca
+                name: Aditya Singh
+          - id: g4_cad
+            name: Suman Singh
+            spouse: Ravindra Singh
+            children:
+              - id: g5_cada
+                name: Tejashwi Singh
+
+      - id: g3_cb
+        name: Ramekbal Singh
+        spouse: Indu Devi
+        children:
+          - id: g4_cba
+            name: Dabbu
+          - id: g4_cbb
+            name: Labbu
+          - id: g4_cbc
+            name: Nutan Singh (Dolly)
+
+      - id: g3_cc
+        name: Shanti Devi
+        spouse: Rajender Prasad Singh
+        children:
+          - id: g4_cca
+            name: Manoj Singh
+          - id: g4_ccb
+            name: Kisan Singh
+          - id: g4_ccc
+            name: Indu Devi
+          - id: g4_ccd
+            name: Chandu Devi
+
+      - id: g3_cd
+        name: Kunti Devi
+        spouse: Rambilas Singh
+        children:
+          - id: g4_cda
+            name: Arun Singh
+            children:
+              - id: g5_cdaa
+                name: Amanpriya Singh
+                spouse: Arti Singh
+              - id: g5_cdab
+                name: Nupur Singh
+          - id: g4_cdb
+            name: Anil Singh
+            children:
+              - id: g5_cdba
+                name: Nishita Singh
+                spouse: Divyaraj Singh
+              - id: g5_cdbb
+                name: Abhishek Singh
+          - id: g4_cdc
+            name: Indu Singh
+          - id: g4_cdd
+            name: Rekha Singh
+          - id: g4_cde
+            name: Suman Singh
+
+      - id: g3_ce
+        name: Manorth Devi
+        spouse: Rajnath Singh
+        children:
+          - id: g4_cea
+            name: Sobha Singh
+          - id: g4_ceb
+            name: Omkar Singh (Banka)
+            children:
+              - id: g5_ceba
+                name: Ansh
+              - id: g5_cebb
+                name: Vedh
+          - id: g4_cec
+            name: Ashwani Singh (Sonu)
+            spouse: Kalyani Singh
+            children:
+              - id: g5_ceca
+                name: Kashvi Singh

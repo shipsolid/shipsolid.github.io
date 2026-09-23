@@ -1,0 +1,11 @@
+# Astro's generated type-cache dir — regenerated on every `astro dev`/`astro build`,
+# so tracking it just produces noise diffs whenever content collections change shape.
+.astro/
+
+# Local dev env — real values are GitHub Actions secrets in CI. See .env.example.
+.env
+
+# Dependencies and build output — CI installs fresh and deploys via GitHub Actions
+# Pages (actions/deploy-pages), so dist/ is never committed.
+node_modules/
+dist/

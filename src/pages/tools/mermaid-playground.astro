@@ -1,0 +1,159 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="mermaid-playground"
+  mermaid={true}
+  description="Edit Mermaid diagrams with a live preview, a template library, and SVG export. Client-side only, no sign-up, no tracking."
+  intro="Write Mermaid on the left, see it rendered on the right. Start from a template, and download the result as SVG. PNG export is out of scope. Everything renders in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Templates</h2>
+    <div id="mp-templates" class="mt-3 flex flex-wrap gap-2"></div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <div class="card">
+      <div class="flex items-center justify-between">
+        <h2 class="section-label">Editor</h2>
+        <div class="flex gap-2">
+          <button id="mp-copy" type="button" class="btn-outline text-xs">Copy code</button>
+          <button id="mp-svg" type="button" class="btn-outline text-xs">Download SVG</button>
+        </div>
+      </div>
+      <textarea id="mp-input" rows="18" spellcheck="false"
+        class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y leading-relaxed"></textarea>
+      <div id="mp-lint" class="mt-3 space-y-1"></div>
+    </div>
+
+    <div class="card">
+      <div class="flex items-center justify-between">
+        <h2 class="section-label">Preview</h2>
+        <span id="mp-type" class="text-xs font-mono text-dim"></span>
+      </div>
+      <div id="mp-preview" class="mt-4 min-h-[8rem]"></div>
+      <p id="mp-render-error" class="mt-2 text-sm text-red-400 font-mono hidden"></p>
+    </div>
+  </div>
+
+</ToolLayout>
+
+<script>
+  import { basicLint, detectDiagramType, MERMAID_TEMPLATES } from '../../lib/tools/mermaid-playground';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:mermaid-playground:code';
+  const DEFAULT_CODE = MERMAID_TEMPLATES[0].code;
+
+  const inputEl = document.getElementById('mp-input') as HTMLTextAreaElement | null;
+  const previewEl = document.getElementById('mp-preview');
+  const lintEl = document.getElementById('mp-lint');
+  const typeEl = document.getElementById('mp-type');
+  const renderErrorEl = document.getElementById('mp-render-error');
+  const templatesEl = document.getElementById('mp-templates');
+  const copyEl = document.getElementById('mp-copy') as HTMLButtonElement | null;
+  const svgEl = document.getElementById('mp-svg') as HTMLButtonElement | null;
+
+  if (inputEl) inputEl.value = loadJSON<string>(STORAGE_KEY, DEFAULT_CODE);
+
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  let renderTimer: number | undefined;
+
+  function renderPreview() {
+    const code = inputEl?.value ?? '';
+    if (!previewEl) return;
+    previewEl.innerHTML = '';
+    renderErrorEl?.classList.add('hidden');
+    if (code.trim() === '') return;
+
+    const pre = document.createElement('pre');
+    pre.setAttribute('data-language', 'mermaid');
+    const codeEl = document.createElement('code');
+    codeEl.textContent = code;
+    pre.appendChild(codeEl);
+    previewEl.appendChild(pre);
+
+    try {
+      const result = (window as unknown as { __renderMermaid?: (root: Element) => Promise<void> }).__renderMermaid?.(previewEl);
+      Promise.resolve(result).catch(showRenderError);
+    } catch (err) {
+      showRenderError(err);
+    }
+  }
+
+  function showRenderError(err: unknown) {
+    if (!renderErrorEl) return;
+    const message = err instanceof Error ? err.message : String(err);
+    renderErrorEl.textContent = `Mermaid could not render this: ${message.split('\n')[0]}`;
+    renderErrorEl.classList.remove('hidden');
+  }
+
+  function run() {
+    const code = inputEl?.value ?? '';
+    saveJSON(STORAGE_KEY, code);
+
+    if (typeEl) typeEl.textContent = detectDiagramType(code);
+
+    const issues = basicLint(code);
+    if (lintEl) {
+      lintEl.innerHTML = issues.length
+        ? issues.map((i) => `<p class="text-xs font-mono text-amber-400">⚠ ${escapeHtml(i)}</p>`).join('')
+        : '<p class="text-xs font-mono text-emerald-400">No structural issues found.</p>';
+    }
+
+    window.clearTimeout(renderTimer);
+    renderTimer = window.setTimeout(renderPreview, 300);
+  }
+
+  inputEl?.addEventListener('input', run);
+
+  if (templatesEl) {
+    templatesEl.innerHTML = MERMAID_TEMPLATES.map(
+      (t) => `<button type="button" data-id="${t.id}" class="btn-outline text-xs">${escapeHtml(t.title)}</button>`
+    ).join('');
+    templatesEl.addEventListener('click', (event) => {
+      const btn = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
+      if (!btn || !inputEl) return;
+      const tpl = MERMAID_TEMPLATES.find((t) => t.id === btn.dataset.id);
+      if (tpl) {
+        inputEl.value = tpl.code;
+        run();
+      }
+    });
+  }
+
+  copyEl?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(inputEl?.value ?? '');
+    const o = copyEl.textContent;
+    copyEl.textContent = 'Copied!';
+    setTimeout(() => (copyEl.textContent = o), 1500);
+  });
+
+  svgEl?.addEventListener('click', () => {
+    const svg = previewEl?.querySelector('svg');
+    if (!svg) {
+      showRenderError('Nothing rendered to export yet.');
+      return;
+    }
+    const serialized = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([serialized], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${detectDiagramType(inputEl?.value ?? '') || 'diagram'}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  // Theme flips are handled by MermaidRenderer's own `themechange` listener, which re-renders
+  // every .mermaid[data-mermaid-source] block — including this preview.
+
+  run();
+</script>

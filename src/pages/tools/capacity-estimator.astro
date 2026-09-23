@@ -1,0 +1,157 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="capacity-estimator"
+  description="Turn DAU, request rate, and a peak multiplier into average and peak QPS, storage growth, bandwidth, and a server count. For system-design sizing. Client-side only, no sign-up, no tracking."
+  intro="Back-of-the-envelope capacity math for a system-design interview or a sizing note. Fill in what you know — the optional fields unlock bandwidth, storage, and server-count estimates. Everything stays in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Traffic</h2>
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4" id="ce-core"></div>
+    <p id="ce-error" class="mt-3 text-sm text-red-400 font-mono hidden"></p>
+  </div>
+
+  <details class="card mt-6">
+    <summary class="section-label cursor-pointer select-none">Optional — bandwidth, storage, servers</summary>
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4" id="ce-optional"></div>
+  </details>
+
+  <div id="ce-result" class="card mt-6"></div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Notes</h2>
+    <ul id="ce-notes" class="mt-3 space-y-1 text-xs text-dim font-mono list-disc pl-5"></ul>
+  </div>
+
+</ToolLayout>
+
+<script>
+  import { estimateCapacity } from '../../lib/tools/capacity-estimator';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:capacity-estimator:input';
+
+  interface CeState {
+    dau: number;
+    requestsPerUserPerDay: number;
+    peakMultiplier: number;
+    avgResponseBytes: number | '';
+    bytesStoredPerRequest: number | '';
+    replicationFactor: number | '';
+    serverCapacityRps: number | '';
+    retentionDays: number | '';
+  }
+
+  const DEFAULT_STATE: CeState = {
+    dau: 10_000_000,
+    requestsPerUserPerDay: 20,
+    peakMultiplier: 5,
+    avgResponseBytes: '',
+    bytesStoredPerRequest: '',
+    replicationFactor: '',
+    serverCapacityRps: '',
+    retentionDays: '',
+  };
+
+  const state: CeState = { ...DEFAULT_STATE, ...loadJSON<Partial<CeState>>(STORAGE_KEY, {}) };
+
+  const CORE: { key: keyof CeState; label: string; step: string }[] = [
+    { key: 'dau', label: 'Daily active users', step: '1' },
+    { key: 'requestsPerUserPerDay', label: 'Requests / user / day', step: '1' },
+    { key: 'peakMultiplier', label: 'Peak multiplier (× average)', step: '0.5' },
+  ];
+  const OPTIONAL: { key: keyof CeState; label: string; step: string }[] = [
+    { key: 'avgResponseBytes', label: 'Avg response size (bytes)', step: '1' },
+    { key: 'bytesStoredPerRequest', label: 'Bytes stored / request', step: '1' },
+    { key: 'replicationFactor', label: 'Replication factor (default 1)', step: '1' },
+    { key: 'serverCapacityRps', label: 'Per-server capacity (RPS)', step: '1' },
+    { key: 'retentionDays', label: 'Retention (days)', step: '1' },
+  ];
+
+  const inputClass =
+    'mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 font-mono';
+
+  function fieldHtml(key: string, label: string, step: string, value: number | string, placeholder = ''): string {
+    return `
+      <label class="text-xs font-mono text-dim">
+        ${label}
+        <input type="number" step="${step}" min="0" data-key="${key}" placeholder="${placeholder}"
+          class="${inputClass}" value="${value === '' ? '' : value}" />
+      </label>`;
+  }
+
+  const coreEl = document.getElementById('ce-core') as HTMLElement | null;
+  const optionalEl = document.getElementById('ce-optional') as HTMLElement | null;
+  const errorEl = document.getElementById('ce-error');
+  const resultEl = document.getElementById('ce-result');
+  const notesEl = document.getElementById('ce-notes');
+
+  if (coreEl) coreEl.innerHTML = CORE.map((f) => fieldHtml(f.key, f.label, f.step, state[f.key] as number)).join('');
+  if (optionalEl)
+    optionalEl.innerHTML = OPTIONAL.map((f) => fieldHtml(f.key, f.label, f.step, state[f.key] as number | string, 'optional')).join('');
+
+  function fmt(n: number): string {
+    if (!Number.isFinite(n)) return '∞';
+    if (Math.abs(n) >= 1000) return Math.round(n).toLocaleString();
+    return (Math.round(n * 100) / 100).toLocaleString();
+  }
+  function opt(n: number | null, unit = ''): string {
+    return n === null ? '—' : `${fmt(n)}${unit}`;
+  }
+  function num(v: number | ''): number | undefined {
+    return v === '' ? undefined : Number(v);
+  }
+
+  function run() {
+    if (!errorEl || !resultEl || !notesEl) return;
+    saveJSON(STORAGE_KEY, state);
+    try {
+      const r = estimateCapacity({
+        dau: Number(state.dau),
+        requestsPerUserPerDay: Number(state.requestsPerUserPerDay),
+        peakMultiplier: Number(state.peakMultiplier),
+        avgResponseBytes: num(state.avgResponseBytes),
+        bytesStoredPerRequest: num(state.bytesStoredPerRequest),
+        replicationFactor: num(state.replicationFactor),
+        serverCapacityRps: num(state.serverCapacityRps),
+        retentionDays: num(state.retentionDays),
+      });
+      errorEl.classList.add('hidden');
+      resultEl.innerHTML = `
+        <h2 class="section-label mb-3">Estimate</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm font-mono">
+          <div><div class="text-dim text-xs">Daily requests</div><div class="text-ink">${fmt(r.dailyRequests)}</div></div>
+          <div><div class="text-dim text-xs">Average QPS</div><div class="text-ink">${fmt(r.averageRps)}</div></div>
+          <div><div class="text-dim text-xs">Peak QPS</div><div class="text-accent">${fmt(r.peakRps)}</div></div>
+          <div><div class="text-dim text-xs">Peak bandwidth</div><div class="text-ink">${opt(r.peakBandwidthMbps, ' Mbps')}</div></div>
+          <div><div class="text-dim text-xs">Storage / day</div><div class="text-ink">${opt(r.storagePerDayGb, ' GB')}</div></div>
+          <div><div class="text-dim text-xs">Storage @ retention</div><div class="text-ink">${opt(r.storageAtRetentionGb, ' GB')}</div></div>
+          <div><div class="text-dim text-xs">Servers (peak)</div><div class="text-ink">${r.estimatedServers === null ? '—' : r.estimatedServers.toLocaleString()}</div></div>
+        </div>
+      `;
+      notesEl.innerHTML = r.notes.map((n) => `<li>${n}</li>`).join('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+      resultEl.innerHTML = '<h2 class="section-label mb-3">Estimate</h2><p class="text-sm text-red-400 font-mono">Fix the error above to see the estimate.</p>';
+    }
+  }
+
+  function onInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const key = target.dataset.key as keyof CeState | undefined;
+    if (!key) return;
+    const raw = target.value.trim();
+    (state[key] as number | string) = raw === '' ? '' : Number(raw);
+    run();
+  }
+
+  coreEl?.addEventListener('input', onInput);
+  optionalEl?.addEventListener('input', onInput);
+
+  run();
+</script>

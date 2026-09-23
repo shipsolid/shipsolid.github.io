@@ -1,0 +1,93 @@
+title: "Fan-Out / Fan-In: MAANG Practice Scenarios"
+description: "Nine principal/staff-level scenarios on the fan-out/fan-in pattern — partitioning, hedging trade-offs, cancellation leaks, aggregator complexity, retry storms, backpressure, hierarchical fan-out, and pre-rollout validation."
+tags: ["patterns", "distributed-systems", "concurrency", "maang-prep", "practice-q"]
+cards:
+  - id: q1-partial-result-policy-choice
+    type: basic
+    q: "Q1 (200-shard search API, 150ms P99): Why does this scenario deliberately deviate from 'default to fail-fast,' and what policy replaces it?"
+    a: "Missing 1 of 200 shards degrades ranking quality — it doesn't produce a wrong answer the way a missing shard in a replicated read would. Use a minimum quorum (e.g. ≥95% or an explicit K of 200) and return partial:true / shards_returned:190/200, rather than letting one flaky shard take down every search request."
+
+  - id: q1-instrument-first
+    type: basic
+    q: "Q1: What's the first thing to instrument when P99 degrades, and how do you distinguish a slow shard from a too-tight deadline?"
+    a: "fan_out_shard_latency_seconds{shard_id} P99 per shard first — a P99 regression at 200 shards is almost always a small number of hot/slow shards, not a uniform slowdown. Correlate with fan_out_cancelled_worker_total: cancellations climbing with one specific shard means that shard is slow; cancellations climbing with no shard standing out means the deadline budget itself is too tight."
+
+  - id: q2-hedge-all-vs-tail-only
+    type: basic
+    q: "Q2 (P99 280ms, P50 30ms, 50 shards): Why should you hedge only the slowest ~5% of shards instead of all 50?"
+    a: "The 9× P99/P50 gap signals a slow-replica problem, not a systemic capacity problem (a systemic issue would show elevated P50 too). Hedging all 50 shards pays ~2× load on the P50 path — the common case that's already fine — to fix a rare-case tail that only affects a small, identifiable subset of shards."
+
+  - id: q2-instrument-before-hedging
+    type: basic
+    q: "Q2: What must you instrument before writing any hedging code, and how do you know afterward if the hedge rate signals the wrong root cause?"
+    a: "fan_out_shard_latency_seconds P99 broken out by shard_id — without it, 'enable hedging' is a guess dressed up as a fix. After shipping, a hedge rate that's high and spread evenly across all 50 shards (rather than concentrated on a small stable set) means the premise was wrong — the problem is systemic, not tail latency."
+
+  - id: q3-ghost-request-symptom
+    type: basic
+    q: "Q3 (30-service fan-out, errors <0.1%, cost 3x): Why does this failure stay invisible at the client boundary?"
+    a: "The client-facing dashboard only sees the request from the client's point of view — the client got a response or a timeout either way, so it looks healthy. What it can't see is that workers didn't propagate the parent's cancellation to their own downstream calls, which keep running to completion for a request nobody is waiting on — consuming CPU and cost with no client-visible error."
+
+  - id: q3-confirm-and-fix-ghost-requests
+    type: basic
+    q: "Q3: What's the confirming signal for a ghost-request leak, and what's the fix?"
+    a: "Compare fan_out_cancelled_worker_total against the downstream request rate — if cancellations rise but downstream request rate doesn't drop in step, workers are ignoring ctx.Done(). A corroborating signal: a downstream trace span still running past the client's timeout mark. Fix: audit every downstream call to ensure it passes the derived (parent) context, not a fresh background context."
+
+  - id: q4-k-way-merge-complexity
+    type: basic
+    q: "Q4 (500 shards, 1,000 sorted points each, top-1,000 merge): What's the merge strategy and its time complexity?"
+    a: "A min-heap seeded with the head element of each of the 500 already-sorted shard lists; repeatedly pop the smallest, push the next element from that shard. Complexity is O(K log N) — K=1,000 output size, N=500 shards — scaling with output size and fan-out width, not with the total 500,000 points across all shards."
+
+  - id: q4-alert-threshold-aggregator
+    type: basic
+    q: "Q4: At what threshold should aggregator latency trigger investigation, and why keep it as a separate histogram?"
+    a: "Alert when aggregator P99 exceeds ~20% of total request latency — at that point the merge itself is a meaningful fraction of the SLO budget, worth profiling directly. A separate fan_out_aggregation_latency_seconds histogram prevents a slow aggregator from being misdiagnosed as a slow shard, since both look identical as elevated total latency from the outside."
+
+  - id: q5-red-flag-before-design-review
+    type: basic
+    q: "Q5 (10 shards in dev, 8,000 in prod, 2,000 RPS): What number should stop the design review immediately?"
+    a: "2,000 RPS × 8,000 shards = 16M backend calls/sec. Dev's 10-shard behavior tells you almost nothing about prod, because dev never exercises the dimension (fan-out width) that actually determines cost at this scale."
+
+  - id: q5-safeguards-before-launch
+    type: basic
+    q: "Q5: What four safeguards should be added before accepting an 8,000-shard fan-out design?"
+    a: "Cap fan-out width with a hard limit (route overflow to a secondary tier); use a worker pool instead of goroutine-per-shard (the goroutine/pool cutover is around 10K, and 8,000 is close); add a fan_out_width_total histogram from day one to catch drift; load test at 10× the target fan-out width before launch."
+
+  - id: q6-retry-plus-fanout-amplification
+    type: basic
+    q: "Q6 (100 shards, 3 retries, no backoff, 15 shards blip): Why does a transient blip turn into a full outage here?"
+    a: "Retry amplification stacks on fan-out amplification: 100 backend calls can become up to 400 attempts (1 original + 3 retries) with no delay between them, aimed specifically at the 15 shards already struggling. This is the direct, predictable output of fixed, immediate, uncapped retries during partial failure — not a coincidence."
+
+  - id: q6-retry-policy-fix
+    type: basic
+    q: "Q6: What three fixes prevent uncapped per-call retries from becoming a self-inflicted thundering herd?"
+    a: "1) Exponential backoff with jitter (desynchronizes retries across workers). 2) A retry budget capped as a percentage of total request volume (e.g. 10%), not a per-call retry count. 3) A circuit breaker per shard that stops new attempts after N consecutive failures, breaking the retry-makes-failure-worse feedback loop."
+
+  - id: q7-average-hides-one-bad-shard
+    type: basic
+    q: "Q7 (500 shards, one at 95% CPU rejecting connections): Why does the dispatcher keep sending full traffic to the failing shard?"
+    a: "One shard's degradation is a rounding error in a 500-shard aggregate average — its contribution is diluted by the 499 healthy shards. Any metric averaged across fan-out width systematically hides a localized problem, because localization is exactly the information an average throws away."
+
+  - id: q7-fix-location-dispatcher-not-shard
+    type: basic
+    q: "Q7: Where does the fix for this belong — dispatcher, worker, or shard — and what two mechanisms does it use?"
+    a: "Primarily the dispatcher — the only component with a system-wide view — tracking per-shard health (rolling error rate/latency, not global average) and shedding/rerouting load via AIMD-style adaptive limits. Paired with a bulkhead per shard-pool so one overloaded shard's stuck calls don't exhaust the worker pool healthy shards depend on. Not the shard — correctly rejecting at 95% CPU is the expected signal, not the bug."
+
+  - id: q8-recursive-remaining-deadline
+    type: basic
+    q: "Q8 (frontend → N queriers → M ingesters, 5s SLO): How does the 'propagate remaining, not original, deadline' rule apply across two fan-out levels?"
+    a: "Recursively, once per hop: the frontend subtracts its own dispatch/aggregation overhead from 5s before handing queriers the remainder (e.g. ~4.95s); each querier then subtracts its own overhead before propagating what's left to its ingesters (e.g. ~4.92s). Copying the original 5s to every level unchanged causes the frontend to wait past its own deadline for queriers that look 'within budget' from their own wrong frame of reference."
+
+  - id: q8-partial-failure-composes-multiplicatively
+    type: basic
+    q: "Q8: Why can two independently 'safe' 1% partial-failure tolerances at each fan-out level silently compound into a worse effective guarantee?"
+    a: "If each querier tolerates 1% of its ingesters failing, and the frontend independently tolerates 1% of queriers being incomplete, the effective top-level completeness isn't 99% — it's whatever those two independent tolerances compose to, and nobody explicitly decided that number. Fix: each querier reports 'N of M ingesters answered' explicitly, and the frontend applies its own policy to the real aggregate completeness, not an assumed one."
+
+  - id: q9-why-fault-injection-not-unit-tests
+    type: basic
+    q: "Q9 (validating a hedging + deadline-propagation rewrite before rollout at 50K RPS): Why is this a fault-injection problem, not a unit-test problem?"
+    a: "A unit test confirms the happy path merges correctly, but cannot confirm cancellation actually propagates under real contention or that a hedge actually cancels its loser. Both failure modes (ghost requests, subtly wrong partial results) are silent by construction — they don't crash, they quietly waste resources or under-report — so validation must actively go looking for them via induced failures, not wait for them to announce themselves."
+
+  - id: q9-canary-comparison-gate
+    type: basic
+    q: "Q9: What's the final gate before full rollout, and what specific discrepancy is the leading indicator of a leak?"
+    a: "A canary rollout diffing fan_out_cancelled_worker_total and fan_out_hedged_requests_used_total pre- and post-change. Cancelled-worker count not dropping when it should after the deadline-propagation fix ships is the leading indicator of a leak still present — cheap to catch in a canary metric comparison, expensive to catch after a full 50K RPS rollout."

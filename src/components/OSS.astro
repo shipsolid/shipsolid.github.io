@@ -1,0 +1,92 @@
+---
+const repos = [
+  {
+    name: 'architect-learning-lab',
+    description: 'Monorepo learning lab — 14 pillars spanning observability, SRE, platform engineering, and autonomous reliability.',
+    tags: ['Grafana', 'OTel', 'Terraform', 'Astro', 'Python', 'Go'],
+    github: 'https://github.com/shipsolid',
+    stars: null,
+  },
+  {
+    name: 'sre-agent',
+    description: 'Experimental SRE agent for autonomous incident response — LLM-backed triage, playbook execution, and post-mortem generation on AKS.',
+    tags: ['Python', 'LLM', 'FastAPI', 'Kubernetes', 'MCP'],
+    github: 'https://github.com/shipsolid',
+    stars: null,
+  },
+  {
+    name: 'signal-forge',
+    description: 'OpenTelemetry validation lab — configurable signal generator for testing Alloy pipelines, cardinality budgets, and alert rules.',
+    tags: ['OTel', 'Alloy', 'Prometheus', 'Kubernetes'],
+    github: 'https://github.com/shipsolid',
+    stars: null,
+  },
+];
+---
+
+<section class="border-t border-line">
+  <div class="section-container">
+
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <p class="section-label">Open Source</p>
+        <h2 class="section-title">Code in the open</h2>
+      </div>
+      <a
+        href="https://github.com/shipsolid"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-sm text-accent hover:text-accent-hover font-mono transition-colors hidden sm:flex items-center gap-1.5"
+      >
+        GitHub →
+      </a>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {repos.map(({ name, description, tags, github }) => (
+        <a
+          href={github}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="card group flex flex-col gap-3 hover:-translate-y-0.5 no-underline"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-dim group-hover:text-accent transition-colors flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+              <span class="font-mono text-sm font-medium text-ink group-hover:text-accent transition-colors">
+                {name}
+              </span>
+            </div>
+            <svg class="w-4 h-4 text-faint group-hover:text-muted transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </div>
+
+          <p class="text-xs text-muted leading-relaxed flex-1">{description}</p>
+
+          <div class="flex flex-wrap gap-1.5">
+            {tags.map((tag) => <span class="tag">{tag}</span>)}
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <!-- GitHub CTA -->
+    <div class="mt-8 flex justify-center">
+      <a
+        href="https://github.com/shipsolid"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-outline flex items-center gap-2"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        View all on GitHub
+      </a>
+    </div>
+
+  </div>
+</section>

@@ -1,0 +1,131 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="sql-formatter"
+  description="Format or minify SQL for Postgres, MySQL, T-SQL, BigQuery, and SQLite. Client-side only, no sign-up, no tracking."
+  intro="Paste SQL, pick a dialect, and get it pretty-printed — or minified back to one line. The formatter runs entirely in your browser."
+>
+
+  <div class="card">
+    <div class="flex flex-wrap items-end gap-4">
+      <label class="text-xs font-mono text-dim">Dialect
+        <select id="sf-dialect"
+          class="mt-1 bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70">
+          <option value="sql">Standard SQL</option>
+          <option value="postgresql">PostgreSQL</option>
+          <option value="mysql">MySQL</option>
+          <option value="tsql">T-SQL</option>
+          <option value="bigquery">BigQuery</option>
+          <option value="sqlite">SQLite</option>
+        </select>
+      </label>
+      <label class="flex items-center gap-2 text-xs font-mono text-dim">
+        <input id="sf-upper" type="checkbox" class="w-4 h-4" style="accent-color: rgb(var(--color-accent-rgb))" />
+        Uppercase keywords
+      </label>
+      <button id="sf-format" type="button" class="btn-primary text-sm">Format</button>
+      <button id="sf-minify" type="button" class="btn-outline text-sm">Minify</button>
+    </div>
+
+    <label class="text-xs font-mono text-dim block mt-4">Input
+      <textarea id="sf-input" rows="10"
+        class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"></textarea>
+    </label>
+    <p id="sf-error" class="mt-2 text-sm text-red-400 font-mono hidden"></p>
+  </div>
+
+  <div class="card mt-6">
+    <div class="flex items-center justify-between">
+      <h2 class="section-label">Output</h2>
+      <button id="sf-copy" type="button" class="btn-outline text-xs">Copy</button>
+    </div>
+    <pre id="sf-output" class="mt-4 whitespace-pre-wrap break-words text-sm font-mono text-body"></pre>
+  </div>
+
+</ToolLayout>
+
+<script>
+  import { formatSql, minifySql } from '../../lib/tools/sql-formatter';
+  import type { SqlDialect } from '../../lib/tools/sql-formatter';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:sql-formatter:state';
+
+  interface SfState {
+    input: string;
+    dialect: SqlDialect;
+    uppercase: boolean;
+  }
+
+  const DEFAULT_STATE: SfState = {
+    input:
+      "select o.id, o.total, c.name from orders o join customers c on c.id=o.customer_id where o.status='open' and o.total > 100 order by o.total desc limit 20",
+    dialect: 'postgresql',
+    uppercase: false,
+  };
+
+  const state: SfState = { ...DEFAULT_STATE, ...loadJSON<Partial<SfState>>(STORAGE_KEY, {}) };
+
+  const inputEl = document.getElementById('sf-input') as HTMLTextAreaElement | null;
+  const dialectEl = document.getElementById('sf-dialect') as HTMLSelectElement | null;
+  const upperEl = document.getElementById('sf-upper') as HTMLInputElement | null;
+  const outputEl = document.getElementById('sf-output');
+  const errorEl = document.getElementById('sf-error');
+  const copyEl = document.getElementById('sf-copy') as HTMLButtonElement | null;
+
+  if (inputEl) inputEl.value = state.input;
+  if (dialectEl) dialectEl.value = state.dialect;
+  if (upperEl) upperEl.checked = state.uppercase;
+
+  function sync() {
+    state.input = inputEl?.value ?? '';
+    state.dialect = (dialectEl?.value as SqlDialect) ?? 'sql';
+    state.uppercase = !!upperEl?.checked;
+    saveJSON(STORAGE_KEY, state);
+  }
+
+  function showError(message: string | null) {
+    if (!errorEl) return;
+    if (message === null) {
+      errorEl.classList.add('hidden');
+      errorEl.textContent = '';
+    } else {
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  function doFormat() {
+    sync();
+    try {
+      const out = formatSql(state.input, { dialect: state.dialect, uppercase: state.uppercase });
+      if (outputEl) outputEl.textContent = out;
+      showError(null);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  function doMinify() {
+    sync();
+    if (outputEl) outputEl.textContent = minifySql(state.input);
+    showError(null);
+  }
+
+  document.getElementById('sf-format')?.addEventListener('click', doFormat);
+  document.getElementById('sf-minify')?.addEventListener('click', doMinify);
+  inputEl?.addEventListener('input', doFormat);
+  dialectEl?.addEventListener('change', doFormat);
+  upperEl?.addEventListener('change', doFormat);
+
+  copyEl?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(outputEl?.textContent ?? '');
+    const o = copyEl.textContent;
+    copyEl.textContent = 'Copied!';
+    setTimeout(() => (copyEl.textContent = o), 1500);
+  });
+
+  doFormat();
+</script>

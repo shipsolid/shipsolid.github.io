@@ -1,0 +1,153 @@
+title: "Telemetry Ingestion Pipeline: Core Architecture"
+description: "High-level design of a MAANG-scale telemetry ingestion pipeline — layers, durability boundary, cardinality enforcement, temporality, multi-tenancy, data tiering, and global topology."
+tags: ["system-design", "observability", "telemetry", "maang-prep"]
+cards:
+  - id: ingestion-pipeline-layers
+    type: basic
+    q: "What are the four layers of the telemetry ingestion pipeline architecture?"
+    a: "Layer 1: Ingestion Frontier (protocol gateways, auth, rate-limit, schema check). Layer 2: Durable Buffer (Kafka). Layer 3: Processing/Enrichment (metric/log/trace processors). Storage: Mimir/Loki/Tempo (hot ingester tier → cold object store, compaction)."
+
+  - id: push-vs-pull-rationale
+    type: basic
+    q: "Why choose push-based ingestion (OTLP) over pull-based (Prometheus scrape) at 10M-agent scale?"
+    a: "A central scraper creates a fan-out coordination problem at that scale. Agents push over OTLP/gRPC to a stateless, horizontally-scaling gateway; Kafka decouples ingestion rate from processing rate. Pull-based scraping needs a distributed scraper fleet with shard assignment and leader election beyond ~500K targets."
+
+  - id: durability-boundary
+    type: basic
+    q: "What is the durability boundary in the ingestion pipeline, and why does it matter?"
+    a: "Kafka — not the gateway. Once a batch is produced to Kafka with acks=all, it's durable regardless of what happens to the gateway. The gateway fleet is intentionally stateless and expendable; the agent's WAL absorbs any gateway disruption before that point."
+
+  - id: agent-wal-resilience
+    type: basic
+    q: "What resilience does an agent-side WAL (write-ahead log) provide during a gateway outage?"
+    a: "Up to its max_age retention (e.g. 4 hours) of resilience to a total gateway outage. The agent persists the batch to local disk before sending and only trims the WAL entry after a confirmed ACK — a rolling restart or short outage is invisible to data completeness."
+
+  - id: kafka-partitioning-strategy
+    type: basic
+    q: "How should Kafka partition keys differ across metrics, logs, and traces?"
+    a: "Metrics: hash(job + instance) — keeps a series' writes ordered on one partition. Logs: hash(service + pod) — orders a log stream. Traces: trace_id — ensures every span of a trace lands on the same partition so assembly is local."
+
+  - id: kafka-retention-by-signal
+    type: basic
+    q: "What Kafka raw-topic retention windows does the design recommend per signal, and why?"
+    a: "Raw metrics: 2-4h (enough to drain a processor outage). Raw traces: 4-24h (tail sampling needs spans held until the root span arrives). Raw logs: 1-6h. After retention, Mimir/Loki/Tempo are the durable source of truth, not Kafka."
+
+  - id: kafka-max-message-bytes-gotcha
+    type: basic
+    q: "What is the hidden Kafka gotcha with max.message.bytes, and what's the preferred fix?"
+    a: "Brokers default max.message.bytes to 1MB. A single trace with thousands of spans can exceed this. Preferred fix: split large OTLP batches at the gateway before producing — this keeps Kafka tuned for the common case, versus raising the broker-wide limit which increases memory pressure for all producers."
+
+  - id: cardinality-enforcement-mechanism
+    type: basic
+    q: "How is cardinality enforced at the processor layer, and why not count exactly?"
+    a: "Track active series per tenant with an approximate structure (HyperLogLog or Count-Min Sketch) — exact counting doesn't fit in memory at 1B+ series. Reject/drop metric families exceeding budget, emit a cardinality_limit_exceeded counter, and signal the agent via OTLP PartialSuccess."
+
+  - id: delta-cumulative-mismatch
+    type: basic
+    q: "What is the 'silent OTLP impedance mismatch' around metric temporality?"
+    a: "Most OTel SDK languages default to delta temporality (value = change since last export), but Prometheus remote-write and Mimir expect cumulative. The processor must stateful-accumulate per series to convert delta→cumulative, which doesn't scale to 1B active series on one machine."
+
+  - id: temporality-preferred-fix
+    type: basic
+    q: "What is the preferred fix for the delta-vs-cumulative temporality mismatch, and why?"
+    a: "Force agents to emit cumulative at the SDK level (a temporality_preference: cumulative config flag) — this eliminates a stateful component from the pipeline entirely. The pipeline-side fix (a deltaToCumulative processor with a bounded LRU state store) leaks state on restart, causing visible counter resets."
+
+  - id: k8s-metadata-enrichment-options
+    type: basic
+    q: "What are the three ways to enrich spans/metrics with Kubernetes metadata, and which is preferred?"
+    a: "1) In-memory pod cache with informer watch (has a cold-start gap after restart). 2) Enrich at the agent — preferred; the Alloy/OTel Collector DaemonSet has local node access and survives processor restarts without gaps. 3) OTel k8sattributes processor — the standard implementation of option 1."
+
+  - id: trace-assembler-hardest-part
+    type: basic
+    q: "Why is the span assembler the hardest part of tail-based sampling at scale?"
+    a: "At 1B spans/sec you cannot hold everything in memory. Mitigations: hash-partition spans by trace_id to processors, bound the in-memory LRU with overflow to disk/Redis, and use TTL-based flush (orphan traces sampled at a low rate or dropped) if the root span never arrives."
+
+  - id: multi-tenancy-enforcement-layers
+    type: basic
+    q: "At how many layers must multi-tenancy be enforced, and why not just at storage?"
+    a: "Every layer: network (SNI routing/path prefix), auth (per-tenant key/cert), gateway (extract tenant ID), buffer (tenant ID in message header), processing (per-tenant cardinality budget), storage (X-Scope-OrgID). Relying on a single enforcement point lets one noisy tenant take down the platform."
+
+  - id: quota-enforcement-points
+    type: basic
+    q: "Name the three quota enforcement points and their granularity."
+    a: "1) Gateway — connection-level and request-rate limits (coarse). 2) Processor — cardinality budget, series-per-minute cap (fine-grained). 3) Storage (Mimir/Loki/Cortex) — per-tenant limits as a safety-net backstop."
+
+  - id: mimir-data-tiering
+    type: basic
+    q: "Describe Mimir's hot-to-cold data tiering path."
+    a: "The ingester holds a hot, in-memory block for the last 2h → flushes to object store (cold tier) → the compactor asynchronously merges overlapping ranges and deduplicates RF=3 replicas. The querier merges recent (ingester) reads with historical (store-gateway) reads."
+
+  - id: mimir-compaction-levels
+    type: basic
+    q: "What are Mimir's compaction levels (L1-L4) and their time ranges?"
+    a: "L1: 2h (raw ingester flush, many small files). L2: 12h (compact 6× L1). L3: 24h (compact 2× L2). L4: 7d (compact 7× L3, for long-range scan efficiency)."
+
+  - id: vertical-compaction-dedup
+    type: basic
+    q: "What is vertical compaction and why does skipping it cost 3x storage?"
+    a: "With RF=3, each series is written to three ingesters simultaneously. The compactor deduplicates overlapping blocks by label fingerprint + timestamp after flush. Without this dedup step, storage cost is 3x because all three replicas' blocks are kept separately."
+
+  - id: store-gateway-lazy-loading
+    type: basic
+    q: "Why does the store-gateway use lazy loading for block indices?"
+    a: "At millions of blocks, loading all block indices into memory at startup is not viable — lazy loading loads indices on demand, keeping startup and steady-state memory bounded."
+
+  - id: global-topology-answer
+    type: basic
+    q: "What global deployment topology does the design recommend at 10M-agent scale, and why?"
+    a: "Regional writes + async cross-region replication to a global query tier — never one global cluster. Write latency stays local (<10ms); a region outage loses telemetry only for that region's tenants during the outage, instead of a global blast radius."
+
+  - id: agent-failover-options
+    type: basic
+    q: "What are the three options for agent failover when a region's gateway is unreachable?"
+    a: "1) DNS-based failover (low TTL, retry to secondary endpoint). 2) Anycast routing (same IP, routing layer redirects to a healthy region). 3) Agent-side fallback list — an explicitly configured secondary endpoint in agent config."
+
+  - id: fan-in-problem-100k-agents
+    type: basic
+    q: "What is the 'fan-in problem' at 100K+ agents, and how is it mitigated?"
+    a: "Connection establishment storms — e.g. after a rolling restart, 50K agents reconnect simultaneously (a thundering herd). Mitigated by exponential backoff with jitter in agents; the gateway itself must never become the coordination point for backpressure."
+
+  - id: otlp-partial-success
+    type: basic
+    q: "What does OTLP PartialSuccess let a gateway signal, and why does it matter?"
+    a: "The gateway can accept most of a batch but signal partial rejection (e.g. 'accepted your metrics, dropped 3 spans — exceeded cardinality budget'). The agent can then decide whether to retry or log and move on, instead of the whole batch failing or silently succeeding."
+
+  - id: backpressure-flow
+    type: basic
+    q: "Trace the backpressure flow when storage fills up, from Mimir back to the agent."
+    a: "Storage full → processor slows, consumer lag grows → Kafka lag alarm fires (scale out via HPA) → if lag persists, gateway returns gRPC RESOURCE_EXHAUSTED → agent gets a 429, backs off with jitter → agent's local WAL/memory queue absorbs the burst."
+
+  - id: rate-limiting-cannot-be-local
+    type: basic
+    q: "Why can't per-request rate limiting be enforced inside a single gateway pod?"
+    a: "State isn't shared across replicas — each pod would enforce its own limit independently, so a tenant's effective limit becomes configured_limit × pod_count, which drifts every time the fleet autoscales. It needs a distributed-state solution (Redis token bucket, gossip, or Envoy + a global rate-limit service)."
+
+  - id: head-vs-tail-recommendation
+    type: basic
+    q: "When does the design recommend head-based vs. tail-based trace sampling?"
+    a: "Tail-based for business-critical services (bias toward errors/slow traces). Head-based at a higher flat rate (e.g. 10%) for internal infrastructure services where aggregate rates matter most. Never both at the same layer — it multiplies complexity for no benefit."
+
+  - id: otlp-grpc-vs-prom-rw
+    type: basic
+    q: "What protocol trade-off does the design recommend for new vs. existing deployments?"
+    a: "OTLP gRPC as the primary protocol for new deployments (binary efficient, HTTP/2 multiplexed, supports all signal types). Prometheus remote-write as a compatibility shim for existing agents. Never negotiate down to HTTP/1.1 + JSON on high-volume paths."
+
+  - id: synthetic-canary-mechanism
+    type: basic
+    q: "How does the synthetic canary validate the pipeline's end-to-end SLO?"
+    a: "Every 60s, push a labeled sentinel metric through the full path (gateway → Kafka → processor → Mimir), then poll the query endpoint until it appears or the SLO window expires. If it doesn't appear in time, fire an alert. It covers gateway-through-storage but not the agent-to-gateway path — test that separately."
+
+  - id: consumer-lag-primary-signal
+    type: basic
+    q: "What is described as the single most important operational signal in this pipeline, and why?"
+    a: "Kafka consumer group lag. It's the earliest, cheapest signal of a processing bottleneck anywhere downstream of the buffer — a lag spike on one partition (versus all) also distinguishes a poison-pill message from a general processor slowdown."
+
+  - id: kafka-producer-config-load-bearing
+    type: basic
+    q: "What Kafka producer settings are 'load-bearing at scale' for the ingestion gateway, and why acks=all?"
+    a: "acks=all (durability over throughput — all ISR replicas confirm), enable.idempotence=true (no duplicate on retry), retries effectively infinite capped by delivery.timeout.ms=120s, linger.ms=5 for batching, compression.type=zstd. acks=all is what makes Kafka the durability boundary — anything less risks silent loss on broker failover."
+
+  - id: pdb-rolling-deploy-capacity
+    type: basic
+    q: "Why does the zero-drop rolling-deploy guarantee need both a PodDisruptionBudget AND HPA headroom below 100%?"
+    a: "A PDB (maxUnavailable: 1) prevents simultaneous multi-pod eviction, but if the fleet is sized to exactly 100% capacity, losing even one pod creates a capacity gap during the deploy. Targeting HPA at ~65% utilization gives the remaining fleet enough headroom to absorb the missing pod's traffic without dropping data."

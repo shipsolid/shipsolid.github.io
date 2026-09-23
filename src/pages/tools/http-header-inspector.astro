@@ -1,0 +1,151 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="http-header-inspector"
+  description="Paste raw HTTP response headers (e.g. curl -I output) to parse them and check for common security headers. Client-side only, no sign-up, no tracking."
+  intro="Paste raw response headers to parse them and check for the security headers that matter. Everything stays in your browser."
+>
+
+  <div class="card">
+        <h2 class="section-label">Raw headers</h2>
+        <label class="text-xs font-mono text-dim block mt-4">
+          Paste output of e.g. <code>curl -I https://example.com</code>
+          <textarea
+            id="hh-raw"
+            rows="10"
+            placeholder="HTTP/1.1 200 OK
+Date: Mon, 01 Jan 2026 00:00:00 GMT
+Content-Type: text/html; charset=utf-8"
+            class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 font-mono"
+          ></textarea>
+        </label>
+      </div>
+
+      <div id="hh-parsed" class="card mt-6"></div>
+
+      <div id="hh-security" class="card mt-6"></div>
+
+</ToolLayout>
+
+<script>
+import { checkSecurityHeaders, parseHeaders } from '../../lib/tools/http-header-inspector';
+import type { HttpHeader, SecurityHeaderCheck } from '../../lib/tools/http-header-inspector';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:http-header-inspector:raw';
+
+  const DEFAULT_RAW = [
+    'HTTP/1.1 200 OK',
+    'Date: Mon, 01 Jan 2026 00:00:00 GMT',
+    'Content-Type: text/html; charset=utf-8',
+    'Content-Length: 1256',
+    'Server: nginx',
+    'Strict-Transport-Security: max-age=63072000; includeSubDomains',
+    'X-Content-Type-Options: nosniff',
+  ].join('\n');
+
+  let raw: string = loadJSON<string>(STORAGE_KEY, DEFAULT_RAW);
+
+  function persistRaw() {
+    saveJSON(STORAGE_KEY, raw);
+  }
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  const rawInput = document.getElementById('hh-raw') as HTMLTextAreaElement | null;
+  const parsedEl = document.getElementById('hh-parsed');
+  const securityEl = document.getElementById('hh-security');
+
+  if (rawInput) rawInput.value = raw;
+
+  function renderParsed(headers: HttpHeader[]): string {
+    if (headers.length === 0) {
+      return `
+        <h2 class="section-label mb-3">Parsed headers</h2>
+        <p class="text-sm text-dim font-mono">No headers parsed yet — paste some above.</p>
+      `;
+    }
+
+    const rows = headers
+      .map(
+        (h) => `
+        <tr>
+          <td class="px-3 py-2 font-mono text-sm text-body border-b border-line align-top whitespace-nowrap">${escapeHtml(h.name)}</td>
+          <td class="px-3 py-2 font-mono text-sm text-body border-b border-line break-all">${escapeHtml(h.value)}</td>
+        </tr>
+      `
+      )
+      .join('');
+
+    return `
+      <h2 class="section-label mb-3">Parsed headers</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr>
+              <th class="text-left px-3 py-2 font-mono text-xs text-dim border-b border-line">Name</th>
+              <th class="text-left px-3 py-2 font-mono text-xs text-dim border-b border-line">Value</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function renderSecurity(checks: SecurityHeaderCheck[]): string {
+    const rows = checks
+      .map((c) => {
+        const icon = c.present
+          ? '<span class="text-green-400">✓</span>'
+          : '<span class="text-red-400">✗</span>';
+        const valueLine = c.present
+          ? `<div class="text-xs font-mono text-muted mt-1 break-all">${escapeHtml(c.value ?? '')}</div>`
+          : '';
+        return `
+          <li class="py-3 border-b border-line last:border-0">
+            <div class="flex items-start gap-3">
+              <span class="mt-0.5">${icon}</span>
+              <div class="flex-1 min-w-0">
+                <div class="font-mono text-sm text-ink">${escapeHtml(c.name)}</div>
+                <div class="text-xs text-dim mt-0.5">${escapeHtml(c.note)}</div>
+                ${valueLine}
+              </div>
+            </div>
+          </li>
+        `;
+      })
+      .join('');
+
+    return `
+      <h2 class="section-label mb-3">Security headers</h2>
+      <ul>${rows}</ul>
+    `;
+  }
+
+  function run() {
+    raw = rawInput?.value ?? '';
+    persistRaw();
+
+    const headers = parseHeaders(raw);
+    const checks = checkSecurityHeaders(headers);
+
+    if (parsedEl) parsedEl.innerHTML = renderParsed(headers);
+    if (securityEl) securityEl.innerHTML = renderSecurity(checks);
+  }
+
+  rawInput?.addEventListener('input', run);
+
+  run();
+})();
+</script>

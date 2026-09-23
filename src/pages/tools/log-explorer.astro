@@ -1,0 +1,209 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="log-explorer"
+  description="Paste raw logs, then parse, filter, group, and search them entirely in your browser. Handles plain lines and JSON-per-line. Client-side only, no sign-up, no tracking."
+  intro="Drop in a block of logs. Each line is parsed for a timestamp, level, and key=value fields; then filter by text or regex, narrow by level, and see the level breakdown. Nothing is uploaded."
+>
+
+  <div class="card">
+    <h2 class="section-label">Logs</h2>
+    <textarea id="le-input" rows="10"
+      class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+      placeholder="2026-08-27 10:14:02 INFO  GET /api/orders status=200 dur=34ms&#10;{&quot;ts&quot;:&quot;2026-08-27T10:14:11Z&quot;,&quot;level&quot;:&quot;error&quot;,&quot;msg&quot;:&quot;timeout&quot;}"></textarea>
+    <p id="le-persist-note" class="mt-2 text-xs text-dim font-mono hidden">This log is large — it won't be remembered on reload.</p>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Filter</h2>
+    <div class="mt-4 flex flex-col sm:flex-row gap-3">
+      <input id="le-query" type="search" placeholder="Search text…"
+        class="flex-1 bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+      <label class="flex items-center gap-2 text-xs font-mono text-dim shrink-0">
+        <input id="le-regex" type="checkbox" class="w-4 h-4" style="accent-color: rgb(var(--color-accent-rgb))" />
+        Regex
+      </label>
+    </div>
+    <div id="le-levels" class="mt-3 flex flex-wrap gap-2"></div>
+    <p id="le-error" class="mt-2 text-sm text-red-400 font-mono hidden"></p>
+  </div>
+
+  <div id="le-summary" class="card mt-6"></div>
+
+  <div id="le-lines" class="card mt-6"></div>
+
+</ToolLayout>
+
+<script>
+  import { filterLogs, groupBy, levelCounts, parseLogs } from '../../lib/tools/log-explorer';
+  import type { ParsedLogLine } from '../../lib/tools/log-explorer';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:log-explorer:state';
+  const PERSIST_MAX_BYTES = 256 * 1024;
+  const RENDER_CAP = 1000;
+  const KNOWN_LEVELS = ['TRACE', 'DEBUG', 'INFO', 'NOTICE', 'WARN', 'ERROR', 'FATAL', 'CRITICAL'];
+
+  interface LeState {
+    text: string;
+    query: string;
+    levels: string[];
+    regex: boolean;
+  }
+
+  const DEFAULT_STATE: LeState = {
+    text: [
+      '2026-08-27 10:14:02 INFO  192.168.1.42 GET /api/orders status=200 dur=34ms',
+      '2026-08-27 10:14:05 WARN  10.0.0.17 POST /api/checkout status=429 dur=812ms',
+      '{"ts":"2026-08-27T10:14:11Z","level":"error","msg":"inventory timeout","service":"inventory","status":500}',
+      '2026-08-27 10:15:44 INFO  192.168.1.42 GET /api/orders status=200 dur=29ms',
+      '2026-08-27 10:16:03 ERROR 172.16.4.9 GET /api/inventory status=500 dur=1502ms trace_id=a1b2c3',
+    ].join('\n'),
+    query: '',
+    levels: [],
+    regex: false,
+  };
+
+  const state: LeState = { ...DEFAULT_STATE, ...loadJSON<Partial<LeState>>(STORAGE_KEY, {}) };
+
+  const inputEl = document.getElementById('le-input') as HTMLTextAreaElement | null;
+  const persistNote = document.getElementById('le-persist-note');
+  const queryEl = document.getElementById('le-query') as HTMLInputElement | null;
+  const regexEl = document.getElementById('le-regex') as HTMLInputElement | null;
+  const levelsEl = document.getElementById('le-levels') as HTMLElement | null;
+  const errorEl = document.getElementById('le-error');
+  const summaryEl = document.getElementById('le-summary');
+  const linesEl = document.getElementById('le-lines');
+
+  if (inputEl) inputEl.value = state.text;
+  if (queryEl) queryEl.value = state.query;
+  if (regexEl) regexEl.checked = state.regex;
+
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function persist() {
+    const toStore: LeState = { ...state };
+    if (new Blob([state.text]).size > PERSIST_MAX_BYTES) {
+      toStore.text = '';
+      persistNote?.classList.remove('hidden');
+    } else {
+      persistNote?.classList.add('hidden');
+    }
+    saveJSON(STORAGE_KEY, toStore);
+  }
+
+  const LEVEL_DOT: Record<string, string> = {
+    ERROR: 'bg-red-500',
+    FATAL: 'bg-red-600',
+    CRITICAL: 'bg-red-600',
+    WARN: 'bg-amber-400',
+    NOTICE: 'bg-sky-400',
+    INFO: 'bg-emerald-500',
+    DEBUG: 'bg-dim',
+    TRACE: 'bg-faint',
+  };
+
+  function renderLevelChips(counts: Record<string, number>) {
+    if (!levelsEl) return;
+    const present = KNOWN_LEVELS.filter((l) => counts[l]);
+    levelsEl.innerHTML = present
+      .map((level) => {
+        const active = state.levels.includes(level);
+        return `<button type="button" data-level="${level}"
+          class="filter-tag ${active ? 'active' : ''}" style="width:auto">
+          <span>${level}</span><span class="tag-count">${counts[level]}</span>
+        </button>`;
+      })
+      .join('');
+  }
+
+  function run() {
+    if (!errorEl || !summaryEl || !linesEl) return;
+    state.text = inputEl?.value ?? '';
+    state.query = queryEl?.value ?? '';
+    state.regex = !!regexEl?.checked;
+    persist();
+
+    const parsed = parseLogs(state.text);
+    const counts = levelCounts(parsed);
+    renderLevelChips(counts);
+
+    let filtered: ParsedLogLine[];
+    try {
+      filtered = filterLogs(parsed, { query: state.query, levels: state.levels, regex: state.regex });
+      errorEl.classList.add('hidden');
+    } catch (err) {
+      errorEl.textContent = err instanceof Error ? err.message : String(err);
+      errorEl.classList.remove('hidden');
+      filtered = parsed;
+    }
+
+    const levelGroups = groupBy(filtered, 'level');
+    const total = filtered.length || 1;
+    summaryEl.innerHTML = `
+      <h2 class="section-label mb-3">Summary</h2>
+      <p class="text-sm font-mono text-muted mb-3">${filtered.length} of ${parsed.length} lines match.</p>
+      ${levelGroups
+        .map(
+          (g) => `
+        <div class="mt-1">
+          <div class="flex justify-between text-xs font-mono text-muted">
+            <span>${escapeHtml(g.key)}</span><span>${g.count}</span>
+          </div>
+          <div class="mt-1 h-2 rounded bg-surface-hover overflow-hidden">
+            <div class="h-full bg-accent" style="width:${(g.count / total) * 100}%"></div>
+          </div>
+        </div>`
+        )
+        .join('')}
+    `;
+
+    const shown = filtered.slice(0, RENDER_CAP);
+    const rows = shown
+      .map((line) => {
+        const dot = LEVEL_DOT[line.level ?? ''] ?? 'bg-line-hover';
+        const fieldPairs = Object.entries(line.fields)
+          .map(([k, v]) => `<span class="text-dim">${escapeHtml(k)}=</span>${escapeHtml(v)}`)
+          .join('  ');
+        return `
+          <details class="border-b border-line last:border-0">
+            <summary class="flex items-start gap-2 py-1.5 cursor-pointer text-sm font-mono">
+              <span class="text-faint w-10 shrink-0 text-right select-none">${line.lineNumber}</span>
+              <span class="mt-1.5 w-2 h-2 rounded-full shrink-0 ${dot}"></span>
+              <span class="text-dim shrink-0">${escapeHtml(line.timestamp ?? '')}</span>
+              <span class="text-ink break-all">${escapeHtml(line.message)}</span>
+            </summary>
+            <div class="pl-14 pb-2 text-xs font-mono text-muted space-y-1">
+              ${fieldPairs ? `<div class="break-all">${fieldPairs}</div>` : ''}
+              <div class="text-faint break-all">${escapeHtml(line.raw)}</div>
+            </div>
+          </details>`;
+      })
+      .join('');
+
+    linesEl.innerHTML = `
+      <h2 class="section-label mb-3">Lines</h2>
+      ${filtered.length === 0 ? '<p class="text-sm text-dim font-mono">No lines match.</p>' : `<div>${rows}</div>`}
+      ${filtered.length > RENDER_CAP ? `<p class="text-xs text-dim font-mono mt-2">Showing the first ${RENDER_CAP} of ${filtered.length}.</p>` : ''}
+    `;
+  }
+
+  inputEl?.addEventListener('input', run);
+  queryEl?.addEventListener('input', run);
+  regexEl?.addEventListener('change', run);
+  levelsEl?.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest('[data-level]') as HTMLElement | null;
+    if (!btn) return;
+    const level = btn.dataset.level as string;
+    state.levels = state.levels.includes(level)
+      ? state.levels.filter((l) => l !== level)
+      : [...state.levels, level];
+    run();
+  });
+
+  run();
+</script>

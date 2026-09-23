@@ -1,0 +1,43 @@
+---
+// The one page shell. Before this, ~37 pages and all four content layouts
+// hand-rolled the same <Base> + <Header /> + <main id="main"> + <Footer />
+// stack, each with its own copy of the pt-28/pt-36 header offset and the
+// id="main"/tabindex="-1" skip-link target. A page now provides only its own
+// width container (which legitimately varies: max-w-9xl / 7xl / 3xl / ...) and
+// its body.
+//
+// Page-level <script> / <style is:global> stay at the top level of the
+// consuming page (outside this component's slot) exactly as before — Astro
+// hoists and processes them regardless of slot nesting.
+import Base from './Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { subNavFor } from '../data/nav';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  article?: boolean;
+  /** Extra classes appended to <main> — currently only "min-h-screen" (the
+   *  flashcard / study pages that must pin the footer to the viewport bottom). */
+  mainClass?: string;
+}
+
+const { title, description, ogImage, article = false, mainClass = '' } = Astro.props;
+
+// Two-row header (/tools/*, and the knowledge section) needs pt-36 so content
+// clears the sub-nav strip. Same decision function the strip itself keys off
+// in Header.astro.
+const subNav = subNavFor(Astro.url.pathname);
+const padTop = subNav === 'tools' || subNav === 'notes' ? 'pt-36' : 'pt-28';
+---
+
+<Base title={title} description={description} ogImage={ogImage} article={article}>
+  <Header />
+  <main id="main" tabindex="-1" class:list={[padTop, 'pb-20', mainClass]}>
+    <slot />
+  </main>
+  <Footer />
+  <slot name="after" />
+</Base>

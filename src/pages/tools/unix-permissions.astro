@@ -1,0 +1,147 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="unix-permissions"
+  description="Unix/Linux file permissions calculator — convert between octal and symbolic notation, see a human-readable breakdown, and preview the chmod command. Client-side only, no sign-up, no tracking."
+  intro="Convert between octal and symbolic file permissions, including setuid/setgid/sticky bits. Everything stays in your browser."
+>
+
+  <div class="card">
+        <h2 class="section-label">Permissions</h2>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="text-xs font-mono text-dim">
+            Octal (e.g. 755, 4755)
+            <input
+              id="up-octal"
+              type="text"
+              placeholder="755"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+          <label class="text-xs font-mono text-dim">
+            Symbolic (e.g. rwxr-xr-x)
+            <input
+              id="up-symbolic"
+              type="text"
+              placeholder="rwxr-xr-x"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+          <label class="text-xs font-mono text-dim sm:col-span-2">
+            Filename (for the chmod preview)
+            <input
+              id="up-filename"
+              type="text"
+              placeholder="myfile.sh"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+        </div>
+        <div id="up-error" class="mt-3 text-sm text-red-400 font-mono"></div>
+      </div>
+
+      <div id="up-describe-card" class="card mt-6">
+        <h3 class="section-label mb-3">Breakdown</h3>
+        <div id="up-describe" class="space-y-1 text-sm font-mono text-body"></div>
+      </div>
+
+      <div id="up-chmod-card" class="card mt-6">
+        <h3 class="section-label mb-3">Command</h3>
+        <div id="up-chmod" class="text-sm font-mono text-body"></div>
+      </div>
+
+</ToolLayout>
+
+<script>
+import { describePermissions, octalToSymbolic, symbolicToOctal } from '../../lib/tools/unix-permissions';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:unix-permissions:octal';
+  const DEFAULT_OCTAL = '755';
+  const DEFAULT_FILENAME = 'myfile.sh';
+
+  const storedOctal: string = loadJSON<string>(STORAGE_KEY, DEFAULT_OCTAL);
+
+  const octalInput = document.getElementById('up-octal') as HTMLInputElement | null;
+  const symbolicInput = document.getElementById('up-symbolic') as HTMLInputElement | null;
+  const filenameInput = document.getElementById('up-filename') as HTMLInputElement | null;
+  const errorEl = document.getElementById('up-error');
+  const describeEl = document.getElementById('up-describe');
+  const chmodEl = document.getElementById('up-chmod');
+
+  if (octalInput) octalInput.value = storedOctal;
+  if (filenameInput) filenameInput.value = DEFAULT_FILENAME;
+
+  function clearError() {
+    if (errorEl) errorEl.textContent = '';
+  }
+
+  function renderError(err: unknown) {
+    if (!errorEl) return;
+    const message = err instanceof Error ? err.message : String(err);
+    errorEl.textContent = message;
+  }
+
+  function renderDescribe(lines: string[]) {
+    if (!describeEl) return;
+    describeEl.innerHTML = lines.map((line) => `<div>${line}</div>`).join('');
+  }
+
+  function renderChmod(octalValue: string) {
+    if (!chmodEl) return;
+    const filename = filenameInput?.value?.trim() || DEFAULT_FILENAME;
+    chmodEl.innerHTML = `<code>chmod ${octalValue} ${filename}</code>`;
+  }
+
+  // Shared apply step once we have a known-valid octal value: refreshes the breakdown + chmod
+  // preview and persists. `updateSymbolicField` is false when the symbolic input was the field
+  // the user just edited, so we don't stomp their in-progress keystrokes.
+  function applyOctal(octalValue: string, updateSymbolicField: boolean) {
+    try {
+      const symbolic = octalToSymbolic(octalValue);
+      const lines = describePermissions(octalValue);
+      if (updateSymbolicField && symbolicInput) symbolicInput.value = symbolic;
+      renderDescribe(lines);
+      renderChmod(octalValue);
+      clearError();
+      saveJSON(STORAGE_KEY, octalValue);
+    } catch (err) {
+      renderError(err);
+    }
+  }
+
+  function applySymbolic(symbolicValue: string) {
+    try {
+      const octalValue = symbolicToOctal(symbolicValue);
+      if (octalInput) octalInput.value = octalValue;
+      applyOctal(octalValue, false);
+    } catch (err) {
+      renderError(err);
+    }
+  }
+
+  octalInput?.addEventListener('input', () => {
+    applyOctal(octalInput.value.trim(), true);
+  });
+
+  symbolicInput?.addEventListener('input', () => {
+    applySymbolic(symbolicInput.value.trim());
+  });
+
+  filenameInput?.addEventListener('input', () => {
+    const octalValue = octalInput?.value?.trim() ?? DEFAULT_OCTAL;
+    try {
+      octalToSymbolic(octalValue); // validate before re-rendering the preview
+      renderChmod(octalValue);
+    } catch {
+      // leave the existing preview/error state alone; the octal/symbolic handlers own error display
+    }
+  });
+
+  // Initial render from the persisted (or default) octal, seeding the symbolic field too.
+  applyOctal(octalInput?.value?.trim() ?? DEFAULT_OCTAL, true);
+})();
+</script>

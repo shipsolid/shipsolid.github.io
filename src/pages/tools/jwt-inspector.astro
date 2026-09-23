@@ -1,0 +1,157 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="jwt-inspector"
+  description="Decode a JWT's header and payload, and check its expiry — all client-side, no sign-up, no tracking."
+>
+  <Fragment slot="intro">
+    <p class="text-muted">
+      Paste a JWT to see its decoded header, payload, and expiry — everything stays in your browser.
+    </p>
+    <p class="text-xs text-dim font-mono mt-3">
+      Decode only — signature is not verified.
+    </p>
+  </Fragment>
+
+  <div class="card">
+        <h2 class="section-label">Token</h2>
+        <form id="jwt-form" class="mt-4 space-y-4">
+          <label class="text-xs font-mono text-dim">
+            JWT
+            <textarea
+              id="jwt-input"
+              rows="6"
+              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9. ..."
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            ></textarea>
+          </label>
+          <button type="submit" class="btn-primary">Decode</button>
+        </form>
+      </div>
+
+      <div id="jwt-error" class="mt-6 text-sm text-red-400 font-mono hidden"></div>
+
+      <div id="jwt-results" class="hidden">
+        <div class="card mt-6">
+          <h2 class="section-label">Expiry</h2>
+          <div class="mt-4 flex flex-wrap items-center gap-3">
+            <span id="jwt-expiry-badge" class="tag"></span>
+            <span id="jwt-issued-at" class="text-xs font-mono text-dim"></span>
+            <span id="jwt-expires-at" class="text-xs font-mono text-dim"></span>
+          </div>
+        </div>
+
+        <div class="card mt-6">
+          <div class="flex items-center justify-between">
+            <h2 class="section-label">Header</h2>
+            <button type="button" id="jwt-copy-header" class="btn-outline text-xs">Copy</button>
+          </div>
+          <pre id="jwt-header-output" class="mt-4 bg-field border border-line rounded-lg p-3 text-sm text-ink font-mono overflow-x-auto"></pre>
+        </div>
+
+        <div class="card mt-6">
+          <div class="flex items-center justify-between">
+            <h2 class="section-label">Payload</h2>
+            <button type="button" id="jwt-copy-payload" class="btn-outline text-xs">Copy</button>
+          </div>
+          <pre id="jwt-payload-output" class="mt-4 bg-field border border-line rounded-lg p-3 text-sm text-ink font-mono overflow-x-auto"></pre>
+        </div>
+      </div>
+
+</ToolLayout>
+
+<script>
+import { decodeJwt } from '../../lib/tools/jwt-inspector';
+
+// Deliberately NOT using loadJSON/saveJSON here — unlike the other tools on this site, a JWT can
+// carry sensitive claims (emails, internal IDs, roles), so the pasted token is never written to
+// localStorage. The form starts empty on every visit.
+
+(() => {
+  const form = document.getElementById('jwt-form');
+  const input = document.getElementById('jwt-input') as HTMLTextAreaElement | null;
+  const errorBox = document.getElementById('jwt-error');
+  const results = document.getElementById('jwt-results');
+
+  const expiryBadge = document.getElementById('jwt-expiry-badge');
+  const issuedAtEl = document.getElementById('jwt-issued-at');
+  const expiresAtEl = document.getElementById('jwt-expires-at');
+
+  const headerOutput = document.getElementById('jwt-header-output');
+  const payloadOutput = document.getElementById('jwt-payload-output');
+  const copyHeaderBtn = document.getElementById('jwt-copy-header') as HTMLButtonElement | null;
+  const copyPayloadBtn = document.getElementById('jwt-copy-payload') as HTMLButtonElement | null;
+
+  function showError(message: string) {
+    results?.classList.add('hidden');
+    if (errorBox) {
+      errorBox.textContent = message;
+      errorBox.classList.remove('hidden');
+    }
+  }
+
+  function formatTimestamp(date: Date | null, label: string): string {
+    return date ? `${label}: ${date.toLocaleString()}` : `${label}: —`;
+  }
+
+  async function copyText(button: HTMLButtonElement | null, text: string) {
+    if (!button) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      const original = button.textContent;
+      button.textContent = 'Copied!';
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+  }
+
+  function decode() {
+    const token = input?.value.trim() ?? '';
+    if (!token) {
+      showError('Paste a JWT above to decode it.');
+      return;
+    }
+
+    try {
+      const decoded = decodeJwt(token);
+      errorBox?.classList.add('hidden');
+      results?.classList.remove('hidden');
+
+      if (expiryBadge) {
+        if (decoded.isExpired === null) {
+          expiryBadge.textContent = 'No expiry claim';
+          expiryBadge.className = 'tag bg-surface-hover text-muted';
+        } else if (decoded.isExpired) {
+          expiryBadge.textContent = 'Expired';
+          expiryBadge.className = 'tag bg-red-950 text-red-400 border border-red-900';
+        } else {
+          expiryBadge.textContent = 'Valid';
+          expiryBadge.className = 'tag bg-emerald-950 text-emerald-400 border border-emerald-900';
+        }
+      }
+
+      if (issuedAtEl) issuedAtEl.textContent = formatTimestamp(decoded.issuedAt, 'Issued at');
+      if (expiresAtEl) expiresAtEl.textContent = formatTimestamp(decoded.expiresAt, 'Expires at');
+
+      if (headerOutput) headerOutput.textContent = JSON.stringify(decoded.header, null, 2);
+      if (payloadOutput) payloadOutput.textContent = JSON.stringify(decoded.payload, null, 2);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      showError(message);
+    }
+  }
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    decode();
+  });
+
+  copyHeaderBtn?.addEventListener('click', () => copyText(copyHeaderBtn, headerOutput?.textContent ?? ''));
+  copyPayloadBtn?.addEventListener('click', () => copyText(copyPayloadBtn, payloadOutput?.textContent ?? ''));
+})();
+</script>

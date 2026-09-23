@@ -1,0 +1,72 @@
+---
+// Shared shell for every /tools/<slug> page. Replaces the hand-built
+// Base + Header + Footer + <main>/<header>/back-link boilerplate that each tool
+// page used to carry its own copy of. Defaults title/description/tags from the
+// central manifest (src/data/tools.ts) so a tool page only overrides what
+// actually differs.
+//
+// The page's own <script> and any <style is:global> stay OUTSIDE the default
+// slot (page-level, unchanged) — only the visible body markup goes in the slot.
+import Page from './Page.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import MermaidRenderer from '../components/MermaidRenderer.astro';
+import { getTool } from '../data/tools';
+
+interface Props {
+  /** Manifest slug — drives the breadcrumb label and the title/description/tags defaults. */
+  slug: string;
+  title?: string;
+  description?: string;
+  /** Chip row above the h1. Defaults to the manifest tags; pass [] to hide it. */
+  tags?: string[];
+  /** Plain-text intro paragraph under the h1. For rich markup use <slot name="intro"> instead. */
+  intro?: string;
+  /** Render <MermaidRenderer/> (needed by tools that draw Mermaid diagrams client-side). */
+  mermaid?: boolean;
+}
+
+const { slug, mermaid = false } = Astro.props;
+const meta = getTool(slug);
+
+const title = Astro.props.title ?? meta?.title ?? 'Tool';
+const description =
+  Astro.props.description ??
+  meta?.description ??
+  'A small, self-hosted engineering tool. Runs entirely in your browser — no account, no server.';
+const tags = Astro.props.tags ?? meta?.tags ?? [];
+const intro = Astro.props.intro;
+---
+
+<Page title={`${title} — Amit Singh`} description={description}>
+    <div class="max-w-6xl mx-auto px-6">
+
+      <Breadcrumb items={[{ label: 'Tools', href: '/tools' }, { label: title }]} />
+
+      <header class="mb-10">
+        {tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mb-4">
+            {tags.map((tag) => <span class="tag">{tag}</span>)}
+          </div>
+        )}
+        <h1 class="text-3xl md:text-4xl font-bold text-ink leading-tight mb-3">
+          {title}
+        </h1>
+        {intro && <p class="text-muted">{intro}</p>}
+        <slot name="intro" />
+      </header>
+
+      <slot />
+
+      <div class="mt-16 pt-8 border-t border-line flex items-center justify-between">
+        <a
+          href="/tools"
+          class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors"
+        >
+          ← Tools
+        </a>
+      </div>
+
+    </div>
+
+  {mermaid && <MermaidRenderer />}
+</Page>

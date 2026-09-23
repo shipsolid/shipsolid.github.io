@@ -1,0 +1,240 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+
+const allDecks = await getCollection('flashcards');
+
+// Group by top-level directory; decks at root (no "/") get topic "General"
+const topicMap = new Map<string, typeof allDecks>();
+for (const deck of allDecks) {
+  const parts = deck.id.split('/');
+  const rawTopic = parts.length > 1 ? parts[0] : 'general';
+  const label = rawTopic
+    .split('-')
+    .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+  if (!topicMap.has(label)) topicMap.set(label, []);
+  topicMap.get(label)!.push(deck);
+}
+
+// Sort topics alphabetically; sort decks within each topic by title
+const topics = [...topicMap.keys()].sort();
+for (const [, decks] of topicMap) {
+  decks.sort((a, b) => a.data.title.localeCompare(b.data.title));
+}
+
+const totalDecks = allDecks.length;
+const totalCards = allDecks.reduce((n, d) => n + d.data.cards.length, 0);
+
+// Tag filter sidebar — same data shape as TopicListing's right column for notes
+const allTags = [...new Set(allDecks.flatMap((d) => d.data.tags))].sort();
+const tagCounts = new Map<string, number>();
+for (const deck of allDecks) {
+  for (const tag of deck.data.tags) {
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  }
+}
+---
+
+<Page
+  title="Flashcards — Amit Singh"
+  description="Active-recall flashcard decks for distributed systems, observability, and MAANG interview prep."
+>
+  <div class="max-w-9xl mx-auto px-6">
+      <div class="mb-12">
+        <p class="section-label">Active Recall</p>
+        <h1 class="text-4xl font-bold text-ink mt-2">Flashcard Decks</h1>
+        <p class="text-muted mt-3 max-w-lg">
+          Flip-card study decks for distributed systems patterns, observability, and system design.
+          Progress is saved per deck in your browser.
+        </p>
+        <p class="text-xs font-mono text-faint mt-3">
+          {totalDecks} {totalDecks === 1 ? 'deck' : 'decks'} · {totalCards} cards
+        </p>
+        <div class="mt-4 flex flex-wrap gap-3">
+          <a href="/flashcards/review" class="btn-outline text-sm">Review Hub</a>
+          <a href="/flashcards/stats" class="btn-outline text-sm">Stats</a>
+        </div>
+      </div>
+
+      {totalDecks === 0 ? (
+        <div class="card text-center py-16">
+          <p class="text-dim font-mono">// First deck coming soon</p>
+        </div>
+      ) : (
+        <div class="doc-grid items-start">
+
+          <!-- Left: topics nav -->
+          <aside class="xl:sticky xl:top-28">
+            <div class="card p-4">
+              <p class="text-xs font-mono text-dim uppercase tracking-widest mb-3">Topics</p>
+              <div class="flex flex-col gap-0.5 overflow-y-auto max-h-[calc(100vh-12rem)]">
+                {topics.map((topic) => {
+                  const count = topicMap.get(topic)!.length;
+                  const topicAnchor = topic.toLowerCase().replace(/\s+/g, '-');
+                  return (
+                    <a
+                      href={`#${topicAnchor}`}
+                      class="flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg text-xs font-mono text-dim hover:text-ink hover:bg-surface-hover/60 transition-colors no-underline"
+                    >
+                      <span class="leading-snug">{topic}</span>
+                      <span class="text-[10px] text-faint shrink-0 mt-0.5">{count}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
+
+          <!-- Center: decks grouped by topic -->
+          <div>
+            <div class="space-y-14">
+              {topics.map((topic) => {
+                const decks = topicMap.get(topic)!;
+                const topicAnchor = topic.toLowerCase().replace(/\s+/g, '-');
+                return (
+                  <section id={topicAnchor} class="deck-group">
+                    <div class="flex items-center justify-between mb-4">
+                      <h2 class="text-lg font-semibold text-ink font-mono">
+                        <span class="text-accent">#</span> {topic}
+                      </h2>
+                      <span class="text-xs font-mono text-faint deck-count">
+                        {decks.length} {decks.length === 1 ? 'deck' : 'decks'}
+                      </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {decks.map((deck) => (
+                        <a
+                          href={`/flashcards/${deck.id}`}
+                          class="card group flex flex-col gap-3 no-underline hover:-translate-y-0.5 deck-card"
+                          data-tags={deck.data.tags.join(',')}
+                          data-title={deck.data.title}
+                        >
+                          <div class="flex items-start justify-between gap-2">
+                            <h3 class="text-base font-semibold text-ink group-hover:text-accent transition-colors leading-snug">
+                              {deck.data.title}
+                            </h3>
+                            <span class="shrink-0 text-xs font-mono text-faint bg-surface-hover px-2 py-0.5 rounded-md">
+                              {deck.data.cards.length} cards
+                            </span>
+                          </div>
+
+                          {deck.data.description && (
+                            <p class="text-sm text-dim leading-relaxed line-clamp-2">
+                              {deck.data.description}
+                            </p>
+                          )}
+
+                          {deck.data.tags.length > 0 && (
+                            <div class="flex flex-wrap gap-1.5 mt-auto pt-1">
+                              {deck.data.tags.map((tag) => (
+                                <span class="tag text-[11px] py-0.5">{tag}</span>
+                              ))}
+                            </div>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+
+            {/* Empty state — deliberately a sibling of the space-y container, not its
+                last child. Tailwind 4 compiles space-y-* to
+                `:where(& > :not(:last-child)) { margin-block-end }`, so a hidden last
+                child leaves a live 3.5rem margin under the last visible section. (v3's
+                `> :not([hidden]) ~ :not([hidden]) { margin-top }` put the dead margin
+                on the hidden element instead, so it never showed.) The explicit mt-14
+                replaces the space-y-14 margin this <p> used to get from the container,
+                which was live in the shown state. */}
+            <p class="hidden mt-14 text-sm font-mono text-faint py-8 text-center" id="empty-state">
+              No decks match this tag.
+            </p>
+          </div>
+
+          <!-- Right: tag filter -->
+          {allTags.length > 0 && (
+            <aside class="xl:sticky xl:top-28">
+              <div class="card p-4">
+                <p class="text-xs font-mono text-dim uppercase tracking-widest mb-3">Filter by tag</p>
+                <div class="flex flex-col gap-0.5 overflow-y-auto max-h-[calc(100vh-12rem)]">
+                  <button class="filter-tag active" data-tag="__all__">
+                    <span>All</span>
+                    <span class="tag-count">{totalDecks}</span>
+                  </button>
+                  {allTags.map((tag) => (
+                    <button class="filter-tag" data-tag={tag}>
+                      <span>{tag}</span>
+                      <span class="tag-count">{tagCounts.get(tag) ?? 0}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          )}
+
+        </div>
+      )}
+    </div>
+
+</Page>
+
+<!-- .filter-tag / .tag-count styles live in src/styles/global.css @layer components -->
+
+<script>
+  const chips = document.querySelectorAll('button[data-tag]');
+  const emptyState = document.getElementById('empty-state');
+
+  function allCards() {
+    return [...document.querySelectorAll('.deck-card')];
+  }
+
+  function syncGroupVisibility() {
+    document.querySelectorAll('.deck-group').forEach((group) => {
+      const visible = [...group.querySelectorAll('.deck-card')]
+        .filter((c) => (c as HTMLElement).style.display !== 'none').length;
+      (group as HTMLElement).style.display = visible === 0 ? 'none' : '';
+      const countEl = group.querySelector('.deck-count');
+      if (countEl) {
+        countEl.textContent = `${visible} ${visible === 1 ? 'deck' : 'decks'}`;
+      }
+    });
+  }
+
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const tag = (chip as HTMLElement).dataset.tag;
+
+      if (chip.classList.contains('active') && tag !== '__all__') {
+        chips.forEach((c) => c.classList.remove('active'));
+        document.querySelector('button[data-tag="__all__"]')?.classList.add('active');
+        allCards().forEach((c) => (c as HTMLElement).style.display = '');
+        syncGroupVisibility();
+        emptyState?.classList.add('hidden');
+        return;
+      }
+
+      chips.forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      if (tag === '__all__') {
+        allCards().forEach((c) => (c as HTMLElement).style.display = '');
+        syncGroupVisibility();
+        emptyState?.classList.add('hidden');
+      } else {
+        let visible = 0;
+        allCards().forEach((c) => {
+          const el = c as HTMLElement;
+          const tags = el.dataset.tags ? el.dataset.tags.split(',') : [];
+          const show = tags.includes(tag!);
+          el.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+        syncGroupVisibility();
+        emptyState?.classList.toggle('hidden', visible > 0);
+      }
+    });
+  });
+</script>

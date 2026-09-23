@@ -1,0 +1,197 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Page from './Page.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import RelatedPosts from '../components/RelatedPosts.astro';
+import GiscusComments from '../components/GiscusComments.astro';
+import MermaidRenderer from '../components/MermaidRenderer.astro';
+import BlogArchiveNav from '../components/BlogArchiveNav.astro';
+import { BLOG_CATEGORY_LABELS } from '../lib/blog-categories';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+  headings: Array<{ depth: number; slug: string; text: string }>;
+  prev: CollectionEntry<'blog'> | null;
+  next: CollectionEntry<'blog'> | null;
+  related: CollectionEntry<'blog'>[];
+  // Full !draft post list, newest-first — feeds the year/month archive nav.
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { post, headings, prev, next, related, posts } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, readTime, category } = post.data;
+
+const formattedDate = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}).format(pubDate);
+
+const formattedUpdated = updatedDate
+  ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(updatedDate)
+  : null;
+---
+
+<Page title={`${title} — Amit Singh`} description={description} article>
+  <!-- Reading progress bar -->
+  <div
+    id="progress-bar"
+    class="fixed top-0 left-0 z-[100] h-0.5 bg-accent"
+    style="width:0%;transition:width 0.1s linear"
+  ></div>
+
+  <!-- Three-column (site column standard): blog archive | article | TOC.
+       Below xl it stacks — the archive and "On this page" drop into
+       collapsibles above the article. -->
+  <div class="max-w-9xl mx-auto px-6">
+    <div class="doc-grid items-start">
+
+        <!-- Col 1: Year → Month → post archive (xl+) -->
+        <aside class="hidden xl:block">
+          <div class="card sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <BlogArchiveNav posts={posts} currentSlug={post.id} />
+          </div>
+        </aside>
+
+        <!-- Col 2: Article -->
+        <div class="min-w-0">
+
+          <!-- Below xl: archive + on-this-page as collapsibles, above the article -->
+          <div class="xl:hidden flex flex-col gap-3 mb-10">
+            <details class="card">
+              <summary class="cursor-pointer text-xs font-mono text-dim uppercase tracking-widest">Blog Archive</summary>
+              <div class="mt-4">
+                <BlogArchiveNav posts={posts} currentSlug={post.id} />
+              </div>
+            </details>
+            {headings.length > 0 && (
+              <details class="card">
+                <summary class="cursor-pointer text-xs font-mono text-dim uppercase tracking-widest">On This Page</summary>
+                <div class="mt-4">
+                  <TableOfContents headings={headings} />
+                </div>
+              </details>
+            )}
+          </div>
+
+          <!-- Article header -->
+          <header class="mb-12">
+            <div class="flex flex-wrap gap-2 mb-4">
+              <a
+                href={`/blog/category/${category}`}
+                class="px-2 py-0.5 text-xs font-mono rounded bg-accent/20 text-accent border border-accent/40 hover:bg-accent/30 transition-colors"
+              >
+                {BLOG_CATEGORY_LABELS[category]}
+              </a>
+              {tags.map((tag) => (
+                <a
+                  href={`/blog/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                  class="tag hover:bg-accent/20 transition-colors"
+                >
+                  {tag}
+                </a>
+              ))}
+            </div>
+
+            <h1 class="text-3xl md:text-4xl font-bold text-ink leading-tight mb-4">
+              {title}
+            </h1>
+
+            <p class="text-lg text-muted mb-6">{description}</p>
+
+            <div class="flex flex-wrap items-center gap-4 text-sm text-dim font-mono border-t border-line pt-4">
+              <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+              {readTime && <span>·</span>}
+              {readTime && <span>{readTime} min read</span>}
+              {formattedUpdated && <span>· Updated {formattedUpdated}</span>}
+
+              <div class="ml-auto flex items-center gap-4">
+                <img
+                  src={`https://hits.sh/shipsolid.github.io/blog/${post.id}.svg?style=flat-square&color=00d9a6&labelColor=1e293b&label=views`}
+                  alt="view count"
+                  class="h-5 rounded"
+                  loading="eager"
+                />
+                <a href="/rss.xml" class="flex items-center gap-1.5 text-faint hover:text-accent transition-colors" title="RSS feed">
+                  <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19.01 7.38 20 6.18 20 4.98 20 4 19.01 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/>
+                  </svg>
+                  RSS
+                </a>
+              </div>
+            </div>
+          </header>
+
+          <article class="min-w-0">
+          <div class="prose prose-invert prose-doc">
+            <slot />
+          </div>
+
+          <!-- Related posts -->
+          <RelatedPosts related={related} />
+
+          <!-- Prev / Next navigation -->
+          {(prev || next) && (
+            <div class="mt-16 pt-8 border-t border-line grid grid-cols-2 gap-4">
+              {prev ? (
+                <a href={`/blog/${prev.id}`} class="card group block hover:-translate-y-0.5 no-underline">
+                  <p class="text-xs font-mono text-faint mb-1.5 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Older
+                  </p>
+                  <p class="text-sm text-body group-hover:text-accent transition-colors leading-snug">
+                    {prev.data.title}
+                  </p>
+                </a>
+              ) : <div />}
+              {next ? (
+                <a href={`/blog/${next.id}`} class="card group block hover:-translate-y-0.5 no-underline text-right">
+                  <p class="text-xs font-mono text-faint mb-1.5 flex items-center gap-1 justify-end">
+                    Newer
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </p>
+                  <p class="text-sm text-body group-hover:text-accent transition-colors leading-snug">
+                    {next.data.title}
+                  </p>
+                </a>
+              ) : <div />}
+            </div>
+          )}
+
+          <!-- Back / Home links -->
+          <div class="mt-8 flex items-center justify-between">
+            <a href="/blog" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors">
+              ← All posts
+            </a>
+            <a href="/" class="text-sm text-dim hover:text-body transition-colors">Home</a>
+          </div>
+
+          <!-- Comments -->
+          <GiscusComments />
+          </article>
+
+        </div>
+
+        <!-- Col 3: TOC (xl+) -->
+        <aside class="hidden xl:block">
+          <div class="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
+            <TableOfContents headings={headings} />
+          </div>
+        </aside>
+
+      </div>
+    </div>
+
+  <MermaidRenderer />
+</Page>
+
+<script>
+import { initCopyButtons, initReadingProgress } from '../lib/reading-enhancements';
+
+initReadingProgress();
+initCopyButtons();
+</script>

@@ -1,0 +1,36 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  related: CollectionEntry<'blog'>[];
+}
+const { related } = Astro.props;
+---
+
+{related.length > 0 && (
+  <div class="mt-16 pt-8 border-t border-line">
+    <p class="text-xs font-mono text-faint uppercase tracking-widest mb-6">Related posts</p>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {related.map((post) => {
+        const date = new Intl.DateTimeFormat('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        }).format(post.data.pubDate);
+        return (
+          <a href={`/blog/${post.id}`} class="card group block hover:-translate-y-0.5 no-underline">
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              {post.data.tags.slice(0, 2).map((tag) => (
+                <span class="tag text-xs">{tag}</span>
+              ))}
+            </div>
+            <h3 class="text-sm font-semibold text-ink group-hover:text-accent transition-colors leading-snug mb-2">
+              {post.data.title}
+            </h3>
+            <p class="text-xs font-mono text-faint">{date}</p>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+)}

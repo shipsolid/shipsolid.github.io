@@ -1,0 +1,517 @@
+---
+import { getCollection } from 'astro:content';
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { expandReviewUnits } from '../../lib/srs/units';
+
+const allDecks = await getCollection('flashcards');
+const deckMeta = allDecks
+  .map((deck) => ({
+    slug: deck.id,
+    title: deck.data.title,
+    tags: deck.data.tags,
+    totalReviewUnits: expandReviewUnits(deck.data.cards).length,
+  }))
+  .sort((a, b) => a.title.localeCompare(b.title));
+
+// Same "raw-text element" escaping concern as flashcards/stats.astro:18-22 — a literal
+// `</script>` inside embedded JSON would prematurely close the tag.
+const dataIslandJson = JSON.stringify({ deckMeta }).replace(/</g, '\\u003c');
+
+const inputClass =
+  'mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70';
+
+// Same base styling, minus the baked-in `w-full` — needed for inputs that sit side-by-side in a
+// flex row (schedule time + label), where `w-full` would fight the row's own width classes.
+const inputClassFlex = inputClass.replace('w-full ', '');
+---
+
+<ToolLayout
+  slug="engineering-cockpit"
+  description="A single daily dashboard — top 3, schedule, quick capture, waiting-on, and real learning progress from your flashcards. Client-side only, no sign-up, no tracking."
+>
+  <p class="text-muted" slot="intro">
+    Today — <span id="ec-date-label" class="font-mono"></span>. Top 3 and schedule reset daily;
+    quick capture and waiting persist until you clear them. Everything stays in your browser.
+  </p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div class="card">
+          <h2 class="section-label">Top 3</h2>
+          <div class="mt-4 space-y-3">
+            <label class="flex items-center gap-3">
+              <input id="ec-top3-done-0" type="checkbox" class="w-4 h-4 shrink-0" style="accent-color: rgb(var(--color-accent-rgb))" />
+              <input id="ec-top3-text-0" type="text" placeholder="Priority 1" class={`${inputClass} mt-0 flex-1`} />
+            </label>
+            <label class="flex items-center gap-3">
+              <input id="ec-top3-done-1" type="checkbox" class="w-4 h-4 shrink-0" style="accent-color: rgb(var(--color-accent-rgb))" />
+              <input id="ec-top3-text-1" type="text" placeholder="Priority 2" class={`${inputClass} mt-0 flex-1`} />
+            </label>
+            <label class="flex items-center gap-3">
+              <input id="ec-top3-done-2" type="checkbox" class="w-4 h-4 shrink-0" style="accent-color: rgb(var(--color-accent-rgb))" />
+              <input id="ec-top3-text-2" type="text" placeholder="Priority 3" class={`${inputClass} mt-0 flex-1`} />
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-label">Today's Schedule</h2>
+          <div id="ec-schedule-list" class="mt-4 space-y-2"></div>
+          <div class="mt-4 flex gap-2">
+            <input id="ec-schedule-time" type="text" placeholder="09:00" class={`${inputClassFlex} mt-0 w-24 shrink-0 font-mono`} />
+            <input id="ec-schedule-label" type="text" placeholder="Standup" class={`${inputClassFlex} mt-0 flex-1 min-w-0`} />
+            <button type="button" id="ec-schedule-add" class="btn-outline text-xs shrink-0">Add</button>
+          </div>
+          <p id="ec-schedule-error" class="mt-2 text-xs text-red-400 font-mono hidden"></p>
+        </div>
+
+        <div class="card">
+          <h2 class="section-label">Quick Capture</h2>
+          <div id="ec-capture-list" class="mt-4 space-y-2"></div>
+          <div class="mt-4 flex gap-2">
+            <input id="ec-capture-input" type="text" placeholder="Idea, note, anything…" class={`${inputClass} mt-0 flex-1`} />
+            <button type="button" id="ec-capture-add" class="btn-outline text-xs shrink-0">Add</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="section-label">Waiting</h2>
+          <div id="ec-waiting-list" class="mt-4 space-y-2"></div>
+          <div class="mt-4 flex gap-2">
+            <input id="ec-waiting-input" type="text" placeholder="Waiting on…" class={`${inputClass} mt-0 flex-1`} />
+            <button type="button" id="ec-waiting-add" class="btn-outline text-xs shrink-0">Add</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="card mt-6">
+        <h2 class="section-label">Learning</h2>
+        <div id="ec-learning-list" class="mt-4 space-y-4"></div>
+      </div>
+
+      <div class="card mt-6">
+        <h2 class="section-label">Export / Import</h2>
+        <p class="text-xs text-dim font-mono mt-2">
+          Export backs up Top 3, schedule, quick capture, and waiting. Import overwrites those with
+          a previously exported file.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2 items-center">
+          <button type="button" id="ec-export-json" class="btn-outline text-xs">Export JSON</button>
+          <button type="button" id="ec-export-md" class="btn-outline text-xs">Export Markdown</button>
+          <button type="button" id="ec-import-trigger" class="btn-outline text-xs">Import JSON…</button>
+          <input type="file" id="ec-import-file" accept="application/json" class="hidden" />
+        </div>
+        <p id="ec-import-error" class="mt-3 text-sm text-red-400 font-mono hidden"></p>
+      </div>
+
+</ToolLayout>
+
+<script type="application/json" id="ec-flashcards-data" set:html={dataIslandJson}></script>
+
+<script>
+import {
+  isValidTime,
+  parseCockpitImport,
+  sortScheduleEntries,
+  buildMarkdownExport,
+  type CaptureItem,
+  type CockpitExport,
+  type ScheduleEntry,
+  type Top3Item,
+  type WaitingItem,
+} from '../../lib/tools/engineering-cockpit';
+import { loadJSON, saveJSON } from '../../lib/storage';
+import { computeTagProgress, computeUnitMasteryScores, dayKeyFromTimestamp } from '../../lib/stats/aggregate';
+import { computeUnitConfidenceScores } from '../../lib/srs/confidence';
+
+(() => {
+  const TOP3_KEY = 'tools:engineering-cockpit:top3';
+  const SCHEDULE_KEY = 'tools:engineering-cockpit:schedule';
+  const CAPTURE_KEY = 'tools:engineering-cockpit:capture';
+  const WAITING_KEY = 'tools:engineering-cockpit:waiting';
+
+  const today = dayKeyFromTimestamp(Date.now());
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  const dateLabelEl = document.getElementById('ec-date-label');
+  if (dateLabelEl) {
+    dateLabelEl.textContent = new Intl.DateTimeFormat(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(new Date());
+  }
+
+  // ---------------------------------------------------------------------
+  // Top 3 — day-scoped, 3 fixed fields wired directly (no list re-render,
+  // so typing never fights a re-render for focus).
+  // ---------------------------------------------------------------------
+  interface Top3State {
+    date: string;
+    items: Top3Item[];
+  }
+
+  function blankTop3(): Top3State {
+    return { date: today, items: [0, 1, 2].map(() => ({ text: '', done: false })) };
+  }
+
+  let top3State = loadJSON<Top3State>(TOP3_KEY, blankTop3());
+  if (top3State.date !== today || top3State.items.length !== 3) top3State = blankTop3();
+
+  function persistTop3() {
+    saveJSON(TOP3_KEY, top3State);
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const textInput = document.getElementById(`ec-top3-text-${i}`) as HTMLInputElement | null;
+    const doneInput = document.getElementById(`ec-top3-done-${i}`) as HTMLInputElement | null;
+    if (textInput) {
+      textInput.value = top3State.items[i].text;
+      textInput.addEventListener('input', () => {
+        top3State.items[i].text = textInput.value;
+        persistTop3();
+      });
+    }
+    if (doneInput) {
+      doneInput.checked = top3State.items[i].done;
+      doneInput.addEventListener('change', () => {
+        top3State.items[i].done = doneInput.checked;
+        persistTop3();
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Today's Schedule — day-scoped, dynamic add/remove list.
+  // ---------------------------------------------------------------------
+  interface ScheduleState {
+    date: string;
+    entries: ScheduleEntry[];
+  }
+
+  let scheduleState = loadJSON<ScheduleState>(SCHEDULE_KEY, { date: today, entries: [] });
+  if (scheduleState.date !== today) scheduleState = { date: today, entries: [] };
+
+  function persistSchedule() {
+    saveJSON(SCHEDULE_KEY, scheduleState);
+  }
+
+  const scheduleListEl = document.getElementById('ec-schedule-list');
+  const scheduleTimeInput = document.getElementById('ec-schedule-time') as HTMLInputElement | null;
+  const scheduleLabelInput = document.getElementById('ec-schedule-label') as HTMLInputElement | null;
+  const scheduleErrorEl = document.getElementById('ec-schedule-error');
+
+  function renderSchedule() {
+    if (!scheduleListEl) return;
+    const sorted = sortScheduleEntries(scheduleState.entries);
+    if (sorted.length === 0) {
+      scheduleListEl.innerHTML = '<p class="text-xs text-faint font-mono italic">Nothing scheduled yet.</p>';
+      return;
+    }
+    scheduleListEl.innerHTML = sorted
+      .map(
+        (entry, i) => `
+        <div class="flex items-center justify-between gap-2 text-sm">
+          <span class="font-mono text-accent">${escapeHtml(entry.time)}</span>
+          <span class="flex-1 text-body">${escapeHtml(entry.label)}</span>
+          <button type="button" data-remove-schedule="${i}" class="text-faint hover:text-red-400 light:text-muted text-xs">✕</button>
+        </div>
+      `
+      )
+      .join('');
+
+    scheduleListEl.querySelectorAll<HTMLButtonElement>('[data-remove-schedule]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.removeSchedule);
+        const target = sorted[idx];
+        scheduleState.entries = scheduleState.entries.filter((e) => e !== target);
+        persistSchedule();
+        renderSchedule();
+      });
+    });
+  }
+
+  document.getElementById('ec-schedule-add')?.addEventListener('click', () => {
+    const time = scheduleTimeInput?.value.trim() ?? '';
+    const label = scheduleLabelInput?.value.trim() ?? '';
+    if (!isValidTime(time) || !label) {
+      if (scheduleErrorEl) {
+        scheduleErrorEl.textContent = !isValidTime(time)
+          ? 'Time must be 24h HH:MM (e.g. 09:00).'
+          : 'Label is required.';
+        scheduleErrorEl.classList.remove('hidden');
+      }
+      return;
+    }
+    scheduleErrorEl?.classList.add('hidden');
+    scheduleState.entries.push({ time, label });
+    persistSchedule();
+    if (scheduleTimeInput) scheduleTimeInput.value = '';
+    if (scheduleLabelInput) scheduleLabelInput.value = '';
+    renderSchedule();
+  });
+
+  renderSchedule();
+
+  // ---------------------------------------------------------------------
+  // Quick Capture — running inbox, not day-scoped, most-recent-first.
+  // ---------------------------------------------------------------------
+  let captureItems = loadJSON<CaptureItem[]>(CAPTURE_KEY, []);
+
+  function persistCapture() {
+    saveJSON(CAPTURE_KEY, captureItems);
+  }
+
+  const captureListEl = document.getElementById('ec-capture-list');
+  const captureInput = document.getElementById('ec-capture-input') as HTMLInputElement | null;
+
+  function renderCapture() {
+    if (!captureListEl) return;
+    if (captureItems.length === 0) {
+      captureListEl.innerHTML = '<p class="text-xs text-faint font-mono italic">Nothing captured yet.</p>';
+      return;
+    }
+    const ordered = [...captureItems].sort((a, b) => b.ts - a.ts);
+    captureListEl.innerHTML = ordered
+      .map(
+        (item, i) => `
+        <div class="flex items-start justify-between gap-2 text-sm">
+          <span class="flex-1 text-body">${escapeHtml(item.text)}</span>
+          <button type="button" data-remove-capture="${i}" class="text-faint hover:text-red-400 light:text-muted text-xs shrink-0">✕</button>
+        </div>
+      `
+      )
+      .join('');
+
+    captureListEl.querySelectorAll<HTMLButtonElement>('[data-remove-capture]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.removeCapture);
+        const target = ordered[idx];
+        captureItems = captureItems.filter((c) => c !== target);
+        persistCapture();
+        renderCapture();
+      });
+    });
+  }
+
+  document.getElementById('ec-capture-add')?.addEventListener('click', () => {
+    const text = captureInput?.value.trim() ?? '';
+    if (!text) return;
+    captureItems.push({ text, ts: Date.now() });
+    persistCapture();
+    if (captureInput) captureInput.value = '';
+    renderCapture();
+  });
+
+  captureInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') document.getElementById('ec-capture-add')?.dispatchEvent(new MouseEvent('click'));
+  });
+
+  renderCapture();
+
+  // ---------------------------------------------------------------------
+  // Waiting — persists until resolved, not day-scoped.
+  // ---------------------------------------------------------------------
+  let waitingItems = loadJSON<WaitingItem[]>(WAITING_KEY, []);
+
+  function persistWaiting() {
+    saveJSON(WAITING_KEY, waitingItems);
+  }
+
+  const waitingListEl = document.getElementById('ec-waiting-list');
+  const waitingInput = document.getElementById('ec-waiting-input') as HTMLInputElement | null;
+
+  function renderWaiting() {
+    if (!waitingListEl) return;
+    if (waitingItems.length === 0) {
+      waitingListEl.innerHTML = '<p class="text-xs text-faint font-mono italic">Nothing waiting.</p>';
+      return;
+    }
+    waitingListEl.innerHTML = waitingItems
+      .map(
+        (item, i) => `
+        <div class="flex items-start justify-between gap-2 text-sm">
+          <span class="flex-1 text-body">${escapeHtml(item.text)}</span>
+          <button type="button" data-remove-waiting="${i}" class="text-faint hover:text-red-400 light:text-muted text-xs shrink-0">✕</button>
+        </div>
+      `
+      )
+      .join('');
+
+    waitingListEl.querySelectorAll<HTMLButtonElement>('[data-remove-waiting]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.removeWaiting);
+        waitingItems = waitingItems.filter((_, j) => j !== idx);
+        persistWaiting();
+        renderWaiting();
+      });
+    });
+  }
+
+  document.getElementById('ec-waiting-add')?.addEventListener('click', () => {
+    const text = waitingInput?.value.trim() ?? '';
+    if (!text) return;
+    waitingItems.push({ text, since: Date.now() });
+    persistWaiting();
+    if (waitingInput) waitingInput.value = '';
+    renderWaiting();
+  });
+
+  waitingInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') document.getElementById('ec-waiting-add')?.dispatchEvent(new MouseEvent('click'));
+  });
+
+  renderWaiting();
+
+  // ---------------------------------------------------------------------
+  // Learning — read-only, real data from the flashcards SRS system. Same
+  // recipe as flashcards/stats.astro:298-360, reused as-is.
+  // ---------------------------------------------------------------------
+  const learningListEl = document.getElementById('ec-learning-list');
+  const flashcardsDataEl = document.getElementById('ec-flashcards-data');
+
+  if (learningListEl && flashcardsDataEl) {
+    const { deckMeta } = JSON.parse(flashcardsDataEl.textContent ?? '{"deckMeta":[]}');
+    const events = loadJSON('fc:log', { v: 1, events: [] }).events;
+    const srsByDeck = Object.fromEntries(
+      deckMeta.map((d: { slug: string }) => [d.slug, loadJSON(`fc:srs:${d.slug}`, { v: 1, cards: {} }).cards])
+    );
+    const confidenceByDeck = Object.fromEntries(
+      deckMeta.map((d: { slug: string }) => [d.slug, loadJSON(`fc:confidence:${d.slug}`, {})])
+    );
+    const unitScores = computeUnitMasteryScores(srsByDeck, events);
+    const confidenceScores = computeUnitConfidenceScores(confidenceByDeck);
+    // events.length, not totalReviewUnits, gates the empty state — a tag can have plenty of
+    // reviewable cards (totalReviewUnits > 0) while the user has never actually studied it, which
+    // should read as "no activity yet" rather than a misleading 0% bar. Same signal
+    // flashcards/stats.astro uses for its own empty state.
+    const tagRows =
+      events.length === 0
+        ? []
+        : computeTagProgress(deckMeta, srsByDeck, unitScores, today, confidenceScores)
+            .filter((row) => row.totalReviewUnits > 0)
+            .sort((a, b) => b.totalReviewUnits - a.totalReviewUnits)
+            .slice(0, 5);
+
+    if (tagRows.length === 0) {
+      learningListEl.innerHTML = `
+        <p class="text-sm text-dim font-mono">
+          No flashcard activity yet — <a href="/flashcards" class="text-accent hover:text-accent-hover">start reviewing</a> to see progress here.
+        </p>
+      `;
+    } else {
+      learningListEl.innerHTML = tagRows
+        .map((row) => {
+          const pct = row.masteryScore === null ? null : Math.round(row.masteryScore * 100);
+          const barPct = pct ?? 0;
+          const label = pct === null ? 'No reviews yet' : `${pct}%`;
+          return `
+            <div>
+              <div class="flex items-center justify-between text-sm mb-1">
+                <span class="text-body">${escapeHtml(row.label)}</span>
+                <span class="font-mono text-xs text-dim">${label}</span>
+              </div>
+              <div class="h-2 rounded-full bg-surface-hover overflow-hidden">
+                <div class="h-full bg-accent" style=${JSON.stringify(`width: ${barPct}%`)}></div>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Export / Import
+  // ---------------------------------------------------------------------
+  function currentExport(): CockpitExport {
+    return {
+      exportedAt: Date.now(),
+      top3: top3State.items,
+      schedule: scheduleState.entries,
+      capture: captureItems,
+      waiting: waitingItems,
+    };
+  }
+
+  function downloadFile(filename: string, content: string, mime: string) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('ec-export-json')?.addEventListener('click', () => {
+    downloadFile(`cockpit-${today}.json`, JSON.stringify(currentExport(), null, 2), 'application/json');
+  });
+
+  document.getElementById('ec-export-md')?.addEventListener('click', () => {
+    const dateLabel = dateLabelEl?.textContent ?? today;
+    downloadFile(`cockpit-${today}.md`, buildMarkdownExport(currentExport(), dateLabel), 'text/markdown');
+  });
+
+  const importFileInput = document.getElementById('ec-import-file') as HTMLInputElement | null;
+  const importErrorEl = document.getElementById('ec-import-error');
+
+  document.getElementById('ec-import-trigger')?.addEventListener('click', () => {
+    importFileInput?.click();
+  });
+
+  importFileInput?.addEventListener('change', async () => {
+    const file = importFileInput.files?.[0];
+    if (!file) return;
+    importErrorEl?.classList.add('hidden');
+
+    try {
+      const text = await file.text();
+      const imported = parseCockpitImport(text);
+
+      if (!confirm('Import will overwrite your current Top 3, schedule, quick capture, and waiting lists. Continue?')) {
+        importFileInput.value = '';
+        return;
+      }
+
+      top3State = { date: today, items: imported.top3.length === 3 ? imported.top3 : blankTop3().items };
+      scheduleState = { date: today, entries: imported.schedule };
+      captureItems = imported.capture;
+      waitingItems = imported.waiting;
+
+      persistTop3();
+      persistSchedule();
+      persistCapture();
+      persistWaiting();
+
+      for (let i = 0; i < 3; i++) {
+        const textInput = document.getElementById(`ec-top3-text-${i}`) as HTMLInputElement | null;
+        const doneInput = document.getElementById(`ec-top3-done-${i}`) as HTMLInputElement | null;
+        if (textInput) textInput.value = top3State.items[i].text;
+        if (doneInput) doneInput.checked = top3State.items[i].done;
+      }
+      renderSchedule();
+      renderCapture();
+      renderWaiting();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (importErrorEl) {
+        importErrorEl.textContent = `Import failed: ${message}`;
+        importErrorEl.classList.remove('hidden');
+      }
+    } finally {
+      importFileInput.value = '';
+    }
+  });
+})();
+</script>

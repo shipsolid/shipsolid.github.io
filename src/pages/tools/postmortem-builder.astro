@@ -1,0 +1,340 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="postmortem-builder"
+  description="Fill in a structured incident postmortem — summary, impact, timeline, root cause, action items — and export it as Markdown. Client-side only, no sign-up, no tracking."
+  intro="Work through the standard postmortem sections and copy the result out as Markdown. Timeline and action items are structured; the narrative sections are free text. Drafts are saved in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Editor</h2>
+    <p id="pm-errors" class="text-xs text-red-400 mt-3 hidden"></p>
+
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="text-xs font-mono text-dim">Title
+        <input id="pm-title" type="text" placeholder="Checkout outage" class="pm-in" /></label>
+      <label class="text-xs font-mono text-dim">Status
+        <select id="pm-status" class="pm-in"><option value="draft" selected>draft</option><option value="final">final</option></select></label>
+      <label class="text-xs font-mono text-dim">Date
+        <input id="pm-date" type="date" class="pm-in" /></label>
+      <label class="text-xs font-mono text-dim">Severity
+        <select id="pm-sev" class="pm-in"><option>SEV1</option><option selected>SEV2</option><option>SEV3</option><option>SEV4</option></select></label>
+      <label class="text-xs font-mono text-dim sm:col-span-2">Authors
+        <input id="pm-authors" type="text" placeholder="Amit, Amlan" class="pm-in" /></label>
+    </div>
+
+    <label class="text-xs font-mono text-dim block mt-4">Summary
+      <textarea id="pm-summary" rows="2" class="pm-in"></textarea></label>
+    <label class="text-xs font-mono text-dim block mt-4">Impact
+      <textarea id="pm-impact" rows="2" class="pm-in"></textarea></label>
+    <label class="text-xs font-mono text-dim block mt-4">Detection <span class="text-faint">(optional)</span>
+      <textarea id="pm-detection" rows="2" class="pm-in"></textarea></label>
+
+    <div class="mt-4">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-mono text-dim">Timeline</span>
+        <button type="button" id="pm-add-tl" class="btn-outline text-xs">Add entry</button>
+      </div>
+      <div id="pm-timeline" class="mt-3 space-y-2"></div>
+    </div>
+
+    <label class="text-xs font-mono text-dim block mt-4">Root cause
+      <textarea id="pm-rootcause" rows="3" class="pm-in"></textarea></label>
+    <label class="text-xs font-mono text-dim block mt-4">Contributing factors <span class="text-faint">(one per line, optional)</span>
+      <textarea id="pm-contributing" rows="2" class="pm-in font-mono"></textarea></label>
+    <label class="text-xs font-mono text-dim block mt-4">Resolution <span class="text-faint">(optional)</span>
+      <textarea id="pm-resolution" rows="2" class="pm-in"></textarea></label>
+    <label class="text-xs font-mono text-dim block mt-4">What went well <span class="text-faint">(one per line, optional)</span>
+      <textarea id="pm-well" rows="2" class="pm-in font-mono"></textarea></label>
+    <label class="text-xs font-mono text-dim block mt-4">What went poorly <span class="text-faint">(one per line, optional)</span>
+      <textarea id="pm-poorly" rows="2" class="pm-in font-mono"></textarea></label>
+
+    <div class="mt-4">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-mono text-dim">Action items</span>
+        <button type="button" id="pm-add-ai" class="btn-outline text-xs">Add item</button>
+      </div>
+      <div id="pm-actions" class="mt-3 space-y-2"></div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button id="pm-copy" type="button" class="btn-primary">Copy as Markdown</button>
+      <button id="pm-save" type="button" class="btn-outline">Save draft</button>
+    </div>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Preview</h2>
+    <pre id="pm-preview" class="mt-4 whitespace-pre-wrap break-words text-sm font-mono text-body"></pre>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Drafts</h2>
+    <div id="pm-drafts" class="mt-4 space-y-3"></div>
+  </div>
+
+</ToolLayout>
+
+<style>
+  .pm-in {
+    margin-top: 0.25rem;
+    width: 100%;
+    background: var(--color-field);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+  .pm-in:focus {
+    outline: none;
+    border-color: rgba(var(--color-accent-rgb) / 0.5);
+  }
+</style>
+
+<script>
+  import { blankPostmortem, toMarkdown, validatePostmortem } from '../../lib/tools/postmortem-builder';
+  import type { ActionItem, Postmortem, TimelineEntry } from '../../lib/tools/postmortem-builder';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const DRAFTS_KEY = 'tools:postmortem-builder:drafts';
+
+  let timeline: TimelineEntry[] = [{ time: '', event: '' }];
+  let actions: ActionItem[] = [{ text: '', owner: '', due: '' }];
+  let drafts: Postmortem[] = loadJSON<Postmortem[]>(DRAFTS_KEY, []);
+  let loadedId: string | null = null;
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+  const els = {
+    title: $<HTMLInputElement>('pm-title'),
+    status: $<HTMLSelectElement>('pm-status'),
+    date: $<HTMLInputElement>('pm-date'),
+    sev: $<HTMLSelectElement>('pm-sev'),
+    authors: $<HTMLInputElement>('pm-authors'),
+    summary: $<HTMLTextAreaElement>('pm-summary'),
+    impact: $<HTMLTextAreaElement>('pm-impact'),
+    detection: $<HTMLTextAreaElement>('pm-detection'),
+    rootcause: $<HTMLTextAreaElement>('pm-rootcause'),
+    contributing: $<HTMLTextAreaElement>('pm-contributing'),
+    resolution: $<HTMLTextAreaElement>('pm-resolution'),
+    well: $<HTMLTextAreaElement>('pm-well'),
+    poorly: $<HTMLTextAreaElement>('pm-poorly'),
+  };
+  const timelineEl = $<HTMLElement>('pm-timeline');
+  const actionsEl = $<HTMLElement>('pm-actions');
+  const errorsEl = $<HTMLElement>('pm-errors');
+  const previewEl = $<HTMLElement>('pm-preview');
+  const draftsEl = $<HTMLElement>('pm-drafts');
+
+  const lines = (v: string) => v.split('\n').map((l) => l.trim()).filter(Boolean);
+  const persistDrafts = () => saveJSON(DRAFTS_KEY, drafts);
+  const esc = (s: string) => s.replace(/</g, '&lt;');
+
+  function current(): Postmortem {
+    return {
+      ...blankPostmortem(),
+      id: loadedId ?? 'preview',
+      createdIso: drafts.find((d) => d.id === loadedId)?.createdIso ?? new Date().toISOString(),
+      title: els.title?.value ?? '',
+      status: (els.status?.value as 'draft' | 'final') ?? 'draft',
+      date: els.date?.value ?? '',
+      severity: els.sev?.value ?? 'SEV2',
+      authors: els.authors?.value ?? '',
+      summary: els.summary?.value ?? '',
+      impact: els.impact?.value ?? '',
+      detection: els.detection?.value ?? '',
+      timeline,
+      rootCause: els.rootcause?.value ?? '',
+      contributingFactors: lines(els.contributing?.value ?? ''),
+      resolution: els.resolution?.value ?? '',
+      whatWentWell: lines(els.well?.value ?? ''),
+      whatWentPoorly: lines(els.poorly?.value ?? ''),
+      actionItems: actions,
+    };
+  }
+
+  function renderTimeline() {
+    if (!timelineEl) return;
+    timelineEl.innerHTML = timeline
+      .map(
+        (_, i) => `
+        <div class="flex gap-2 items-center">
+          <input type="text" data-role="time" data-index="${i}" placeholder="14:02" class="pm-in font-mono" style="width:6rem;flex:none" />
+          <input type="text" data-role="event" data-index="${i}" placeholder="What happened" class="pm-in flex-1 min-w-0" />
+          <button type="button" data-role="rm" data-index="${i}" class="btn-outline text-xs shrink-0">✕</button>
+        </div>`
+      )
+      .join('');
+    timeline.forEach((t, i) => {
+      (timelineEl.querySelector(`[data-role="time"][data-index="${i}"]`) as HTMLInputElement).value = t.time;
+      (timelineEl.querySelector(`[data-role="event"][data-index="${i}"]`) as HTMLInputElement).value = t.event;
+    });
+  }
+
+  function renderActions() {
+    if (!actionsEl) return;
+    actionsEl.innerHTML = actions
+      .map(
+        (_, i) => `
+        <div class="flex gap-2 items-center">
+          <input type="text" data-role="text" data-index="${i}" placeholder="Action" class="pm-in flex-1 min-w-0" />
+          <input type="text" data-role="owner" data-index="${i}" placeholder="Owner" class="pm-in" style="width:8rem;flex:none" />
+          <input type="text" data-role="due" data-index="${i}" placeholder="Due" class="pm-in font-mono" style="width:8rem;flex:none" />
+          <button type="button" data-role="rm" data-index="${i}" class="btn-outline text-xs shrink-0">✕</button>
+        </div>`
+      )
+      .join('');
+    actions.forEach((a, i) => {
+      (actionsEl.querySelector(`[data-role="text"][data-index="${i}"]`) as HTMLInputElement).value = a.text;
+      (actionsEl.querySelector(`[data-role="owner"][data-index="${i}"]`) as HTMLInputElement).value = a.owner ?? '';
+      (actionsEl.querySelector(`[data-role="due"][data-index="${i}"]`) as HTMLInputElement).value = a.due ?? '';
+    });
+  }
+
+  function renderPreview() {
+    if (previewEl) previewEl.textContent = toMarkdown(current());
+  }
+
+  function renderDrafts() {
+    if (!draftsEl) return;
+    if (drafts.length === 0) {
+      draftsEl.innerHTML = '<p class="text-xs text-faint italic">No drafts saved yet.</p>';
+      return;
+    }
+    draftsEl.innerHTML = drafts
+      .map(
+        (d) => `
+        <div class="flex items-center justify-between gap-3 border border-line rounded-lg px-3 py-2">
+          <span class="text-sm text-body min-w-0 truncate">${esc(d.title || 'Untitled')}
+            <span class="text-xs font-mono text-dim ml-1">${d.severity} · ${d.status}</span></span>
+          <span class="flex gap-2 shrink-0">
+            <button type="button" data-load="${d.id}" class="btn-outline text-xs">Load</button>
+            <button type="button" data-del="${d.id}" class="btn-outline text-xs">Delete</button>
+          </span>
+        </div>`
+      )
+      .join('');
+  }
+
+  function showErrors(errs: string[]) {
+    if (!errorsEl) return;
+    errorsEl.classList.toggle('hidden', errs.length === 0);
+    errorsEl.textContent = errs.join(' ');
+  }
+
+  timelineEl?.addEventListener('input', (e) => {
+    const t = e.target as HTMLElement;
+    const i = Number(t.dataset.index);
+    if (Number.isNaN(i) || !timeline[i]) return;
+    if (t.dataset.role === 'time') timeline[i].time = (t as HTMLInputElement).value;
+    if (t.dataset.role === 'event') timeline[i].event = (t as HTMLInputElement).value;
+    renderPreview();
+  });
+  timelineEl?.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.role !== 'rm') return;
+    timeline.splice(Number(t.dataset.index), 1);
+    if (timeline.length === 0) timeline.push({ time: '', event: '' });
+    renderTimeline();
+    renderPreview();
+  });
+  $('pm-add-tl')?.addEventListener('click', () => {
+    timeline.push({ time: '', event: '' });
+    renderTimeline();
+    renderPreview();
+  });
+
+  actionsEl?.addEventListener('input', (e) => {
+    const t = e.target as HTMLElement;
+    const i = Number(t.dataset.index);
+    if (Number.isNaN(i) || !actions[i]) return;
+    const role = t.dataset.role as 'text' | 'owner' | 'due';
+    actions[i][role] = (t as HTMLInputElement).value;
+    renderPreview();
+  });
+  actionsEl?.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.role !== 'rm') return;
+    actions.splice(Number(t.dataset.index), 1);
+    if (actions.length === 0) actions.push({ text: '', owner: '', due: '' });
+    renderActions();
+    renderPreview();
+  });
+  $('pm-add-ai')?.addEventListener('click', () => {
+    actions.push({ text: '', owner: '', due: '' });
+    renderActions();
+    renderPreview();
+  });
+
+  Object.values(els).forEach((el) => {
+    el?.addEventListener('input', renderPreview);
+    el?.addEventListener('change', renderPreview);
+  });
+
+  $('pm-save')?.addEventListener('click', () => {
+    const p = current();
+    const errs = validatePostmortem(p);
+    if (errs.length) return showErrors(errs);
+    showErrors([]);
+    const existing = loadedId ? drafts.find((d) => d.id === loadedId) : undefined;
+    if (existing) {
+      Object.assign(existing, p, { id: existing.id, createdIso: existing.createdIso });
+    } else {
+      p.id = crypto.randomUUID();
+      p.createdIso = new Date().toISOString();
+      drafts.push(p);
+      loadedId = p.id;
+    }
+    persistDrafts();
+    renderDrafts();
+  });
+
+  $('pm-copy')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    await navigator.clipboard.writeText(toMarkdown(current()));
+    const o = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => (btn.textContent = o), 1500);
+  });
+
+  draftsEl?.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.load) {
+      const d = drafts.find((x) => x.id === t.dataset.load);
+      if (!d) return;
+      loadedId = d.id;
+      if (els.title) els.title.value = d.title;
+      if (els.status) els.status.value = d.status;
+      if (els.date) els.date.value = d.date;
+      if (els.sev) els.sev.value = d.severity;
+      if (els.authors) els.authors.value = d.authors;
+      if (els.summary) els.summary.value = d.summary;
+      if (els.impact) els.impact.value = d.impact;
+      if (els.detection) els.detection.value = d.detection;
+      if (els.rootcause) els.rootcause.value = d.rootCause;
+      if (els.contributing) els.contributing.value = d.contributingFactors.join('\n');
+      if (els.resolution) els.resolution.value = d.resolution;
+      if (els.well) els.well.value = d.whatWentWell.join('\n');
+      if (els.poorly) els.poorly.value = d.whatWentPoorly.join('\n');
+      timeline = d.timeline.length ? d.timeline.map((x) => ({ ...x })) : [{ time: '', event: '' }];
+      actions = d.actionItems.length ? d.actionItems.map((x) => ({ ...x })) : [{ text: '', owner: '', due: '' }];
+      showErrors([]);
+      renderTimeline();
+      renderActions();
+      renderPreview();
+    }
+    if (t.dataset.del) {
+      drafts = drafts.filter((x) => x.id !== t.dataset.del);
+      if (loadedId === t.dataset.del) loadedId = null;
+      persistDrafts();
+      renderDrafts();
+    }
+  });
+
+  renderTimeline();
+  renderActions();
+  renderDrafts();
+  renderPreview();
+</script>

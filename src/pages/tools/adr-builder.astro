@@ -1,0 +1,351 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="adr-builder"
+  mermaid={true}
+  description="Structured Architecture Decision Record editor with Mermaid diagram preview. Client-side only, no sign-up, no tracking."
+  intro="Write a structured Architecture Decision Record with a live Markdown + Mermaid preview. Everything stays in your browser — no account, no server."
+>
+
+  <!-- Editor -->
+      <div class="card">
+        <h2 class="section-label">Editor</h2>
+
+        <p id="adr-errors" class="text-xs text-red-400 mt-3 hidden"></p>
+
+        <div class="mt-4 space-y-5">
+          <label class="block text-xs font-mono text-dim">
+            Title
+            <input
+              id="adr-title"
+              type="text"
+              placeholder="e.g. Use OpenTelemetry for .NET instrumentation"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+
+          <label class="block text-xs font-mono text-dim">
+            Status
+            <select
+              id="adr-status"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            >
+              <option value="Proposed">Proposed</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Deprecated">Deprecated</option>
+              <option value="Superseded">Superseded</option>
+            </select>
+          </label>
+
+          <label class="block text-xs font-mono text-dim">
+            Context
+            <textarea
+              id="adr-context"
+              rows="4"
+              placeholder="What is the issue we're facing? What forces are at play?"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+            ></textarea>
+          </label>
+
+          <label class="block text-xs font-mono text-dim">
+            Decision
+            <textarea
+              id="adr-decision"
+              rows="4"
+              placeholder="What are we going to do?"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+            ></textarea>
+          </label>
+
+          <label class="block text-xs font-mono text-dim">
+            Diagram (optional, Mermaid syntax)
+            <textarea
+              id="adr-mermaid"
+              rows="4"
+              placeholder={'graph TD;\n  A[Client] --> B[Service];'}
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm font-mono text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+            ></textarea>
+          </label>
+
+          <label class="block text-xs font-mono text-dim">
+            Alternatives
+            <textarea
+              id="adr-alternatives"
+              rows="4"
+              placeholder="What other options were considered, and why weren't they chosen?"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+            ></textarea>
+          </label>
+
+          <label class="block text-xs font-mono text-dim">
+            Consequences
+            <textarea
+              id="adr-consequences"
+              rows="4"
+              placeholder="What becomes easier or harder as a result of this decision?"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+            ></textarea>
+          </label>
+        </div>
+
+        <div class="mt-6 flex flex-wrap items-center gap-3">
+          <button id="adr-copy-btn" type="button" class="btn-primary">Copy as Markdown</button>
+          <button id="adr-save-btn" type="button" class="btn-outline">Save draft</button>
+          <span id="adr-filename" class="text-xs font-mono text-dim"></span>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="card mt-6">
+        <h2 class="section-label">Preview</h2>
+        <pre id="adr-preview" class="mt-4 whitespace-pre-wrap break-words text-sm text-body font-mono"></pre>
+        <div id="adr-mermaid-preview" class="mt-4"></div>
+      </div>
+
+      <!-- Drafts -->
+      <div class="card mt-6">
+        <h2 class="section-label">Drafts</h2>
+        <div id="adr-drafts-list" class="mt-4 space-y-3"></div>
+      </div>
+
+</ToolLayout>
+
+<script>
+  import { nextAdrNumber, toFilename, toMarkdown, validateAdr } from '../../lib/tools/adr-builder';
+  import type { Adr, AdrStatus } from '../../lib/tools/adr-builder';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const DRAFTS_KEY = 'tools:adr-builder:drafts';
+
+  const titleInput = document.getElementById('adr-title') as HTMLInputElement | null;
+  const statusSelect = document.getElementById('adr-status') as HTMLSelectElement | null;
+  const contextInput = document.getElementById('adr-context') as HTMLTextAreaElement | null;
+  const decisionInput = document.getElementById('adr-decision') as HTMLTextAreaElement | null;
+  const alternativesInput = document.getElementById('adr-alternatives') as HTMLTextAreaElement | null;
+  const consequencesInput = document.getElementById('adr-consequences') as HTMLTextAreaElement | null;
+  const mermaidInput = document.getElementById('adr-mermaid') as HTMLTextAreaElement | null;
+  const errorsEl = document.getElementById('adr-errors');
+  const previewEl = document.getElementById('adr-preview');
+  const mermaidPreviewEl = document.getElementById('adr-mermaid-preview');
+  const filenameEl = document.getElementById('adr-filename');
+  const copyBtn = document.getElementById('adr-copy-btn') as HTMLButtonElement | null;
+  const saveBtn = document.getElementById('adr-save-btn') as HTMLButtonElement | null;
+  const draftsListEl = document.getElementById('adr-drafts-list');
+
+  let drafts: Adr[] = loadJSON<Adr[]>(DRAFTS_KEY, []);
+  // Tracks which saved draft (if any) the form currently mirrors, so Save updates that draft in
+  // place instead of appending a duplicate every time.
+  let loadedDraftId: string | null = null;
+
+  function persistDrafts() {
+    saveJSON(DRAFTS_KEY, drafts);
+  }
+
+  function currentFormValues() {
+    return {
+      title: titleInput?.value ?? '',
+      status: (statusSelect?.value ?? 'Proposed') as AdrStatus,
+      context: contextInput?.value ?? '',
+      decision: decisionInput?.value ?? '',
+      alternatives: alternativesInput?.value ?? '',
+      consequences: consequencesInput?.value ?? '',
+      mermaid: mermaidInput?.value ?? '',
+    };
+  }
+
+  // Builds a full Adr from the live form for preview/export. When the form mirrors a saved draft
+  // it reuses that draft's number/id so the preview and filename stay stable; otherwise it previews
+  // the number the draft WOULD get if saved right now.
+  function buildPreviewAdr(): Adr {
+    const values = currentFormValues();
+    const loaded = loadedDraftId ? drafts.find((d) => d.id === loadedDraftId) : undefined;
+    return {
+      id: loaded?.id ?? 'preview',
+      number: loaded?.number ?? nextAdrNumber(drafts),
+      createdIso: loaded?.createdIso ?? new Date().toISOString(),
+      ...values,
+    };
+  }
+
+  function showErrors(errors: string[]) {
+    if (!errorsEl) return;
+    if (errors.length === 0) {
+      errorsEl.textContent = '';
+      errorsEl.classList.add('hidden');
+      return;
+    }
+    errorsEl.textContent = errors.join(' ');
+    errorsEl.classList.remove('hidden');
+  }
+
+  function renderPreview() {
+    const adr = buildPreviewAdr();
+    if (previewEl) previewEl.textContent = toMarkdown(adr);
+    if (filenameEl) filenameEl.textContent = toFilename(adr);
+    renderMermaidPreview(adr.mermaid);
+  }
+
+  // window.__renderMermaid replaces a <pre data-language="mermaid"> with a rendered
+  // <div class="mermaid"> in place, so every re-render needs a brand new <pre>/<code> pair rather
+  // than reusing the previous (already-replaced) node.
+  function renderMermaidPreview(source?: string) {
+    if (!mermaidPreviewEl) return;
+    mermaidPreviewEl.innerHTML = '';
+    if (!source || !source.trim()) return;
+
+    const pre = document.createElement('pre');
+    pre.setAttribute('data-language', 'mermaid');
+    const code = document.createElement('code');
+    code.textContent = source;
+    pre.appendChild(code);
+    mermaidPreviewEl.appendChild(pre);
+
+    (window as unknown as { __renderMermaid?: (root: Element) => void }).__renderMermaid?.(mermaidPreviewEl);
+  }
+
+  function renderDrafts() {
+    if (!draftsListEl) return;
+    draftsListEl.innerHTML = '';
+
+    if (drafts.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'text-xs text-faint italic';
+      empty.textContent = 'No drafts saved yet.';
+      draftsListEl.appendChild(empty);
+      return;
+    }
+
+    [...drafts]
+      .sort((a, b) => b.number - a.number)
+      .forEach((draft) => {
+        const row = document.createElement('div');
+        row.className =
+          'flex items-center justify-between gap-3 border border-line rounded-lg px-3 py-2';
+
+        const info = document.createElement('div');
+        info.className = 'text-sm text-body min-w-0';
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'font-medium';
+        titleSpan.textContent = `ADR-${String(draft.number).padStart(4, '0')}: ${draft.title || 'Untitled'}`;
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'ml-2 text-xs font-mono text-dim';
+        statusSpan.textContent = draft.status;
+
+        info.appendChild(titleSpan);
+        info.appendChild(statusSpan);
+
+        const actions = document.createElement('div');
+        actions.className = 'flex-shrink-0 flex items-center gap-2';
+
+        const loadDraftBtn = document.createElement('button');
+        loadDraftBtn.type = 'button';
+        loadDraftBtn.className = 'btn-outline text-xs';
+        loadDraftBtn.textContent = 'Load';
+        loadDraftBtn.addEventListener('click', () => loadDraft(draft.id));
+
+        const deleteDraftBtn = document.createElement('button');
+        deleteDraftBtn.type = 'button';
+        deleteDraftBtn.className = 'btn-outline text-xs';
+        deleteDraftBtn.textContent = 'Delete';
+        deleteDraftBtn.addEventListener('click', () => deleteDraft(draft.id));
+
+        actions.appendChild(loadDraftBtn);
+        actions.appendChild(deleteDraftBtn);
+
+        row.appendChild(info);
+        row.appendChild(actions);
+        draftsListEl.appendChild(row);
+      });
+  }
+
+  function loadDraft(id: string) {
+    const draft = drafts.find((d) => d.id === id);
+    if (!draft) return;
+    loadedDraftId = draft.id;
+    if (titleInput) titleInput.value = draft.title;
+    if (statusSelect) statusSelect.value = draft.status;
+    if (contextInput) contextInput.value = draft.context;
+    if (decisionInput) decisionInput.value = draft.decision;
+    if (alternativesInput) alternativesInput.value = draft.alternatives;
+    if (consequencesInput) consequencesInput.value = draft.consequences;
+    if (mermaidInput) mermaidInput.value = draft.mermaid ?? '';
+    showErrors([]);
+    renderPreview();
+  }
+
+  function deleteDraft(id: string) {
+    drafts = drafts.filter((d) => d.id !== id);
+    persistDrafts();
+    if (loadedDraftId === id) loadedDraftId = null;
+    renderDrafts();
+  }
+
+  function saveDraft() {
+    const values = currentFormValues();
+    const errors = validateAdr(values);
+    if (errors.length > 0) {
+      showErrors(errors);
+      return;
+    }
+    showErrors([]);
+
+    const existing = loadedDraftId ? drafts.find((d) => d.id === loadedDraftId) : undefined;
+    if (existing) {
+      Object.assign(existing, values);
+    } else {
+      const adr: Adr = {
+        id: crypto.randomUUID(),
+        number: nextAdrNumber(drafts),
+        createdIso: new Date().toISOString(),
+        ...values,
+      };
+      drafts.push(adr);
+      loadedDraftId = adr.id;
+    }
+
+    persistDrafts();
+    renderDrafts();
+    renderPreview();
+  }
+
+  async function copyMarkdown() {
+    const values = currentFormValues();
+    const errors = validateAdr(values);
+    if (errors.length > 0) {
+      showErrors(errors);
+      return;
+    }
+    showErrors([]);
+
+    const markdown = toMarkdown(buildPreviewAdr());
+    try {
+      await navigator.clipboard.writeText(markdown);
+      if (copyBtn) {
+        const original = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          if (copyBtn) copyBtn.textContent = original;
+        }, 1500);
+      }
+    } catch (err) {
+      console.error('Failed to copy ADR markdown to clipboard:', err);
+    }
+  }
+
+  [titleInput, statusSelect, contextInput, decisionInput, alternativesInput, consequencesInput, mermaidInput].forEach(
+    (input) => {
+      input?.addEventListener('input', renderPreview);
+      input?.addEventListener('change', renderPreview);
+    }
+  );
+
+  copyBtn?.addEventListener('click', copyMarkdown);
+  saveBtn?.addEventListener('click', saveDraft);
+
+  renderDrafts();
+  renderPreview();
+</script>

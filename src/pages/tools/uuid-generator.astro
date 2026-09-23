@@ -1,0 +1,143 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="uuid-generator"
+  description="Generate v4 UUIDs in bulk, and validate/parse an existing UUID's version and variant — all client-side, no sign-up, no tracking."
+  intro="Generate random UUIDs, or paste one to check its validity and parsed version/variant — everything stays in your browser."
+>
+
+  <div class="card">
+        <h2 class="section-label">Generate</h2>
+        <form id="uuid-generate-form" class="mt-4 flex flex-wrap items-end gap-4">
+          <label class="text-xs font-mono text-dim">
+            Count
+            <input
+              id="uuid-count"
+              type="number"
+              step="1"
+              min="1"
+              max="50"
+              value="1"
+              class="mt-1 w-24 bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+          <button type="submit" class="btn-primary">Generate</button>
+        </form>
+      </div>
+
+      <div id="uuid-result-card" class="card mt-6 hidden">
+        <div class="flex items-center justify-between">
+          <h2 class="section-label">Generated UUIDs</h2>
+          <button type="button" id="uuid-copy-all" class="btn-outline text-xs">Copy all</button>
+        </div>
+        <pre id="uuid-output" class="mt-4 bg-field border border-line rounded-lg p-3 text-sm text-ink font-mono overflow-x-auto"></pre>
+      </div>
+
+      <div class="card mt-6">
+        <h2 class="section-label">Parse / Validate</h2>
+        <form id="uuid-parse-form" class="mt-4 space-y-4">
+          <label class="text-xs font-mono text-dim">
+            UUID
+            <input
+              id="uuid-parse-input"
+              type="text"
+              placeholder="123e4567-e89b-12d3-a456-426614174000"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+        </form>
+        <div id="uuid-parse-result" class="mt-4"></div>
+      </div>
+
+</ToolLayout>
+
+<script>
+import { isValidUuid, parseUuid } from '../../lib/tools/uuid-generator';
+
+// No persistence for this tool — generated UUIDs and pasted values are ephemeral by nature, so
+// loadJSON/saveJSON is deliberately skipped here (unlike most other tools on this site).
+
+(() => {
+  // ---------------------------------------------------------------------
+  // Generate
+  // ---------------------------------------------------------------------
+  const generateForm = document.getElementById('uuid-generate-form');
+  const countInput = document.getElementById('uuid-count') as HTMLInputElement | null;
+  const resultCard = document.getElementById('uuid-result-card');
+  const output = document.getElementById('uuid-output');
+  const copyAllBtn = document.getElementById('uuid-copy-all') as HTMLButtonElement | null;
+
+  let generated: string[] = [];
+
+  function generate() {
+    const rawCount = Number(countInput?.value);
+    const count = Math.min(50, Math.max(1, Number.isFinite(rawCount) ? Math.trunc(rawCount) : 1));
+    if (countInput) countInput.value = String(count);
+
+    generated = Array.from({ length: count }, () => crypto.randomUUID());
+
+    if (output) output.textContent = generated.join('\n');
+    resultCard?.classList.remove('hidden');
+  }
+
+  generateForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    generate();
+  });
+
+  copyAllBtn?.addEventListener('click', async () => {
+    if (!copyAllBtn || generated.length === 0) return;
+    try {
+      await navigator.clipboard.writeText(generated.join('\n'));
+      const original = copyAllBtn.textContent;
+      copyAllBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        copyAllBtn.textContent = original;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy UUIDs to clipboard:', err);
+    }
+  });
+
+  generate();
+
+  // ---------------------------------------------------------------------
+  // Parse / Validate
+  // ---------------------------------------------------------------------
+  const parseInput = document.getElementById('uuid-parse-input') as HTMLInputElement | null;
+  const parseResult = document.getElementById('uuid-parse-result');
+
+  function renderParse() {
+    if (!parseResult) return;
+    const value = parseInput?.value.trim() ?? '';
+
+    if (value === '') {
+      parseResult.innerHTML = '';
+      return;
+    }
+
+    if (!isValidUuid(value)) {
+      parseResult.innerHTML = `<div class="text-sm text-red-400 font-mono">Not a valid UUID.</div>`;
+      return;
+    }
+
+    try {
+      const { version, variant } = parseUuid(value);
+      parseResult.innerHTML = `
+        <div class="space-y-1 text-sm font-mono text-body">
+          <div><span class="text-emerald-400">Valid UUID</span></div>
+          <div>Version: ${version === null ? 'unrecognized' : version}</div>
+          <div>Variant: ${variant}</div>
+        </div>
+      `;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      parseResult.innerHTML = `<div class="text-sm text-red-400 font-mono">${message}</div>`;
+    }
+  }
+
+  parseInput?.addEventListener('input', renderParse);
+})();
+</script>

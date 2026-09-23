@@ -1,0 +1,78 @@
+title: "Retry Policies and the Delivery Semantics They Produce"
+description: "Every retry decision is made along three axes — trigger, backoff, budget — before delivery semantics even enter the picture. At-least-once, at-most-once, and exactly-once are the accumulated side effect of those decisions, not a separate design choice."
+tags: ["system-design", "observability", "telemetry", "maang-prep", "retry-policies", "kafka"]
+cards:
+  - id: retry-policy-three-knobs
+    type: basic
+    q: "What are the three knobs of any retry policy, and what does getting each wrong look like?"
+    a: "Trigger (which failures are worth retrying? — wrong: retrying a 400 forever, or not retrying a 429/503). Backoff (how long before the next attempt? — wrong: fixed-interval causing a thundering herd). Budget (when do you stop? — wrong: no cap lets a permanently-failing message block everything behind it)."
+
+  - id: delivery-semantics-are-downstream
+    type: basic
+    q: "Why are delivery semantics 'downstream of the retry decision, not upstream of it'?"
+    a: "A retry policy that always retries on uncertainty produces at-least-once delivery by construction — not because anyone chose that semantic, but because duplicates are the unavoidable consequence of that trigger rule. The semantic is the accumulated side effect of retry decisions across every hop."
+
+  - id: why-exponential-backoff-not-fixed
+    type: basic
+    q: "Why does fixed-interval retry fail, and how does exponential backoff + jitter fix it?"
+    a: "Fixed-interval retry causes every client to retry at the exact same instant once the failure resolves — a thundering herd (e.g. 50K agents reconnecting after a rolling restart). Exponential backoff spreads load over time; jitter (randomizing each wait) is what actually breaks the synchronization — backoff alone still leaves clients on the same, just slower, schedule."
+
+  - id: poison-pill-vs-circuit-breaker
+    type: basic
+    q: "What's the difference between a poison-pill fix and a circuit breaker, and when is each appropriate?"
+    a: "Poison pill: one bad message that will never succeed (malformed payload) — fix is a per-message retry-count cap with overflow routed to a dead-letter destination. Circuit breaker: one dependency is down — fix is to stop sending traffic so retries don't amplify the outage. Conflating the two is the most common root cause of a stuck partition or a 10-min outage becoming an hour."
+
+  - id: 429-is-a-slowdown-signal
+    type: basic
+    q: "Why must 429/RESOURCE_EXHAUSTED be treated as a signal to slow down, not a transient failure to retry around?"
+    a: "A retry policy that treats backpressure as 'just retry immediately' turns a load-shedding signal into more load — exactly what exponential backoff with jitter exists to prevent. The decision to slow down must live in the retrying client, where the backoff state actually is; the gateway must never become the coordination point."
+
+  - id: delivery-semantics-comparison-table
+    type: basic
+    q: "Compare at-most-once, at-least-once, and exactly-once by retry policy and cost."
+    a: "At-most-once: never retry — cheapest, message may be silently lost. At-least-once: always retry on uncertainty — cheap, consumer must handle duplicates. Exactly-once: retry, but the system guarantees no duplicate/no loss — highest cost, coordination overhead on every message."
+
+  - id: idempotent-producer-mechanism
+    type: basic
+    q: "How does an idempotent Kafka producer prevent duplicates, and what's its limitation?"
+    a: "The producer attaches a monotonically increasing sequence number per producer session; the broker tracks the last accepted sequence per producer and silently no-ops a retry of an already-seen one. Limitation: this only solves duplication on the producer→broker hop — a consumer can still process a message twice if it crashes after processing but before committing its offset."
+
+  - id: transactional-consume-process-produce
+    type: basic
+    q: "How does Kafka's transactional consume-process-produce guarantee work, and where does its guarantee stop?"
+    a: "The consumer atomically commits its consumed offset together with its produced output as one all-or-nothing unit — if it crashes between processing and committing, the whole transaction rolls back and replays. The guarantee only holds within Kafka's own transactional boundary; writing to an external system (DB, API, TSDB) outside that boundary needs its own idempotency or the guarantee silently stops there."
+
+  - id: effectively-once-definition
+    type: basic
+    q: "What is 'effectively-once' and why do most real systems settle for it instead of true exactly-once?"
+    a: "Effectively-once = at-least-once retry policy + idempotent processing at the consumer (dedup by stable ID/content hash/fingerprint). True end-to-end exactly-once requires every hop, including external systems, to participate in the same transactional/idempotency scheme — too expensive for most cases, and unnecessary once the practical outcome (no double-counting) is already achieved."
+
+  - id: which-signals-tolerate-at-least-once
+    type: basic
+    q: "Why can metrics, logs, and traces all safely default to at-least-once delivery?"
+    a: "Each has cheap native dedup downstream: metrics — the TSDB dedups by timestamp + label fingerprint (a duplicate overwrites, doesn't double-count). Logs — dedup by content hash + timestamp window. Traces — dedup by span ID. Only a billing-critical signal needs the expense of true exactly-once."
+
+  - id: retry-per-hop-table
+    type: basic
+    q: "Why is retry policy 'set per hop, not once for the whole pipeline'?"
+    a: "Each hop (agent→gateway, gateway→Kafka, Kafka→processor, processor→storage) has its own trigger, backoff, and budget, and duplicate risk compounds across every hop that retries independently — treating retry as one pipeline-wide setting misses that each hop's failure mode and mitigation differ."
+
+  - id: retry-storm-feedback-loop
+    type: basic
+    q: "Describe the retry-storm feedback loop that a bad retry policy can create."
+    a: "Storage full → processor slows, consumer lag grows → lag alarm scales processors via HPA → if lag persists, gateway returns RESOURCE_EXHAUSTED → the agent should back off with jitter and buffer locally. A retry policy that instead retries harder against an already-struggling system amplifies the very overload it should be relieving."
+
+  - id: exponential-backoff-config-example
+    type: basic
+    q: "What do initial_interval, max_interval, and max_elapsed_time control in an exponential backoff config?"
+    a: "initial_interval: the first retry delay (e.g. 1s). max_interval: the cap on how large backoff can grow (e.g. 60s) — without it, backoff grows unbounded. max_elapsed_time: the total retry budget (e.g. 120s) — after this, give up and let the WAL hold the batch instead of retrying forever."
+
+  - id: same-jitter-fix-different-subsystem
+    type: basic
+    q: "Where else in this pipeline does the same 'jitter breaks correlated retries' fix appear, outside of agent retries?"
+    a: "Ingester flush schedules: jittering the 2-hour flush boundary per tenant/shard prevents ingesters that started at the same time from resynchronizing their flushes and causing a compactor storm — same failure shape (correlated retries/schedules becoming a self-inflicted storm), different subsystem."
+
+  - id: retry-policy-cost-summary
+    type: basic
+    q: "What four costs does choosing a stricter retry/delivery guarantee (exactly-once) impose?"
+    a: "Latency (extra coordination round trips), throughput (transaction coordinators serialize commits), operational surface area (a dedicated isolated consumer path, since transactional and non-transactional consumption can't share a consumer group), and blast-radius amplification risk if backoff/jitter is missing elsewhere."

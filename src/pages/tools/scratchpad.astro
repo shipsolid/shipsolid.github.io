@@ -1,0 +1,182 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="scratchpad"
+  description="A tabbed, auto-saving local workspace for throwaway notes, JSON, logs, and SQL. Client-side only, no sign-up, no tracking."
+  intro="Up to 12 tabs, each an autosaving text buffer. Double-click a tab to rename it. Nothing leaves your browser — this is a scratch space, not storage you should rely on."
+>
+
+  <div class="card">
+    <div class="flex items-center gap-2 flex-wrap">
+      <div id="sp-tabs" class="tabs flex-wrap" role="tablist" style="margin-bottom:0"></div>
+      <button id="sp-add" type="button" class="btn-outline text-xs" title="New tab">+ Tab</button>
+    </div>
+    <p id="sp-error" class="mt-2 text-xs text-red-400 font-mono hidden"></p>
+
+    <textarea id="sp-body" rows="18" spellcheck="false"
+      class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y leading-relaxed"></textarea>
+
+    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <span id="sp-count" class="text-xs font-mono text-dim"></span>
+      <div class="flex gap-2">
+        <button id="sp-copy" type="button" class="btn-outline text-xs">Copy</button>
+        <button id="sp-download" type="button" class="btn-outline text-xs">Download .md</button>
+        <button id="sp-clear" type="button" class="btn-outline text-xs">Clear tab</button>
+        <button id="sp-delete" type="button" class="btn-outline text-xs">Delete tab</button>
+      </div>
+    </div>
+  </div>
+
+</ToolLayout>
+
+<script>
+  import { addTab, blankTab, removeTab, renameTab, wordCount } from '../../lib/tools/scratchpad';
+  import type { ScratchTab } from '../../lib/tools/scratchpad';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const TABS_KEY = 'tools:scratchpad:tabs';
+  const ACTIVE_KEY = 'tools:scratchpad:activeId';
+
+  let tabs: ScratchTab[] = loadJSON<ScratchTab[]>(TABS_KEY, []);
+  if (!Array.isArray(tabs) || tabs.length === 0) {
+    tabs = [{ ...blankTab('Scratch 1'), body: 'Anything goes here.\nAutosaves as you type.' }];
+  }
+  let activeId: string = loadJSON<string>(ACTIVE_KEY, tabs[0].id);
+  if (!tabs.some((t) => t.id === activeId)) activeId = tabs[0].id;
+
+  const tabsEl = document.getElementById('sp-tabs') as HTMLElement | null;
+  const addEl = document.getElementById('sp-add');
+  const bodyEl = document.getElementById('sp-body') as HTMLTextAreaElement | null;
+  const countEl = document.getElementById('sp-count');
+  const errorEl = document.getElementById('sp-error');
+  const copyEl = document.getElementById('sp-copy') as HTMLButtonElement | null;
+  const downloadEl = document.getElementById('sp-download');
+  const clearEl = document.getElementById('sp-clear');
+  const deleteEl = document.getElementById('sp-delete');
+
+  function persist() {
+    saveJSON(TABS_KEY, tabs);
+    saveJSON(ACTIVE_KEY, activeId);
+  }
+  function activeTab(): ScratchTab {
+    return tabs.find((t) => t.id === activeId) ?? tabs[0];
+  }
+  function showError(message: string) {
+    if (!errorEl) return;
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+    setTimeout(() => errorEl.classList.add('hidden'), 2500);
+  }
+
+  function renderTabs() {
+    if (!tabsEl) return;
+    tabsEl.innerHTML = tabs
+      .map(
+        (t) => `<button class="tab" role="tab" data-id="${t.id}" aria-selected="${t.id === activeId}"
+          title="Double-click to rename">${t.name.replace(/</g, '&lt;')}</button>`
+      )
+      .join('');
+  }
+
+  function renderBody() {
+    if (bodyEl) bodyEl.value = activeTab().body;
+    renderCount();
+  }
+
+  function renderCount() {
+    if (!countEl) return;
+    const { words, chars, lines } = wordCount(activeTab().body);
+    countEl.textContent = `${words} words · ${chars} chars · ${lines} lines`;
+  }
+
+  tabsEl?.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
+    if (!btn) return;
+    activeId = btn.dataset.id as string;
+    persist();
+    renderTabs();
+    renderBody();
+    bodyEl?.focus();
+  });
+
+  tabsEl?.addEventListener('dblclick', (event) => {
+    const btn = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
+    if (!btn) return;
+    const tab = tabs.find((t) => t.id === btn.dataset.id);
+    if (!tab) return;
+    const next = window.prompt('Rename tab', tab.name);
+    if (next === null) return;
+    try {
+      tabs = renameTab(tabs, tab.id, next);
+      persist();
+      renderTabs();
+    } catch (err) {
+      showError(err instanceof Error ? err.message : String(err));
+    }
+  });
+
+  addEl?.addEventListener('click', () => {
+    try {
+      tabs = addTab(tabs);
+      activeId = tabs[tabs.length - 1].id;
+      persist();
+      renderTabs();
+      renderBody();
+      bodyEl?.focus();
+    } catch (err) {
+      showError(err instanceof Error ? err.message : String(err));
+    }
+  });
+
+  bodyEl?.addEventListener('input', () => {
+    const tab = activeTab();
+    tab.body = bodyEl.value;
+    tab.updated = Date.now();
+    persist();
+    renderCount();
+  });
+
+  copyEl?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(activeTab().body);
+    const o = copyEl.textContent;
+    copyEl.textContent = 'Copied!';
+    setTimeout(() => (copyEl.textContent = o), 1500);
+  });
+
+  downloadEl?.addEventListener('click', () => {
+    const tab = activeTab();
+    const blob = new Blob([tab.body], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${tab.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase() || 'scratch'}.md`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  clearEl?.addEventListener('click', () => {
+    const tab = activeTab();
+    if (tab.body !== '' && !window.confirm('Clear this tab?')) return;
+    tab.body = '';
+    tab.updated = Date.now();
+    persist();
+    renderBody();
+  });
+
+  deleteEl?.addEventListener('click', () => {
+    const tab = activeTab();
+    if (tab.body !== '' && !window.confirm(`Delete "${tab.name}"?`)) return;
+    tabs = removeTab(tabs, tab.id);
+    activeId = tabs[Math.max(0, tabs.length - 1)].id;
+    persist();
+    renderTabs();
+    renderBody();
+  });
+
+  renderTabs();
+  renderBody();
+</script>

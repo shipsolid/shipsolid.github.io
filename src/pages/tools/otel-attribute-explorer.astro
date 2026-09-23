@@ -1,0 +1,132 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="otel-attribute-explorer"
+  description="Paste OpenTelemetry attributes and see them grouped by signal scope, with the high-cardinality ones flagged as unsafe for metric labels. Client-side only, no sign-up, no tracking."
+  intro="Paste a set of attributes as JSON or key=value lines. They get grouped into resource / scope / span / metric, and every key is rated for cardinality risk so you know which ones must never become a metric label. Everything stays in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Attributes</h2>
+    <textarea
+      id="oae-input"
+      rows="9"
+      class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+      placeholder={'{\n  "service.name": "checkout",\n  "deployment.environment": "prod",\n  "http.route": "/api/orders/:id",\n  "user.id": "u_9182"\n}'}
+    ></textarea>
+    <p id="oae-error" class="mt-3 text-sm text-red-400 font-mono hidden"></p>
+  </div>
+
+  <div id="oae-flags" class="card mt-6 hidden"></div>
+
+  <div id="oae-groups" class="mt-6 space-y-6"></div>
+
+</ToolLayout>
+
+<script>
+  import { classifyAttributes, parseAttributeText } from '../../lib/tools/otel-attribute-explorer';
+  import type { OtelScope } from '../../lib/tools/otel-attribute-explorer';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:otel-attribute-explorer:input';
+  const DEFAULT_INPUT = JSON.stringify(
+    {
+      'service.name': 'checkout',
+      'deployment.environment': 'prod',
+      'cloud.region': 'centralindia',
+      'k8s.pod.name': 'checkout-7d9f',
+      'http.request.method': 'POST',
+      'http.route': '/api/orders/:id',
+      'http.target': '/api/orders/8123?expand=items',
+      'user.id': 'u_9182',
+    },
+    null,
+    2
+  );
+
+  const inputEl = document.getElementById('oae-input') as HTMLTextAreaElement | null;
+  const errorEl = document.getElementById('oae-error');
+  const flagsEl = document.getElementById('oae-flags');
+  const groupsEl = document.getElementById('oae-groups');
+
+  if (inputEl) inputEl.value = loadJSON<string>(STORAGE_KEY, DEFAULT_INPUT);
+
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  const SCOPE_ORDER: OtelScope[] = ['resource', 'scope', 'span', 'metric', 'unknown'];
+  const SCOPE_LABEL: Record<OtelScope, string> = {
+    resource: 'Resource',
+    scope: 'Instrumentation scope',
+    span: 'Span',
+    metric: 'Metric',
+    unknown: 'Unknown / custom',
+  };
+  const RISK_CLASS: Record<string, string> = {
+    low: 'bg-emerald-950 text-emerald-400 border border-emerald-900',
+    medium: 'bg-amber-950 text-amber-400 border border-amber-900',
+    high: 'bg-red-950 text-red-400 border border-red-900',
+  };
+
+  function run() {
+    if (!errorEl || !flagsEl || !groupsEl) return;
+    const raw = inputEl?.value ?? '';
+    saveJSON(STORAGE_KEY, raw);
+
+    let classified;
+    try {
+      classified = classifyAttributes(parseAttributeText(raw));
+      errorEl.classList.add('hidden');
+    } catch (err) {
+      errorEl.textContent = err instanceof Error ? err.message : String(err);
+      errorEl.classList.remove('hidden');
+      flagsEl.classList.add('hidden');
+      groupsEl.innerHTML = '';
+      return;
+    }
+
+    const highs = classified.filter((a) => a.highCardinalityRisk === 'high');
+    if (highs.length === 0) {
+      flagsEl.classList.add('hidden');
+    } else {
+      flagsEl.classList.remove('hidden');
+      flagsEl.innerHTML = `
+        <h2 class="section-label mb-2 text-red-400">Do not use as metric labels</h2>
+        <p class="text-sm font-mono text-ink">${highs.map((a) => escapeHtml(a.key)).join(', ')}</p>
+        <p class="text-xs text-dim mt-1">Attach these to spans or logs, or emit them as exemplars — never as a metric label.</p>
+      `;
+    }
+
+    groupsEl.innerHTML = SCOPE_ORDER.filter((scope) => classified.some((a) => a.scope === scope))
+      .map((scope) => {
+        const rows = classified
+          .filter((a) => a.scope === scope)
+          .map(
+            (a) => `
+            <li class="py-2 border-b border-line last:border-0">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="font-mono text-sm text-ink break-all">${escapeHtml(a.key)}</div>
+                  <div class="font-mono text-xs text-dim break-all">${escapeHtml(a.value)}</div>
+                  <div class="text-xs text-dim mt-1">${escapeHtml(a.note)}</div>
+                </div>
+                <span class="tag shrink-0 ${RISK_CLASS[a.highCardinalityRisk]}">${a.highCardinalityRisk}</span>
+              </div>
+            </li>`
+          )
+          .join('');
+        return `
+          <div class="card">
+            <h2 class="section-label">${SCOPE_LABEL[scope]}</h2>
+            <ul class="mt-3">${rows}</ul>
+          </div>`;
+      })
+      .join('');
+  }
+
+  inputEl?.addEventListener('input', run);
+  run();
+</script>

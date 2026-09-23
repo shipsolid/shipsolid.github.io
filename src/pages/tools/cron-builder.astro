@@ -1,0 +1,99 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="cron-builder"
+  description="Validate a standard 5-field cron expression, get a plain-English description, and see the next 5 run times. Client-side only, no sign-up, no tracking."
+  intro="Standard 5-field cron (minute hour day-of-month month day-of-week). Fields are evaluated in UTC. Everything stays in your browser — no account, no server."
+>
+
+  <div class="card">
+        <h2 class="section-label">Cron Expression</h2>
+        <form id="cron-form" class="mt-4 grid grid-cols-1 gap-4">
+          <label class="text-xs font-mono text-dim">
+            Expression
+            <input
+              id="cron-expr"
+              type="text"
+              placeholder="*/15 * * * *"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+          <div>
+            <button type="submit" class="btn-primary">Parse</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="cron-result" class="card mt-6"></div>
+
+</ToolLayout>
+
+<script>
+import { describeCron, nextRunTimes, validateCron } from '../../lib/tools/cron-builder';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:cron-builder:expr';
+  const DEFAULT_EXPR = '*/15 * * * *';
+
+  const expr: string = loadJSON<string>(STORAGE_KEY, DEFAULT_EXPR);
+
+  const form = document.getElementById('cron-form');
+  const exprInput = document.getElementById('cron-expr') as HTMLInputElement | null;
+  const result = document.getElementById('cron-result');
+
+  if (exprInput) exprInput.value = expr;
+
+  function renderResult(container: HTMLElement | null, lines: string[]) {
+    if (!container) return;
+    container.innerHTML = `
+      <h3 class="section-label mb-3">Result</h3>
+      <div class="space-y-1 text-sm font-mono text-body">
+        ${lines.map((line) => `<div>${line}</div>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderError(container: HTMLElement | null, message: string) {
+    if (!container) return;
+    container.innerHTML = `<div class="text-sm text-red-400 font-mono">${message}</div>`;
+  }
+
+  function run() {
+    const value = exprInput?.value?.trim() ?? '';
+    saveJSON(STORAGE_KEY, value);
+
+    const validation = validateCron(value);
+    if (!validation.valid) {
+      renderError(result, validation.error ?? 'Invalid cron expression');
+      return;
+    }
+
+    try {
+      const description = describeCron(value);
+      const from = new Date();
+      const runs = nextRunTimes(value, 5, from);
+
+      const lines = [
+        `Description: ${description}`,
+        '',
+        'Next 5 run times (UTC):',
+        ...runs.map((d) => `  ${d.toISOString().replace('.000Z', 'Z')}`),
+      ];
+      renderResult(result, lines);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      renderError(result, message);
+    }
+  }
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    run();
+  });
+
+  run();
+})();
+</script>

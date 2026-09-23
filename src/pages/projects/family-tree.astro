@@ -1,0 +1,221 @@
+---
+import Page from '../../layouts/Page.astro';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import * as yaml from 'js-yaml';
+
+const treeData = yaml.load(
+  readFileSync(join(process.cwd(), 'src/data/family-tree.yaml'), 'utf-8')
+);
+---
+
+<Page title="Singh Family Tree — Amit Singh" description="Five-generation interactive family tree of the Singh lineage from Gurubakas Singh.">
+  <div class="max-w-6xl mx-auto px-6">
+      <header class="mb-10">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="tag">family</span>
+          <span class="tag">genealogy</span>
+        </div>
+        <div class="flex items-start gap-4 mb-4">
+          <h1 class="text-3xl md:text-4xl font-bold text-ink leading-tight flex-1">
+            Singh Family Tree
+          </h1>
+          <span class="flex-shrink-0 mt-1 px-2.5 py-1 text-xs font-mono rounded-full border text-success bg-success/10 border-success/20">
+            Active
+          </span>
+        </div>
+        <p class="text-muted mb-6">
+          Six-generation lineage from Gurubakas Singh. Click any node with children to collapse or expand that branch.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-mono border-t border-line pt-4">
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#94e2d5"></span>Gen 1</span>
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#89dceb"></span>Gen 2</span>
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#b4befe"></span>Gen 3</span>
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#cba6f7"></span>Gen 4</span>
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#f5c2e7"></span>Gen 5</span>
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#fab387"></span>Gen 6</span>
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#f9e2af"></span>Gen 7</span>
+          <span class="flex items-center gap-1.5 text-dim"><span class="inline-block w-2.5 h-2.5 rounded-xs" style="background:#a6e3a1"></span>Gen 8</span>
+          <span class="ml-auto text-faint">▶ expand &nbsp;·&nbsp; ▼ collapse</span>
+        </div>
+      </header>
+
+      <div id="tree-root"></div>
+
+      <div class="mt-16 pt-8 border-t border-line flex items-center justify-between">
+        <a href="/projects" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors">
+          ← All projects
+        </a>
+        <a href="/" class="text-sm text-dim hover:text-body transition-colors">Home</a>
+      </div>
+
+    </div>
+
+</Page>
+
+<style is:global>
+  .ft-node { position: relative; }
+
+  .ft-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.375rem;
+    padding: 0.25rem 0;
+  }
+
+  .ft-toggle {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.5rem;
+    color: var(--color-text-faint);
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: color 0.15s, background 0.15s;
+    border: none;
+    background: transparent;
+    padding: 0;
+  }
+  .ft-toggle:hover { color: var(--color-text-muted); background: rgba(148,163,184,.08); }
+  .ft-toggle.ft-leaf { cursor: default; color: var(--color-border-hover); }
+  .ft-toggle.ft-leaf:hover { background: transparent; }
+
+  .ft-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left-width: 3px;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    transition: background 0.15s, border-color 0.15s;
+    cursor: default;
+    min-width: 200px;
+    max-width: 420px;
+  }
+  .ft-card:hover { background: var(--color-surface-hover); }
+
+  .ft-name {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .ft-spouse {
+    font-size: 0.75rem;
+    color: var(--color-dim);
+    margin-top: 0.1rem;
+  }
+  .ft-spouse span { color: var(--color-text-muted); }
+
+  .ft-note {
+    font-size: 0.7rem;
+    font-style: italic;
+    color: var(--color-text-faint);
+    margin-top: 0.1rem;
+  }
+
+  .ft-uid {
+    font-family: ui-monospace, monospace;
+    font-size: 0.6rem;
+    color: var(--color-border);
+    margin-top: 0.25rem;
+    transition: color 0.15s;
+  }
+  .ft-card:hover .ft-uid { color: var(--color-border-hover); }
+
+  .ft-children {
+    margin-left: 1.625rem;
+    padding-left: 1rem;
+    border-left: 1px solid var(--color-border);
+  }
+  .ft-children.collapsed { display: none; }
+</style>
+
+<script define:vars={{ treeData }}>
+  const GEN_COLORS = {
+    1: '#94e2d5',
+    2: '#89dceb',
+    3: '#b4befe',
+    4: '#cba6f7',
+    5: '#f5c2e7',
+    6: '#fab387',
+    7: '#f9e2af',
+    8: '#a6e3a1',
+  };
+
+  function genFromId(id) {
+    return parseInt(id?.split('_')[0]?.slice(1)) || 1;
+  }
+
+  const TREE = treeData;
+
+  function buildNode(node) {
+    const color = GEN_COLORS[genFromId(node.id)] || '#585b70';
+    const hasChildren = !!(node.children && node.children.length);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'ft-node';
+
+    const row = document.createElement('div');
+    row.className = 'ft-row';
+
+    const toggle = document.createElement('button');
+    toggle.className = hasChildren ? 'ft-toggle' : 'ft-toggle ft-leaf';
+    toggle.setAttribute('aria-label', hasChildren ? 'Collapse' : '');
+    toggle.textContent = hasChildren ? '▼' : '●';
+
+    const card = document.createElement('div');
+    card.className = 'ft-card';
+    card.style.borderLeftColor = color;
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'ft-name';
+    nameEl.textContent = node.name;
+    card.appendChild(nameEl);
+
+    if (node.spouse) {
+      const sp = document.createElement('div');
+      sp.className = 'ft-spouse';
+      sp.innerHTML = `⚭ <span>${node.spouse}</span>`;
+      card.appendChild(sp);
+    }
+
+    if (node.note) {
+      const note = document.createElement('div');
+      note.className = 'ft-note';
+      note.textContent = node.note;
+      card.appendChild(note);
+    }
+
+    const uid = document.createElement('div');
+    uid.className = 'ft-uid';
+    uid.textContent = node.id;
+    card.appendChild(uid);
+
+    row.appendChild(toggle);
+    row.appendChild(card);
+    wrapper.appendChild(row);
+
+    if (hasChildren) {
+      const childrenEl = document.createElement('div');
+      childrenEl.className = 'ft-children';
+      node.children.forEach(c => childrenEl.appendChild(buildNode(c)));
+      wrapper.appendChild(childrenEl);
+
+      toggle.addEventListener('click', () => {
+        const collapsed = childrenEl.classList.toggle('collapsed');
+        toggle.textContent = collapsed ? '▶' : '▼';
+      });
+    }
+
+    return wrapper;
+  }
+
+  const root = document.getElementById('tree-root');
+  if (root) root.appendChild(buildNode(TREE));
+</script>

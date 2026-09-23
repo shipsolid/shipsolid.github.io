@@ -1,0 +1,167 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="timestamp-converter"
+  description="Convert between unix seconds and ISO 8601, render a timestamp in any timezone, and see relative time. Client-side only, no sign-up, no tracking."
+  intro="Unix seconds ⇄ ISO 8601, rendered in any timezone, with relative time. Everything stays in your browser — no account, no server."
+>
+
+  <div class="card">
+        <div class="flex items-center justify-between">
+          <h2 class="section-label">Convert</h2>
+          <button id="ts-now" type="button" class="btn-outline text-xs">Now</button>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label class="text-xs font-mono text-dim">
+            Unix Seconds
+            <input
+              id="ts-unix"
+              type="text"
+              inputmode="numeric"
+              placeholder="1735689600"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+          <label class="text-xs font-mono text-dim">
+            ISO 8601
+            <input
+              id="ts-iso"
+              type="text"
+              placeholder="2025-01-01T00:00:00.000Z"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+          <label class="text-xs font-mono text-dim sm:col-span-2">
+            Timezone
+            <select
+              id="ts-timezone"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            >
+              <option value="UTC">UTC</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+              <option value="Europe/London">Europe/London</option>
+              <option value="Asia/Kolkata">Asia/Kolkata</option>
+              <option value="Asia/Tokyo">Asia/Tokyo</option>
+              <option value="Australia/Sydney">Australia/Sydney</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="ts-result" class="card mt-6"></div>
+
+</ToolLayout>
+
+<script>
+import { formatTimestamp, isoToUnix, relativeTime, unixToIso } from '../../lib/tools/timestamp-converter';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:timestamp-converter:unixSeconds';
+  const DEFAULT_UNIX_SECONDS = 1735689600; // 2025-01-01T00:00:00.000Z
+
+  const unixInput = document.getElementById('ts-unix') as HTMLInputElement | null;
+  const isoInput = document.getElementById('ts-iso') as HTMLInputElement | null;
+  const timezoneSelect = document.getElementById('ts-timezone') as HTMLSelectElement | null;
+  const nowButton = document.getElementById('ts-now');
+  const result = document.getElementById('ts-result');
+
+  const persistedUnixSeconds: number = loadJSON<number>(STORAGE_KEY, DEFAULT_UNIX_SECONDS);
+
+  function renderResult(container: HTMLElement | null, lines: string[]) {
+    if (!container) return;
+    container.innerHTML = `
+      <h3 class="section-label mb-3">Result</h3>
+      <div class="space-y-1 text-sm font-mono text-body">
+        ${lines.map((line) => `<div>${line}</div>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderError(container: HTMLElement | null, message: string) {
+    if (!container) return;
+    container.innerHTML = `<div class="text-sm text-red-400 font-mono">${message}</div>`;
+  }
+
+  // Renders the current unix value into the result card: formatted-in-timezone + relative time.
+  // The page (not lib/) supplies "now" for relativeTime, per this site's determinism convention.
+  function renderFromUnix(unixSeconds: number) {
+    const timeZone = timezoneSelect?.value ?? 'UTC';
+    const nowSeconds = Math.floor(Date.now() / 1000);
+
+    try {
+      const formatted = formatTimestamp(unixSeconds, timeZone);
+      const relative = relativeTime(unixSeconds, nowSeconds);
+      renderResult(result, [
+        `Unix seconds: ${unixSeconds}`,
+        `ISO 8601 (UTC): ${unixToIso(unixSeconds)}`,
+        `${timeZone}: ${formatted}`,
+        `Relative: ${relative}`,
+      ]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      renderError(result, message);
+    }
+  }
+
+  function setFromUnixSeconds(unixSeconds: number) {
+    if (unixInput) unixInput.value = String(unixSeconds);
+    try {
+      if (isoInput) isoInput.value = unixToIso(unixSeconds);
+    } catch {
+      // leave ISO field as-is if conversion fails; renderFromUnix will surface the error
+    }
+    saveJSON(STORAGE_KEY, unixSeconds);
+    renderFromUnix(unixSeconds);
+  }
+
+  // Initial render from persisted (or default) unix seconds.
+  setFromUnixSeconds(persistedUnixSeconds);
+
+  unixInput?.addEventListener('input', () => {
+    const raw = unixInput.value.trim();
+    const parsed = Number(raw);
+    if (raw === '' || Number.isNaN(parsed)) {
+      renderError(result, `"${raw}" is not a valid unix seconds value`);
+      return;
+    }
+
+    try {
+      if (isoInput) isoInput.value = unixToIso(parsed);
+    } catch {
+      // renderFromUnix below will surface the underlying error
+    }
+    saveJSON(STORAGE_KEY, parsed);
+    renderFromUnix(parsed);
+  });
+
+  isoInput?.addEventListener('input', () => {
+    const raw = isoInput.value.trim();
+    try {
+      const unixSeconds = isoToUnix(raw);
+      if (unixInput) unixInput.value = String(unixSeconds);
+      saveJSON(STORAGE_KEY, unixSeconds);
+      renderFromUnix(unixSeconds);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      renderError(result, message);
+    }
+  });
+
+  timezoneSelect?.addEventListener('change', () => {
+    const raw = unixInput?.value?.trim() ?? '';
+    const parsed = Number(raw);
+    if (raw !== '' && !Number.isNaN(parsed)) {
+      renderFromUnix(parsed);
+    }
+  });
+
+  nowButton?.addEventListener('click', () => {
+    setFromUnixSeconds(Math.floor(Date.now() / 1000));
+  });
+})();
+</script>

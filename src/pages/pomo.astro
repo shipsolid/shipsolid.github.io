@@ -1,0 +1,1137 @@
+---
+import Page from '../layouts/Page.astro';
+---
+
+<Page
+  title="Pomodoro Timer — Amit Singh"
+  description="A focused Pomodoro timer with ambient noise, browser notifications, and local session stats. No sign-up, no tracking."
+>
+  <div class="max-w-3xl mx-auto px-6">
+      <header class="mb-10">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="tag">productivity</span>
+          <span class="tag">focus</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold text-ink leading-tight mb-3">
+          Pomodoro Timer
+        </h1>
+        <p class="text-muted">
+          25/5/15 focus cycles, ambient noise mixing, and local stats. Everything stays in your
+          browser — no account, no server.
+        </p>
+      </header>
+
+      <!-- Tabs -->
+      <div class="tabs" role="tablist">
+        <button class="tab" data-tab="timer" role="tab" aria-selected="true" type="button">Timer</button>
+        <button class="tab" data-tab="analytics" role="tab" aria-selected="false" type="button">Analytics</button>
+      </div>
+
+      <!-- Screen-reader announcer for phase transitions. Lives outside both tab panels so it
+           still announces even while the Analytics tab is active (Timer panel is display:none,
+           and the timer keeps running regardless of which tab is visible). -->
+      <div id="pomo-phase-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+      <div id="pomo-panel-timer" role="tabpanel">
+        <!-- Timer -->
+        <div id="pomo-timer-card" class="card flex flex-col items-center text-center py-10">
+          <div class="relative w-[220px] h-[220px] flex items-center justify-center">
+            <svg class="pomo-ring" viewBox="0 0 200 200" width="220" height="220">
+              <circle class="pomo-ring-track" cx="100" cy="100" r="90"></circle>
+              <circle id="pomo-ring-progress" class="pomo-ring-progress" cx="100" cy="100" r="90"></circle>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span id="pomo-phase-label" class="pomo-phase-label text-xs font-mono uppercase tracking-widest mb-1">Focus</span>
+              <span id="pomo-time" class="text-5xl font-bold text-ink tabular-nums">25:00</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 mt-8">
+            <button id="pomo-start-pause" class="btn-primary w-28">Start</button>
+            <button id="pomo-reset" class="btn-outline">Reset</button>
+            <button id="pomo-skip" class="btn-outline">Skip</button>
+          </div>
+
+          <p class="text-xs text-faint font-mono mt-6">Space start/pause · R reset · S skip</p>
+        </div>
+
+        <!-- Ambient sound -->
+        <div class="card mt-6">
+          <h2 class="section-label">Ambient Sound</h2>
+
+          <div class="pomo-ambient-add mt-4">
+            <select id="ambient-add-select" aria-label="Add ambient sound">
+              <option value="">+ Add ambient sound…</option>
+              <option value="white">White Noise</option>
+              <option value="pink">Pink Noise</option>
+              <option value="brown">Brown Noise</option>
+              <option value="forest">Forest</option>
+              <option value="rain">Rain</option>
+              <option value="cafe">Café</option>
+              <option value="ocean">Ocean</option>
+              <option value="thunderstorm">Thunderstorm</option>
+            </select>
+          </div>
+          <div id="pomo-active-sounds" class="mt-4 space-y-3"></div>
+
+          <div class="pomo-spotify-row mt-4 pt-4 border-t border-line">
+            <div class="flex items-center gap-2">
+              <input
+                id="spotify-url-input"
+                type="text"
+                placeholder="Paste a Spotify track/playlist/album link…"
+                class="flex-1 bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+              <button id="spotify-load-btn" type="button" class="btn-outline text-xs whitespace-nowrap">Load</button>
+            </div>
+            <p id="spotify-error" class="text-xs text-red-400 mt-2 hidden"></p>
+            <div id="spotify-embed-wrap" class="mt-3 rounded-lg overflow-hidden"></div>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <details class="card mt-6">
+          <summary class="section-label cursor-pointer select-none">Settings</summary>
+          <div class="mt-4 grid grid-cols-2 gap-4">
+            <label class="text-xs font-mono text-dim">
+              Focus (min)
+              <input id="set-focus" type="number" min="1" max="120"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Short Break (min)
+              <input id="set-short" type="number" min="1" max="60"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Long Break (min)
+              <input id="set-long" type="number" min="1" max="60"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Sessions until long break
+              <input id="set-cadence" type="number" min="1" max="12"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+            </label>
+          </div>
+          <div class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <label class="flex items-center gap-2 text-xs font-mono text-muted">
+              <input id="set-autostart" type="checkbox" style="accent-color: rgb(var(--color-accent-rgb))" class="w-4 h-4" />
+              Auto-start next phase
+            </label>
+            <button id="set-notify-toggle" type="button" class="btn-outline text-xs">Enable Notifications</button>
+          </div>
+        </details>
+      </div>
+
+      <div id="pomo-panel-analytics" role="tabpanel" class="hidden">
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="card text-center py-5">
+            <div id="stat-today" class="text-2xl font-bold text-accent">0</div>
+            <div class="text-xs text-dim font-mono mt-1">Today</div>
+            <div id="stat-today-sub" class="text-[11px] text-faint mt-1">0 min focused</div>
+          </div>
+          <div class="card text-center py-5">
+            <div id="stat-streak" class="text-2xl font-bold text-accent">0</div>
+            <div class="text-xs text-dim font-mono mt-1">Day Streak</div>
+            <div class="text-[11px] text-faint mt-1">days in a row</div>
+          </div>
+          <div class="card text-center py-5">
+            <div id="stat-total" class="text-2xl font-bold text-accent">0</div>
+            <div class="text-xs text-dim font-mono mt-1">Total Sessions</div>
+            <div id="stat-total-sub" class="text-[11px] text-faint mt-1">0 min focused</div>
+          </div>
+          <div class="card text-center py-5">
+            <div id="stat-hours" class="text-2xl font-bold text-accent">0.0</div>
+            <div class="text-xs text-dim font-mono mt-1">Focus Hours</div>
+          </div>
+        </div>
+
+        <!-- Weekly Overview -->
+        <div class="card mt-6">
+          <h2 class="section-label">Weekly Overview</h2>
+          <div id="pomo-weekly-chart" class="pomo-weekly-chart mt-6"></div>
+        </div>
+
+        <!-- Achievements -->
+        <div class="card mt-6">
+          <h2 class="section-label">Achievements</h2>
+          <div id="pomo-achievements" class="badge-grid mt-4"></div>
+        </div>
+      </div>
+
+      <div class="mt-16 pt-8 border-t border-line flex items-center justify-between">
+        <a href="/tools" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors">
+          ← Tools
+        </a>
+      </div>
+
+    </div>
+
+</Page>
+
+<style is:global>
+  /* Required by the @apply rules further down — see the note in search.astro. */
+  @reference '../styles/global.css';
+
+  .pomo-ring-track {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 10;
+  }
+
+  .pomo-ring-progress {
+    fill: none;
+    stroke: var(--phase-color, rgb(var(--color-accent-rgb)));
+    stroke-width: 10;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 100px 100px;
+    transition: stroke-dashoffset 0.3s linear, stroke 0.3s ease;
+  }
+
+  .pomo-phase-label {
+    color: var(--phase-color, rgb(var(--color-accent-rgb)));
+    transition: color 0.3s ease;
+  }
+
+  .pomo-sound-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .pomo-sound-name {
+    flex-shrink: 0;
+    width: 8.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(var(--color-accent-rgb) / 0.3);
+    background: rgb(var(--color-accent-rgb) / 0.08);
+    color: rgb(var(--color-accent-rgb));
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+  }
+
+  .pomo-sound-remove {
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-dim);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .pomo-sound-remove:hover {
+    color: #f38ba8; /* Mocha Red */
+    border-color: rgba(248, 113, 113, 0.4);
+  }
+
+  .pomo-ambient-empty {
+    font-size: 0.8rem;
+    color: var(--color-dim);
+    font-style: italic;
+  }
+
+  .pomo-ambient-add select {
+    width: 100%;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    font-family: ui-monospace, monospace;
+    cursor: pointer;
+  }
+  .pomo-ambient-add select:focus {
+    outline: none;
+    border-color: rgb(var(--color-accent-rgb) / 0.5);
+  }
+
+  .pomo-range {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--color-border);
+    outline: none;
+  }
+  .pomo-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgb(var(--color-accent-rgb));
+    cursor: pointer;
+  }
+  .pomo-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: none;
+    border-radius: 50%;
+    background: rgb(var(--color-accent-rgb));
+    cursor: pointer;
+  }
+
+  .pomo-weekly-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .pomo-weekly-slot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 0;
+  }
+
+  .pomo-weekly-value {
+    font-size: 0.7rem;
+    font-family: ui-monospace, monospace;
+    color: rgb(var(--color-accent-rgb));
+    height: 1rem;
+    line-height: 1rem;
+  }
+
+  .pomo-weekly-track {
+    width: 100%;
+    max-width: 24px;
+    height: 96px;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .pomo-weekly-bar {
+    width: 100%;
+    @apply bg-accent-subtle;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease, background 0.2s ease;
+  }
+  .pomo-weekly-bar--today {
+    @apply bg-accent;
+  }
+
+  .pomo-weekly-label {
+    font-size: 0.65rem;
+    font-family: ui-monospace, monospace;
+    color: var(--color-dim);
+  }
+
+</style>
+
+<script>
+import { loadVersionedJSON, saveJSON } from '../lib/storage';
+import { PHASE_LABEL, PHASE_COLOR, PHASE_COLOR_LIGHT, phaseDurationMs, resetPhase, nextPhase, formatTime, type Phase, type TimerState } from '../lib/pomo/engine';
+
+function currentPhaseColors() {
+  return document.documentElement.dataset.theme === 'light' ? PHASE_COLOR_LIGHT : PHASE_COLOR;
+}
+import { todayKey, recordFocusSession, ACHIEVEMENTS, type PomoStats } from '../lib/pomo/stats';
+import { parseSpotifyUri } from '../lib/pomo/spotify';
+
+type AmbientType = 'white' | 'pink' | 'brown' | 'forest' | 'rain' | 'cafe' | 'ocean' | 'thunderstorm';
+
+interface PomoSettings {
+  v: number;
+  focusMin: number;
+  shortBreakMin: number;
+  longBreakMin: number;
+  sessionsUntilLongBreak: number;
+  autoStartNext: boolean;
+  notificationsEnabled: boolean;
+  ambientVolumes: Record<AmbientType, number>;
+  spotifyUri: string;
+  activeTab: string;
+}
+
+type SoundDef =
+  | { type: AmbientType; label: string; kind: 'noise' }
+  | { type: AmbientType; label: string; kind: 'file'; url: string };
+
+type SoundNode = { source: AudioBufferSourceNode | null; gain: GainNode; active: boolean };
+
+interface SpotifyController {
+  addListener: (event: string, cb: (e: { data: { position: number; duration: number } }) => void) => void;
+  restart: () => void;
+  loadUri: (uri: string) => void;
+}
+interface SpotifyIframeApi {
+  createController: (
+    el: HTMLElement,
+    opts: { uri: string; width: string | number; height: string | number },
+    cb: (controller: SpotifyController) => void
+  ) => void;
+}
+type SpotifyReadyCallback = (api: SpotifyIframeApi) => void;
+
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+    __spotifyIFrameAPI?: SpotifyIframeApi;
+    __spotifyReadyCallbacks?: SpotifyReadyCallback[];
+    onSpotifyIframeApiReady?: (api: SpotifyIframeApi) => void;
+  }
+}
+
+(() => {
+  const SETTINGS_KEY = 'pomo:settings';
+  const STATS_KEY = 'pomo:stats';
+
+  const DEFAULT_SETTINGS: PomoSettings = {
+    v: 1,
+    focusMin: 25,
+    shortBreakMin: 5,
+    longBreakMin: 15,
+    sessionsUntilLongBreak: 4,
+    autoStartNext: false,
+    notificationsEnabled: false,
+    ambientVolumes: { white: 0, pink: 0, brown: 0, forest: 0, rain: 0, cafe: 0, ocean: 0, thunderstorm: 0 },
+    spotifyUri: '',
+    activeTab: 'timer',
+  };
+
+  const DEFAULT_STATS: PomoStats = {
+    v: 1,
+    totalSessions: 0,
+    totalFocusMinutes: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    bestDaySessions: 0,
+    bestDayMinutes: 0,
+    lastSessionDate: null,
+    dailyLog: {},
+  };
+
+  const settings = loadVersionedJSON<PomoSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
+  const stats = loadVersionedJSON<PomoStats>(STATS_KEY, DEFAULT_STATS);
+
+  function persistSettings() {
+    saveJSON(SETTINGS_KEY, settings);
+  }
+  function persistStats() {
+    saveJSON(STATS_KEY, stats);
+  }
+
+  // ---------------------------------------------------------------------
+  // Timer engine (phase/duration/cadence math lives in ../lib/pomo/engine —
+  // this file owns the mutable `state`/`settings` and the DOM/Audio wiring
+  // around it).
+  // ---------------------------------------------------------------------
+  const KEY_TO_PHASE: Record<'focusMin' | 'shortBreakMin' | 'longBreakMin', Phase> = {
+    focusMin: 'focus',
+    shortBreakMin: 'short',
+    longBreakMin: 'long',
+  };
+
+  const state: TimerState = {
+    phase: 'focus',
+    sessionsCompleted: 0,
+    running: false,
+    endTimestamp: null,
+    remainingMs: null,
+  };
+
+  function start() {
+    ensureAudioContext();
+    if (state.running) return;
+    state.running = true;
+    state.endTimestamp = Date.now() + (state.remainingMs ?? 0);
+    render();
+  }
+
+  function pause() {
+    if (!state.running) return;
+    state.running = false;
+    state.remainingMs = Math.max(0, (state.endTimestamp ?? 0) - Date.now());
+    state.endTimestamp = null;
+    render();
+  }
+
+  function reset() {
+    Object.assign(state, resetPhase(state.phase, settings));
+    render();
+  }
+
+  function skip() {
+    completePhase(false);
+  }
+
+  function completePhase(counted: boolean) {
+    const finishedPhase = state.phase;
+    if (finishedPhase === 'focus') {
+      if (counted) {
+        Object.assign(stats, recordFocusSession({ stats, today: todayKey(), focusMin: settings.focusMin }));
+        persistStats();
+        renderStats();
+      }
+      state.sessionsCompleted += 1;
+    }
+    const upcoming = nextPhase({
+      finishedPhase,
+      sessionsCompleted: state.sessionsCompleted,
+      sessionsUntilLongBreak: settings.sessionsUntilLongBreak,
+    });
+    Object.assign(state, resetPhase(upcoming, settings));
+    playChime();
+    notifyPhaseChange(upcoming);
+    announcePhaseChange(upcoming);
+    if (settings.autoStartNext) {
+      start();
+    } else {
+      render();
+    }
+  }
+
+  Object.assign(state, resetPhase('focus', settings));
+
+  // ---------------------------------------------------------------------
+  // Rendering
+  // ---------------------------------------------------------------------
+  const el = {
+    time: document.getElementById('pomo-time'),
+    phaseLabel: document.getElementById('pomo-phase-label'),
+    startPause: document.getElementById('pomo-start-pause'),
+    ring: document.getElementById('pomo-ring-progress'),
+    card: document.getElementById('pomo-timer-card'),
+  };
+
+  const RING_CIRCUMFERENCE = 2 * Math.PI * 90;
+  if (el.ring) el.ring.style.strokeDasharray = `${RING_CIRCUMFERENCE}`;
+
+  function render() {
+    const total = phaseDurationMs(state.phase, settings);
+    const remaining = state.running ? Math.max(0, (state.endTimestamp ?? 0) - Date.now()) : (state.remainingMs ?? 0);
+    const fraction = total > 0 ? remaining / total : 0;
+
+    if (el.time) el.time.textContent = formatTime(remaining);
+    if (el.phaseLabel) el.phaseLabel.textContent = PHASE_LABEL[state.phase];
+    if (el.startPause) el.startPause.textContent = state.running ? 'Pause' : remaining < total ? 'Resume' : 'Start';
+    if (el.ring) el.ring.style.strokeDashoffset = `${RING_CIRCUMFERENCE * (1 - fraction)}`;
+    if (el.card) el.card.style.setProperty('--phase-color', currentPhaseColors()[state.phase]);
+
+    document.title = `${formatTime(remaining)} · ${PHASE_LABEL[state.phase]} — Pomodoro`;
+  }
+
+  function renderStats() {
+    const today = todayKey();
+    const todayCount = stats.dailyLog[today] || 0;
+    const statToday = document.getElementById('stat-today');
+    const statTodaySub = document.getElementById('stat-today-sub');
+    const statStreak = document.getElementById('stat-streak');
+    const statTotal = document.getElementById('stat-total');
+    const statTotalSub = document.getElementById('stat-total-sub');
+    const statHours = document.getElementById('stat-hours');
+    if (statToday) statToday.textContent = String(todayCount);
+    if (statTodaySub) statTodaySub.textContent = `${todayCount * settings.focusMin} min focused`;
+    if (statStreak) statStreak.textContent = String(stats.currentStreak || 0);
+    if (statTotal) statTotal.textContent = String(stats.totalSessions || 0);
+    if (statTotalSub) statTotalSub.textContent = `${stats.totalFocusMinutes} min focused`;
+    if (statHours) statHours.textContent = (stats.totalFocusMinutes / 60).toFixed(1);
+    renderWeeklyChart();
+    renderAchievements();
+  }
+
+  // ---------------------------------------------------------------------
+  // Weekly Overview chart — 7 plain sized bars, single teal hue (validated
+  // via the dataviz skill's ordinal-palette checks; bars ride the accent
+  // tokens — bg-accent-subtle past days, bg-accent today — so they follow
+  // the theme, currently Catppuccin Mocha), no chart library. The container carries role="img" +
+  // a computed aria-label summarizing all 7 days; individual bars are
+  // aria-hidden since the container label is the single source of truth
+  // for assistive tech (avoids duplicate/conflicting announcements).
+  // ---------------------------------------------------------------------
+  function renderWeeklyChart() {
+    const container = document.getElementById('pomo-weekly-chart');
+    if (!container) return;
+
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      days.push({ date, key: todayKey(date), count: stats.dailyLog[todayKey(date)] || 0 });
+    }
+    const max = Math.max(1, ...days.map((d) => d.count));
+    const todayStr = todayKey();
+
+    container.setAttribute('role', 'img');
+    const summary = days
+      .map((d) => {
+        const weekday = d.date.toLocaleDateString(undefined, { weekday: 'short' });
+        const label = d.key === todayStr ? `${weekday} (today)` : weekday;
+        return `${label}: ${d.count} session${d.count === 1 ? '' : 's'}`;
+      })
+      .join(', ');
+    container.setAttribute('aria-label', `Sessions in the last 7 days — ${summary}`);
+
+    container.innerHTML = '';
+    days.forEach((day) => {
+      const isToday = day.key === todayStr;
+      const weekdayShort = day.date.toLocaleDateString(undefined, { weekday: 'short' });
+
+      const slot = document.createElement('div');
+      slot.className = 'pomo-weekly-slot';
+      slot.setAttribute('aria-hidden', 'true');
+
+      const valueLabel = document.createElement('div');
+      valueLabel.className = 'pomo-weekly-value';
+      valueLabel.textContent = day.count > 0 ? String(day.count) : ' ';
+
+      const track = document.createElement('div');
+      track.className = 'pomo-weekly-track';
+
+      const bar = document.createElement('div');
+      bar.className = 'pomo-weekly-bar' + (isToday ? ' pomo-weekly-bar--today' : '');
+      bar.style.height = `${Math.max(6, (day.count / max) * 100)}%`;
+      bar.title = `${weekdayShort} ${day.date.getDate()}: ${day.count} session${day.count === 1 ? '' : 's'}`;
+      track.appendChild(bar);
+
+      const dayLabel = document.createElement('div');
+      dayLabel.className = 'pomo-weekly-label';
+      dayLabel.textContent = weekdayShort.slice(0, 3);
+
+      slot.appendChild(valueLabel);
+      slot.appendChild(track);
+      slot.appendChild(dayLabel);
+      container.appendChild(slot);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Achievements — unlock state is always derived from `stats` at render
+  // time (no stored unlocked flags), so it can never desync.
+  // ---------------------------------------------------------------------
+  function renderAchievements() {
+    const container = document.getElementById('pomo-achievements');
+    if (!container) return;
+    container.setAttribute('role', 'list');
+    container.setAttribute('aria-label', 'Achievements');
+    container.innerHTML = '';
+    ACHIEVEMENTS.forEach((achievement) => {
+      const unlocked = achievement.check(stats);
+      const card = document.createElement('div');
+      card.className = 'badge' + (unlocked ? ' unlocked' : '');
+      card.setAttribute('role', 'listitem');
+      card.setAttribute(
+        'aria-label',
+        `${achievement.label}: ${achievement.desc}${unlocked ? ' (unlocked)' : ' (locked)'}`
+      );
+
+      const icon = document.createElement('div');
+      icon.className = 'badge-icon';
+      icon.textContent = achievement.icon;
+
+      const label = document.createElement('div');
+      label.className = 'badge-label';
+      label.textContent = achievement.label;
+
+      const desc = document.createElement('div');
+      desc.className = 'badge-desc';
+      desc.textContent = achievement.desc;
+
+      card.appendChild(icon);
+      card.appendChild(label);
+      card.appendChild(desc);
+      container.appendChild(card);
+    });
+  }
+
+  function tick() {
+    if (state.running) {
+      const remaining = Math.max(0, (state.endTimestamp ?? 0) - Date.now());
+      if (remaining <= 0) {
+        completePhase(true);
+        return;
+      }
+      state.remainingMs = remaining;
+    }
+    render();
+  }
+
+  el.startPause?.addEventListener('click', () => {
+    if (state.running) pause();
+    else start();
+  });
+  document.getElementById('pomo-reset')?.addEventListener('click', reset);
+  document.getElementById('pomo-skip')?.addEventListener('click', skip);
+
+  document.addEventListener('keydown', (event) => {
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (event.code === 'Space') {
+      event.preventDefault();
+      if (state.running) pause();
+      else start();
+    } else if (event.key === 'r' || event.key === 'R') {
+      reset();
+    } else if (event.key === 's' || event.key === 'S') {
+      skip();
+    }
+  });
+
+  // ---------------------------------------------------------------------
+  // Phase-change announcer (screen readers)
+  // ---------------------------------------------------------------------
+  const phaseAnnouncer = document.getElementById('pomo-phase-announcer');
+  function announcePhaseChange(phase: Phase) {
+    if (!phaseAnnouncer) return;
+    phaseAnnouncer.textContent = phase === 'focus' ? 'Focus session started' : `${PHASE_LABEL[phase]} started`;
+  }
+
+  // ---------------------------------------------------------------------
+  // Tabs (Timer / Analytics)
+  // ---------------------------------------------------------------------
+  function setActiveTab(tab?: string) {
+    const resolved = tab === 'analytics' ? 'analytics' : 'timer';
+    settings.activeTab = resolved;
+    persistSettings();
+    document.querySelectorAll<HTMLElement>('.tab').forEach((btn) => {
+      btn.setAttribute('aria-selected', String(btn.dataset.tab === resolved));
+    });
+    document.getElementById('pomo-panel-timer')?.classList.toggle('hidden', resolved !== 'timer');
+    document.getElementById('pomo-panel-analytics')?.classList.toggle('hidden', resolved !== 'analytics');
+  }
+
+  document.querySelectorAll<HTMLElement>('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+  });
+
+  // ---------------------------------------------------------------------
+  // Ambient sound (Web Audio API — procedural white/pink/brown noise, plus
+  // real recorded ambience files, all mixed through the same graph). Nodes
+  // are created lazily — only when a sound is actually added — rather than
+  // eagerly fetching every file on first gesture.
+  // ---------------------------------------------------------------------
+  const SOUND_DEFS: SoundDef[] = [
+    { type: 'white', label: 'White Noise', kind: 'noise' },
+    { type: 'pink', label: 'Pink Noise', kind: 'noise' },
+    { type: 'brown', label: 'Brown Noise', kind: 'noise' },
+    { type: 'forest', label: 'Forest', kind: 'file', url: '/pomo/sounds/forest.mp3' },
+    { type: 'rain', label: 'Rain', kind: 'file', url: '/pomo/sounds/rain.mp3' },
+    { type: 'cafe', label: 'Café', kind: 'file', url: '/pomo/sounds/cafe.mp3' },
+    { type: 'ocean', label: 'Ocean', kind: 'file', url: '/pomo/sounds/ocean.mp3' },
+    { type: 'thunderstorm', label: 'Thunderstorm', kind: 'file', url: '/pomo/sounds/thunderstorm.mp3' },
+  ];
+
+  let audioCtx: AudioContext | null = null;
+  let masterGain: GainNode | null = null;
+  const noiseNodes: { [key: string]: SoundNode } = {};
+
+  function ensureAudioContext() {
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return;
+    }
+    audioCtx = new (window.AudioContext || (window.webkitAudioContext as typeof AudioContext))();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 1;
+    masterGain.connect(audioCtx.destination);
+
+    // Restore whichever sounds were already active (volume > 0) from a
+    // previous session — everything else stays uncreated until picked.
+    Object.entries(settings.ambientVolumes).forEach(([type, volume]) => {
+      if (volume > 0) {
+        const node = getOrCreateSoundNode(type);
+        if (node) node.gain.gain.value = volume;
+      }
+    });
+  }
+
+  function getOrCreateSoundNode(type: string): SoundNode | null {
+    if (noiseNodes[type]) return noiseNodes[type];
+    const def = SOUND_DEFS.find((s) => s.type === type);
+    if (!def) return null;
+    const node = def.kind === 'file' ? createFileNode(def.url) : createNoiseNode(type);
+    noiseNodes[type] = node;
+    return node;
+  }
+
+  function createFileNode(url: string): SoundNode {
+    // non-null: node-building runs only via getOrCreateSoundNode, after ensureAudioContext() built the graph.
+    const ctx = audioCtx!;
+    const master = masterGain!;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.connect(master);
+    const node: SoundNode = { source: null, gain, active: true };
+
+    fetch(url)
+      .then((res) => res.arrayBuffer())
+      .then((data) => ctx.decodeAudioData(data))
+      .then((buffer) => {
+        if (!node.active) return; // removed before the file finished loading — don't resurrect it
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        source.connect(gain);
+        source.start();
+        node.source = source;
+      })
+      .catch((err) => console.error(`Failed to load ambient sound "${url}":`, err));
+
+    return node;
+  }
+
+  function createNoiseNode(type: string): SoundNode {
+    // non-null: node-building runs only via getOrCreateSoundNode, after ensureAudioContext() built the graph.
+    const ctx = audioCtx!;
+    const master = masterGain!;
+    const bufferSize = ctx.sampleRate * 2;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    if (type === 'white') {
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    } else if (type === 'pink') {
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.969 * b2 + white * 0.153852;
+        b3 = 0.8665 * b3 + white * 0.3104856;
+        b4 = 0.55 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.016898;
+        const pink = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+        b6 = white * 0.115926;
+        data[i] = pink * 0.11;
+      }
+    } else {
+      let lastOut = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        lastOut = (lastOut + 0.02 * white) / 1.02;
+        data[i] = lastOut * 3.5;
+      }
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    source.connect(gain);
+    gain.connect(master);
+    source.start();
+    return { source, gain, active: true };
+  }
+
+  function setAmbientVolume(type: AmbientType, volume01: number) {
+    settings.ambientVolumes[type] = volume01;
+    const node = audioCtx ? getOrCreateSoundNode(type) : null;
+    if (node) {
+      // non-null: node is non-null only when audioCtx was truthy on the line above.
+      node.gain.gain.setTargetAtTime(volume01, audioCtx!.currentTime, 0.05);
+    }
+    persistSettings();
+  }
+
+  // Actually tears the node down (stop + disconnect), unlike setAmbientVolume(type, 0) which only
+  // ramps gain to zero and leaves the oscillator/buffer-source running forever. Not folded into
+  // setAmbientVolume itself, since that also fires on every slider-drag tick — a volume hitting
+  // exactly 0 mid-drag shouldn't tear the node down when the user might drag it back up immediately.
+  function stopSound(type: string) {
+    const node = noiseNodes[type];
+    if (!node) return;
+    node.active = false;
+    if (node.source) {
+      try {
+        node.source.stop();
+      } catch {
+        /* already stopped */
+      }
+      node.source.disconnect();
+    }
+    node.gain.disconnect();
+    delete noiseNodes[type];
+  }
+
+  function playChime() {
+    ensureAudioContext();
+    // non-null: ensureAudioContext() above guarantees audioCtx is set.
+    const ctx = audioCtx!;
+    const now = ctx.currentTime;
+    [880, 1320].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      const startAt = now + i * 0.15;
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, startAt);
+      g.gain.linearRampToValueAtTime(0.3, startAt + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, startAt + 0.4);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(startAt);
+      osc.stop(startAt + 0.45);
+    });
+  }
+
+  function addActiveSound(type: AmbientType) {
+    ensureAudioContext();
+    if ((settings.ambientVolumes[type] || 0) > 0) return; // already active
+    setAmbientVolume(type, 0.4);
+    renderActiveSounds();
+  }
+
+  function removeActiveSound(type: AmbientType) {
+    settings.ambientVolumes[type] = 0;
+    persistSettings();
+    stopSound(type);
+    renderActiveSounds();
+  }
+
+  function renderActiveSounds() {
+    const container = document.getElementById('pomo-active-sounds');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const active = SOUND_DEFS.filter((def) => (settings.ambientVolumes[def.type] || 0) > 0);
+
+    if (!active.length) {
+      const empty = document.createElement('p');
+      empty.className = 'pomo-ambient-empty';
+      empty.textContent = 'No ambient sounds active — pick one above.';
+      container.appendChild(empty);
+      return;
+    }
+
+    active.forEach((def) => {
+      const row = document.createElement('div');
+      row.className = 'pomo-sound-row';
+
+      const name = document.createElement('span');
+      name.className = 'pomo-sound-name';
+      name.textContent = def.label;
+
+      const range = document.createElement('input');
+      range.type = 'range';
+      range.min = '0';
+      range.max = '100';
+      range.className = 'pomo-range';
+      range.value = String(Math.round((settings.ambientVolumes[def.type] || 0) * 100));
+      range.setAttribute('aria-label', `${def.label} volume`);
+      range.addEventListener('input', () => {
+        setAmbientVolume(def.type, Number(range.value) / 100);
+      });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'pomo-sound-remove';
+      removeBtn.setAttribute('aria-label', `Remove ${def.label}`);
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => removeActiveSound(def.type));
+
+      row.appendChild(name);
+      row.appendChild(range);
+      row.appendChild(removeBtn);
+      container.appendChild(row);
+    });
+  }
+
+  document.getElementById('ambient-add-select')?.addEventListener('change', function (this: HTMLSelectElement) {
+    const type = this.value;
+    if (type) addActiveSound(type as AmbientType); // option values are exactly the AmbientType keys
+    this.value = '';
+  });
+
+  renderActiveSounds();
+
+  // ---------------------------------------------------------------------
+  // Spotify ambient sound (public embed iframe — no OAuth, no volume API)
+  // ---------------------------------------------------------------------
+  let spotifyController: SpotifyController | null = null;
+  let spotifyEndTriggered = false;
+
+  function withSpotifyApi(callback: SpotifyReadyCallback) {
+    if (window.__spotifyIFrameAPI) {
+      callback(window.__spotifyIFrameAPI);
+      return;
+    }
+    window.__spotifyReadyCallbacks = window.__spotifyReadyCallbacks || [];
+    window.__spotifyReadyCallbacks?.push(callback);
+  }
+
+  function registerSpotifyListeners(controller: SpotifyController) {
+    controller.addListener('playback_update', (event) => {
+      const { position, duration } = event.data;
+      // Spotify's embed stops emitting playback_update once a track/preview naturally ends —
+      // there is no later "isPaused: true" event to react to. Detect the approach to the end
+      // while still playing instead, guarded so it only fires once per loop.
+      if (duration > 0 && position >= duration - 1500 && !spotifyEndTriggered) {
+        spotifyEndTriggered = true;
+        controller.restart();
+      } else if (position < 1500) {
+        spotifyEndTriggered = false;
+      }
+    });
+  }
+
+  function loadSpotify(uri: string) {
+    if (spotifyController) {
+      spotifyController.loadUri(uri);
+      return;
+    }
+    const embedEl = document.getElementById('spotify-embed-wrap');
+    if (!embedEl) return;
+    withSpotifyApi((IFrameAPI) => {
+      IFrameAPI.createController(embedEl, { uri, width: '100%', height: 152 }, (controller) => {
+        spotifyController = controller;
+        registerSpotifyListeners(controller);
+      });
+    });
+  }
+
+  const spotifyInput = document.getElementById('spotify-url-input') as HTMLInputElement | null;
+  const spotifyError = document.getElementById('spotify-error');
+
+  if (spotifyInput && settings.spotifyUri) {
+    spotifyInput.value = settings.spotifyUri;
+    const initialUri = parseSpotifyUri(settings.spotifyUri);
+    if (initialUri) loadSpotify(initialUri); // restore the embed on reload, not just the input text
+  }
+
+  document.getElementById('spotify-load-btn')?.addEventListener('click', () => {
+    if (!spotifyInput) return;
+    const uri = parseSpotifyUri(spotifyInput.value);
+    if (!uri) {
+      if (spotifyError) {
+        spotifyError.textContent = "Couldn't recognize that Spotify link — paste a track, playlist, or album URL.";
+        spotifyError.classList.remove('hidden');
+      }
+      return;
+    }
+    spotifyError?.classList.add('hidden');
+    settings.spotifyUri = spotifyInput.value.trim();
+    persistSettings();
+    loadSpotify(uri);
+  });
+
+  // ---------------------------------------------------------------------
+  // Notifications (opt-in only, chime is the always-on fallback)
+  // ---------------------------------------------------------------------
+  const notifyBtn = document.getElementById('set-notify-toggle') as HTMLButtonElement | null;
+
+  function updateNotifyUI() {
+    if (!notifyBtn) return;
+    if (!('Notification' in window)) {
+      notifyBtn.textContent = 'Notifications unsupported';
+      notifyBtn.disabled = true;
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      notifyBtn.textContent = 'Notifications blocked in browser settings';
+      notifyBtn.disabled = true;
+      return;
+    }
+    if (Notification.permission === 'granted' && settings.notificationsEnabled) {
+      notifyBtn.textContent = 'Notifications On';
+      notifyBtn.disabled = false;
+      return;
+    }
+    notifyBtn.textContent = 'Enable Notifications';
+    notifyBtn.disabled = false;
+  }
+
+  notifyBtn?.addEventListener('click', async () => {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      settings.notificationsEnabled = !settings.notificationsEnabled;
+      persistSettings();
+      updateNotifyUI();
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    settings.notificationsEnabled = permission === 'granted';
+    persistSettings();
+    updateNotifyUI();
+  });
+
+  function notifyPhaseChange(upcomingPhase: Phase) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted' || !settings.notificationsEnabled) return;
+    const body =
+      upcomingPhase === 'focus'
+        ? 'Break is over — back to focus.'
+        : `Nice work — time for a ${PHASE_LABEL[upcomingPhase].toLowerCase()}.`;
+    new Notification('Pomodoro', { body, icon: '/favicon.svg' });
+  }
+
+  updateNotifyUI();
+
+  // ---------------------------------------------------------------------
+  // Settings panel bindings
+  // ---------------------------------------------------------------------
+  type DurationKey = 'focusMin' | 'shortBreakMin' | 'longBreakMin';
+  const durationInputs: Record<DurationKey, HTMLInputElement | null> = {
+    focusMin: document.getElementById('set-focus') as HTMLInputElement | null,
+    shortBreakMin: document.getElementById('set-short') as HTMLInputElement | null,
+    longBreakMin: document.getElementById('set-long') as HTMLInputElement | null,
+  };
+  (Object.entries(durationInputs) as [DurationKey, HTMLInputElement | null][]).forEach(([key, inputEl]) => {
+    if (!inputEl) return;
+    inputEl.value = String(settings[key]);
+    inputEl.addEventListener('change', () => {
+      const value = Math.max(1, parseInt(inputEl.value, 10) || settings[key]);
+      settings[key] = value;
+      inputEl.value = String(value);
+      persistSettings();
+      if (!state.running && KEY_TO_PHASE[key] === state.phase) {
+        state.remainingMs = phaseDurationMs(state.phase, settings);
+        render();
+      }
+    });
+  });
+
+  const cadenceInput = document.getElementById('set-cadence') as HTMLInputElement | null;
+  if (cadenceInput) {
+    cadenceInput.value = String(settings.sessionsUntilLongBreak);
+    cadenceInput.addEventListener('change', () => {
+      const value = Math.max(1, parseInt(cadenceInput.value, 10) || settings.sessionsUntilLongBreak);
+      settings.sessionsUntilLongBreak = value;
+      cadenceInput.value = String(value);
+      persistSettings();
+    });
+  }
+
+  const autoStartInput = document.getElementById('set-autostart') as HTMLInputElement | null;
+  if (autoStartInput) {
+    autoStartInput.checked = settings.autoStartNext;
+    autoStartInput.addEventListener('change', () => {
+      settings.autoStartNext = autoStartInput.checked;
+      persistSettings();
+    });
+  }
+
+  setActiveTab(settings.activeTab);
+  render();
+  renderStats();
+  setInterval(tick, 250);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tick();
+  });
+  // The tick loop would pick up the new phase color within 250ms regardless —
+  // this just makes the ring/label flip instantly with the toggle.
+  window.addEventListener('themechange', render);
+})();
+</script>
+
+<script>
+  window.__spotifyReadyCallbacks = window.__spotifyReadyCallbacks || [];
+  window.onSpotifyIframeApiReady = (IFrameAPI) => {
+    window.__spotifyIFrameAPI = IFrameAPI;
+    window.__spotifyReadyCallbacks?.forEach((cb) => cb(IFrameAPI));
+    window.__spotifyReadyCallbacks = [];
+  };
+</script>
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>

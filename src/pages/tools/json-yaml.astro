@@ -1,0 +1,160 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="json-yaml"
+  description="Convert between JSON and YAML, format, and minify — all client-side, no sign-up, no tracking."
+  intro="Convert between JSON and YAML, format, or minify — everything stays in your browser."
+>
+
+  <div class="card">
+        <h2 class="section-label">Convert</h2>
+        <form id="jy-form" class="mt-4 space-y-4">
+          <label class="text-xs font-mono text-dim">
+            Mode
+            <select
+              id="jy-mode"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            >
+              <option value="json-to-yaml">JSON → YAML</option>
+              <option value="yaml-to-json">YAML → JSON</option>
+              <option value="format-json">Format JSON</option>
+              <option value="minify-json">Minify JSON</option>
+            </select>
+          </label>
+
+          <label class="text-xs font-mono text-dim">
+            Input
+            <textarea
+              id="jy-input"
+              rows="10"
+              placeholder="Paste JSON or YAML here…"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            ></textarea>
+          </label>
+
+          <button type="submit" class="btn-primary">Convert</button>
+        </form>
+      </div>
+
+      <div id="jy-error" class="mt-6 text-sm text-red-400 font-mono hidden"></div>
+
+      <div id="jy-result-card" class="card mt-6 hidden">
+        <div class="flex items-center justify-between">
+          <h2 class="section-label">Output</h2>
+          <button type="button" id="jy-copy" class="btn-outline text-xs">Copy</button>
+        </div>
+        <textarea
+          id="jy-output"
+          readonly
+          rows="10"
+          class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+        ></textarea>
+      </div>
+
+</ToolLayout>
+
+<script>
+import { formatJson, jsonToYaml, minifyJson, yamlToJson } from '../../lib/tools/json-yaml';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:json-yaml:state';
+
+  type Mode = 'json-to-yaml' | 'yaml-to-json' | 'format-json' | 'minify-json';
+
+  interface JsonYamlState {
+    mode: Mode;
+    input: string;
+  }
+
+  const DEFAULT_STATE: JsonYamlState = {
+    mode: 'json-to-yaml',
+    input: '{\n  "service": "checkout",\n  "replicas": 3,\n  "tags": ["sre", "prod"]\n}',
+  };
+
+  const state: JsonYamlState = loadJSON<JsonYamlState>(STORAGE_KEY, DEFAULT_STATE);
+
+  function persistState() {
+    saveJSON(STORAGE_KEY, state);
+  }
+
+  const form = document.getElementById('jy-form');
+  const modeSelect = document.getElementById('jy-mode') as HTMLSelectElement | null;
+  const inputArea = document.getElementById('jy-input') as HTMLTextAreaElement | null;
+  const outputArea = document.getElementById('jy-output') as HTMLTextAreaElement | null;
+  const resultCard = document.getElementById('jy-result-card');
+  const errorBox = document.getElementById('jy-error');
+  const copyBtn = document.getElementById('jy-copy') as HTMLButtonElement | null;
+
+  if (modeSelect) modeSelect.value = state.mode;
+  if (inputArea) inputArea.value = state.input;
+
+  function showError(message: string) {
+    if (resultCard) resultCard.classList.add('hidden');
+    if (errorBox) {
+      errorBox.textContent = message;
+      errorBox.classList.remove('hidden');
+    }
+  }
+
+  function showResult(output: string) {
+    if (errorBox) errorBox.classList.add('hidden');
+    if (outputArea) outputArea.value = output;
+    if (resultCard) resultCard.classList.remove('hidden');
+  }
+
+  function convert() {
+    const mode = (modeSelect?.value ?? DEFAULT_STATE.mode) as Mode;
+    const input = inputArea?.value ?? '';
+
+    state.mode = mode;
+    state.input = input;
+    persistState();
+
+    try {
+      let output: string;
+      switch (mode) {
+        case 'json-to-yaml':
+          output = jsonToYaml(input);
+          break;
+        case 'yaml-to-json':
+          output = yamlToJson(input);
+          break;
+        case 'format-json':
+          output = formatJson(input);
+          break;
+        case 'minify-json':
+          output = minifyJson(input);
+          break;
+      }
+      showResult(output);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      showError(message);
+    }
+  }
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    convert();
+  });
+
+  copyBtn?.addEventListener('click', async () => {
+    if (!outputArea) return;
+    try {
+      await navigator.clipboard.writeText(outputArea.value);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        copyBtn.textContent = original;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy output to clipboard:', err);
+    }
+  });
+
+  convert();
+})();
+</script>

@@ -1,0 +1,210 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="regex-playground"
+  description="Test regular expressions live against sample text, with match highlighting and named capture group inspection. Client-side only, no sign-up, no tracking."
+  intro="Test a pattern against sample text live — matches highlight inline and named capture groups break out into a table. Everything stays in your browser."
+>
+
+  <div class="card">
+        <h2 class="section-label">Pattern</h2>
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <label class="text-xs font-mono text-dim sm:col-span-3">
+            Pattern
+            <input
+              id="rx-pattern"
+              type="text"
+              placeholder="(?<year>\d{4})-(?<month>\d{2})"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+          <label class="text-xs font-mono text-dim">
+            Flags
+            <input
+              id="rx-flags"
+              type="text"
+              placeholder="g"
+              class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+            />
+          </label>
+        </div>
+        <div id="rx-error" class="mt-3 text-sm text-red-400 font-mono"></div>
+      </div>
+
+      <div class="card mt-6">
+        <h2 class="section-label">Sample text</h2>
+        <label class="text-xs font-mono text-dim block mt-4">
+          Sample text
+          <textarea
+            id="rx-sample"
+            rows="6"
+            class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 font-mono"
+          ></textarea>
+        </label>
+      </div>
+
+      <div class="card mt-6">
+        <h2 class="section-label">Highlighted matches</h2>
+        <pre id="rx-highlighted" class="mt-4 whitespace-pre-wrap break-words text-sm font-mono text-body leading-relaxed"></pre>
+      </div>
+
+      <div id="rx-groups" class="card mt-6"></div>
+
+</ToolLayout>
+
+<script>
+import { testRegex } from '../../lib/tools/regex-playground';
+import type { RegexMatch } from '../../lib/tools/regex-playground';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:regex-playground:state';
+
+  interface RegexPlaygroundState {
+    pattern: string;
+    flags: string;
+    sampleText: string;
+  }
+
+  const DEFAULT_SAMPLE_TEXT = [
+    '2026-08-27 10:14:02 INFO  192.168.1.42 GET /api/v1/orders 200 34ms',
+    '2026-08-27 10:14:05 WARN  10.0.0.17 POST /api/v1/checkout 429 812ms',
+    '2026-08-27 10:14:11 ERROR 172.16.4.9 GET /api/v1/inventory 500 1502ms',
+    '2026-08-27 10:15:44 INFO  192.168.1.42 GET /api/v1/orders 200 29ms',
+  ].join('\n');
+
+  const DEFAULT_STATE: RegexPlaygroundState = {
+    pattern: '(?<year>\\d{4})-(?<month>\\d{2})-(?<day>\\d{2})',
+    flags: 'g',
+    sampleText: DEFAULT_SAMPLE_TEXT,
+  };
+
+  const state: RegexPlaygroundState = loadJSON<RegexPlaygroundState>(STORAGE_KEY, DEFAULT_STATE);
+
+  function persistState() {
+    saveJSON(STORAGE_KEY, state);
+  }
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  const patternInput = document.getElementById('rx-pattern') as HTMLInputElement | null;
+  const flagsInput = document.getElementById('rx-flags') as HTMLInputElement | null;
+  const sampleInput = document.getElementById('rx-sample') as HTMLTextAreaElement | null;
+  const errorEl = document.getElementById('rx-error');
+  const highlightedEl = document.getElementById('rx-highlighted');
+  const groupsEl = document.getElementById('rx-groups');
+
+  if (patternInput) patternInput.value = state.pattern;
+  if (flagsInput) flagsInput.value = state.flags;
+  if (sampleInput) sampleInput.value = state.sampleText;
+
+  // Builds the highlighted-match HTML by walking matches in index order, escaping every literal
+  // chunk (matched and unmatched alike) before splicing it into the trusted <mark> wrapper.
+  function buildHighlightedHtml(text: string, matches: RegexMatch[]): string {
+    let html = '';
+    let cursor = 0;
+
+    for (const m of matches) {
+      if (m.index < cursor) continue; // defensive: skip any out-of-order/overlapping match
+      html += escapeHtml(text.slice(cursor, m.index));
+      html += `<mark class="bg-accent/30 text-ink rounded px-0.5">${escapeHtml(m.match)}</mark>`;
+      cursor = m.index + m.match.length;
+    }
+    html += escapeHtml(text.slice(cursor));
+
+    return html || '<span class="text-faint">(empty)</span>';
+  }
+
+  function buildGroupsTable(matches: RegexMatch[]): string {
+    const groupNames = new Set<string>();
+    for (const m of matches) {
+      if (m.groups) {
+        for (const key of Object.keys(m.groups)) groupNames.add(key);
+      }
+    }
+
+    if (matches.length === 0) {
+      return '<p class="text-sm text-dim font-mono">No matches yet.</p>';
+    }
+
+    if (groupNames.size === 0) {
+      return '<p class="text-sm text-dim font-mono">No capture groups.</p>';
+    }
+
+    const names = Array.from(groupNames);
+    const headerCells = ['Match', ...names]
+      .map((h) => `<th class="text-left px-3 py-2 font-mono text-xs text-dim border-b border-line">${escapeHtml(h)}</th>`)
+      .join('');
+
+    const rows = matches
+      .map((m) => {
+        const matchCell = `<td class="px-3 py-2 font-mono text-sm text-body border-b border-line">${escapeHtml(m.match)}</td>`;
+        const groupCells = names
+          .map((name) => {
+            const value = m.groups ? m.groups[name] : undefined;
+            const display = value === undefined ? '<span class="text-faint">did not match</span>' : escapeHtml(value);
+            return `<td class="px-3 py-2 font-mono text-sm text-body border-b border-line">${display}</td>`;
+          })
+          .join('');
+        return `<tr>${matchCell}${groupCells}</tr>`;
+      })
+      .join('');
+
+    return `
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead><tr>${headerCells}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function run() {
+    const pattern = patternInput?.value ?? '';
+    const flags = flagsInput?.value ?? '';
+    const sampleText = sampleInput?.value ?? '';
+
+    state.pattern = pattern;
+    state.flags = flags;
+    state.sampleText = sampleText;
+    persistState();
+
+    const result = testRegex(pattern, flags, sampleText);
+
+    if (errorEl) {
+      errorEl.textContent = result.isValid ? '' : result.error;
+    }
+
+    if (highlightedEl) {
+      if (result.isValid) {
+        highlightedEl.innerHTML = buildHighlightedHtml(sampleText, result.matches);
+      } else {
+        highlightedEl.innerHTML = escapeHtml(sampleText);
+      }
+    }
+
+    if (groupsEl) {
+      groupsEl.innerHTML = `
+        <h2 class="section-label mb-3">Capture groups</h2>
+        ${result.isValid ? buildGroupsTable(result.matches) : '<p class="text-sm text-dim font-mono">Fix the pattern error above to see capture groups.</p>'}
+      `;
+    }
+  }
+
+  patternInput?.addEventListener('input', run);
+  flagsInput?.addEventListener('input', run);
+  sampleInput?.addEventListener('input', run);
+
+  run();
+})();
+</script>

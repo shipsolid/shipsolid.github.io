@@ -1,0 +1,50 @@
+---
+---
+
+<div class="mt-16 pt-8 border-t border-line">
+  <p class="text-xs font-mono text-faint uppercase tracking-widest mb-6">Discussion</p>
+  <script
+    src="https://giscus.app/client.js"
+    data-repo="shipsolid/shipsolid.github.io"
+    data-repo-id="R_kgDOOr14lw"
+    data-category="General"
+    data-category-id="DIC_kwDOOr14l84C9sb9"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="dark_dimmed"
+    data-lang="en"
+    crossorigin="anonymous"
+    async
+    is:inline
+  ></script>
+</div>
+
+<script is:inline>
+  (function () {
+    // The giscus iframe is injected asynchronously by client.js above and
+    // reads data-theme only at mount time — the page is statically generated
+    // so it can't know the visitor's theme up front. Correct it client-side
+    // once the iframe exists, and again on every toggle, via giscus's
+    // documented postMessage config API rather than re-mounting the widget.
+    function giscusTheme() {
+      return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark_dimmed';
+    }
+    function sendGiscusTheme() {
+      const iframe = document.querySelector('iframe.giscus-frame');
+      if (!iframe) return;
+      iframe.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, 'https://giscus.app');
+    }
+    const observer = new MutationObserver(() => {
+      const iframe = document.querySelector('iframe.giscus-frame');
+      if (iframe) {
+        iframe.addEventListener('load', sendGiscusTheme, { once: true });
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('themechange', sendGiscusTheme);
+  })();
+</script>

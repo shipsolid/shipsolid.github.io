@@ -1,0 +1,313 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="logql-builder"
+  description="Assemble a LogQL query from stream matchers, line filters, a parser stage, and an optional metric wrapper. Client-side only, no sign-up, no tracking."
+  intro="Build a Loki query stage by stage — pick your stream labels, add line filters, choose a parser, and optionally wrap it in a metric function. The query updates as you go. Everything stays in your browser."
+>
+
+  <div class="card">
+    <div class="flex items-center justify-between">
+      <h2 class="section-label">Stream selector</h2>
+      <button type="button" data-add="matcher" class="btn-outline text-xs">Add matcher</button>
+    </div>
+    <div id="lq-matchers" class="mt-4 space-y-2"></div>
+  </div>
+
+  <div class="card mt-6">
+    <div class="flex items-center justify-between">
+      <h2 class="section-label">Line filters</h2>
+      <button type="button" data-add="filter" class="btn-outline text-xs">Add filter</button>
+    </div>
+    <div id="lq-filters" class="mt-4 space-y-2"></div>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Parser</h2>
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="text-xs font-mono text-dim">
+        Stage
+        <select id="lq-parser"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70">
+          <option value="none">none</option>
+          <option value="json">json</option>
+          <option value="logfmt">logfmt</option>
+          <option value="pattern">pattern</option>
+          <option value="regexp">regexp</option>
+          <option value="unpack">unpack</option>
+        </select>
+      </label>
+      <label class="text-xs font-mono text-dim">
+        Pattern / regexp argument
+        <input id="lq-parser-arg" type="text" placeholder='<ip> - <_> "<method> <path>"'
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+      </label>
+    </div>
+  </div>
+
+  <details class="card mt-6">
+    <summary class="section-label cursor-pointer select-none">Metric wrapper</summary>
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <label class="text-xs font-mono text-dim">
+        Function
+        <select id="lq-metric-fn"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70">
+          <option value="none">none (log query)</option>
+          <option value="rate">rate</option>
+          <option value="count_over_time">count_over_time</option>
+          <option value="bytes_rate">bytes_rate</option>
+          <option value="bytes_over_time">bytes_over_time</option>
+          <option value="sum by">sum by (count_over_time)</option>
+        </select>
+      </label>
+      <label class="text-xs font-mono text-dim">
+        Range
+        <input id="lq-metric-range" type="text" placeholder="5m"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+      </label>
+      <label class="text-xs font-mono text-dim">
+        Group by (comma-separated, for sum by)
+        <input id="lq-metric-by" type="text" placeholder="level, service"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+      </label>
+    </div>
+  </details>
+
+  <div class="card mt-6">
+    <div class="flex items-center justify-between">
+      <h2 class="section-label">Query</h2>
+      <button id="lq-copy" type="button" class="btn-outline text-xs">Copy</button>
+    </div>
+    <pre id="lq-output" class="mt-4 whitespace-pre-wrap break-all text-sm font-mono text-body"></pre>
+    <div id="lq-errors" class="mt-3 space-y-1"></div>
+  </div>
+
+</ToolLayout>
+
+<script>
+  import { buildLogql, validateSpec } from '../../lib/tools/logql-builder';
+  import type { LabelMatcher, LineFilter, LogqlParser, LogqlSpec, MetricFn } from '../../lib/tools/logql-builder';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:logql-builder:spec';
+
+  interface LqState {
+    matchers: LabelMatcher[];
+    filters: LineFilter[];
+    parser: LogqlParser;
+    parserArg: string;
+    metricFn: MetricFn;
+    metricRange: string;
+    metricBy: string;
+  }
+
+  const DEFAULT_STATE: LqState = {
+    matchers: [
+      { label: 'namespace', op: '=', value: 'production' },
+      { label: 'app', op: '=~', value: 'api|web' },
+    ],
+    filters: [{ op: '|=', match: 'error' }],
+    parser: 'json',
+    parserArg: '',
+    metricFn: 'none',
+    metricRange: '5m',
+    metricBy: 'level',
+  };
+
+  const state: LqState = { ...DEFAULT_STATE, ...loadJSON<Partial<LqState>>(STORAGE_KEY, {}) };
+
+  const matchersEl = document.getElementById('lq-matchers') as HTMLElement | null;
+  const filtersEl = document.getElementById('lq-filters') as HTMLElement | null;
+  const parserEl = document.getElementById('lq-parser') as HTMLSelectElement | null;
+  const parserArgEl = document.getElementById('lq-parser-arg') as HTMLInputElement | null;
+  const metricFnEl = document.getElementById('lq-metric-fn') as HTMLSelectElement | null;
+  const metricRangeEl = document.getElementById('lq-metric-range') as HTMLInputElement | null;
+  const metricByEl = document.getElementById('lq-metric-by') as HTMLInputElement | null;
+  const outputEl = document.getElementById('lq-output');
+  const errorsEl = document.getElementById('lq-errors');
+  const copyEl = document.getElementById('lq-copy') as HTMLButtonElement | null;
+
+  if (parserEl) parserEl.value = state.parser;
+  if (parserArgEl) parserArgEl.value = state.parserArg;
+  if (metricFnEl) metricFnEl.value = state.metricFn;
+  if (metricRangeEl) metricRangeEl.value = state.metricRange;
+  if (metricByEl) metricByEl.value = state.metricBy;
+
+  const inputClass =
+    'bg-field border border-line rounded-lg px-2 py-1.5 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 font-mono';
+
+  function persist() {
+    saveJSON(STORAGE_KEY, state);
+  }
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function opSelect(role: string, i: number, options: string[], current: string): string {
+    return `<select data-role="${role}" data-index="${i}" class="${inputClass} shrink-0">
+      ${options.map((o) => `<option value="${o}"${o === current ? ' selected' : ''}>${o}</option>`).join('')}
+    </select>`;
+  }
+
+  function renderMatchers() {
+    if (!matchersEl) return;
+    matchersEl.innerHTML = state.matchers
+      .map(
+        (m, i) => `
+        <div class="flex gap-2 items-center">
+          <input type="text" data-role="m-label" data-index="${i}" placeholder="label" class="${inputClass} flex-1 min-w-0" />
+          ${opSelect('m-op', i, ['=', '!=', '=~', '!~'], m.op)}
+          <input type="text" data-role="m-value" data-index="${i}" placeholder="value" class="${inputClass} flex-1 min-w-0" />
+          <button type="button" data-role="m-rm" data-index="${i}" class="btn-outline text-xs shrink-0">✕</button>
+        </div>`
+      )
+      .join('');
+    state.matchers.forEach((m, i) => {
+      (matchersEl.querySelector(`[data-role="m-label"][data-index="${i}"]`) as HTMLInputElement).value = m.label;
+      (matchersEl.querySelector(`[data-role="m-value"][data-index="${i}"]`) as HTMLInputElement).value = m.value;
+    });
+  }
+
+  function renderFilters() {
+    if (!filtersEl) return;
+    if (state.filters.length === 0) {
+      filtersEl.innerHTML = '<p class="text-xs text-faint font-mono italic">No line filters.</p>';
+      return;
+    }
+    filtersEl.innerHTML = state.filters
+      .map(
+        (f, i) => `
+        <div class="flex gap-2 items-center">
+          ${opSelect('f-op', i, ['|=', '!=', '|~', '!~'], f.op)}
+          <input type="text" data-role="f-match" data-index="${i}" placeholder="match string" class="${inputClass} flex-1 min-w-0" />
+          <button type="button" data-role="f-rm" data-index="${i}" class="btn-outline text-xs shrink-0">✕</button>
+        </div>`
+      )
+      .join('');
+    state.filters.forEach((f, i) => {
+      (filtersEl.querySelector(`[data-role="f-match"][data-index="${i}"]`) as HTMLInputElement).value = f.match;
+    });
+  }
+
+  function currentSpec(): LogqlSpec {
+    return {
+      stream: state.matchers,
+      lineFilters: state.filters,
+      parser: state.parser,
+      parserArg: state.parserArg,
+      metricWrap:
+        state.metricFn === 'none'
+          ? undefined
+          : {
+              fn: state.metricFn,
+              range: state.metricRange,
+              by: state.metricBy.split(',').map((s) => s.trim()).filter(Boolean),
+            },
+    };
+  }
+
+  function run() {
+    persist();
+    const spec = currentSpec();
+    if (outputEl) outputEl.textContent = buildLogql(spec);
+    const errors = validateSpec(spec);
+    if (errorsEl) {
+      errorsEl.innerHTML = errors
+        .map((e) => `<p class="text-xs font-mono text-red-400">✗ ${escapeHtml(e)}</p>`)
+        .join('');
+    }
+  }
+
+  matchersEl?.addEventListener('input', (event) => {
+    const t = event.target as HTMLElement;
+    const i = Number(t.dataset.index);
+    if (Number.isNaN(i) || !state.matchers[i]) return;
+    if (t.dataset.role === 'm-label') state.matchers[i].label = (t as HTMLInputElement).value;
+    if (t.dataset.role === 'm-op') state.matchers[i].op = (t as HTMLSelectElement).value as LabelMatcher['op'];
+    if (t.dataset.role === 'm-value') state.matchers[i].value = (t as HTMLInputElement).value;
+    run();
+  });
+  matchersEl?.addEventListener('change', (event) => {
+    const t = event.target as HTMLElement;
+    if (t.dataset.role === 'm-op') {
+      state.matchers[Number(t.dataset.index)].op = (t as HTMLSelectElement).value as LabelMatcher['op'];
+      run();
+    }
+  });
+  matchersEl?.addEventListener('click', (event) => {
+    const t = event.target as HTMLElement;
+    if (t.dataset.role !== 'm-rm') return;
+    state.matchers.splice(Number(t.dataset.index), 1);
+    renderMatchers();
+    run();
+  });
+
+  filtersEl?.addEventListener('input', (event) => {
+    const t = event.target as HTMLElement;
+    const i = Number(t.dataset.index);
+    if (Number.isNaN(i) || !state.filters[i]) return;
+    if (t.dataset.role === 'f-match') state.filters[i].match = (t as HTMLInputElement).value;
+    run();
+  });
+  filtersEl?.addEventListener('change', (event) => {
+    const t = event.target as HTMLElement;
+    if (t.dataset.role === 'f-op') {
+      state.filters[Number(t.dataset.index)].op = (t as HTMLSelectElement).value as LineFilter['op'];
+      run();
+    }
+  });
+  filtersEl?.addEventListener('click', (event) => {
+    const t = event.target as HTMLElement;
+    if (t.dataset.role !== 'f-rm') return;
+    state.filters.splice(Number(t.dataset.index), 1);
+    renderFilters();
+    run();
+  });
+
+  document.querySelectorAll('[data-add]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      if ((btn as HTMLElement).dataset.add === 'matcher') {
+        state.matchers.push({ label: '', op: '=', value: '' });
+        renderMatchers();
+      } else {
+        state.filters.push({ op: '|=', match: '' });
+        renderFilters();
+      }
+      run();
+    })
+  );
+
+  parserEl?.addEventListener('change', () => {
+    state.parser = parserEl.value as LogqlParser;
+    run();
+  });
+  parserArgEl?.addEventListener('input', () => {
+    state.parserArg = parserArgEl.value;
+    run();
+  });
+  metricFnEl?.addEventListener('change', () => {
+    state.metricFn = metricFnEl.value as MetricFn;
+    run();
+  });
+  metricRangeEl?.addEventListener('input', () => {
+    state.metricRange = metricRangeEl.value;
+    run();
+  });
+  metricByEl?.addEventListener('input', () => {
+    state.metricBy = metricByEl.value;
+    run();
+  });
+
+  copyEl?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(outputEl?.textContent ?? '');
+    const o = copyEl.textContent;
+    copyEl.textContent = 'Copied!';
+    setTimeout(() => (copyEl.textContent = o), 1500);
+  });
+
+  renderMatchers();
+  renderFilters();
+  run();
+</script>

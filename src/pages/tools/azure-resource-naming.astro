@@ -1,0 +1,171 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { AZURE_ABBREVIATIONS, AZURE_REGION_SHORTCODES } from '../../lib/tools/azure-resource-naming';
+
+const resourceTypes = Object.keys(AZURE_ABBREVIATIONS).sort();
+const regions = Object.keys(AZURE_REGION_SHORTCODES).sort();
+---
+
+<ToolLayout
+  slug="azure-resource-naming"
+  description="Generate Azure resource names from the Cloud Adoption Framework abbreviation + component convention, with per-type rule checks. Client-side only, no sign-up, no tracking."
+  intro="Pick a resource type, workload, environment, and region — get a CAF-style name back, with warnings when a type has stricter rules (storage accounts, container registries, Key Vaults). Everything stays in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Components</h2>
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="text-xs font-mono text-dim">Resource type
+        <input id="an-type" list="an-types" type="text" placeholder="function app" class="an-in" />
+        <datalist id="an-types">{resourceTypes.map((t) => <option value={t} />)}</datalist>
+      </label>
+      <label class="text-xs font-mono text-dim">Region
+        <input id="an-region" list="an-regions" type="text" placeholder="centralindia" class="an-in" />
+        <datalist id="an-regions">{regions.map((r) => <option value={r} />)}</datalist>
+      </label>
+      <label class="text-xs font-mono text-dim">Workload
+        <input id="an-workload" type="text" placeholder="payments" class="an-in" /></label>
+      <label class="text-xs font-mono text-dim">Environment
+        <input id="an-env" type="text" placeholder="prod" class="an-in" /></label>
+      <label class="text-xs font-mono text-dim">Instance (optional)
+        <input id="an-instance" type="text" placeholder="01" class="an-in" /></label>
+      <label class="text-xs font-mono text-dim">Delimiter
+        <select id="an-delim" class="an-in"><option value="-">- (dash)</option><option value="">none</option><option value="_">_ (underscore)</option></select>
+      </label>
+      <label class="text-xs font-mono text-dim sm:col-span-2">Segment order
+        <input id="an-order" type="text" value="type, workload, environment, region, instance" class="an-in font-mono" /></label>
+    </div>
+  </div>
+
+  <div id="an-result" class="card mt-6"></div>
+
+</ToolLayout>
+
+<style>
+  .an-in {
+    margin-top: 0.25rem;
+    width: 100%;
+    background: var(--color-field);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+  .an-in:focus {
+    outline: none;
+    border-color: rgba(var(--color-accent-rgb) / 0.5);
+  }
+</style>
+
+<script>
+  import { buildResourceName } from '../../lib/tools/azure-resource-naming';
+  import type { NamingSegment } from '../../lib/tools/azure-resource-naming';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:azure-resource-naming:config';
+  const VALID_SEGMENTS: NamingSegment[] = ['type', 'workload', 'environment', 'region', 'instance'];
+
+  interface AnState {
+    resourceType: string;
+    region: string;
+    workload: string;
+    environment: string;
+    instance: string;
+    delimiter: string;
+    order: string;
+  }
+
+  const DEFAULT_STATE: AnState = {
+    resourceType: 'function app',
+    region: 'centralindia',
+    workload: 'payments',
+    environment: 'prod',
+    instance: '',
+    delimiter: '-',
+    order: 'type, workload, environment, region, instance',
+  };
+
+  const state: AnState = { ...DEFAULT_STATE, ...loadJSON<Partial<AnState>>(STORAGE_KEY, {}) };
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+  const els = {
+    type: $<HTMLInputElement>('an-type'),
+    region: $<HTMLInputElement>('an-region'),
+    workload: $<HTMLInputElement>('an-workload'),
+    env: $<HTMLInputElement>('an-env'),
+    instance: $<HTMLInputElement>('an-instance'),
+    delim: $<HTMLSelectElement>('an-delim'),
+    order: $<HTMLInputElement>('an-order'),
+  };
+  const resultEl = $<HTMLElement>('an-result');
+
+  if (els.type) els.type.value = state.resourceType;
+  if (els.region) els.region.value = state.region;
+  if (els.workload) els.workload.value = state.workload;
+  if (els.env) els.env.value = state.environment;
+  if (els.instance) els.instance.value = state.instance;
+  if (els.delim) els.delim.value = state.delimiter;
+  if (els.order) els.order.value = state.order;
+
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function run() {
+    if (!resultEl) return;
+    state.resourceType = els.type?.value ?? '';
+    state.region = els.region?.value ?? '';
+    state.workload = els.workload?.value ?? '';
+    state.environment = els.env?.value ?? '';
+    state.instance = els.instance?.value ?? '';
+    state.delimiter = els.delim?.value ?? '-';
+    state.order = els.order?.value ?? '';
+    saveJSON(STORAGE_KEY, state);
+
+    const order = state.order
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter((s): s is NamingSegment => (VALID_SEGMENTS as string[]).includes(s));
+
+    const { name, warnings } = buildResourceName({
+      resourceType: state.resourceType,
+      workload: state.workload,
+      environment: state.environment,
+      region: state.region,
+      instance: state.instance || undefined,
+      delimiter: state.delimiter,
+      order: order.length ? order : undefined,
+    });
+
+    const warningsHtml = warnings.length
+      ? `<ul class="mt-3 list-disc pl-5 space-y-1 text-xs font-mono text-amber-400">
+           ${warnings.map((w) => `<li>${escapeHtml(w)}</li>`).join('')}
+         </ul>`
+      : '<p class="mt-3 text-xs font-mono text-emerald-400">Meets the naming rules for this resource type.</p>';
+
+    resultEl.innerHTML = `
+      <div class="flex items-center justify-between">
+        <h2 class="section-label">Name</h2>
+        <button id="an-copy" type="button" class="btn-outline text-xs">Copy</button>
+      </div>
+      <p class="mt-4 text-lg font-mono text-ink break-all">${escapeHtml(name) || '<span class="text-dim">—</span>'}</p>
+      ${warningsHtml}
+    `;
+
+    document.getElementById('an-copy')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      await navigator.clipboard.writeText(name);
+      const o = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => (btn.textContent = o), 1500);
+    });
+  }
+
+  Object.values(els).forEach((el) => {
+    el?.addEventListener('input', run);
+    el?.addEventListener('change', run);
+  });
+
+  run();
+</script>

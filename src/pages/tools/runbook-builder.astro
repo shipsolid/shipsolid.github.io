@@ -1,0 +1,302 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="runbook-builder"
+  description="Draft an alert runbook — symptoms, checks, decision points, remediation, escalation — with a live Markdown preview and multiple saved drafts. Client-side only, no sign-up, no tracking."
+  intro="Fill in the sections of an alert runbook and copy it out as Markdown for your wiki. Simple string sections take one item per line; diagnosis steps are structured. Drafts are saved in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Editor</h2>
+    <p id="rb-errors" class="text-xs text-red-400 mt-3 hidden"></p>
+
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="text-xs font-mono text-dim">Title
+        <input id="rb-title" type="text" placeholder="Checkout latency" class="rb-in" /></label>
+      <label class="text-xs font-mono text-dim">Alert name
+        <input id="rb-alert" type="text" placeholder="CheckoutP99High" class="rb-in" /></label>
+      <label class="text-xs font-mono text-dim">Severity
+        <select id="rb-sev" class="rb-in">
+          <option>SEV1</option><option>SEV2</option><option selected>SEV3</option><option>SEV4</option>
+        </select></label>
+      <label class="text-xs font-mono text-dim">Owner (optional)
+        <input id="rb-owner" type="text" placeholder="Platform SRE" class="rb-in" /></label>
+    </div>
+
+    <label class="text-xs font-mono text-dim block mt-4">Summary
+      <textarea id="rb-summary" rows="2" class="rb-in font-mono" placeholder="One or two lines on what this alert means."></textarea></label>
+
+    <label class="text-xs font-mono text-dim block mt-4">Symptoms <span class="text-faint">(one per line)</span>
+      <textarea id="rb-symptoms" rows="3" class="rb-in font-mono"></textarea></label>
+
+    <div class="mt-4">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-mono text-dim">Diagnosis steps</span>
+        <button type="button" id="rb-add-step" class="btn-outline text-xs">Add step</button>
+      </div>
+      <div id="rb-steps" class="mt-3 space-y-3"></div>
+    </div>
+
+    <label class="text-xs font-mono text-dim block mt-4">Remediation <span class="text-faint">(one per line)</span>
+      <textarea id="rb-remediation" rows="3" class="rb-in font-mono"></textarea></label>
+
+    <label class="text-xs font-mono text-dim block mt-4">Escalation
+      <textarea id="rb-escalation" rows="2" class="rb-in font-mono"></textarea></label>
+
+    <label class="text-xs font-mono text-dim block mt-4">Dashboards <span class="text-faint">(one per line, optional)</span>
+      <textarea id="rb-dashboards" rows="2" class="rb-in font-mono"></textarea></label>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button id="rb-copy" type="button" class="btn-primary">Copy as Markdown</button>
+      <button id="rb-save" type="button" class="btn-outline">Save draft</button>
+      <span id="rb-filename" class="text-xs font-mono text-dim"></span>
+    </div>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Preview</h2>
+    <pre id="rb-preview" class="mt-4 whitespace-pre-wrap break-words text-sm font-mono text-body"></pre>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Drafts</h2>
+    <div id="rb-drafts" class="mt-4 space-y-3"></div>
+  </div>
+
+</ToolLayout>
+
+<style>
+  .rb-in {
+    margin-top: 0.25rem;
+    width: 100%;
+    background: var(--color-field);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+  .rb-in:focus {
+    outline: none;
+    border-color: rgba(var(--color-accent-rgb) / 0.5);
+  }
+</style>
+
+<script>
+  import { blankRunbook, toFilename, toMarkdown, validateRunbook } from '../../lib/tools/runbook-builder';
+  import type { Runbook, RunbookStep, RunbookStepKind } from '../../lib/tools/runbook-builder';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const DRAFTS_KEY = 'tools:runbook-builder:drafts';
+
+  let steps: RunbookStep[] = [
+    { id: crypto.randomUUID(), kind: 'check', text: '', expected: '', onFail: '' },
+  ];
+  let drafts: Runbook[] = loadJSON<Runbook[]>(DRAFTS_KEY, []);
+  let loadedId: string | null = null;
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
+  const titleEl = $<HTMLInputElement>('rb-title');
+  const alertEl = $<HTMLInputElement>('rb-alert');
+  const sevEl = $<HTMLSelectElement>('rb-sev');
+  const ownerEl = $<HTMLInputElement>('rb-owner');
+  const summaryEl = $<HTMLTextAreaElement>('rb-summary');
+  const symptomsEl = $<HTMLTextAreaElement>('rb-symptoms');
+  const stepsEl = $<HTMLElement>('rb-steps');
+  const remediationEl = $<HTMLTextAreaElement>('rb-remediation');
+  const escalationEl = $<HTMLTextAreaElement>('rb-escalation');
+  const dashboardsEl = $<HTMLTextAreaElement>('rb-dashboards');
+  const errorsEl = $<HTMLElement>('rb-errors');
+  const previewEl = $<HTMLElement>('rb-preview');
+  const filenameEl = $<HTMLElement>('rb-filename');
+  const draftsEl = $<HTMLElement>('rb-drafts');
+
+  function lines(value: string): string[] {
+    return value.split('\n').map((l) => l.trim()).filter(Boolean);
+  }
+  function persistDrafts() {
+    saveJSON(DRAFTS_KEY, drafts);
+  }
+
+  function current(): Runbook {
+    return {
+      ...blankRunbook(),
+      id: loadedId ?? 'preview',
+      createdIso: drafts.find((d) => d.id === loadedId)?.createdIso ?? new Date().toISOString(),
+      title: titleEl?.value ?? '',
+      alertName: alertEl?.value ?? '',
+      severity: sevEl?.value ?? 'SEV3',
+      owner: ownerEl?.value ?? '',
+      summary: summaryEl?.value ?? '',
+      symptoms: lines(symptomsEl?.value ?? ''),
+      diagnosisSteps: steps,
+      remediation: lines(remediationEl?.value ?? ''),
+      escalation: escalationEl?.value ?? '',
+      dashboards: lines(dashboardsEl?.value ?? ''),
+    };
+  }
+
+  function renderSteps() {
+    if (!stepsEl) return;
+    stepsEl.innerHTML = steps
+      .map(
+        (s, i) => `
+        <div class="border border-line rounded-lg p-3 space-y-2">
+          <div class="flex gap-2 items-center">
+            <select data-role="kind" data-index="${i}" class="rb-in" style="width:auto">
+              <option value="check"${s.kind === 'check' ? ' selected' : ''}>check</option>
+              <option value="action"${s.kind === 'action' ? ' selected' : ''}>action</option>
+              <option value="decision"${s.kind === 'decision' ? ' selected' : ''}>decision</option>
+            </select>
+            <input type="text" data-role="text" data-index="${i}" placeholder="What to do" class="rb-in flex-1 min-w-0" />
+            <button type="button" data-role="rm" data-index="${i}" class="btn-outline text-xs shrink-0">✕</button>
+          </div>
+          <input type="text" data-role="expected" data-index="${i}" placeholder="Expected result (optional)" class="rb-in text-xs" />
+          <input type="text" data-role="onFail" data-index="${i}" placeholder="If not… (optional)" class="rb-in text-xs" />
+        </div>`
+      )
+      .join('');
+    steps.forEach((s, i) => {
+      (stepsEl.querySelector(`[data-role="text"][data-index="${i}"]`) as HTMLInputElement).value = s.text;
+      (stepsEl.querySelector(`[data-role="expected"][data-index="${i}"]`) as HTMLInputElement).value = s.expected ?? '';
+      (stepsEl.querySelector(`[data-role="onFail"][data-index="${i}"]`) as HTMLInputElement).value = s.onFail ?? '';
+    });
+  }
+
+  function renderPreview() {
+    const r = current();
+    if (previewEl) previewEl.textContent = toMarkdown(r);
+    if (filenameEl) filenameEl.textContent = toFilename(r);
+  }
+
+  function renderDrafts() {
+    if (!draftsEl) return;
+    if (drafts.length === 0) {
+      draftsEl.innerHTML = '<p class="text-xs text-faint italic">No drafts saved yet.</p>';
+      return;
+    }
+    draftsEl.innerHTML = drafts
+      .map(
+        (d) => `
+        <div class="flex items-center justify-between gap-3 border border-line rounded-lg px-3 py-2">
+          <span class="text-sm text-body min-w-0 truncate">${
+            (d.title || d.alertName || 'Untitled').replace(/</g, '&lt;')
+          } <span class="text-xs font-mono text-dim ml-1">${d.severity}</span></span>
+          <span class="flex gap-2 shrink-0">
+            <button type="button" data-load="${d.id}" class="btn-outline text-xs">Load</button>
+            <button type="button" data-del="${d.id}" class="btn-outline text-xs">Delete</button>
+          </span>
+        </div>`
+      )
+      .join('');
+  }
+
+  function showErrors(errs: string[]) {
+    if (!errorsEl) return;
+    if (errs.length === 0) {
+      errorsEl.classList.add('hidden');
+      errorsEl.textContent = '';
+    } else {
+      errorsEl.textContent = errs.join(' ');
+      errorsEl.classList.remove('hidden');
+    }
+  }
+
+  // step list events
+  stepsEl?.addEventListener('input', (e) => {
+    const t = e.target as HTMLElement;
+    const i = Number(t.dataset.index);
+    if (Number.isNaN(i) || !steps[i]) return;
+    const role = t.dataset.role;
+    if (role === 'text') steps[i].text = (t as HTMLInputElement).value;
+    if (role === 'expected') steps[i].expected = (t as HTMLInputElement).value;
+    if (role === 'onFail') steps[i].onFail = (t as HTMLInputElement).value;
+    renderPreview();
+  });
+  stepsEl?.addEventListener('change', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.role === 'kind') {
+      steps[Number(t.dataset.index)].kind = (t as HTMLSelectElement).value as RunbookStepKind;
+      renderPreview();
+    }
+  });
+  stepsEl?.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.role !== 'rm') return;
+    steps.splice(Number(t.dataset.index), 1);
+    if (steps.length === 0) steps.push({ id: crypto.randomUUID(), kind: 'check', text: '', expected: '', onFail: '' });
+    renderSteps();
+    renderPreview();
+  });
+  $('rb-add-step')?.addEventListener('click', () => {
+    steps.push({ id: crypto.randomUUID(), kind: 'check', text: '', expected: '', onFail: '' });
+    renderSteps();
+    renderPreview();
+  });
+
+  [titleEl, alertEl, sevEl, ownerEl, summaryEl, symptomsEl, remediationEl, escalationEl, dashboardsEl].forEach((el) => {
+    el?.addEventListener('input', renderPreview);
+    el?.addEventListener('change', renderPreview);
+  });
+
+  $('rb-save')?.addEventListener('click', () => {
+    const r = current();
+    const errs = validateRunbook(r);
+    if (errs.length) return showErrors(errs);
+    showErrors([]);
+    const existing = loadedId ? drafts.find((d) => d.id === loadedId) : undefined;
+    if (existing) {
+      Object.assign(existing, r, { id: existing.id, createdIso: existing.createdIso });
+    } else {
+      r.id = crypto.randomUUID();
+      r.createdIso = new Date().toISOString();
+      drafts.push(r);
+      loadedId = r.id;
+    }
+    persistDrafts();
+    renderDrafts();
+    renderPreview();
+  });
+
+  $('rb-copy')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    await navigator.clipboard.writeText(toMarkdown(current()));
+    const o = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => (btn.textContent = o), 1500);
+  });
+
+  draftsEl?.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.load) {
+      const d = drafts.find((x) => x.id === t.dataset.load);
+      if (!d) return;
+      loadedId = d.id;
+      if (titleEl) titleEl.value = d.title;
+      if (alertEl) alertEl.value = d.alertName;
+      if (sevEl) sevEl.value = d.severity;
+      if (ownerEl) ownerEl.value = d.owner;
+      if (summaryEl) summaryEl.value = d.summary;
+      if (symptomsEl) symptomsEl.value = d.symptoms.join('\n');
+      if (remediationEl) remediationEl.value = d.remediation.join('\n');
+      if (escalationEl) escalationEl.value = d.escalation;
+      if (dashboardsEl) dashboardsEl.value = d.dashboards.join('\n');
+      steps = d.diagnosisSteps.length ? d.diagnosisSteps.map((s) => ({ ...s })) : [{ id: crypto.randomUUID(), kind: 'check', text: '', expected: '', onFail: '' }];
+      showErrors([]);
+      renderSteps();
+      renderPreview();
+    }
+    if (t.dataset.del) {
+      drafts = drafts.filter((x) => x.id !== t.dataset.del);
+      if (loadedId === t.dataset.del) loadedId = null;
+      persistDrafts();
+      renderDrafts();
+    }
+  });
+
+  renderSteps();
+  renderDrafts();
+  renderPreview();
+</script>

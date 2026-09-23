@@ -1,0 +1,427 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="sre-calculator"
+  description="SLO error budget, burn rate, Apdex, and MTTR/MTBF calculators. Client-side only, no sign-up, no tracking."
+  intro="SLO error budgets, burn rate, Apdex, and MTTR/MTBF — everything stays in your browser."
+>
+
+  <!-- Tabs -->
+      <div class="tabs" role="tablist">
+        <button class="tab" data-tab="error-budget" role="tab" aria-selected="true" type="button">Error Budget</button>
+        <button class="tab" data-tab="burn-rate" role="tab" aria-selected="false" type="button">Burn Rate</button>
+        <button class="tab" data-tab="apdex" role="tab" aria-selected="false" type="button">Apdex</button>
+        <button class="tab" data-tab="mttr-mtbf" role="tab" aria-selected="false" type="button">MTTR / MTBF</button>
+      </div>
+
+      <!-- Error Budget -->
+      <div id="sre-panel-error-budget" role="tabpanel">
+        <div class="card">
+          <h2 class="section-label">Error Budget</h2>
+          <form id="error-budget-form" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label class="text-xs font-mono text-dim">
+              SLO Target (%)
+              <input
+                id="eb-slo-percent"
+                type="number"
+                step="0.001"
+                min="0"
+                max="100"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Window (days)
+              <input
+                id="eb-window-days"
+                type="number"
+                step="1"
+                min="1"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Actual Downtime (min, optional)
+              <input
+                id="eb-actual-downtime"
+                type="number"
+                step="0.1"
+                min="0"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <div class="sm:col-span-3">
+              <button type="submit" class="btn-primary">Calculate</button>
+            </div>
+          </form>
+        </div>
+        <div id="eb-result" class="card mt-6"></div>
+      </div>
+
+      <!-- Burn Rate -->
+      <div id="sre-panel-burn-rate" role="tabpanel" class="hidden">
+        <div class="card">
+          <h2 class="section-label">Burn Rate</h2>
+          <form id="burn-rate-form" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label class="text-xs font-mono text-dim">
+              SLO Target (%)
+              <input
+                id="br-slo-percent"
+                type="number"
+                step="0.001"
+                min="0"
+                max="100"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Observed Error Rate (%)
+              <input
+                id="br-error-rate"
+                type="number"
+                step="0.001"
+                min="0"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Window (days)
+              <input
+                id="br-window-days"
+                type="number"
+                step="1"
+                min="1"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <div class="sm:col-span-3">
+              <button type="submit" class="btn-primary">Calculate</button>
+            </div>
+          </form>
+        </div>
+        <div id="br-result" class="card mt-6"></div>
+      </div>
+
+      <!-- Apdex -->
+      <div id="sre-panel-apdex" role="tabpanel" class="hidden">
+        <div class="card">
+          <h2 class="section-label">Apdex</h2>
+          <form id="apdex-form" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label class="text-xs font-mono text-dim">
+              Satisfied Count
+              <input
+                id="ap-satisfied"
+                type="number"
+                step="1"
+                min="0"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Tolerating Count
+              <input
+                id="ap-tolerating"
+                type="number"
+                step="1"
+                min="0"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <label class="text-xs font-mono text-dim">
+              Total Count
+              <input
+                id="ap-total"
+                type="number"
+                step="1"
+                min="1"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <div class="sm:col-span-3">
+              <button type="submit" class="btn-primary">Calculate</button>
+            </div>
+          </form>
+        </div>
+        <div id="ap-result" class="card mt-6"></div>
+      </div>
+
+      <!-- MTTR / MTBF -->
+      <div id="sre-panel-mttr-mtbf" role="tabpanel" class="hidden">
+        <div class="card">
+          <h2 class="section-label">MTTR / MTBF</h2>
+          <form id="mttr-mtbf-form" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label class="text-xs font-mono text-dim sm:col-span-2">
+              Incident Downtimes (comma-separated minutes)
+              <input
+                id="mm-incidents"
+                type="text"
+                placeholder="15, 25, 20"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <label class="text-xs font-mono text-dim sm:col-span-2">
+              Total Observation (minutes)
+              <input
+                id="mm-total-observation"
+                type="number"
+                step="1"
+                min="1"
+                class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70"
+              />
+            </label>
+            <div class="sm:col-span-2">
+              <button type="submit" class="btn-primary">Calculate</button>
+            </div>
+          </form>
+        </div>
+        <div id="mm-result" class="card mt-6"></div>
+      </div>
+
+</ToolLayout>
+
+<script>
+import { calcApdex, calcBurnRate, calcErrorBudget, calcMttrMtbf, formatDuration } from '../../lib/tools/sre-calculator';
+import { loadJSON, saveJSON } from '../../lib/storage';
+
+(() => {
+  const STORAGE_KEY = 'tools:sre-calculator:inputs';
+  const TABS = ['error-budget', 'burn-rate', 'apdex', 'mttr-mtbf'];
+
+  interface SreCalculatorInputs {
+    errorBudget: { sloPercent: number; windowDays: number; actualDowntimeMinutes: number | '' };
+    burnRate: { sloPercent: number; observedErrorRatePercent: number; windowDays: number };
+    apdex: { satisfiedCount: number; toleratingCount: number; totalCount: number };
+    mttrMtbf: { incidentDowntimes: string; totalObservationMinutes: number };
+  }
+
+  const DEFAULT_INPUTS: SreCalculatorInputs = {
+    errorBudget: { sloPercent: 99.9, windowDays: 30, actualDowntimeMinutes: 10 },
+    burnRate: { sloPercent: 99.9, observedErrorRatePercent: 0.5, windowDays: 30 },
+    apdex: { satisfiedCount: 80, toleratingCount: 15, totalCount: 100 },
+    mttrMtbf: { incidentDowntimes: '15, 25, 20', totalObservationMinutes: 43200 },
+  };
+
+  const inputs: SreCalculatorInputs = loadJSON<SreCalculatorInputs>(STORAGE_KEY, DEFAULT_INPUTS);
+
+  function persistInputs() {
+    saveJSON(STORAGE_KEY, inputs);
+  }
+
+  // formatDuration clamps negatives to 0 (it's built for countdown-style durations), so a
+  // remaining error budget that's gone negative (over budget) is formatted via its absolute
+  // value instead of silently showing "0s".
+  function formatMinutesSigned(minutes: number): string {
+    return minutes < 0 ? `-${formatDuration(-minutes)} over budget` : formatDuration(minutes);
+  }
+
+  function formatDays(days: number): string {
+    return isFinite(days) ? `${days.toFixed(1)} days` : '∞';
+  }
+
+  function renderResult(container: HTMLElement | null, lines: string[]) {
+    if (!container) return;
+    container.innerHTML = `
+      <h3 class="section-label mb-3">Result</h3>
+      <div class="space-y-1 text-sm font-mono text-body">
+        ${lines.map((line) => `<div>${line}</div>`).join('')}
+      </div>
+    `;
+  }
+
+  function renderError(container: HTMLElement | null, err: unknown) {
+    if (!container) return;
+    const message = err instanceof Error ? err.message : String(err);
+    container.innerHTML = `<div class="text-sm text-red-400 font-mono">${message}</div>`;
+  }
+
+  // ---------------------------------------------------------------------
+  // Error Budget
+  // ---------------------------------------------------------------------
+  const ebForm = document.getElementById('error-budget-form');
+  const ebSlo = document.getElementById('eb-slo-percent') as HTMLInputElement | null;
+  const ebWindow = document.getElementById('eb-window-days') as HTMLInputElement | null;
+  const ebActual = document.getElementById('eb-actual-downtime') as HTMLInputElement | null;
+  const ebResult = document.getElementById('eb-result');
+
+  if (ebSlo) ebSlo.value = String(inputs.errorBudget.sloPercent);
+  if (ebWindow) ebWindow.value = String(inputs.errorBudget.windowDays);
+  if (ebActual) ebActual.value = inputs.errorBudget.actualDowntimeMinutes === '' || inputs.errorBudget.actualDowntimeMinutes == null
+    ? ''
+    : String(inputs.errorBudget.actualDowntimeMinutes);
+
+  function runErrorBudget() {
+    const sloPercent = Number(ebSlo?.value);
+    const windowDays = Number(ebWindow?.value);
+    const rawActual = ebActual?.value?.trim() ?? '';
+    const hasActual = rawActual !== '';
+    const actualDowntimeMinutes = hasActual ? Number(rawActual) : undefined;
+
+    inputs.errorBudget = {
+      sloPercent,
+      windowDays,
+      actualDowntimeMinutes: hasActual ? Number(rawActual) : '',
+    };
+    persistInputs();
+
+    try {
+      const result = calcErrorBudget(sloPercent, windowDays, actualDowntimeMinutes);
+      const lines = [
+        `Window: ${result.windowMinutes.toFixed(0)} min (${formatDuration(result.windowMinutes)})`,
+        `Allowed downtime budget: ${formatDuration(result.allowedDowntimeMinutes)}`,
+      ];
+      if (result.remainingBudgetMinutes !== null && result.percentConsumed !== null) {
+        lines.push(`Remaining budget: ${formatMinutesSigned(result.remainingBudgetMinutes)}`);
+        lines.push(`Budget consumed: ${result.percentConsumed.toFixed(1)}%`);
+      }
+      renderResult(ebResult, lines);
+    } catch (err) {
+      renderError(ebResult, err);
+    }
+  }
+
+  ebForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    runErrorBudget();
+  });
+  runErrorBudget();
+
+  // ---------------------------------------------------------------------
+  // Burn Rate
+  // ---------------------------------------------------------------------
+  const brForm = document.getElementById('burn-rate-form');
+  const brSlo = document.getElementById('br-slo-percent') as HTMLInputElement | null;
+  const brErrorRate = document.getElementById('br-error-rate') as HTMLInputElement | null;
+  const brWindow = document.getElementById('br-window-days') as HTMLInputElement | null;
+  const brResult = document.getElementById('br-result');
+
+  if (brSlo) brSlo.value = String(inputs.burnRate.sloPercent);
+  if (brErrorRate) brErrorRate.value = String(inputs.burnRate.observedErrorRatePercent);
+  if (brWindow) brWindow.value = String(inputs.burnRate.windowDays);
+
+  function runBurnRate() {
+    const sloPercent = Number(brSlo?.value);
+    const observedErrorRatePercent = Number(brErrorRate?.value);
+    const windowDays = Number(brWindow?.value);
+
+    inputs.burnRate = { sloPercent, observedErrorRatePercent, windowDays };
+    persistInputs();
+
+    try {
+      const result = calcBurnRate(sloPercent, observedErrorRatePercent, windowDays);
+      renderResult(brResult, [
+        `Burn rate: ${result.burnRate.toFixed(2)}x sustainable rate`,
+        `Days to exhaust budget: ${formatDays(result.daysToExhaustBudget)}`,
+      ]);
+    } catch (err) {
+      renderError(brResult, err);
+    }
+  }
+
+  brForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    runBurnRate();
+  });
+  runBurnRate();
+
+  // ---------------------------------------------------------------------
+  // Apdex
+  // ---------------------------------------------------------------------
+  const apForm = document.getElementById('apdex-form');
+  const apSatisfied = document.getElementById('ap-satisfied') as HTMLInputElement | null;
+  const apTolerating = document.getElementById('ap-tolerating') as HTMLInputElement | null;
+  const apTotal = document.getElementById('ap-total') as HTMLInputElement | null;
+  const apResult = document.getElementById('ap-result');
+
+  if (apSatisfied) apSatisfied.value = String(inputs.apdex.satisfiedCount);
+  if (apTolerating) apTolerating.value = String(inputs.apdex.toleratingCount);
+  if (apTotal) apTotal.value = String(inputs.apdex.totalCount);
+
+  function runApdex() {
+    const satisfiedCount = Number(apSatisfied?.value);
+    const toleratingCount = Number(apTolerating?.value);
+    const totalCount = Number(apTotal?.value);
+
+    inputs.apdex = { satisfiedCount, toleratingCount, totalCount };
+    persistInputs();
+
+    try {
+      const result = calcApdex(satisfiedCount, toleratingCount, totalCount);
+      renderResult(apResult, [`Apdex score: ${result.score.toFixed(2)}`, `Rating: ${result.rating}`]);
+    } catch (err) {
+      renderError(apResult, err);
+    }
+  }
+
+  apForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    runApdex();
+  });
+  runApdex();
+
+  // ---------------------------------------------------------------------
+  // MTTR / MTBF
+  // ---------------------------------------------------------------------
+  const mmForm = document.getElementById('mttr-mtbf-form');
+  const mmIncidents = document.getElementById('mm-incidents') as HTMLInputElement | null;
+  const mmTotalObservation = document.getElementById('mm-total-observation') as HTMLInputElement | null;
+  const mmResult = document.getElementById('mm-result');
+
+  if (mmIncidents) mmIncidents.value = String(inputs.mttrMtbf.incidentDowntimes);
+  if (mmTotalObservation) mmTotalObservation.value = String(inputs.mttrMtbf.totalObservationMinutes);
+
+  function parseIncidentDowntimes(raw: string): number[] {
+    return raw
+      .split(',')
+      .map((part) => part.trim())
+      .filter((part) => part !== '')
+      .map(Number)
+      .filter((n) => !Number.isNaN(n));
+  }
+
+  function runMttrMtbf() {
+    const incidentDowntimesRaw = mmIncidents?.value ?? '';
+    const totalObservationMinutes = Number(mmTotalObservation?.value);
+    const incidentDowntimeMinutes = parseIncidentDowntimes(incidentDowntimesRaw);
+
+    inputs.mttrMtbf = { incidentDowntimes: incidentDowntimesRaw, totalObservationMinutes };
+    persistInputs();
+
+    try {
+      const result = calcMttrMtbf(incidentDowntimeMinutes, totalObservationMinutes);
+      renderResult(mmResult, [
+        `Incidents counted: ${incidentDowntimeMinutes.length}`,
+        `MTTR: ${formatDuration(result.mttrMinutes)}`,
+        `MTBF: ${formatDuration(result.mtbfMinutes)}`,
+        `Availability: ${result.availabilityPercent.toFixed(3)}%`,
+      ]);
+    } catch (err) {
+      renderError(mmResult, err);
+    }
+  }
+
+  mmForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    runMttrMtbf();
+  });
+  runMttrMtbf();
+
+  // ---------------------------------------------------------------------
+  // Tabs
+  // ---------------------------------------------------------------------
+  function setActiveTab(tab: string | undefined) {
+    const resolved = TABS.includes(tab ?? '') ? (tab as string) : TABS[0];
+    document.querySelectorAll('.tab').forEach((btn) => {
+      btn.setAttribute('aria-selected', String((btn as HTMLElement).dataset.tab === resolved));
+    });
+    TABS.forEach((t) => {
+      document.getElementById(`sre-panel-${t}`)?.classList.toggle('hidden', t !== resolved);
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => setActiveTab((btn as HTMLElement).dataset.tab));
+  });
+})();
+</script>

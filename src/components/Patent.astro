@@ -1,0 +1,65 @@
+---
+// Patent data from CV
+---
+
+<section class="border-t border-line">
+  <div class="section-container">
+
+    <div
+      class="relative rounded-2xl overflow-hidden border border-accent/20 bg-gradient-to-br from-accent/5 to-teal-900/10 p-8 md:p-12"
+    >
+      <!-- Background glow -->
+      <div class="absolute -top-20 -right-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 flex flex-col md:flex-row gap-8 items-start">
+
+        <!-- Icon -->
+        <div class="flex-shrink-0 w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center">
+          <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1">
+          <div class="flex flex-wrap items-center gap-3 mb-3">
+            <span class="px-3 py-1 text-xs font-mono font-semibold text-accent bg-accent/10 border border-accent/20 rounded-full uppercase tracking-wider">
+              Patent Holder
+            </span>
+            <span class="px-3 py-1 text-xs font-mono text-success bg-success/10 border border-success/20 rounded-full">
+              Granted · India + US
+            </span>
+          </div>
+
+          <h3 class="text-2xl md:text-3xl font-bold text-ink mb-3">
+            System and Method for Monitoring Performance of Applications for an Entity
+          </h3>
+
+          <p class="text-muted leading-relaxed max-w-2xl">
+            An automated global performance reporting system that reduced manual reporting effort
+            from <span class="text-ink">31 hours → 2 minutes</span> per cycle —
+            saving <span class="text-ink">6,000+ engineering hours/year</span> and
+            generating <span class="text-ink">$1.2M in annual savings</span> across 20+ global teams.
+            Standardised performance analytics using ASP.NET + SQL Server with automated ingestion pipelines.
+          </p>
+
+          <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { label: 'India Patent No.', value: '3327/CHE/2015' },
+              { label: 'US Patent No.', value: 'KNS.BFSI.0353IN1' },
+              { label: 'Annual savings', value: '$1.2M+' },
+            ].map(({ label, value }) => (
+              <div class="p-3 rounded-lg bg-surface-hover/50 border border-line">
+                <div class="text-xs text-faint font-mono uppercase tracking-wider">{label}</div>
+                <div class="text-sm font-medium text-body mt-0.5 font-mono">{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>

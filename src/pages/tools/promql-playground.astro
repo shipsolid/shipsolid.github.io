@@ -1,0 +1,162 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="promql-playground"
+  description="Build and explain PromQL with templates, a function reference, and best-effort linting. No query execution — an editor and reference, not a Prometheus. Client-side only, no sign-up, no tracking."
+  intro="Write a query with syntax highlighting and inline lint hints, start from a template, and search the function reference. There is no backend — nothing is executed against a real Prometheus. Everything stays in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Query</h2>
+    <div class="mt-4 relative">
+      <textarea id="pq-input" rows="5" spellcheck="false"
+        class="w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-transparent caret-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y relative z-10"
+        style="background: transparent;"></textarea>
+      <pre id="pq-highlight" aria-hidden="true"
+        class="pointer-events-none absolute inset-0 px-3 py-2 text-sm font-mono whitespace-pre-wrap break-words overflow-hidden text-body z-0"></pre>
+    </div>
+    <div id="pq-lint" class="mt-4 space-y-1"></div>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Templates</h2>
+    <div id="pq-templates" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+  </div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Function reference</h2>
+    <input id="pq-fn-search" type="search" placeholder="Filter functions…"
+      class="mt-4 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70" />
+    <div id="pq-fn-list" class="mt-4 space-y-3"></div>
+  </div>
+
+</ToolLayout>
+
+<style>
+  /* keep the textarea and the highlight layer perfectly aligned */
+  #pq-input,
+  #pq-highlight {
+    line-height: 1.6;
+    letter-spacing: 0;
+    tab-size: 2;
+  }
+</style>
+
+<script>
+  import { lintPromql, tokenizePromql, PROMQL_FUNCTIONS, PROMQL_TEMPLATES } from '../../lib/tools/promql-playground';
+  import type { PromqlTokenType } from '../../lib/tools/promql-playground';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:promql-playground:query';
+  const DEFAULT_QUERY = 'sum by (route) (rate(http_requests_total{status=~"5.."}[5m]))';
+
+  const inputEl = document.getElementById('pq-input') as HTMLTextAreaElement | null;
+  const highlightEl = document.getElementById('pq-highlight');
+  const lintEl = document.getElementById('pq-lint');
+  const templatesEl = document.getElementById('pq-templates');
+  const fnSearchEl = document.getElementById('pq-fn-search') as HTMLInputElement | null;
+  const fnListEl = document.getElementById('pq-fn-list');
+
+  if (inputEl) inputEl.value = loadJSON<string>(STORAGE_KEY, DEFAULT_QUERY);
+
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  const TOKEN_CLASS: Record<PromqlTokenType, string> = {
+    string: 'text-amber-400 light:text-amber-700',
+    duration: 'text-sky-400 light:text-sky-700',
+    number: 'text-sky-400 light:text-sky-700',
+    function: 'text-accent',
+    keyword: 'text-fuchsia-400 light:text-fuchsia-700',
+    metric: 'text-ink',
+    operator: 'text-muted',
+    brace: 'text-dim',
+    text: '',
+  };
+
+  function renderHighlight(query: string) {
+    if (!highlightEl) return;
+    highlightEl.innerHTML =
+      tokenizePromql(query)
+        .map((t) => {
+          const cls = TOKEN_CLASS[t.type];
+          const safe = escapeHtml(t.text);
+          return cls ? `<span class="${cls}">${safe}</span>` : safe;
+        })
+        .join('') + '\n';
+  }
+
+  function renderLint(query: string) {
+    if (!lintEl) return;
+    const issues = lintPromql(query);
+    if (issues.length === 0) {
+      lintEl.innerHTML = query.trim()
+        ? '<p class="text-xs font-mono text-emerald-400">No issues found by the best-effort linter.</p>'
+        : '';
+      return;
+    }
+    lintEl.innerHTML = issues
+      .map((i) => {
+        const cls = i.severity === 'error' ? 'text-red-400' : 'text-amber-400';
+        return `<p class="text-xs font-mono ${cls}">${i.severity === 'error' ? '✗' : '⚠'} ${escapeHtml(i.message)}</p>`;
+      })
+      .join('');
+  }
+
+  function run() {
+    const query = inputEl?.value ?? '';
+    saveJSON(STORAGE_KEY, query);
+    renderHighlight(query);
+    renderLint(query);
+  }
+
+  inputEl?.addEventListener('input', run);
+  inputEl?.addEventListener('scroll', () => {
+    if (highlightEl && inputEl) highlightEl.scrollTop = inputEl.scrollTop;
+  });
+
+  // templates
+  if (templatesEl) {
+    templatesEl.innerHTML = PROMQL_TEMPLATES.map(
+      (t) => `
+      <button type="button" data-query="${escapeHtml(t.query).replace(/"/g, '&quot;')}"
+        class="card block text-left hover:border-accent/50 transition-colors">
+        <div class="text-sm font-semibold text-ink">${escapeHtml(t.title)}</div>
+        <div class="text-xs text-dim mt-1">${escapeHtml(t.note)}</div>
+      </button>`
+    ).join('');
+    templatesEl.addEventListener('click', (event) => {
+      const btn = (event.target as HTMLElement).closest('[data-query]') as HTMLElement | null;
+      if (!btn || !inputEl) return;
+      inputEl.value = btn.dataset.query ?? '';
+      run();
+      inputEl.focus();
+    });
+  }
+
+  // function reference
+  function renderFunctions(filter: string) {
+    if (!fnListEl) return;
+    const needle = filter.trim().toLowerCase();
+    const rows = PROMQL_FUNCTIONS.filter(
+      (f) => needle === '' || f.name.toLowerCase().includes(needle) || f.summary.toLowerCase().includes(needle)
+    );
+    fnListEl.innerHTML = rows
+      .map(
+        (f) => `
+        <div class="border-b border-line last:border-0 pb-3">
+          <code class="text-sm text-accent">${escapeHtml(f.signature)}</code>
+          <span class="ml-2 text-[10px] font-mono uppercase text-faint">${escapeHtml(f.category)}</span>
+          <p class="text-xs text-dim mt-1">${escapeHtml(f.summary)}</p>
+        </div>`
+      )
+      .join('');
+  }
+  fnSearchEl?.addEventListener('input', () => renderFunctions(fnSearchEl.value));
+
+  run();
+  renderFunctions('');
+</script>

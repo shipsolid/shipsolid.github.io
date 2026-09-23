@@ -1,0 +1,130 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import BlogArchiveNav from '../../components/BlogArchiveNav.astro';
+import { BLOG_CATEGORIES, BLOG_CATEGORY_LABELS } from '../../lib/blog-categories';
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const posts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
+const categoriesInUse = [...new Set(posts.map((p) => p.data.category))].sort(
+  (a, b) => BLOG_CATEGORIES.indexOf(a) - BLOG_CATEGORIES.indexOf(b)
+);
+---
+
+<Page
+  title="Blog — Amit Singh"
+  description="Technical writing on observability, SRE, distributed systems, and platform engineering."
+>
+  <div class="max-w-9xl mx-auto px-6">
+      <!-- Header -->
+      <div class="mb-12">
+        <p class="section-label">Blog</p>
+        <h1 class="text-4xl font-bold text-ink mt-2">Writing from the trenches</h1>
+        <p class="text-muted mt-3 max-w-lg">
+          Practitioner-level posts on observability, SRE, platform engineering, and the
+          occasional deep-dive into distributed systems. No fluff.
+        </p>
+      </div>
+
+      <!-- 3-column grid (site column standard): archive nav | posts | tags.
+           Below xl it stacks — archive nav sits above the posts list. -->
+      <div class="doc-grid items-start">
+
+        <!-- Col 1: Year → Month → post archive -->
+        <aside class="xl:sticky xl:top-28">
+          <div class="card xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:pr-1">
+            <BlogArchiveNav posts={posts} />
+          </div>
+        </aside>
+
+        <!-- Col 2: Posts list -->
+        <div>
+          {posts.length === 0 ? (
+            <div class="card text-center py-16">
+              <p class="text-dim font-mono">// First post coming soon</p>
+            </div>
+          ) : (
+            <div class="space-y-5">
+              {posts.map((post) => {
+                const date = new Intl.DateTimeFormat('en-US', {
+                  year: 'numeric', month: 'short', day: 'numeric',
+                }).format(post.data.pubDate);
+
+                return (
+                  <a
+                    href={`/blog/${post.id}`}
+                    class="card group block hover:-translate-y-0.5 no-underline"
+                  >
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                      <span class="px-2 py-0.5 text-xs font-mono rounded bg-accent/20 text-accent border border-accent/40">
+                        {BLOG_CATEGORY_LABELS[post.data.category]}
+                      </span>
+                      {post.data.tags.slice(0, 4).map((tag) => (
+                        <span class="tag">{tag}</span>
+                      ))}
+                    </div>
+
+                    <h2 class="text-lg font-semibold text-ink group-hover:text-accent transition-colors leading-snug mb-2">
+                      {post.data.title}
+                    </h2>
+
+                    <p class="text-sm text-muted leading-relaxed mb-4 line-clamp-2">
+                      {post.data.description}
+                    </p>
+
+                    <div class="flex items-center justify-between text-xs font-mono text-faint pt-3 border-t border-line">
+                      <time datetime={post.data.pubDate.toISOString()}>{date}</time>
+                      <span class="flex items-center gap-1 text-accent/60 group-hover:text-accent transition-colors">
+                        Read
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                      </span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <!-- Col 3: Browse by type + filter by tag -->
+        <aside class="xl:sticky xl:top-28 space-y-6">
+          <div class="card">
+            <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4">Browse by type</p>
+            <div class="flex flex-wrap gap-2">
+              {categoriesInUse.map((category) => (
+                <a
+                  href={`/blog/category/${category}`}
+                  class="tag hover:bg-accent/20 transition-colors"
+                >
+                  {BLOG_CATEGORY_LABELS[category]}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {allTags.length > 0 && (
+            <div class="card">
+              <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4">Filter by tag</p>
+              <div class="flex flex-wrap gap-2">
+                {allTags.map((tag) => (
+                  <a
+                    href={`/blog/tag/${tag.toLowerCase().replace(/\s+/g, '-')}`}
+                    class="tag hover:bg-accent/20 transition-colors"
+                  >
+                    {tag}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+
+      </div>
+
+    </div>
+
+</Page>

@@ -1,0 +1,77 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { BLOG_CATEGORY_LABELS } from '../lib/blog-categories';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+}
+
+const { posts } = Astro.props;
+---
+
+<section id="blog" class="border-t border-line">
+  <div class="section-container">
+
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <p class="section-label">Blog</p>
+        <h2 class="section-title">Writing from the trenches</h2>
+      </div>
+      <a href="/blog" class="text-sm text-accent hover:text-accent-hover font-mono transition-colors hidden sm:flex items-center gap-1.5">
+        All posts
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
+    {posts.length === 0 ? (
+      <div class="card text-center py-12">
+        <p class="text-dim font-mono text-sm">// First post coming soon</p>
+      </div>
+    ) : (
+      <div class="space-y-5">
+        {posts.map((post) => {
+          const date = new Intl.DateTimeFormat('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+          }).format(post.data.pubDate);
+
+          return (
+            <a
+              href={`/blog/${post.id}`}
+              class="card group flex flex-col sm:flex-row sm:items-center gap-4 hover:-translate-y-0.5 no-underline"
+            >
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                  <span class="px-2 py-0.5 text-xs font-mono rounded bg-accent/20 text-accent border border-accent/40">
+                    {BLOG_CATEGORY_LABELS[post.data.category]}
+                  </span>
+                  {post.data.tags.slice(0, 3).map((tag) => (
+                    <span class="tag text-xs">{tag}</span>
+                  ))}
+                </div>
+                <h3 class="font-semibold text-ink group-hover:text-accent transition-colors leading-snug">
+                  {post.data.title}
+                </h3>
+                <p class="text-sm text-muted mt-1 line-clamp-2">{post.data.description}</p>
+              </div>
+
+              <div class="flex-shrink-0 flex items-center gap-4 text-xs font-mono text-faint">
+                <span>{date}</span>
+                {post.data.readTime && <span>{post.data.readTime} min</span>}
+                <svg class="w-4 h-4 text-accent/50 group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    )}
+
+    <div class="mt-8 flex sm:hidden">
+      <a href="/blog" class="btn-outline w-full text-center">View all posts</a>
+    </div>
+
+  </div>
+</section>

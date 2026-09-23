@@ -1,0 +1,414 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+import FlashcardStudySession from '../../components/FlashcardStudySession.astro';
+import { expandReviewUnits } from '../../lib/srs/units';
+import { renderReviewUnits, type ResolvedReviewUnit } from '../../lib/content/render-card';
+
+const allDecks = await getCollection('flashcards');
+
+const allResolvedUnits: ResolvedReviewUnit[] = [];
+const allUnitMeta: { reviewId: string; deckSlug: string; tags: string[]; source: string | null }[] = [];
+const deckTitleBySlug: Record<string, string> = {};
+
+for (const deck of allDecks) {
+  const units = expandReviewUnits(deck.data.cards);
+  allResolvedUnits.push(...(await renderReviewUnits(deck.data.cards, units, deck.id)));
+
+  const cardsById = new Map(deck.data.cards.map((c) => [c.id, c]));
+  for (const u of units) {
+    allUnitMeta.push({
+      reviewId: u.reviewId,
+      deckSlug: deck.id,
+      tags: deck.data.tags,
+      source: cardsById.get(u.cardId)?.source ?? null,
+    });
+  }
+  deckTitleBySlug[deck.id] = deck.data.title;
+}
+
+const allTags = [...new Set(allDecks.flatMap((d) => d.data.tags))].sort();
+const allSources = [...new Set(allUnitMeta.map((u) => u.source).filter((s): s is string => Boolean(s)))].sort();
+const deckOptions = allDecks
+  .map((d) => ({ slug: d.id, title: d.data.title }))
+  .sort((a, b) => a.title.localeCompare(b.title));
+
+const totalUnits = allResolvedUnits.length;
+---
+
+<Page
+  title="Review Hub — Flashcards"
+  description="Cross-deck spaced-repetition review: due queue, weak cards, forgotten cards, and custom sessions."
+ mainClass="min-h-screen">
+  <div class="max-w-7xl mx-auto px-6">
+      <nav class="mb-8 text-sm font-mono text-faint flex items-center flex-wrap gap-1">
+        <a href="/flashcards" class="hover:text-muted transition-colors">flashcards</a>
+        <span class="mx-1">/</span>
+        <span class="text-muted">review</span>
+      </nav>
+
+      <div id="filter-picker-view">
+        <div class="mb-10">
+          <p class="section-label">Review Hub</p>
+          <h1 class="text-4xl font-bold text-ink mt-2">Cross-Deck Review</h1>
+          <p class="text-muted mt-3 max-w-lg">
+            Study across every deck at once — due queue, weak cards, forgotten cards, or a custom
+            session built from tags, decks, sources, and difficulty.
+          </p>
+        </div>
+
+        {totalUnits === 0 ? (
+          <div class="card text-center py-16">
+            <p class="text-dim font-mono">// No cards yet</p>
+          </div>
+        ) : (
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+
+            <!-- Presets -->
+            <div>
+              <div class="space-y-4">
+                <p class="text-xs font-mono text-dim uppercase tracking-widest">Quick start</p>
+
+                <button id="preset-due" class="card w-full text-left flex items-center justify-between group hover:-translate-y-0.5 transition-transform">
+                  <div>
+                    <h3 class="text-base font-semibold text-ink group-hover:text-accent transition-colors">Due today, all decks</h3>
+                    <p class="text-sm text-dim mt-1">New + due cards across every deck</p>
+                  </div>
+                  <span class="text-accent text-xl shrink-0 ml-4">&rarr;</span>
+                </button>
+
+                <button id="preset-weak" class="card w-full text-left flex items-center justify-between group hover:-translate-y-0.5 transition-transform">
+                  <div>
+                    <h3 class="text-base font-semibold text-ink group-hover:text-accent transition-colors">Weak cards</h3>
+                    <p class="text-sm text-dim mt-1">Low ease factor — cards you've struggled with</p>
+                  </div>
+                  <span class="text-accent text-xl shrink-0 ml-4">&rarr;</span>
+                </button>
+
+                <button id="preset-forgotten" class="card w-full text-left flex items-center justify-between group hover:-translate-y-0.5 transition-transform">
+                  <div>
+                    <h3 class="text-base font-semibold text-ink group-hover:text-accent transition-colors">Forgotten cards</h3>
+                    <p class="text-sm text-dim mt-1">Graded "Again" in the last 7 days</p>
+                  </div>
+                  <span class="text-accent text-xl shrink-0 ml-4">&rarr;</span>
+                </button>
+
+                <button id="preset-history" class="card w-full text-left flex items-center justify-between group hover:-translate-y-0.5 transition-transform">
+                  <div>
+                    <h3 class="text-base font-semibold text-ink group-hover:text-accent transition-colors">Review history</h3>
+                    <p class="text-sm text-dim mt-1">Chronological log of past reviews</p>
+                  </div>
+                  <span class="text-accent text-xl shrink-0 ml-4">&rarr;</span>
+                </button>
+              </div>
+
+              {/* Sibling of the space-y container, not its last child — see the note
+                  in flashcards/index.astro: a hidden last child would leave a live
+                  1rem margin under the last preset button under Tailwind 4. mt-4
+                  replaces the space-y-4 margin it used to get from the container. */}
+              <p id="preset-empty-message" class="hidden mt-4 text-xs font-mono text-faint text-center pt-2"></p>
+            </div>
+
+            <!-- Custom session builder -->
+            <div class="card p-6">
+              <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4">Custom session</p>
+
+              {allTags.length > 0 && (
+                <div class="mb-4">
+                  <p class="text-xs font-mono text-faint mb-2">Tags</p>
+                  <div class="flex flex-wrap gap-1.5">
+                    {allTags.map((tag) => (
+                      <button class="filter-tag w-auto" data-group="tag" data-tag={tag}>{tag}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div class="mb-4">
+                <p class="text-xs font-mono text-faint mb-2">Decks</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {deckOptions.map((d) => (
+                    <button class="filter-tag w-auto" data-group="deck" data-deck={d.slug}>{d.title}</button>
+                  ))}
+                </div>
+              </div>
+
+              {allSources.length > 0 && (
+                <div class="mb-4">
+                  <p class="text-xs font-mono text-faint mb-2">Source</p>
+                  <div class="flex flex-wrap gap-1.5">
+                    {allSources.map((source) => (
+                      <button class="filter-tag w-auto" data-group="source" data-source={source}>{source}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div class="mb-4">
+                <label for="difficulty-filter" class="text-xs font-mono text-faint mb-2 block">Difficulty</label>
+                <select id="difficulty-filter" class="w-full bg-surface border border-line-hover rounded-lg px-3 py-2 text-sm text-ink">
+                  <option value="all">All</option>
+                  <option value="new">New (never reviewed)</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+
+              <div class="mb-6">
+                <label for="timer-duration" class="text-xs font-mono text-faint mb-2 block">Session timer</label>
+                <select id="timer-duration" class="w-full bg-surface border border-line-hover rounded-lg px-3 py-2 text-sm text-ink">
+                  <option value="0">No timer</option>
+                  <option value="5">5 minutes</option>
+                  <option value="10">10 minutes</option>
+                  <option value="15">15 minutes</option>
+                </select>
+              </div>
+
+              <button id="btn-start-custom" class="btn-primary w-full">Start custom session</button>
+              <p id="custom-empty-message" class="hidden text-xs font-mono text-faint mt-3 text-center">No cards match these filters.</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div id="session-view" class="hidden">
+        <div class="mb-6 flex items-center justify-between gap-4">
+          <button id="btn-back-to-filters" class="text-xs font-mono text-faint hover:text-muted transition-colors">
+            &larr; back to filters
+          </button>
+          <div id="session-timer-badge" class="hidden text-xs font-mono text-accent">
+            &#9201; <span id="timer-remaining"></span> remaining
+          </div>
+        </div>
+        <FlashcardStudySession
+          resolvedUnits={allResolvedUnits}
+          autoStart={false}
+          newCardsPerSession={50}
+          backLink={{ href: '/flashcards/review', label: 'Review hub' }}
+        />
+      </div>
+
+      <div id="history-view" class="hidden">
+        <button id="btn-back-to-filters-2" class="text-xs font-mono text-faint hover:text-muted transition-colors mb-8">
+          &larr; back to filters
+        </button>
+        <div id="history-content"></div>
+      </div>
+
+    </div>
+
+</Page>
+
+<script define:vars={{ allUnitMeta, deckTitleBySlug }}>
+  const WEAK_EASE_THRESHOLD = 2.0;
+  const FORGOTTEN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+  const HISTORY_DISPLAY_CAP = 500;
+  const LOG_KEY = 'fc:log';
+
+  function loadJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function unitKeyFor(u) { return `${u.deckSlug}::${u.reviewId}`; }
+
+  const filterPickerView = document.getElementById('filter-picker-view');
+  const sessionView = document.getElementById('session-view');
+  const historyView = document.getElementById('history-view');
+  const timerBadge = document.getElementById('session-timer-badge');
+  const timerRemaining = document.getElementById('timer-remaining');
+  const historyContent = document.getElementById('history-content');
+  const presetEmptyMessage = document.getElementById('preset-empty-message');
+
+  let timerInterval = null;
+  let historyRendered = false;
+
+  function clearTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    timerBadge.classList.add('hidden');
+  }
+
+  function showFilterPicker() {
+    clearTimer();
+    filterPickerView.classList.remove('hidden');
+    sessionView.classList.add('hidden');
+    historyView.classList.add('hidden');
+  }
+
+  function enterSession() {
+    presetEmptyMessage.classList.add('hidden');
+    filterPickerView.classList.add('hidden');
+    historyView.classList.add('hidden');
+    sessionView.classList.remove('hidden');
+  }
+
+  function startTimer(minutes) {
+    if (!minutes) return;
+    let remaining = minutes * 60;
+    timerBadge.classList.remove('hidden');
+    const tick = () => {
+      const m = Math.floor(remaining / 60);
+      const s = remaining % 60;
+      timerRemaining.textContent = `${m}:${String(s).padStart(2, '0')}`;
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        window.__fcStudySession.endSession('timeout');
+        return;
+      }
+      remaining--;
+    };
+    tick();
+    timerInterval = setInterval(tick, 1000);
+  }
+
+  function maybeStartTimer() {
+    const minutes = Number(document.getElementById('timer-duration').value);
+    if (minutes > 0) startTimer(minutes);
+  }
+
+  window.addEventListener('fc:session-done', () => clearTimer());
+
+  function computeWeakUnitKeys() {
+    return allUnitMeta
+      .filter((u) => {
+        const s = window.__fcStudySession.getSrsState(u.deckSlug, u.reviewId);
+        return s && s.ease < WEAK_EASE_THRESHOLD;
+      })
+      .map(unitKeyFor);
+  }
+
+  function computeForgottenUnitKeys() {
+    const log = loadJSON(LOG_KEY, { v: 1, events: [] });
+    const cutoff = Date.now() - FORGOTTEN_WINDOW_MS;
+    const forgotten = new Set(
+      log.events
+        .filter((e) => e.grade === 'again' && e.timestamp >= cutoff)
+        .map((e) => `${e.deckSlug}::${e.reviewId}`)
+    );
+    return allUnitMeta.map(unitKeyFor).filter((k) => forgotten.has(k));
+  }
+
+  function computeCustomUnitKeys() {
+    const activeTags = [...document.querySelectorAll('.filter-tag[data-group="tag"].active')].map((b) => b.dataset.tag);
+    const activeDecks = [...document.querySelectorAll('.filter-tag[data-group="deck"].active')].map((b) => b.dataset.deck);
+    const activeSources = [...document.querySelectorAll('.filter-tag[data-group="source"].active')].map((b) => b.dataset.source);
+    const difficulty = document.getElementById('difficulty-filter').value;
+
+    return allUnitMeta
+      .filter((u) => activeTags.length === 0 || u.tags.some((t) => activeTags.includes(t)))
+      .filter((u) => activeDecks.length === 0 || activeDecks.includes(u.deckSlug))
+      .filter((u) => activeSources.length === 0 || (u.source && activeSources.includes(u.source)))
+      .filter((u) => {
+        if (difficulty === 'all') return true;
+        const s = window.__fcStudySession.getSrsState(u.deckSlug, u.reviewId);
+        if (difficulty === 'new') return !s;
+        if (!s) return false;
+        if (difficulty === 'easy') return s.ease > 2.5;
+        if (difficulty === 'medium') return s.ease >= 2.0 && s.ease <= 2.5;
+        return s.ease < 2.0; // 'hard'
+      })
+      .map(unitKeyFor);
+  }
+
+  function startFixedPreset(unitKeys, emptyMessage) {
+    if (unitKeys.length === 0) {
+      presetEmptyMessage.textContent = emptyMessage;
+      presetEmptyMessage.classList.remove('hidden');
+      return;
+    }
+    enterSession();
+    window.__fcStudySession.startSession({ mode: 'fixed', unitKeys });
+    maybeStartTimer();
+  }
+
+  document.getElementById('preset-due')?.addEventListener('click', () => {
+    enterSession();
+    window.__fcStudySession.startSession({ mode: 'auto', cram: false });
+    maybeStartTimer();
+  });
+
+  document.getElementById('preset-weak')?.addEventListener('click', () => {
+    startFixedPreset(computeWeakUnitKeys(), 'No weak cards yet — nice work.');
+  });
+
+  document.getElementById('preset-forgotten')?.addEventListener('click', () => {
+    startFixedPreset(computeForgottenUnitKeys(), 'No forgotten cards in the last 7 days.');
+  });
+
+  document.getElementById('preset-history')?.addEventListener('click', () => {
+    filterPickerView.classList.add('hidden');
+    sessionView.classList.add('hidden');
+    historyView.classList.remove('hidden');
+    renderHistoryOnce();
+  });
+
+  document.querySelectorAll('.filter-tag[data-group]').forEach((btn) => {
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  });
+
+  document.getElementById('btn-start-custom')?.addEventListener('click', () => {
+    const unitKeys = computeCustomUnitKeys();
+    const emptyMsg = document.getElementById('custom-empty-message');
+    if (unitKeys.length === 0) {
+      emptyMsg.classList.remove('hidden');
+      return;
+    }
+    emptyMsg.classList.add('hidden');
+    enterSession();
+    window.__fcStudySession.startSession({ mode: 'fixed', unitKeys });
+    maybeStartTimer();
+  });
+
+  document.getElementById('btn-back-to-filters')?.addEventListener('click', showFilterPicker);
+  document.getElementById('btn-back-to-filters-2')?.addEventListener('click', showFilterPicker);
+
+  function dayKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function renderHistoryOnce() {
+    if (historyRendered) return;
+    historyRendered = true;
+    const log = loadJSON(LOG_KEY, { v: 1, events: [] });
+    const total = log.events.length;
+    const shown = log.events.slice(-HISTORY_DISPLAY_CAP).reverse();
+
+    if (shown.length === 0) {
+      historyContent.innerHTML = '<p class="text-sm font-mono text-faint text-center py-16">No reviews yet.</p>';
+      return;
+    }
+
+    const groups = new Map();
+    for (const event of shown) {
+      const key = dayKey(new Date(event.timestamp));
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(event);
+    }
+
+    const header = `<p class="text-xs font-mono text-faint mb-6">showing most recent ${shown.length} of ${total} reviews</p>`;
+    const body = [...groups.entries()].map(([day, events]) => {
+      const rows = events.map((e) => {
+        const time = new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const deckTitle = deckTitleBySlug[e.deckSlug] ?? e.deckSlug;
+        return `<div class="flex items-center justify-between py-2 border-b border-line text-sm">
+          <span class="text-muted font-mono text-xs">${time}</span>
+          <span class="text-body flex-1 px-4 truncate">${deckTitle}</span>
+          <span class="text-xs font-mono text-dim">${e.grade}</span>
+          <span class="text-xs font-mono text-faint ml-4">${(e.elapsedMs / 1000).toFixed(1)}s</span>
+        </div>`;
+      }).join('');
+      return `<div class="mb-6"><p class="text-xs font-mono text-accent uppercase tracking-widest mb-2">${day}</p>${rows}</div>`;
+    }).join('');
+
+    historyContent.innerHTML = header + body;
+  }
+</script>

@@ -1,0 +1,82 @@
+---
+// Tech stack sourced from CV
+const stack = [
+  {
+    category: 'Observability Platform',
+    icon: '📊',
+    tools: ['Grafana Cloud', 'Prometheus', 'Loki', 'Tempo', 'Mimir', 'Grafana IRM', 'AppDynamics', 'Splunk'],
+  },
+  {
+    category: 'Collection & Pipeline',
+    icon: '🔁',
+    tools: ['OpenTelemetry', 'Grafana Alloy', 'BigPanda AIOps', 'ServiceNow', 'ELK Stack'],
+  },
+  {
+    category: 'Cloud & Platform',
+    icon: '☁️',
+    tools: ['Azure AKS', 'Azure ARO', 'Azure Container Apps', 'Function Apps', 'SQL MI', 'Logic Apps', 'SAP RISE'],
+  },
+  {
+    category: 'IaC & Automation',
+    icon: '⚙️',
+    tools: ['Terraform', 'Ansible', 'Helm', 'FluxCD', 'Docker', 'Kubernetes', 'GitHub Actions', 'Azure Pipelines'],
+  },
+  {
+    category: 'Languages',
+    icon: '💻',
+    tools: ['Python', 'Bash', 'C#', 'Java', 'Go (learning)', 'YAML', 'ASP.NET', 'SQL'],
+  },
+  {
+    category: 'Principles & Practices',
+    icon: '📐',
+    tools: ['Platform Engineering', 'SRE', 'GitOps', 'Observability Strategy', 'SLO/SLA Design', 'FinOps', 'AIOps'],
+  },
+];
+---
+
+<section id="stack" class="border-t border-line">
+  <div class="section-container">
+    <p class="section-label">Stack</p>
+    <h2 class="section-title">Tools I trust in production</h2>
+
+    <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {stack.map(({ category, icon, tools }) => (
+        <div class="card group">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="text-2xl" role="img" aria-hidden="true">{icon}</span>
+            <h3 class="text-sm font-semibold text-body">{category}</h3>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            {tools.map((tool) => (
+              <span class="px-2.5 py-1 text-xs text-muted bg-surface-hover rounded-lg border border-line-hover/50
+                           group-hover:border-line-hover/50 transition-colors">
+                {tool}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- CNCF + Certifications callout -->
+    <div class="mt-8 grid sm:grid-cols-2 gap-4">
+      <div class="p-5 rounded-xl border border-line bg-surface/50 flex items-start gap-4">
+        <div class="flex-shrink-0 px-3 py-1.5 text-xs font-mono text-accent bg-accent/10 border border-accent/20 rounded-lg">
+          CNCF
+        </div>
+        <p class="text-sm text-muted">
+          All production observability work uses OpenTelemetry-native instrumentation — vendor neutrality, open standards, long-term portability.
+        </p>
+      </div>
+      <div class="p-5 rounded-xl border border-line bg-surface/50 flex items-start gap-4">
+        <div class="flex-shrink-0 px-3 py-1.5 text-xs font-mono text-accent bg-accent/10 border border-accent/20 rounded-lg whitespace-nowrap">
+          Certs
+        </div>
+        <p class="text-sm text-muted">
+          GitHub Actions Certified · Microsoft Azure Fundamentals (AZ-900) · M.Tech Software Engineering, BITS Pilani
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>

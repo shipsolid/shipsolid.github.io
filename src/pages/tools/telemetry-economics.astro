@@ -1,0 +1,202 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="telemetry-economics"
+  description="Model metric, log, and trace volume from fleet size, and estimate the cost drivers. Vendor-neutral — you supply the rates. Client-side only, no sign-up, no tracking."
+  intro="Size the telemetry your fleet produces — active series, samples per second, monthly log and trace GB — and, when you add unit costs, see which signal dominates the bill. No vendor pricing is assumed. Everything stays in your browser."
+>
+
+  <div class="card">
+    <h2 class="section-label">Fleet</h2>
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4" id="te-fleet"></div>
+    <p id="te-error" class="mt-3 text-sm text-red-400 font-mono hidden"></p>
+  </div>
+
+  <details class="card mt-6">
+    <summary class="section-label cursor-pointer select-none">Advanced</summary>
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4" id="te-advanced"></div>
+  </details>
+
+  <div id="te-result" class="card mt-6"></div>
+
+  <div class="card mt-6">
+    <h2 class="section-label">Notes</h2>
+    <ul id="te-notes" class="mt-3 space-y-1 text-xs text-dim font-mono list-disc pl-5"></ul>
+  </div>
+
+</ToolLayout>
+
+<script>
+  import { calcTelemetryEconomics } from '../../lib/tools/telemetry-economics';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:telemetry-economics:input';
+
+  interface TeState {
+    services: number;
+    hostsCount: number;
+    metricsPerService: number;
+    metricIntervalSeconds: number;
+    logsGbPerDay: number;
+    tracesGbPerDay: number;
+    avgLabelCardinality: number | '';
+    retentionDays: number | '';
+    perMillionSeriesUsd: number | '';
+    perLogGbUsd: number | '';
+    perTraceGbUsd: number | '';
+  }
+
+  const DEFAULT_STATE: TeState = {
+    services: 120,
+    hostsCount: 80,
+    metricsPerService: 2000,
+    metricIntervalSeconds: 15,
+    logsGbPerDay: 80,
+    tracesGbPerDay: 5,
+    avgLabelCardinality: '',
+    retentionDays: '',
+    perMillionSeriesUsd: '',
+    perLogGbUsd: '',
+    perTraceGbUsd: '',
+  };
+
+  const state: TeState = { ...DEFAULT_STATE, ...loadJSON<Partial<TeState>>(STORAGE_KEY, {}) };
+
+  const FLEET_FIELDS: { key: keyof TeState; label: string; step: string }[] = [
+    { key: 'services', label: 'Services', step: '1' },
+    { key: 'hostsCount', label: 'Hosts', step: '1' },
+    { key: 'metricsPerService', label: 'Metrics / service', step: '1' },
+    { key: 'metricIntervalSeconds', label: 'Metric interval (s)', step: '1' },
+    { key: 'logsGbPerDay', label: 'Logs GB / day', step: '0.1' },
+    { key: 'tracesGbPerDay', label: 'Traces GB / day', step: '0.1' },
+  ];
+
+  const ADVANCED_FIELDS: { key: keyof TeState; label: string; step: string }[] = [
+    { key: 'avgLabelCardinality', label: 'Avg label cardinality (default 10)', step: '1' },
+    { key: 'retentionDays', label: 'Retention (days)', step: '1' },
+    { key: 'perMillionSeriesUsd', label: '$ / million series / mo', step: '0.01' },
+    { key: 'perLogGbUsd', label: '$ / log GB', step: '0.01' },
+    { key: 'perTraceGbUsd', label: '$ / trace GB', step: '0.01' },
+  ];
+
+  const inputClass =
+    'mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 font-mono';
+
+  const fleetEl = document.getElementById('te-fleet') as HTMLElement | null;
+  const advancedEl = document.getElementById('te-advanced') as HTMLElement | null;
+  const errorEl = document.getElementById('te-error');
+  const resultEl = document.getElementById('te-result');
+  const notesEl = document.getElementById('te-notes');
+
+  function fieldHtml(key: string, label: string, step: string, value: number | string, placeholder = ''): string {
+    return `
+      <label class="text-xs font-mono text-dim">
+        ${label}
+        <input type="number" step="${step}" min="0" data-key="${key}" placeholder="${placeholder}"
+          class="${inputClass}" value="${value === '' ? '' : value}" />
+      </label>`;
+  }
+
+  if (fleetEl) fleetEl.innerHTML = FLEET_FIELDS.map((f) => fieldHtml(f.key, f.label, f.step, state[f.key] as number)).join('');
+  if (advancedEl)
+    advancedEl.innerHTML = ADVANCED_FIELDS.map((f) =>
+      fieldHtml(f.key, f.label, f.step, state[f.key] as number | string, 'optional')
+    ).join('');
+
+  function fmt(n: number): string {
+    if (!Number.isFinite(n)) return '∞';
+    if (Math.abs(n) >= 1000) return Math.round(n).toLocaleString();
+    return (Math.round(n * 100) / 100).toLocaleString();
+  }
+  function money(n: number | null): string {
+    return n === null ? '—' : '$' + fmt(n);
+  }
+
+  function num(v: number | ''): number | undefined {
+    return v === '' ? undefined : Number(v);
+  }
+
+  function run() {
+    if (!errorEl || !resultEl || !notesEl) return;
+    saveJSON(STORAGE_KEY, state);
+
+    try {
+      const r = calcTelemetryEconomics({
+        services: Number(state.services),
+        hostsCount: Number(state.hostsCount),
+        metricsPerService: Number(state.metricsPerService),
+        metricIntervalSeconds: Number(state.metricIntervalSeconds),
+        logsGbPerDay: Number(state.logsGbPerDay),
+        tracesGbPerDay: Number(state.tracesGbPerDay),
+        avgLabelCardinality: num(state.avgLabelCardinality),
+        retentionDays: num(state.retentionDays),
+        unitCost: {
+          perMillionSeriesUsd: num(state.perMillionSeriesUsd),
+          perLogGbUsd: num(state.perLogGbUsd),
+          perTraceGbUsd: num(state.perTraceGbUsd),
+        },
+      });
+      errorEl.classList.add('hidden');
+
+      const drivers =
+        r.costDrivers.length === 0
+          ? '<p class="text-xs text-dim font-mono mt-2">Add unit costs above to see the cost split.</p>'
+          : r.costDrivers
+              .map(
+                (d) => `
+              <div class="mt-2">
+                <div class="flex justify-between text-xs font-mono text-muted">
+                  <span>${d.driver}</span><span>${money(d.monthlyUsd)} · ${d.sharePercent}%</span>
+                </div>
+                <div class="mt-1 h-2 rounded bg-surface-hover overflow-hidden">
+                  <div class="h-full bg-accent" style="width:${Math.min(100, d.sharePercent)}%"></div>
+                </div>
+              </div>`
+              )
+              .join('');
+
+      resultEl.innerHTML = `
+        <h2 class="section-label mb-3">Volume</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm font-mono">
+          <div><div class="text-dim text-xs">Active series</div><div class="text-ink">${fmt(r.estActiveSeries)}</div></div>
+          <div><div class="text-dim text-xs">Samples / sec</div><div class="text-ink">${fmt(r.samplesPerSecond)}</div></div>
+          <div><div class="text-dim text-xs">Log GB / mo</div><div class="text-ink">${fmt(r.logVolumeGbPerMonth)}</div></div>
+          <div><div class="text-dim text-xs">Trace GB / mo</div><div class="text-ink">${fmt(r.traceVolumeGbPerMonth)}</div></div>
+        </div>
+
+        <h3 class="section-label mt-6 mb-2">Estimated monthly cost</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm font-mono">
+          <div><div class="text-dim text-xs">Metrics</div><div class="text-ink">${money(r.estMonthlyCost.metrics)}</div></div>
+          <div><div class="text-dim text-xs">Logs</div><div class="text-ink">${money(r.estMonthlyCost.logs)}</div></div>
+          <div><div class="text-dim text-xs">Traces</div><div class="text-ink">${money(r.estMonthlyCost.traces)}</div></div>
+          <div><div class="text-dim text-xs">Total</div><div class="text-accent">${money(r.estMonthlyCost.total)}</div></div>
+        </div>
+
+        <h3 class="section-label mt-6 mb-1">Cost drivers</h3>
+        ${drivers}
+      `;
+      notesEl.innerHTML = r.notes.map((n) => `<li>${n}</li>`).join('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+      resultEl.innerHTML = '<h2 class="section-label mb-3">Volume</h2><p class="text-sm text-red-400 font-mono">Fix the error above to see the estimate.</p>';
+    }
+  }
+
+  function onInput(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const key = target.dataset.key as keyof TeState | undefined;
+    if (!key) return;
+    const raw = target.value.trim();
+    (state[key] as number | string) = raw === '' ? '' : Number(raw);
+    run();
+  }
+
+  fleetEl?.addEventListener('input', onInput);
+  advancedEl?.addEventListener('input', onInput);
+
+  run();
+</script>

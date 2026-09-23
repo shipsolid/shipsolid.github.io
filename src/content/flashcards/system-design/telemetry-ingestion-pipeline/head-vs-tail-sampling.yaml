@@ -1,0 +1,53 @@
+title: "Head vs. Tail Sampling for Distributed Traces"
+description: "The sampling decision point determines whether a trace pipeline needs to buffer spans in memory — head-based decides at trace start, tail-based decides after the trace completes."
+tags: ["system-design", "observability", "telemetry", "maang-prep", "sampling"]
+cards:
+  - id: head-vs-tail-core-distinction
+    type: basic
+    q: "What is the core distinction between head-based and tail-based trace sampling?"
+    a: "Head-based decides at trace start, before any span outcome is known — stateless, no memory needed, can't bias toward errors. Tail-based decides after the trace completes (root span arrived) — a central span assembler holds the whole trace, so it CAN bias toward errors/slow traces, at the cost of buffering memory and assembly complexity."
+
+  - id: head-based-consistent-sampling
+    type: basic
+    q: "How does head-based sampling stay consistent across services in a call chain?"
+    a: "The decision is made once at the root span and propagated via the trace context (the 'sampled' flag in the W3C traceparent header). Every downstream service honors the parent's decision rather than sampling independently — without this propagation you'd get fragments instead of complete traces."
+
+  - id: head-based-blind-weakness
+    type: basic
+    q: "Why is head-based sampling described as 'blind'?"
+    a: "A flat 1% head-sample rate keeps 1% of everything uniformly — including the boring healthy 99% — at the same rate as the interesting slow/errored traces you actually want, because the outcome isn't known yet when the decision is made."
+
+  - id: tail-sampling-composite-policy
+    type: basic
+    q: "What does a real tail-sampling policy typically combine, with OR semantics?"
+    a: "Keep the trace if ANY policy says keep: errors (status_code == ERROR), slow (latency > threshold_ms), or baseline (a flat probabilistic sample, e.g. 1%, of everything else). This gives full anomaly visibility plus a cost-bounded representative baseline."
+
+  - id: decision-wait-num-traces-tradeoff
+    type: basic
+    q: "What do decision_wait and num_traces control in a tail-sampling processor, and what do they trade off?"
+    a: "decision_wait: how long to wait for the root span before giving up. num_traces: the bound on concurrently-open traces (memory cap). Both directly trade memory for completeness — waiting longer catches more slow traces but holds more open traces in memory at once."
+
+  - id: orphan-handling-definition
+    type: basic
+    q: "What is 'orphan handling' in tail-based sampling, and why is it necessary?"
+    a: "Not every trace's root span arrives before a TTL cutoff (a service crash, a dropped span, a misconfigured SDK). The assembler must decide what to do with an orphan: sample at a low rate anyway (some visibility) or drop it. Without a TTL cutoff, holding orphans forever is an unbounded memory leak disguised as a sampling policy."
+
+  - id: tail-sampling-memory-eviction-bias
+    type: basic
+    q: "Why does a memory-pressured LRU in a tail-sampling assembler create a selection bias against exactly the traces you want to keep?"
+    a: "A slow trace stays 'open' the longest waiting for its root span. Under memory pressure, an LRU evicts the oldest open traces first — which disproportionately are the slow ones the sampling policy exists to keep. The eviction policy is anti-correlated with the sampling policy's goal."
+
+  - id: sampling-recommendation-by-service-class
+    type: basic
+    q: "Which service classes get tail-based vs. head-based sampling, and why never both at once?"
+    a: "Tail-based for business-critical services (checkout, auth, payments) — you need the errored/slow traces specifically. Head-based at a higher flat rate (e.g. 10%) for internal infrastructure services where aggregate rates are what's actually queried. Never both at the same layer — it multiplies complexity for no benefit."
+
+  - id: sampling-decision-point-memory-requirement
+    type: basic
+    q: "Which sampling approach requires zero memory overhead, and which requires buffering every span until resolution?"
+    a: "Head-based: none — stateless, decide and forward immediately. Tail-based: must buffer every span of a trace in memory (or Redis) until the trace resolves (root span arrives), which is the entire operational cost of the approach."
+
+  - id: what-1-percent-of-everything-means
+    type: basic
+    q: "In a tail-sampling policy, what does 'keep 1% of everything' actually mean in practice?"
+    a: "It applies only to the leftover bucket of healthy, non-anomalous traces after errors and slow traces are already kept at 100%. It's a flat probabilistic coin-flip (sampling_percentage: 1) on the boring 99% — full anomaly visibility plus a cost-bounded baseline, which is the entire point of tail sampling over a single flat head-based rate."

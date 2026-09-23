@@ -1,0 +1,320 @@
+---
+import Page from '../../layouts/Page.astro';
+---
+
+<Page
+  title="Kubernetes Manifest Explainer — Amit Singh"
+  description="Paste any Kubernetes YAML manifest and get a field-by-field, plain-English breakdown of what it does."
+>
+  <div class="max-w-6xl mx-auto px-6">
+      <header class="mb-10">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="tag">Kubernetes</span>
+          <span class="tag">YAML</span>
+          <span class="tag">Learning Tool</span>
+        </div>
+        <div class="flex items-start gap-4 mb-4">
+          <h1 class="text-3xl md:text-4xl font-bold text-ink leading-tight flex-1">
+            Kubernetes Manifest Explainer
+          </h1>
+          <span class="flex-shrink-0 mt-1 px-2.5 py-1 text-xs font-mono rounded-full border text-success bg-success/10 border-success/20">
+            Active
+          </span>
+        </div>
+        <p class="text-muted">
+          Paste a Kubernetes manifest — one resource or several, separated by <code>---</code> —
+          and get a field-by-field, plain-English breakdown of what it does. Everything runs in
+          your browser; nothing is uploaded anywhere.
+        </p>
+      </header>
+
+      <div class="card mb-8">
+        <textarea
+          id="manifest-input"
+          rows="16"
+          spellcheck="false"
+          placeholder={'apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 3\n  ...'}
+          class="w-full bg-field border border-line rounded-lg px-4 py-3 text-sm font-mono text-ink outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"
+        ></textarea>
+
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <button id="explain-btn" type="button" class="btn-primary">Explain</button>
+          <button id="load-example-btn" type="button" class="btn-outline text-xs">Load example</button>
+          <label class="btn-outline text-xs cursor-pointer">
+            Upload file
+            <input id="manifest-file-input" type="file" accept=".yaml,.yml,.txt" class="hidden" />
+          </label>
+        </div>
+      </div>
+
+      <div id="output"></div>
+
+      <div class="mt-16 pt-8 border-t border-line flex items-center justify-between">
+        <a href="/projects" class="text-sm text-accent hover:text-accent-hover font-mono flex items-center gap-2 transition-colors">
+          ← All projects
+        </a>
+        <a href="/" class="text-sm text-dim hover:text-body transition-colors">Home</a>
+      </div>
+
+    </div>
+
+</Page>
+
+<script>
+  import * as yaml from 'js-yaml';
+  import { explainManifest } from '../../lib/k8s-explainer/explain';
+  import type { ExplainManifestResult, ExplainedResource, FieldExplanation, DocError } from '../../lib/k8s-explainer/types';
+
+  const EXAMPLE_MANIFEST = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: default
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/example/web:1.4.2
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: web-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: default
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: default
+data:
+  LOG_LEVEL: info
+  FEATURE_FLAG_NEW_UI: "true"
+`;
+
+  // non-null: #manifest-input and #output are rendered unconditionally in this page's template.
+  const textarea = document.getElementById('manifest-input') as HTMLTextAreaElement;
+  const explainBtn = document.getElementById('explain-btn');
+  const loadExampleBtn = document.getElementById('load-example-btn');
+  const fileInput = document.getElementById('manifest-file-input') as HTMLInputElement | null;
+  const output = document.getElementById('output')!;
+
+  function groupLabel(path: string) {
+    return path.startsWith('spec') ? 'Spec' : 'Overview';
+  }
+
+  function renderFieldList(fields: FieldExplanation[]) {
+    const groups = new Map<string, FieldExplanation[]>();
+    for (const f of fields) {
+      const label = groupLabel(f.path);
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label)?.push(f);
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'space-y-4';
+
+    for (const [label, groupFields] of groups) {
+      const details = document.createElement('details');
+      details.open = true;
+      details.className = 'card';
+
+      const summary = document.createElement('summary');
+      summary.className = 'section-label cursor-pointer select-none';
+      summary.textContent = label;
+      details.appendChild(summary);
+
+      const list = document.createElement('div');
+      list.className = 'mt-4 space-y-4';
+
+      for (const f of groupFields) {
+        const item = document.createElement('div');
+        item.className = 'border-l-2 border-accent/30 pl-3';
+
+        const pathEl = document.createElement('div');
+        pathEl.className = 'font-mono text-xs text-accent break-all';
+        pathEl.textContent = f.path;
+
+        const valueEl = document.createElement('pre');
+        valueEl.className = 'font-mono text-xs text-muted whitespace-pre-wrap break-words mt-1';
+        valueEl.textContent = f.value;
+
+        const explEl = document.createElement('p');
+        explEl.className = 'text-sm text-body mt-1';
+        explEl.textContent = f.explanation;
+
+        item.append(pathEl, valueEl, explEl);
+        list.appendChild(item);
+      }
+
+      details.appendChild(list);
+      wrap.appendChild(details);
+    }
+
+    return wrap;
+  }
+
+  function renderResourcePanel(resource: ExplainedResource) {
+    const panel = document.createElement('div');
+    panel.id = `k8s-panel-${resource.docIndex}`;
+    panel.setAttribute('role', 'tabpanel');
+    panel.className = 'grid md:grid-cols-2 gap-6';
+
+    const rawPre = document.createElement('pre');
+    rawPre.className = 'card font-mono text-xs text-body overflow-x-auto whitespace-pre h-fit';
+    rawPre.textContent = yaml.dump(resource.raw);
+
+    const explCol = document.createElement('div');
+    explCol.className = 'space-y-4';
+
+    if (resource.isGenericFallback) {
+      const note = document.createElement('p');
+      note.className = 'text-xs text-dim italic';
+      note.textContent = `"${resource.kind}" isn't a built-in kind this tool has deep coverage for yet — showing the fields every Kubernetes resource shares.`;
+      explCol.appendChild(note);
+    }
+
+    explCol.appendChild(renderFieldList(resource.fields));
+
+    panel.append(rawPre, explCol);
+    return panel;
+  }
+
+  function renderErrorPanel(errors: DocError[]) {
+    const card = document.createElement('div');
+    card.className = 'card border-red-500/30';
+    for (const e of errors) {
+      const p = document.createElement('p');
+      p.className = 'text-sm text-red-400';
+      p.textContent = e.message;
+      card.appendChild(p);
+    }
+    return card;
+  }
+
+  function renderWarningBanner(errors: DocError[]) {
+    const card = document.createElement('div');
+    card.className = 'card border-amber-500/30 mb-6';
+
+    const title = document.createElement('p');
+    title.className = 'text-xs font-mono uppercase tracking-wide text-amber-400 mb-2';
+    title.textContent = `${errors.length} document${errors.length === 1 ? '' : 's'} could not be explained`;
+    card.appendChild(title);
+
+    for (const e of errors) {
+      const p = document.createElement('p');
+      p.className = 'text-sm text-muted';
+      p.textContent = e.message;
+      card.appendChild(p);
+    }
+
+    return card;
+  }
+
+  function setActiveResourceTab(docIndex: number) {
+    document.querySelectorAll<HTMLElement>('#output .tab').forEach((btn) => {
+      btn.setAttribute('aria-selected', String(btn.dataset.docIndex === String(docIndex)));
+    });
+    document.querySelectorAll('#output [role="tabpanel"]').forEach((panel) => {
+      panel.classList.toggle('hidden', panel.id !== `k8s-panel-${docIndex}`);
+    });
+  }
+
+  function render(result: ExplainManifestResult) {
+    output.innerHTML = '';
+
+    if (result.resources.length === 0) {
+      output.appendChild(renderErrorPanel(result.errors));
+      return;
+    }
+
+    if (result.errors.length > 0) {
+      output.appendChild(renderWarningBanner(result.errors));
+    }
+
+    const tabs = document.createElement('div');
+    tabs.className = 'tabs flex-wrap mb-6';
+    tabs.setAttribute('role', 'tablist');
+
+    const panelsWrap = document.createElement('div');
+
+    result.resources.forEach((resource, i) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'tab';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', String(i === 0));
+      btn.dataset.docIndex = String(resource.docIndex);
+      btn.textContent = `${resource.kind}: ${resource.name ?? '(unnamed)'}`;
+      btn.addEventListener('click', () => setActiveResourceTab(resource.docIndex));
+      tabs.appendChild(btn);
+
+      const panel = renderResourcePanel(resource);
+      if (i !== 0) panel.classList.add('hidden');
+      panelsWrap.appendChild(panel);
+    });
+
+    output.append(tabs, panelsWrap);
+  }
+
+  function runExplain() {
+    render(explainManifest(textarea.value));
+  }
+
+  explainBtn?.addEventListener('click', runExplain);
+
+  loadExampleBtn?.addEventListener('click', () => {
+    textarea.value = EXAMPLE_MANIFEST;
+    runExplain();
+  });
+
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput?.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      textarea.value = String(reader.result ?? '');
+      runExplain();
+    };
+    reader.readAsText(file);
+  });
+</script>

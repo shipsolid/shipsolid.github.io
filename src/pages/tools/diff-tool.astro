@@ -1,0 +1,172 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  slug="diff-tool"
+  description="Line-by-line text diff with whitespace and case options, viewed as a unified diff you can copy. Client-side only, no sign-up, no tracking."
+  intro="Paste two versions of a config, a log, or a block of code and see what changed. Optionally ignore whitespace or case. Everything stays in your browser."
+>
+
+  <div class="card">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label class="text-xs font-mono text-dim">
+        Original
+        <textarea id="dt-left" rows="12"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"></textarea>
+      </label>
+      <label class="text-xs font-mono text-dim">
+        Changed
+        <textarea id="dt-right" rows="12"
+          class="mt-1 w-full bg-field border border-line rounded-lg px-3 py-2 text-sm text-ink font-mono outline-none focus:border-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/70 resize-y"></textarea>
+      </label>
+    </div>
+    <div class="mt-4 flex flex-wrap items-center gap-4 text-xs font-mono text-dim">
+      <label class="flex items-center gap-2">
+        <input id="dt-ws" type="checkbox" class="w-4 h-4" style="accent-color: rgb(var(--color-accent-rgb))" />
+        Ignore whitespace
+      </label>
+      <label class="flex items-center gap-2">
+        <input id="dt-case" type="checkbox" class="w-4 h-4" style="accent-color: rgb(var(--color-accent-rgb))" />
+        Ignore case
+      </label>
+      <button id="dt-swap" type="button" class="btn-outline text-xs">Swap sides</button>
+      <button id="dt-copy" type="button" class="btn-outline text-xs">Copy as ```diff```</button>
+    </div>
+    <p id="dt-error" class="mt-3 text-sm text-red-400 font-mono hidden"></p>
+  </div>
+
+  <div id="dt-result" class="card mt-6"></div>
+
+</ToolLayout>
+
+<script>
+  import { diffLines, toUnifiedText } from '../../lib/tools/diff-tool';
+  import { loadJSON, saveJSON } from '../../lib/storage';
+
+  const STORAGE_KEY = 'tools:diff-tool:state';
+  const RENDER_CAP = 1500;
+
+  interface DiffState {
+    left: string;
+    right: string;
+    ignoreWhitespace: boolean;
+    ignoreCase: boolean;
+  }
+
+  const DEFAULT_STATE: DiffState = {
+    left: 'scrape_interval: 15s\nevaluation_interval: 30s\nexternal_labels:\n  cluster: prod-cin\n  region: centralindia',
+    right: 'scrape_interval: 30s\nevaluation_interval: 30s\nexternal_labels:\n  cluster: prod-cin\n  region: centralindia\n  team: platform',
+    ignoreWhitespace: false,
+    ignoreCase: false,
+  };
+
+  const state: DiffState = { ...DEFAULT_STATE, ...loadJSON<Partial<DiffState>>(STORAGE_KEY, {}) };
+
+  const leftEl = document.getElementById('dt-left') as HTMLTextAreaElement | null;
+  const rightEl = document.getElementById('dt-right') as HTMLTextAreaElement | null;
+  const wsEl = document.getElementById('dt-ws') as HTMLInputElement | null;
+  const caseEl = document.getElementById('dt-case') as HTMLInputElement | null;
+  const swapEl = document.getElementById('dt-swap');
+  const copyEl = document.getElementById('dt-copy') as HTMLButtonElement | null;
+  const errorEl = document.getElementById('dt-error');
+  const resultEl = document.getElementById('dt-result');
+
+  if (leftEl) leftEl.value = state.left;
+  if (rightEl) rightEl.value = state.right;
+  if (wsEl) wsEl.checked = state.ignoreWhitespace;
+  if (caseEl) caseEl.checked = state.ignoreCase;
+
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function run() {
+    if (!errorEl || !resultEl) return;
+    state.left = leftEl?.value ?? '';
+    state.right = rightEl?.value ?? '';
+    state.ignoreWhitespace = !!wsEl?.checked;
+    state.ignoreCase = !!caseEl?.checked;
+    saveJSON(STORAGE_KEY, state);
+
+    try {
+      const result = diffLines(state.left, state.right, {
+        ignoreWhitespace: state.ignoreWhitespace,
+        ignoreCase: state.ignoreCase,
+      });
+      errorEl.classList.add('hidden');
+
+      const shown = result.lines.slice(0, RENDER_CAP);
+      const rows = shown
+        .map((line) => {
+          const bg =
+            line.op === 'insert'
+              ? 'bg-green-500/15'
+              : line.op === 'delete'
+                ? 'bg-red-500/15'
+                : '';
+          const sign = line.op === 'insert' ? '+' : line.op === 'delete' ? '-' : ' ';
+          const ln = line.leftNumber ?? '';
+          const rn = line.rightNumber ?? '';
+          return `<div class="flex ${bg}">
+            <span class="w-10 shrink-0 text-right pr-2 text-faint select-none">${ln}</span>
+            <span class="w-10 shrink-0 text-right pr-2 text-faint select-none">${rn}</span>
+            <span class="w-4 shrink-0 text-dim select-none">${sign}</span>
+            <span class="whitespace-pre-wrap break-all flex-1">${escapeHtml(line.text) || '&nbsp;'}</span>
+          </div>`;
+        })
+        .join('');
+
+      const truncated =
+        result.lines.length > RENDER_CAP
+          ? `<p class="text-xs text-dim font-mono mt-2">Showing the first ${RENDER_CAP} of ${result.lines.length} lines.</p>`
+          : '';
+
+      resultEl.innerHTML = `
+        <div class="flex items-center justify-between">
+          <h2 class="section-label">Diff</h2>
+          <span class="text-xs font-mono text-dim">
+            <span class="text-green-400">+${result.added}</span>
+            <span class="text-red-400 ml-2">-${result.removed}</span>
+            <span class="ml-2">${result.unchanged} unchanged</span>
+          </span>
+        </div>
+        <div class="mt-4 text-xs font-mono text-body border border-line rounded-lg overflow-x-auto">${rows}</div>
+        ${truncated}
+      `;
+    } catch (err) {
+      errorEl.textContent = err instanceof Error ? err.message : String(err);
+      errorEl.classList.remove('hidden');
+      resultEl.innerHTML = '<h2 class="section-label">Diff</h2><p class="text-sm text-red-400 font-mono mt-2">Fix the error above to see the diff.</p>';
+    }
+  }
+
+  [leftEl, rightEl].forEach((el) => el?.addEventListener('input', run));
+  [wsEl, caseEl].forEach((el) => el?.addEventListener('change', run));
+
+  swapEl?.addEventListener('click', () => {
+    const l = leftEl?.value ?? '';
+    if (leftEl) leftEl.value = rightEl?.value ?? '';
+    if (rightEl) rightEl.value = l;
+    run();
+  });
+
+  copyEl?.addEventListener('click', async () => {
+    try {
+      const result = diffLines(state.left, state.right, {
+        ignoreWhitespace: state.ignoreWhitespace,
+        ignoreCase: state.ignoreCase,
+      });
+      await navigator.clipboard.writeText('```diff\n' + toUnifiedText(result) + '\n```');
+      const original = copyEl.textContent;
+      copyEl.textContent = 'Copied!';
+      setTimeout(() => {
+        copyEl.textContent = original;
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy diff:', err);
+    }
+  });
+
+  run();
+</script>

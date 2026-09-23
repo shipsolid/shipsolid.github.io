@@ -1,0 +1,190 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  posts: CollectionEntry<'blog'>[];
+  // Set on blog post pages — highlights that post and force-expands its
+  // year/month branch even if the reader had collapsed it previously.
+  currentSlug?: string;
+}
+
+const { posts, currentSlug } = Astro.props;
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+// Call sites already pass a !draft, newest-first list — re-sort defensively so
+// the grouping below never depends on that.
+const sorted = [...posts].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+interface MonthGroup {
+  month: number;
+  key: string;
+  posts: CollectionEntry<'blog'>[];
+}
+interface YearGroup {
+  year: number;
+  key: string;
+  count: number;
+  months: MonthGroup[];
+}
+
+// UTC getters, not local — pubDate is a date-only frontmatter value coerced to
+// UTC midnight; a negative-offset build box would otherwise roll day-01 posts
+// back into the previous month.
+const years: YearGroup[] = [];
+for (const post of sorted) {
+  const y = post.data.pubDate.getUTCFullYear();
+  const m = post.data.pubDate.getUTCMonth();
+
+  let yg = years.find((g) => g.year === y);
+  if (!yg) {
+    yg = { year: y, key: `y:${y}`, count: 0, months: [] };
+    years.push(yg);
+  }
+  yg.count++;
+
+  let mg = yg.months.find((g) => g.month === m);
+  if (!mg) {
+    mg = { month: m, key: `y:${y}/m:${m}`, posts: [] };
+    yg.months.push(mg);
+  }
+  mg.posts.push(post);
+}
+
+const activePost = currentSlug ? sorted.find((p) => p.id === currentSlug) : undefined;
+const activeYear = activePost?.data.pubDate.getUTCFullYear();
+const activeMonth = activePost?.data.pubDate.getUTCMonth();
+
+// Default expanded branch: the active post's year/month on a post page,
+// otherwise the most recent year and its most recent month.
+const openYear = activeYear ?? years[0]?.year;
+const openMonthKey =
+  activeYear != null && activeMonth != null
+    ? `y:${activeYear}/m:${activeMonth}`
+    : years[0]?.months[0]?.key;
+---
+
+<nav data-blog-archive aria-label="Blog archive">
+  <p class="text-xs font-mono text-dim uppercase tracking-widest mb-4">Archive</p>
+
+  <div class="flex flex-col gap-0.5">
+    {years.map((yg) => (
+      <details data-node-path={yg.key} open={yg.year === openYear}>
+        <summary class="flex items-center gap-1.5 px-2 py-2 rounded-lg text-sm text-body hover:text-ink hover:bg-surface-hover/50 transition cursor-pointer">
+          <span class="tree-chevron shrink-0 text-faint transition-transform duration-150" aria-hidden="true">▸</span>
+          <span class="flex-1 font-mono">{yg.year}</span>
+          <span class="text-xs font-mono text-faint">{yg.count}</span>
+        </summary>
+
+        <div class="mt-0.5 mb-1 flex flex-col gap-0.5">
+          {yg.months.map((mg) => (
+            <details data-node-path={mg.key} open={mg.key === openMonthKey}>
+              <summary
+                style="padding-left:1.25rem"
+                class="flex items-center gap-1.5 pr-2 py-1.5 rounded-lg text-xs text-dim hover:text-body hover:bg-surface-hover/30 transition cursor-pointer"
+              >
+                <span class="tree-chevron shrink-0 text-faint transition-transform duration-150" aria-hidden="true">▸</span>
+                <span class="flex-1">{MONTHS[mg.month]}</span>
+                <span class="font-mono text-faint">{mg.posts.length}</span>
+              </summary>
+
+              <div class="mt-0.5 flex flex-col gap-0.5">
+                {mg.posts.map((post) => {
+                  const isActive = post.id === currentSlug;
+                  return (
+                    <a
+                      href={`/blog/${post.id}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      style="padding-left:2.5rem"
+                      class={
+                        'block pr-2 py-1.5 rounded-lg text-xs leading-snug transition no-underline break-words ' +
+                        (isActive
+                          ? 'text-accent bg-accent/10'
+                          : 'text-dim hover:text-ink hover:bg-surface-hover/30')
+                      }
+                    >
+                      {post.data.title}
+                    </a>
+                  );
+                })}
+              </div>
+            </details>
+          ))}
+        </div>
+      </details>
+    ))}
+  </div>
+</nav>
+
+<style>
+  [data-blog-archive] summary {
+    list-style: none;
+  }
+  [data-blog-archive] summary::-webkit-details-marker {
+    display: none;
+  }
+  [data-blog-archive] details[open] > summary .tree-chevron {
+    transform: rotate(90deg);
+  }
+</style>
+
+<script>
+  // Persist year/month expansion across navigations. Mirrors
+  // NotesSidebarTree: a Set of open [data-node-path]s in localStorage. On a
+  // first visit (no stored key) the SSR `open` defaults are kept as the seed.
+  // The query is document-wide, so the desktop aside and the mobile <details>
+  // copy on a blog post page each get wired independently against their own
+  // subtree (they share the key, so they reconcile on the next load).
+  const STORAGE_KEY = 'blog-archive-expanded';
+
+  document.querySelectorAll<HTMLElement>('[data-blog-archive]').forEach((root) => {
+    const detailsEls = [...root.querySelectorAll<HTMLDetailsElement>('details[data-node-path]')];
+    const seedOpen = () =>
+      new Set(detailsEls.filter((d) => d.open).map((d) => d.dataset.nodePath!));
+
+    let expanded: Set<string>;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      expanded = raw ? new Set(JSON.parse(raw) as string[]) : seedOpen();
+    } catch {
+      expanded = seedOpen();
+    }
+
+    detailsEls.forEach((d) => {
+      const path = d.dataset.nodePath;
+      if (!path) return;
+      d.open = expanded.has(path);
+      d.addEventListener('toggle', () => {
+        if (d.open) expanded.add(path);
+        else expanded.delete(path);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([...expanded]));
+        } catch {
+          /* private browsing / quota — degrade to session-only */
+        }
+      });
+    });
+
+    // Always reveal the branch holding the current post, even against a
+    // stored state that had it collapsed. Stop at the nav boundary so the
+    // mobile wrapper <details> (outside [data-blog-archive]) isn't forced open.
+    const activeLink = root.querySelector<HTMLAnchorElement>('a[aria-current="page"]');
+    if (!activeLink) return;
+
+    let ancestor = activeLink.closest('details') as HTMLDetailsElement | null;
+    while (ancestor && root.contains(ancestor)) {
+      ancestor.open = true;
+      const p = ancestor.dataset.nodePath;
+      if (p) expanded.add(p);
+      ancestor = ancestor.parentElement?.closest('details') ?? null;
+    }
+
+    // Only scroll if this instance is actually the visible one.
+    if (activeLink.offsetParent !== null) {
+      requestAnimationFrame(() => activeLink.scrollIntoView({ block: 'center' }));
+    }
+  });
+</script>
