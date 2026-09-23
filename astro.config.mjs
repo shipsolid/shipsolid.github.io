@@ -13,8 +13,15 @@ const faroSourcemapApiKey = process.env.FARO_SOURCEMAP_API_KEY;
 // unaffected regardless of Node version.
 const faroUploader = faroSourcemapApiKey ? (await import('@grafana/faro-rollup-plugin')).default : null;
 
+// Two deploy targets, both serving from the domain root (this repo's GitHub
+// Pages deploy is the org's root user page, not a subpath like gita's) — only
+// `site` (canonical URLs, sitemap) and `outDir` differ. `npm run build:cloudflare`
+// flips it via DEPLOY_TARGET — see package.json.
+const CLOUDFLARE = process.env.DEPLOY_TARGET === 'cloudflare';
+
 export default defineConfig({
-  site: 'https://shipsolid.github.io',
+  site: CLOUDFLARE ? 'https://amit.shipsolid.workers.dev' : 'https://shipsolid.github.io',
+  outDir: CLOUDFLARE ? './dist-cloudflare' : './dist',
   // SignalForge's write-up moved to its own repo's Pages deploy at /signal-forge/.
   // Static output turns this into dist/projects/signal-forge/index.html — a meta-refresh
   // + <link rel="canonical"> page, the only redirect kind GitHub Pages static hosting

@@ -6,6 +6,8 @@
 .env
 
 # Dependencies and build output — CI installs fresh and deploys via GitHub Actions
-# Pages (actions/deploy-pages), so dist/ is never committed.
+# Pages (actions/deploy-pages) or wrangler, so build output is never committed.
 node_modules/
 dist/
+dist-cloudflare/
+.wrangler/
