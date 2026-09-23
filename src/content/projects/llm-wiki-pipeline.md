@@ -5,7 +5,7 @@ tags: ["Python", "Ollama", "Notion API", "GitHub Actions", "RAG", "pgvector"]
 github: "https://github.com/shipsolid"
 status: "active"
 featured: false
-order: 4
+order: 5
 ---
 
 A personal knowledge pipeline that turns raw Notion notes into a structured, queryable GitHub wiki —

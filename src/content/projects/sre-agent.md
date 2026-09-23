@@ -5,7 +5,7 @@ tags: ["Python", "FastAPI", "Claude API", "AKS", "Kubernetes", "Grafana", "LLM",
 github: "https://github.com/shipsolid"
 status: "active"
 featured: true
-order: 2
+order: 3
 results:
   - "[Add: alert-to-context latency, before vs. after the agent — the number an interviewer will ask for first]"
   - "[Add: fraction of draft post-mortems that needed no human edits, if tracked]"

@@ -5,7 +5,7 @@ tags: ["Backstage", "ArgoCD", "Crossplane", "Kyverno", "Linkerd", "k3d", "Helm",
 github: "https://github.com/shipsolid"
 status: "active"
 featured: true
-order: 3
+order: 4
 ---
 
 An IDP learning lab that goes all the way — from service scaffolding to progressive delivery to
