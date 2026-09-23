@@ -36,10 +36,11 @@ const projects = defineCollection({
     tags: z.array(z.string()).default([]),
     github: z.string().optional(),
     demo: z.string().optional(),
-    // Set when the project's write-up lives on its own site (a separate repo's
-    // GitHub Pages deploy, e.g. /signal-forge/). The /projects and homepage cards
-    // link straight here, and src/pages/projects/[slug].astro skips route
-    // generation for the entry — there is no local prose page to render.
+    // Set when the project's write-up lives on its own site (a separate deploy this
+    // portfolio doesn't own, e.g. https://signal-forge.shipsolid.workers.dev/). The
+    // /projects and homepage cards link straight here, and
+    // src/pages/projects/[slug].astro skips route generation for the entry — there
+    // is no local prose page to render.
     externalUrl: z.string().optional(),
     status: z.enum(['active', 'archived', 'wip']).default('active'),
     featured: z.boolean().default(false),

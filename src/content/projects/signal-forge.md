@@ -6,10 +6,11 @@ github: "https://github.com/shipsolid/signal-forge"
 status: "active"
 featured: true
 order: 1
-externalUrl: "/signal-forge/"
+externalUrl: "https://signal-forge.shipsolid.workers.dev/"
 ---
 
-The full SignalForge write-up lives at <https://shipsolid.github.io/signal-forge/> — built from the
-[`signal-forge`](https://github.com/shipsolid/signal-forge) repo's `docs/` tree and deployed as its
-own GitHub Pages site. This entry only feeds the `/projects` and homepage cards;
-`/projects/signal-forge` redirects to `/signal-forge/` (see `astro.config.mjs`).
+The full SignalForge write-up lives at <https://signal-forge.shipsolid.workers.dev/> — built from
+the [`signal-forge`](https://github.com/shipsolid/signal-forge) repo's `docs/` tree and deployed to
+Cloudflare Workers via Cloudflare's native Git integration on that repo. This entry only feeds the
+`/projects` and homepage cards; `/projects/signal-forge` redirects to the Workers site (see
+`astro.config.mjs`).

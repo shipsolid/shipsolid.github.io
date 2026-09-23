@@ -8,9 +8,9 @@ export async function getStaticPaths() {
   // body would shadow the real page with an empty or stale write-up:
   //   - `dedicated`: has a bespoke page in this repo (interactive family tree /
   //     k8s manifest explainer); the .md only feeds the /projects index card.
-  //   - `externalUrl` set: the write-up lives on its own site (a separate repo's
-  //     Pages deploy, e.g. /signal-forge/); the cards link straight there and
-  //     astro.config.mjs redirects /projects/<id> onward.
+  //   - `externalUrl` set: the write-up lives on its own site (a deploy this repo
+  //     doesn't own, e.g. https://signal-forge.shipsolid.workers.dev/); the cards
+  //     link straight there and astro.config.mjs redirects /projects/<id> onward.
   // (Declared inside getStaticPaths: Astro runs it in isolation from the
   // component module scope.)
   const dedicated = new Set(['family-tree', 'k8s-manifest-explainer']);
