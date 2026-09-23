@@ -19,9 +19,11 @@ const subNav = subNavFor(pathname);
     <!-- Desktop nav — 6 primary items + search + toggle + Contact need ~1024px
          to sit on one row without crowding; below that it's the mobile menu. -->
     <nav aria-label="Primary" class="hidden lg:flex items-center gap-1">
-      {PRIMARY_NAV.map(({ href, label }) => (
+      {PRIMARY_NAV.map(({ href, label, external }) => (
         <a
           href={href}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noopener noreferrer' : undefined}
           class="px-4 py-2 text-sm text-muted hover:text-ink rounded-lg hover:bg-surface-hover/50 transition duration-200"
         >
           {label}
@@ -98,9 +100,11 @@ const subNav = subNavFor(pathname);
   <!-- Mobile menu -->
   <div id="mobile-menu" class="hidden lg:hidden bg-bg/98 border-t border-line">
     <nav aria-label="Primary" class="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-1">
-      {PRIMARY_NAV.map(({ href, label }) => (
+      {PRIMARY_NAV.map(({ href, label, external }) => (
         <a
           href={href}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noopener noreferrer' : undefined}
           class="px-4 py-3 text-sm text-body hover:text-ink hover:bg-surface-hover/50 rounded-lg transition-colors"
         >
           {label}

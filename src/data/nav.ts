@@ -9,21 +9,20 @@ import { TOOL_FAMILIES } from './tools';
 export interface NavLink {
   href: string;
   label: string;
+  external?: boolean;
 }
 
 // Primary desktop + mobile nav. Flashcards is deliberately kept out of this
-// bar — it's reached via its own sub-nav strip. Notes and Gita are their own
-// independently-deployed products now (still reachable at /notes/* and
-// /gita/* on the domain) — linked out from here rather than owned by this
-// site's build.
+// bar — it's reached via its own sub-nav strip. Bhagavad Gita is its own
+// independently-deployed product, hosted off-domain on Cloudflare Workers —
+// linked out from here rather than owned by this site's build.
 export const PRIMARY_NAV: readonly NavLink[] = [
   { href: '/#about', label: 'About' },
   { href: '/#projects', label: 'Projects' },
   { href: '/#stack', label: 'Stack' },
   { href: '/blog', label: 'Blog' },
   { href: '/tools', label: 'Tools' },
-  { href: '/gita', label: 'Bhagavad Gita' },
-  { href: '/notes', label: 'Notes' },
+  { href: 'https://gita.shipsolid.workers.dev/', label: 'Bhagavad Gita', external: true },
 ];
 
 // Second nav strip shown on /flashcards/* — surfaces sibling knowledge tools
